@@ -149,29 +149,6 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
         .into_iter()
         .collect();
 
-    /*
-    root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v/suprarust# cargo build --release
-    Compiling suprarust v0.1.0 (/var/www/wordpress/wp-content/themes/2upra3v/suprarust)
-    error[E0308]: mismatched types
-       --> src/lib.rs:163:28
-        |
-    163 |       let vistas: Vec<i64> = conn.query_map(
-        |  _________________--------___^
-        | |                 |
-        | |                 expected due to this
-    164 | |     format!("SELECT meta_value FROM wpsg_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
-    165 | |     |meta_value: String| {
-    166 | |         serde_json::from_str::<VistasData>(&meta_value)
-    ...   |
-    175 | |     vec![]
-    176 | | });
-        | |__^ expected `Vec<i64>`, found `Vec<Vec<i64>>`
-        |
-        = note: expected struct `std::vec::Vec<i64>`
-                   found struct `std::vec::Vec<std::vec::Vec<i64>>`
-
-    For more information about this error, try `rustc --explain E0308`.
-         */
 
     #[derive(Debug, Deserialize, Serialize)]
     struct Vista {
@@ -195,7 +172,10 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     ).unwrap_or_else(|err| {
         eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
         vec![]
-    });
+    })
+    .into_iter()  // Agrega into_iter()
+    .flatten() // Agrega flatten()
+    .collect(); // Ahora collect() recolecta un Vec<i64>
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365))
