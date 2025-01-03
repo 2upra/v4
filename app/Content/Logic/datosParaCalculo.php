@@ -34,7 +34,7 @@ function obtenerDatosFeed($userId)
             return [];
         }
 
-        $resultadoRust = obtener_metadatos_posts_rust($postsIds);
+        $resultadoRust = obtenerMetadatosPosts($postsIds);
 
         if (isset($resultadoRust['error'])) {
             $log .= "[obtenerDatosFeed] Error en la extensión Rust: " . $resultadoRust['error'] . " \n";
