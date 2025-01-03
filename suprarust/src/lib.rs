@@ -164,12 +164,12 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
             serde_json::from_str::<VistasData>(&meta_value)
                 .map(|vistas_data| vistas_data.0.values().map(|vista| vista.count).collect::<Vec<i64>>())
                 .unwrap_or_else(|err| {
-                    eprintln!("Error al deserializar vistas_posts: {}", err);
+                    println!("Error al deserializar vistas_posts: {}", err);
                     vec![]
                 })
         },
     ).unwrap_or_else(|err| {
-        eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
+        println!("Error al obtener vistas_posts de la base de datos: {}", err);
         vec![]
     })
     .into_iter()

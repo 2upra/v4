@@ -157,20 +157,34 @@ function obtenerDatosFeed($userId)
     }
 }
 
+function obtenerDatosFeedConCache($userId) {
+    $cache_key = 'feed_datos_' . $userId;
+    ob_start(); // Inicia la captura de salida
+    $datos = obtenerDatosFeedRust($userId);
+    $output = ob_get_clean(); // Obtiene la salida capturada y limpia el búfer
+
+    if (!empty($output)) {
+        // Haz algo con la salida, como escribirla en un archivo de log
+        error_log("Salida de la extensión Rust: " . $output);
+    }
+
+    return $datos;
+}
+/*
 function obtenerDatosFeedConCache($userId)
 {
     $cache_key = 'feed_datos_' . $userId;
     //$datos = obtenerCache($cache_key);
     //$datos = obtenerDatosFeed($userId);
     $datos = obtenerDatosFeedRust($userId); 
-    /* if (false === $datos) {
+     if (false === $datos) {
         guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
         $datos = obtenerDatosFeed($userId);
         guardarCache($cache_key, $datos, 43200); // Guarda en caché por 12 horas
         guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
     } else {
         guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
-    } */
+    } 
 
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
         //guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
@@ -179,3 +193,5 @@ function obtenerDatosFeedConCache($userId)
 
     return $datos;
 }
+
+*/
