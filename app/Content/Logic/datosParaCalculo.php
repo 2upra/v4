@@ -7,15 +7,17 @@
 
 function obtenerDatosFeed($userId)
 {
-    rendimientolog("[obtenerDatosFeed] Inicio de la función para el usuario ID: " . $userId);
     $tiempoInicio = microtime(true);
+    $log = "[obtenerDatosFeed] Inicio de la función para el usuario ID: $userId. \n";
 
     try {
         if (!comprobarConexionBD()) {
+            $log .= "[obtenerDatosFeed] Error: No se pudo conectar a la base de datos. \n";
             return [];
         }
 
         if (!validarUsuario($userId)) {
+            $log .= "[obtenerDatosFeed] Error: Usuario no válido ($userId). \n";
             return [];
         }
 
@@ -23,35 +25,26 @@ function obtenerDatosFeed($userId)
         $intereses = obtenerInteresesUsuario($userId);
         $vistas = vistasDatos($userId);
         generarMetaDeIntereses($userId);
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos");
+        $log .= "[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos. \n";
 
         $postsIds = obtenerIdsPostsRecientes();
         if (empty($postsIds)) {
-            guardarLog("[obtenerDatosFeed] Aviso: No se encontraron posts en los últimos 365 días");
+            $log .= "[obtenerDatosFeed] Aviso: No se encontraron posts en los últimos 365 días. \n";
             rendimientolog("[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos");
             return [];
         }
-        //no puedo ver los logs o errroes que genera obtener_metadatos_posts_rust
-        $mataData = obtener_metadatos_posts_rust($postsIds);
 
-        if (is_array($mataData) && isset($mataData[0]) && is_array($mataData[0])) {
-            $metaData = $mataData[0];
-        } else {
-            $metaData = [];
-            guardarLog("[obtenerDatosFeed] Advertencia: La función obtener_metadatos_posts_rust no devolvió un array en el índice 0.");
+        $resultadoRust = obtener_metadatos_posts_rust($postsIds);
+
+        if (isset($resultadoRust['error'])) {
+            $log .= "[obtenerDatosFeed] Error en la extensión Rust: " . $resultadoRust['error'] . " \n";
         }
 
-        if (is_array($mataData) && isset($mataData[1]) && is_array($mataData[1])) {
-            $logsRust = $mataData[1];
-            foreach ($logsRust as $logEntry) {
-                guardarLog("[obtenerDatosFeed] Log desde Rust: " . $logEntry);
-            }
-        } else {
-            if (is_array($mataData)) {
-                guardarLog("[obtenerDatosFeed] Advertencia: La función obtener_metadatos_posts_rust no devolvió un array en el índice 1.");
-            } else {
-                guardarLog("[obtenerDatosFeed] Error: La función obtener_metadatos_posts_rust no devolvió un array.");
-            }
+        $metaData = $resultadoRust['meta_data'] ?? [];
+        $logsRust = $resultadoRust['logs'] ?? [];
+
+        foreach ($logsRust as $logEntry) {
+            $log .= "[obtenerDatosFeed] Log desde Rust: $logEntry \n";
         }
 
         $metaRoles = procesarMetadatosRoles($metaData);
@@ -60,9 +53,8 @@ function obtenerDatosFeed($userId)
         $postContenido = procesarContenidoPosts($postsResultados);
 
         $tiempoFin = microtime(true);
-        $tiempoTotal = $tiempoFin - $tiempoInicio;
-        rendimientolog("[obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: " . $tiempoTotal . " segundos");
-
+        $log .= "[obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: " . ($tiempoFin - $tiempoInicio) . " segundos. \n";
+        guardarLog($log);
         return [
             'siguiendo'        => $siguiendo,
             'interesesUsuario' => $intereses,
@@ -74,12 +66,12 @@ function obtenerDatosFeed($userId)
             'post_content'     => $postContenido,
         ];
     } catch (Exception $e) {
-        guardarLog("[obtenerDatosFeed] Error crítico: " . $e->getMessage());
+        $log .= "[obtenerDatosFeed] Error crítico: " . $e->getMessage() . " \n";
+        guardarLog($log);
         rendimientolog("[obtenerDatosFeed] Terminó con error crítico (Exception) en " . (microtime(true) - $tiempoInicio) . " segundos");
         return [];
     }
 }
-
 function obtenerUsuariosSeguidos($userId)
 {
     $tiempoInicio = microtime(true);

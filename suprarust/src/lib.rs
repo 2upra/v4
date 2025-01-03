@@ -2,7 +2,7 @@
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use mysql_async::prelude::*;
-use mysql_async::{Pool, Row};
+use mysql_async::{Pool, Row, Error as MySqlError};
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use std::env;
@@ -10,6 +10,7 @@ use dotenv::dotenv;
 use tokio::runtime::Runtime;
 use std::sync::Arc;
 use ext_php_rs::convert::IntoZval;
+use ext_php_rs::zend::ExecuteData;
 
 lazy_static! {
     static ref MYSQL_POOL: Arc<Pool> = {
@@ -37,40 +38,42 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String>
 
     let rt = Runtime::new().unwrap();
 
-    let (meta_data_result, logs) = rt.block_on(async {
+    let result = rt.block_on(async {
         ejecutar_consulta(pool_clone, posts_ids, meta_keys).await
     });
 
-    let mut final_result: HashMap<String, Zval> = HashMap::new();
+    match result {
+        Ok((meta_data, logs)) => {
+            let mut result_map = HashMap::new();
 
-    match meta_data_result {
-        Ok(meta_data) => {
-            let mut result_vec: Vec<HashMap<String, HashMap<String, String>>> = Vec::new();
+            let mut meta_data_map = HashMap::new();
             for (post_id, meta_map) in meta_data {
-                let mut post_meta = HashMap::new();
-                post_meta.insert(post_id.to_string(), meta_map);
-                result_vec.push(post_meta);
+                let mut post_meta_map = HashMap::new();
+                for (key, value) in meta_map {
+                    post_meta_map.insert(key, value.into_zval(false).unwrap());
+                }
+                meta_data_map.insert(post_id.to_string(), post_meta_map.into_zval(false).unwrap());
             }
-            final_result.insert("meta_data".to_string(), result_vec.into_zval(false).unwrap());
-        }
-        Err(err) => {
-            final_result.insert("error".to_string(), err.into_zval(false).unwrap());
-        }
+            result_map.insert("meta_data".to_string(), meta_data_map.into_zval(false).unwrap());
+
+            result_map.insert("logs".to_string(), logs.into_zval(false).unwrap());
+            
+            Ok(result_map.into_zval(false).unwrap())
+        },
+        Err(err) => Err(err),
     }
-
-    final_result.insert("logs".to_string(), logs.into_zval(false).unwrap());
-
-    final_result.into_zval(false).map_err(|e| e.to_string())
 }
 
-async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> (Result<HashMap<i64, HashMap<String, String>>, String>, Vec<String>) {
+async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> Result<(HashMap<i64, HashMap<String, String>>, Vec<String>), String> {
     let mut logs = Vec::new();
-    let mut conn = match pool_clone.get_conn().await {
+    let conn_result = pool_clone.get_conn().await;
+
+    let mut conn = match conn_result {
         Ok(conn) => conn,
         Err(err) => {
             logs.push(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err));
-            return (Err(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err)), logs);
-        },
+            return Err(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err));
+        }
     };
 
     let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
@@ -83,357 +86,59 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
         meta_keys_placeholders, placeholders
     );
 
-    let params = meta_keys
+    let params_vec: Vec<String> = meta_keys
         .iter()
         .map(|s| s.to_string())
         .chain(posts_ids.iter().map(|id| id.to_string()))
-        .collect::<Vec<String>>();
+        .collect();
 
-    let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
-        Ok(result) => result,
-        Err(err) => {
-            logs.push(format!("[ejecutar_consulta] Error al ejecutar la consulta: {}", err));
-            return (Err(format!("[ejecutar_consulta] Error al ejecutar la consulta: {}", err)), logs);
-        },
-    };
+    let params: Vec<&str> = params_vec.iter().map(|s| s.as_str()).collect();
+
+    let meta_resultados: Result<Vec<Row>, MySqlError> = conn.exec(sql_meta, params).await;
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
-    for row in meta_resultados {
-        let post_id: i64 = row.get("post_id").unwrap_or(0);
-        let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
-        let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
 
-        if post_id != 0 && !meta_key.is_empty() {
-            meta_data
-                .entry(post_id)
-                .or_insert_with(HashMap::new)
-                .insert(meta_key, meta_value);
-        } else {
-            logs.push(format!("[ejecutar_consulta] Se encontró una fila con post_id vacío o meta_key vacía"));
+    match meta_resultados {
+        Ok(rows) => {
+            for row in rows {
+                let post_id: i64 = match row.get("post_id") {
+                    Some(v) => v,
+                    None => {
+                        logs.push("[ejecutar_consulta] Fila sin post_id".to_string());
+                        continue;
+                    }
+                };
+                let meta_key: String = match row.get("meta_key") {
+                    Some(v) => v,
+                    None => {
+                        logs.push("[ejecutar_consulta] Fila sin meta_key".to_string());
+                        continue;
+                    }
+                };
+                let meta_value: String = match row.get("meta_value") {
+                    Some(v) => v,
+                    None => {
+                        logs.push("[ejecutar_consulta] Fila sin meta_value".to_string());
+                        continue;
+                    }
+                };
+
+                meta_data
+                    .entry(post_id)
+                    .or_insert_with(HashMap::new)
+                    .insert(meta_key, meta_value);
+            }
+        },
+        Err(err) => {
+            logs.push(format!("[ejecutar_consulta] Error en la consulta: {}", err));
+            return Err(format!("[ejecutar_consulta] Error en la consulta: {}", err));
         }
     }
 
-    (Ok(meta_data), logs)
+    Ok((meta_data, logs))
 }
 
 #[php_module]
 pub fn module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
-
-/*
-
-te muestro un codigo viejo que no funcionaba pero al menos copilaba
-#![allow(non_snake_case)]
-use chrono::prelude::*;
-use dotenv::dotenv;
-use ext_php_rs::builders::ModuleBuilder;
-use ext_php_rs::convert::IntoZval;
-use ext_php_rs::ffi::HashTable;
-use ext_php_rs::flags::DataType;
-use ext_php_rs::prelude::*;
-use ext_php_rs::types::Zval;
-use mysql::prelude::*;
-use mysql::*;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::collections::HashMap;
-use std::env;
-
-// Estructuras para los datos de los posts y likes
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
-struct PostData {
-    id: u64,
-    autor: u64,
-    fecha: String,
-    contenido: String,
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
-struct LikeData {
-    post_id: u64,
-    like: u32,
-    favorito: u32,
-    nome_gusta: u32,
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
-struct MetaData {
-    datosAlgoritmo: Option<String>,
-    Verificado: Option<String>,
-    postAut: Option<String>,
-    artista: Option<bool>,
-    fan: Option<bool>,
-}
-
-// Implementación correcta de IntoZval (sin usar persistent)
-impl IntoZval for MetaData {
-    const TYPE: DataType = DataType::Array;
-
-    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> Result<(), ext_php_rs::error::Error>
-    where
-        Self: Sized,
-    {
-        let mut arr = HashTable::new();
-        if let Some(datosAlgoritmo) = self.datosAlgoritmo {
-            arr.insert("datosAlgoritmo", datosAlgoritmo)?;
-        }
-        if let Some(verificado) = self.Verificado {
-            arr.insert("Verificado", verificado)?;
-        }
-        if let Some(postAut) = self.postAut {
-            arr.insert("postAut", postAut)?;
-        }
-        arr.insert("artista", self.artista.unwrap_or(false))?;
-        arr.insert("fan", self.fan.unwrap_or(false))?;
-
-        zv.set_hashtable(arr);
-        Ok(())
-    }
-
-    fn into_zval(self, persistent: bool) -> Result<Zval, ext_php_rs::error::Error>
-    where
-        Self: Sized,
-    {
-        let mut zv = Zval::new();
-        self.set_zval(&mut zv, persistent)?; // Aquí se puede usar persistent o no, según tu lógica
-        Ok(zv)
-    }
-}
-
-impl IntoZval for LikeData {
-    const TYPE: DataType = DataType::Array;
-
-    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> Result<(), ext_php_rs::error::Error>
-    where
-        Self: Sized,
-    {
-        let mut arr = HashTable::new();
-        arr.insert("post_id", self.post_id)?;
-        arr.insert("like", self.like)?;
-        arr.insert("favorito", self.favorito)?;
-        arr.insert("no_me_gusta", self.nome_gusta)?;
-
-        zv.set_hashtable(arr);
-        Ok(())
-    }
-
-    fn into_zval(self, persistent: bool) -> Result<Zval, ext_php_rs::error::Error>
-    where
-        Self: Sized,
-    {
-        let mut zv = Zval::new();
-        self.set_zval(&mut zv, persistent)?; // Aquí se puede usar persistent o no, según tu lógica
-        Ok(zv)
-    }
-}
-
-// Función para obtener la conexión a la base de datos
-fn obtenerConexion() -> std::result::Result<PooledConn, mysql::Error> {
-    dotenv().ok(); // Carga las variables de entorno desde .env
-
-    let db_user = env::var("DB_USER").expect("Variable DB_USER no encontrada en .env");
-    let db_password = env::var("DB_PASSWORD").expect("Variable DB_PASSWORD no encontrada en .env");
-    let db_host = env::var("DB_HOST").expect("Variable DB_HOST no encontrada en .env");
-    let db_name = env::var("DB_NAME").expect("Variable DB_NAME no encontrada en .env");
-    let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string()); // Puerto 3306 por defecto
-
-    let url = format!(
-        "mysql://{}:{}@{}:{}/{}",
-        db_user, db_password, db_host, db_port, db_name
-    );
-
-    let pool = Pool::new(url.as_str())?; // Convertir la String a &str
-    pool.get_conn()
-}
-
-#[php_function]
-pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
-    let mut conn = obtenerConexion().unwrap();
-
-    // --- Obtener 'siguiendo' ---
-    let siguiendo: Vec<i64> = conn
-        .query_map(
-            format!(
-                "SELECT meta_value FROM wpsg_usermeta WHERE user_id = {} AND meta_key = 'siguiendo'",
-                usu
-            ),
-            |meta_value: String| meta_value.parse().unwrap_or(0),
-        )
-        .unwrap_or_else(|_| vec![]);
-
-    // --- Obtener 'intereses' ---
-    let intereses: HashMap<String, i32> = conn
-        .query_map(
-            format!(
-                "SELECT interest, intensity FROM {} WHERE user_id = {}",
-                "INTERES_TABLE", usu
-            ),
-            |(interest, intensity)| (interest, intensity),
-        )
-        .unwrap_or_default()
-        .into_iter()
-        .collect();
-
-    #[derive(Debug, Deserialize, Serialize)]
-    struct Vista {
-        count: i64,
-        last_view: i64,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    struct VistasData(HashMap<i64, Vista>);
-
-    let vistas: Vec<i64> = conn.query_map(
-        format!("SELECT meta_value FROM wpsg_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
-        |meta_value: String| {
-            serde_json::from_str::<VistasData>(&meta_value)
-                .map(|vistas_data| vistas_data.0.values().map(|vista| vista.count).collect::<Vec<i64>>())
-                .unwrap_or_else(|err| {
-                    println!("Error al deserializar vistas_posts: {}", err);
-                    vec![]
-                })
-        },
-    ).unwrap_or_else(|err| {
-        println!("Error al obtener vistas_posts de la base de datos: {}", err);
-        vec![]
-    })
-    .into_iter()
-    .flatten()
-    .collect();
-
-    // --- Obtener IDs de posts en los últimos 365 días ---
-    let fechaLimite = (Utc::now() - chrono::Duration::days(365))
-        .format("%Y-%m-%d")
-        .to_string();
-    let postsIds: Vec<u64> = conn
-        .query_map(
-            format!(
-                "SELECT ID FROM wpsg_posts WHERE post_type = 'social_post' AND post_date > '{}'",
-                fechaLimite
-            ),
-            |id: u64| id,
-        )
-        .unwrap_or_default();
-
-    // --- Obtener metadata de los posts ---
-    let metaData: HashMap<u64, MetaData> = {
-        let mut meta = HashMap::new();
-        if !postsIds.is_empty() {
-            let postsIdsStr = postsIds
-                .iter()
-                .map(|id| id.to_string())
-                .collect::<Vec<String>>()
-                .join(",");
-            let metaRes: Vec<(u64, String, String)> = conn.query_map(
-                format!("SELECT post_id, meta_key, meta_value FROM wpsg_postmeta WHERE post_id IN ({}) AND meta_key IN ('datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan')", postsIdsStr),
-                |(post_id, meta_key, meta_value)| (post_id, meta_key, meta_value),
-            ).unwrap_or_default();
-
-            for (post_id, meta_key, meta_value) in metaRes {
-                let entry = meta.entry(post_id).or_insert_with(MetaData::default);
-                match meta_key.as_str() {
-                    "datosAlgoritmo" => entry.datosAlgoritmo = Some(meta_value),
-                    "Verificado" => entry.Verificado = Some(meta_value),
-                    "postAut" => entry.postAut = Some(meta_value),
-                    "artista" => entry.artista = Some(meta_value == "1"),
-                    "fan" => entry.fan = Some(meta_value == "1"),
-                    _ => {}
-                }
-            }
-        }
-        meta
-    };
-
-    // --- Obtener likes de los posts ---
-    let likesPorPost: HashMap<u64, LikeData> = {
-        let mut likes = HashMap::new();
-        if !postsIds.is_empty() {
-            let postsIdsStr = postsIds
-                .iter()
-                .map(|id| id.to_string())
-                .collect::<Vec<String>>()
-                .join(",");
-            let likesRes: Vec<(u64, String, u32)> = conn.query_map(
-                format!("SELECT post_id, like_type, COUNT(*) as cantidad FROM wpsg_post_likes WHERE post_id IN ({}) GROUP BY post_id, like_type", postsIdsStr),
-                |(post_id, like_type, cantidad)| (post_id, like_type, cantidad),
-            ).unwrap_or_default();
-
-            for (post_id, like_type, cantidad) in likesRes {
-                let entry = likes.entry(post_id).or_insert_with(LikeData::default);
-                match like_type.as_str() {
-                    "like" => entry.like = cantidad,
-                    "favorito" => entry.favorito = cantidad,
-                    "no_me_gusta" => entry.nome_gusta = cantidad,
-                    _ => {}
-                }
-            }
-        }
-        likes
-    };
-
-    // --- Obtener datos de los posts ---
-    let postContenido: HashMap<u64, String> = {
-        let mut contenido = HashMap::new();
-        if !postsIds.is_empty() {
-            let postsIdsStr = postsIds
-                .iter()
-                .map(|id| id.to_string())
-                .collect::<Vec<String>>()
-                .join(",");
-            let postsRes: Vec<(u64, String)> = conn
-                .query_map(
-                    format!(
-                        "SELECT ID, post_content FROM wpsg_posts WHERE ID IN ({})",
-                        postsIdsStr
-                    ),
-                    |(id, post_content)| (id, post_content),
-                )
-                .unwrap_or_default();
-
-            for (id, post_content) in postsRes {
-                contenido.insert(id, post_content);
-            }
-        }
-        contenido
-    };
-
-    // --- Preparar los resultados para PHP ---
-    // Clonar los datos antes de convertirlos a Zval
-    let siguiendoClon = siguiendo.clone();
-    let interesesClon = intereses.clone();
-    let vistasClon = vistas.clone();
-
-    let mut resultado: Vec<Zval> = vec![];
-    for id in postsIds {
-        let mut datos = vec![];
-        datos.push(id.into_zval(false).unwrap());
-        datos.push(siguiendoClon.clone().into_zval(false).unwrap());
-        datos.push(interesesClon.clone().into_zval(false).unwrap());
-        datos.push(vistasClon.clone().into_zval(false).unwrap());
-        datos.push(match metaData.get(&id).cloned() {
-            Some(meta_data) => meta_data.into_zval(false).unwrap_or_default(),
-            None => Zval::new(),
-        });
-
-        datos.push(match likesPorPost.get(&id).cloned() {
-            Some(likes_data) => likes_data.into_zval(false).unwrap_or_default(),
-            None => Zval::new(),
-        });
-
-        datos.push(match postContenido.get(&id).cloned() {
-            Some(content) => content.into_zval(false).unwrap_or_default(),
-            None => Zval::new(),
-        });
-        resultado.push(datos.into_zval(false).unwrap());
-    }
-
-    Ok(resultado)
-}
-
-#[php_module]
-pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
-    module
-}
-
-    */
