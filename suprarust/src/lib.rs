@@ -273,17 +273,18 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     };
 
     // --- Preparar los resultados para PHP ---
-    let siguiendoZval = siguiendo.into_zval(false).unwrap();
-    let interesesZval = intereses.into_zval(false).unwrap();
-    let vistasZval = vistas.into_zval(false).unwrap();
+    // Clonar los datos antes de convertirlos a Zval
+    let siguiendoClon = siguiendo.clone();
+    let interesesClon = intereses.clone();
+    let vistasClon = vistas.clone();
 
     let mut resultado: Vec<Zval> = vec![];
     for id in postsIds {
         let mut datos = vec![];
         datos.push(id.into_zval(false).unwrap());
-        datos.push(siguiendoZval.clone());
-        datos.push(interesesZval.clone());
-        datos.push(vistasZval.clone());
+        datos.push(siguiendoClon.clone().into_zval(false).unwrap());
+        datos.push(interesesClon.clone().into_zval(false).unwrap());
+        datos.push(vistasClon.clone().into_zval(false).unwrap());
         datos.push(match metaData.get(&id).cloned() {
             Some(meta_data) => meta_data.into_zval(false).unwrap_or_default(),
             None => Zval::new(),
