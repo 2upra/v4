@@ -11,13 +11,13 @@ function obtenerDatosFeed($userId) {
     try {
         if (!comprobarConexionBD()) {
             $log .= "[obtenerDatosFeed] Error: No se pudo conectar a la base de datos. \n";
-            guardarLog($log);
+            //guardarLog($log);
             return [];
         }
 
         if (!validarUsuario($userId)) {
             $log .= "[obtenerDatosFeed] Error: Usuario no válido. \n";
-            guardarLog($log);
+            //guardarLog($log);
             return [];
         }
 
@@ -30,7 +30,7 @@ function obtenerDatosFeed($userId) {
         $postsIds = obtenerIdsPostsRecientes();
         if (empty($postsIds)) {
             $log .= "[obtenerDatosFeed] Aviso: No se encontraron posts recientes. \n";
-            guardarLog($log);
+            //guardarLog($log);
             $log .= "[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos \n";
             return [];
         }
@@ -67,7 +67,7 @@ function obtenerDatosFeed($userId) {
 
     } catch (Exception $e) {
         $log .= "[obtenerDatosFeed] Error: " . $e->getMessage() . "\n";
-        guardarLog($log);
+        //guardarLog($log);
         $log .= "[obtenerDatosFeed] Terminó con error en " . (microtime(true) - $tiempoInicio) . " segundos \n";
         return [];
     }
@@ -88,7 +88,7 @@ function obtenerUsuariosSeguidos($userId) {
     );
 
     if (empty($siguiendo)) {
-        guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
+        //guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
         $siguiendo = [];  
     } else {
 
@@ -107,7 +107,7 @@ function comprobarConexionBD() {
     $tiempoInicio = microtime(true);
 
     if (!$wpdb) {
-        guardarLog("[comprobarConexionBD] Error crítico: No se pudo acceder a la base de datos wpdb");
+        //guardarLog("[comprobarConexionBD] Error crítico: No se pudo acceder a la base de datos wpdb");
         rendimientolog("[comprobarConexionBD] Terminó con error crítico (sin acceso a \$wpdb) en " . (microtime(true) - $tiempoInicio) . " segundos");
         return false;
     }
@@ -117,7 +117,7 @@ function comprobarConexionBD() {
 function validarUsuario($userId) {
     $tiempoInicio = microtime(true);
     if (!$userId) {
-        guardarLog("[validarUsuario] Error: ID de usuario no válido");
+        //guardarLog("[validarUsuario] Error: ID de usuario no válido");
         rendimientolog("[validarUsuario] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
         return false;
     }
@@ -133,7 +133,7 @@ function obtenerInteresesUsuario($userId) {
         $userId
     ), OBJECT_K);
     if ($wpdb->last_error) {
-        guardarLog("[obtenerInteresesUsuario] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
+        //guardarLog("[obtenerInteresesUsuario] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
     }
     rendimientolog("[obtenerInteresesUsuario] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $intereses;
@@ -180,7 +180,7 @@ function obtenerMetadatosPosts($postsIds) {
     $metaResultados = $wpdb->get_results($preparedSqlMeta);
 
     if ($wpdb->last_error) {
-        guardarLog("[obtenerMetadatosPosts] Error: Fallo al obtener metadata: " . $wpdb->last_error);
+        //guardarLog("[obtenerMetadatosPosts] Error: Fallo al obtener metadata: " . $wpdb->last_error);
     }
     rendimientolog("[obtenerMetadatosPosts] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
@@ -224,7 +224,7 @@ function obtenerLikesPorPost($postsIds) {
     $likesResultados = $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], $args));
 
     if ($wpdb->last_error) {
-        guardarLog("[obtenerLikesPorPost] Error: Fallo al obtener likes: " . $wpdb->last_error);
+        //guardarLog("[obtenerLikesPorPost] Error: Fallo al obtener likes: " . $wpdb->last_error);
     }
     rendimientolog("[obtenerLikesPorPost] Tiempo para obtener \$likesResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
@@ -259,7 +259,7 @@ function obtenerDatosBasicosPosts($postsIds) {
     $postsResultados = $wpdb->get_results($wpdb->prepare($sqlPosts, $postsIds), OBJECT_K);
 
     if ($wpdb->last_error) {
-        guardarLog("[obtenerDatosBasicosPosts] Error: Fallo al obtener posts: " . $wpdb->last_error);
+        //guardarLog("[obtenerDatosBasicosPosts] Error: Fallo al obtener posts: " . $wpdb->last_error);
     }
     rendimientolog("[obtenerDatosBasicosPosts] Tiempo para obtener \$postsResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
@@ -282,16 +282,16 @@ function obtenerDatosFeedConCache($userId)
     $datos = obtenerCache($cache_key);
 
     if (false === $datos) {
-        guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
+        //guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
         $datos = obtenerDatosFeed($userId);
         guardarCache($cache_key, $datos, 43200); // Guarda en caché por 12 horas
-        guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
+        //guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
     } else {
-        guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
+        //guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
     }
 
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        //guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
+        ////guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
         return [];
     }
 
