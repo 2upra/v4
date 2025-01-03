@@ -45,7 +45,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                     <div class="bloque">
                         <?php
                         if (function_exists('conectar_bd')) {
-                            $resultado = conectar_bd();
+                            $resultado = conectar_bd_sin_lazy_static();
                             guardarLog("conectar_bd: " . $resultado);
                             echo "<p>Resultado de la conexión a la base de datos: " . $resultado . "</p>";
                         } else {
