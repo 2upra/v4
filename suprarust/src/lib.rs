@@ -136,21 +136,29 @@ fn ejecutar_consulta(
         .collect();
 
     // Ejecutar la consulta preparada
-    let meta_resultados: Result<Vec<Row>, mysql::Error> = stmt.exec(params);
+    let meta_resultados = stmt.exec_iter(params);
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
 
     match meta_resultados {
-        Ok(rows) => {
-            for row in rows.into_iter() {
-                let post_id: i64 = row.get("post_id").unwrap_or(0);
-                let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
-                let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
+        Ok(mut result) => {
+          let rows: Result<Vec<Row>, mysql::Error> = result.map(|row_result| row_result).collect();
+            match rows {
+                Ok(rows) => {
+                    for row in rows.into_iter() {
+                        let post_id: i64 = row.get("post_id").unwrap_or(0);
+                        let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
+                        let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
 
-                meta_data
-                    .entry(post_id)
-                    .or_insert_with(HashMap::new)
-                    .insert(meta_key, meta_value);
+                        meta_data
+                            .entry(post_id)
+                            .or_insert_with(HashMap::new)
+                            .insert(meta_key, meta_value);
+                    }
+                }
+                Err(err) => {
+                    return Err(format!("[ejecutar_consulta] Error en la consulta: {}", err));
+                }
             }
         }
         Err(err) => {
