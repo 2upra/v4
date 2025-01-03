@@ -29,15 +29,13 @@ lazy_static! {
 }
 
 #[php_function]
-pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<String, HashMap<String, String>>>, String> {
+pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<(Vec<HashMap<String, HashMap<String, String>>>, Vec<String>), (String, Vec<String>)> {
     let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
-    // Crear un nuevo runtime de Tokio.
     let rt = Runtime::new().unwrap();
 
-    // Ejecutar el código asíncrono dentro del runtime.
-    let meta_data_result = rt.block_on(async {
+    let (meta_data_result, logs) = rt.block_on(async {
         ejecutar_consulta(pool_clone, posts_ids, meta_keys).await
     });
 
@@ -49,16 +47,20 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
                 post_meta.insert(post_id.to_string(), meta_map);
                 result_vec.push(post_meta);
             }
-            Ok(result_vec)
+            Ok((result_vec, logs))
         }
-        Err(err) => Err(err),
+        Err(err) => Err((err, logs)),
     }
 }
 
-async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> Result<HashMap<i64, HashMap<String, String>>, String> {
+async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> (Result<HashMap<i64, HashMap<String, String>>, String>, Vec<String>) {
+    let mut logs = Vec::new();
     let mut conn = match pool_clone.get_conn().await {
         Ok(conn) => conn,
-        Err(err) => return Err(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err)),
+        Err(err) => {
+            logs.push(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err));
+            return (Err(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err)), logs);
+        },
     };
 
     let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
@@ -79,7 +81,10 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
 
     let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
         Ok(result) => result,
-        Err(err) => return Err(format!("[ejecutar_consulta] Error al ejecutar la consulta: {}", err)),
+        Err(err) => {
+            logs.push(format!("[ejecutar_consulta] Error al ejecutar la consulta: {}", err));
+            return (Err(format!("[ejecutar_consulta] Error al ejecutar la consulta: {}", err)), logs);
+        },
     };
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
@@ -94,7 +99,7 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
             .insert(meta_key, meta_value);
     }
 
-    Ok(meta_data)
+    (Ok(meta_data), logs)
 }
 
 #[php_module]

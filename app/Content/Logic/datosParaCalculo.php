@@ -5,7 +5,8 @@
 2.5 segundos
 */
 
-function obtenerDatosFeed($userId) {
+function obtenerDatosFeed($userId)
+{
     rendimientolog("[obtenerDatosFeed] Inicio de la función para el usuario ID: " . $userId);
     $tiempoInicio = microtime(true);
 
@@ -30,8 +31,29 @@ function obtenerDatosFeed($userId) {
             rendimientolog("[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos");
             return [];
         }
+        //no puedo ver los logs o errroes que genera obtener_metadatos_posts_rust
+        $mataData = obtener_metadatos_posts_rust($postsIds);
 
-        $metaData = obtener_metadatos_posts_rust($postsIds);
+        if (is_array($mataData) && isset($mataData[0]) && is_array($mataData[0])) {
+            $metaData = $mataData[0];
+        } else {
+            $metaData = [];
+            guardarLog("[obtenerDatosFeed] Advertencia: La función obtener_metadatos_posts_rust no devolvió un array en el índice 0.");
+        }
+
+        if (is_array($mataData) && isset($mataData[1]) && is_array($mataData[1])) {
+            $logsRust = $mataData[1];
+            foreach ($logsRust as $logEntry) {
+                guardarLog("[obtenerDatosFeed] Log desde Rust: " . $logEntry);
+            }
+        } else {
+            if (is_array($mataData)) {
+                guardarLog("[obtenerDatosFeed] Advertencia: La función obtener_metadatos_posts_rust no devolvió un array en el índice 1.");
+            } else {
+                guardarLog("[obtenerDatosFeed] Error: La función obtener_metadatos_posts_rust no devolvió un array.");
+            }
+        }
+
         $metaRoles = procesarMetadatosRoles($metaData);
         $likesPorPost = obtenerLikesPorPost($postsIds);
         $postsResultados = obtenerDatosBasicosPosts($postsIds);
@@ -51,7 +73,6 @@ function obtenerDatosFeed($userId) {
             'author_results'   => $postsResultados,
             'post_content'     => $postContenido,
         ];
-
     } catch (Exception $e) {
         guardarLog("[obtenerDatosFeed] Error crítico: " . $e->getMessage());
         rendimientolog("[obtenerDatosFeed] Terminó con error crítico (Exception) en " . (microtime(true) - $tiempoInicio) . " segundos");
@@ -59,7 +80,8 @@ function obtenerDatosFeed($userId) {
     }
 }
 
-function obtenerUsuariosSeguidos($userId) {
+function obtenerUsuariosSeguidos($userId)
+{
     $tiempoInicio = microtime(true);
 
 
@@ -75,11 +97,11 @@ function obtenerUsuariosSeguidos($userId) {
 
     if (empty($siguiendo)) {
         guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
-        $siguiendo = [];  
+        $siguiendo = [];
     } else {
 
-      $siguiendo = maybe_unserialize($siguiendo[0]);
-      $siguiendo = is_array($siguiendo) ? $siguiendo : [];
+        $siguiendo = maybe_unserialize($siguiendo[0]);
+        $siguiendo = is_array($siguiendo) ? $siguiendo : [];
     }
 
     rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
@@ -87,7 +109,8 @@ function obtenerUsuariosSeguidos($userId) {
 }
 
 
-function comprobarConexionBD() {
+function comprobarConexionBD()
+{
     global $wpdb;
     $tiempoInicio = microtime(true);
 
@@ -99,7 +122,8 @@ function comprobarConexionBD() {
     return true;
 }
 
-function validarUsuario($userId) {
+function validarUsuario($userId)
+{
     $tiempoInicio = microtime(true);
     if (!$userId) {
         guardarLog("[validarUsuario] Error: ID de usuario no válido");
@@ -109,7 +133,8 @@ function validarUsuario($userId) {
     return true;
 }
 
-function obtenerInteresesUsuario($userId) {
+function obtenerInteresesUsuario($userId)
+{
     global $wpdb;
     $tiempoInicio = microtime(true);
     $tablaIntereses = INTERES_TABLE;
@@ -124,14 +149,16 @@ function obtenerInteresesUsuario($userId) {
     return $intereses;
 }
 
-function vistasDatos($userId) {
+function vistasDatos($userId)
+{
     $tiempoInicio = microtime(true);
     $vistas = get_user_meta($userId, 'vistas_posts', true);
     rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $vistas;
 }
 
-function obtenerIdsPostsRecientes() {
+function obtenerIdsPostsRecientes()
+{
     $tiempoInicio = microtime(true);
     $args = [
         'post_type'      => 'social_post',
@@ -147,7 +174,8 @@ function obtenerIdsPostsRecientes() {
     return $postsIds;
 }
 
-function obtenerMetadatosPosts($postsIds) {
+function obtenerMetadatosPosts($postsIds)
+{
     global $wpdb;
     $tiempoInicio = microtime(true);
 
@@ -177,7 +205,8 @@ function obtenerMetadatosPosts($postsIds) {
     return $metaData;
 }
 
-function procesarMetadatosRoles($metaData) {
+function procesarMetadatosRoles($metaData)
+{
     $tiempoInicio = microtime(true);
     $metaRoles = [];
     foreach ($metaData as $postId => $meta) {
@@ -190,7 +219,8 @@ function procesarMetadatosRoles($metaData) {
     return $metaRoles;
 }
 
-function obtenerLikesPorPost($postsIds) {
+function obtenerLikesPorPost($postsIds)
+{
     global $wpdb;
     $tiempoInicio = microtime(true);
     $tablaLikes = "{$wpdb->prefix}post_likes";
@@ -229,7 +259,8 @@ function obtenerLikesPorPost($postsIds) {
 }
 
 
-function obtenerDatosBasicosPosts($postsIds) {
+function obtenerDatosBasicosPosts($postsIds)
+{
     global $wpdb;
     $tiempoInicio = microtime(true);
 
@@ -250,7 +281,8 @@ function obtenerDatosBasicosPosts($postsIds) {
     return $postsResultados;
 }
 
-function procesarContenidoPosts($postsResultados) {
+function procesarContenidoPosts($postsResultados)
+{
     $tiempoInicio = microtime(true);
     $postContenido = [];
     foreach ($postsResultados as $post) {
