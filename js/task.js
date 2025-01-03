@@ -198,11 +198,15 @@ function selectorTipoTarea() {
 }
 
 /*
-esto funciona bien pero, cada vez que se crea una tarea, supongo que se reinicia, cosa que no esta mal, pero, la tarea se duplica visualmente por cada reinicio o mejor dichi por cada tarea creada
+mira, cuando duplica una tarea
+<li class="POST-tarea EDYQHV 468  draggable-element Pendiente" filtro="tarea" tipo-tarea="una vez" id-post="468" autor="1" draggable="true" sesion="pendiente" estado="Pendiente" data-submenu-initialized="true" data-seccion="General">
+
+tiene que tomar la sesion(no data-seccion) y estado y enviarlo al servidor de lo que copio
+
 */
 
 function crearTareaEnter() {
-    const contenedor = document.querySelector('.clase-tarea'); // Asumiendo que hay un contenedor para tus tareas
+    const contenedor = document.querySelector('.clase-tarea'); 
 
     contenedor.addEventListener('keydown', ev => {
         if (ev.target.classList.contains('tituloTarea') && ev.key === 'Enter' && ev.target.contentEditable === 'true') {
@@ -251,7 +255,7 @@ function crearTareaEnter() {
                 if (valorAntiguo !== valorNuevo && valorNuevo !== '') {
                     titulo.contentEditable = false;
                     titulo.removeAttribute('placeholder');
-                    const dat = { id: 0, titulo: valorNuevo };
+                    const dat = {id: 0, titulo: valorNuevo};
 
                     enviarAjax('modificarTarea', dat)
                         .then(rta => {
@@ -289,49 +293,6 @@ function crearTareaEnter() {
                 }, 100);
             });
         }
-    });
-}
-
-function borrarTareaVacia() {
-    const tareas = document.querySelectorAll('.tituloTarea');
-
-    tareas.forEach(tarea => {
-        let borrar = false;
-
-        tarea.addEventListener('keydown', ev => {
-            if (ev.key === 'Backspace' && tarea.textContent.trim() === '') {
-                if (borrar) {
-                    const id = tarea.dataset.tarea;
-                    const tareaCompleta = tarea.closest('.POST-tarea');
-
-                    // Eliminar event listeners antes de remover la tarea
-                    tarea.removeEventListener('input', tarea.onInput);
-                    tarea.removeEventListener('blur', tarea.onBlur);
-                    tarea.removeEventListener('paste', tarea.onPaste);
-
-                    tareaCompleta.remove();
-
-                    let log = 'Se borró la tarea con ID: ' + id;
-
-                    const data = {
-                        id: id
-                    };
-                    enviarAjax('borrarTarea', data)
-                        .then(resp => {
-                            log += ', \n  Respuesta recibida: ' + resp;
-                            console.log(log);
-                        })
-                        .catch(error => {
-                            log += ', \n  Error: ' + error;
-                            console.error(log);
-                        });
-                } else {
-                    borrar = true;
-                }
-            } else {
-                borrar = false;
-            }
-        });
     });
 }
 
@@ -432,6 +393,50 @@ function guardarEdicion(t, id, valorAnt) {
         t.style.boxShadow = 'none';
     }
 }
+
+function borrarTareaVacia() {
+    const tareas = document.querySelectorAll('.tituloTarea');
+
+    tareas.forEach(tarea => {
+        let borrar = false;
+
+        tarea.addEventListener('keydown', ev => {
+            if (ev.key === 'Backspace' && tarea.textContent.trim() === '') {
+                if (borrar) {
+                    const id = tarea.dataset.tarea;
+                    const tareaCompleta = tarea.closest('.POST-tarea');
+
+                    // Eliminar event listeners antes de remover la tarea
+                    tarea.removeEventListener('input', tarea.onInput);
+                    tarea.removeEventListener('blur', tarea.onBlur);
+                    tarea.removeEventListener('paste', tarea.onPaste);
+
+                    tareaCompleta.remove();
+
+                    let log = 'Se borró la tarea con ID: ' + id;
+
+                    const data = {
+                        id: id
+                    };
+                    enviarAjax('borrarTarea', data)
+                        .then(resp => {
+                            log += ', \n  Respuesta recibida: ' + resp;
+                            console.log(log);
+                        })
+                        .catch(error => {
+                            log += ', \n  Error: ' + error;
+                            console.error(log);
+                        });
+                } else {
+                    borrar = true;
+                }
+            } else {
+                borrar = false;
+            }
+        });
+    });
+}
+
 function calcularPosicionCursor(ev, el) {
     const sel = window.getSelection();
     sel.removeAllRanges();
