@@ -105,7 +105,7 @@ fn ejecutar_consulta(
 
     let sql_meta = format!(
         "SELECT post_id, meta_key, meta_value
-         FROM wp_postmeta
+         FROM wpsg_postmeta
          WHERE meta_key IN ({}) AND post_id IN ({})",
         meta_keys_placeholders, placeholders
     );
