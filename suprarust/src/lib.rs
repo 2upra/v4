@@ -1,5 +1,57 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
+use mysql_async::prelude::*;
+use mysql_async::{Pool, Error as MySqlError};
+use lazy_static::lazy_static;
+use std::env;
+use dotenv::dotenv;
+use tokio::runtime::Runtime;
+use std::sync::Arc;
+
+lazy_static! {
+    static ref MYSQL_POOL: Arc<Pool> = {
+        dotenv().ok();
+
+        let db_user = env::var("DB_USER").expect("Variable DB_USER no encontrada en .env");
+        let db_password = env::var("DB_PASSWORD").expect("Variable DB_PASSWORD no encontrada en .env");
+        let db_host = env::var("DB_HOST").expect("Variable DB_HOST no encontrada en .env");
+        let db_name = env::var("DB_NAME").expect("Variable DB_NAME no encontrada en .env");
+        let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string());
+
+        let url = format!(
+            "mysql://{}:{}@{}:{}/{}",
+            db_user, db_password, db_host, db_port, db_name
+        );
+
+        Arc::new(Pool::new(url.as_str()))
+    };
+}
+
+#[php_function]
+pub fn conectar_bd() -> String {
+    let pool = MYSQL_POOL.clone();
+    let mut log = String::new();
+
+    let rt = Runtime::new().unwrap();
+    let result = rt.block_on(async {
+        match pool.get_conn().await {
+            Ok(_) => "Conexión exitosa a la base de datos.".to_string(),
+            Err(err) => format!("Error al conectar a la base de datos: {}", err),
+        }
+    });
+
+    log.push_str(&result);
+    log
+}
+
+#[php_module]
+pub fn module(module: ModuleBuilder) -> ModuleBuilder {
+    module
+}
+
+
+/* #![cfg_attr(windows, feature(abi_vectorcall))]
+use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
 use mysql_async::prelude::*;
 use mysql_async::{Pool, Row, Error as MySqlError};
@@ -57,7 +109,7 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String>
             result_map.insert("meta_data".to_string(), meta_data_map.into_zval(false).unwrap());
 
             result_map.insert("logs".to_string(), logs.into_zval(false).unwrap());
-            
+
             Ok(result_map.into_zval(false).unwrap())
         },
         Err(err) => Err(err),
@@ -80,8 +132,8 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
     let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
     let sql_meta = format!(
-        "SELECT post_id, meta_key, meta_value 
-         FROM wp_postmeta 
+        "SELECT post_id, meta_key, meta_value
+         FROM wp_postmeta
          WHERE meta_key IN ({}) AND post_id IN ({})",
         meta_keys_placeholders, placeholders
     );
@@ -142,3 +194,5 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
 pub fn module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
+
+    */

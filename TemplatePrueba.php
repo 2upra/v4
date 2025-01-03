@@ -44,18 +44,12 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                 <div class="tab INICIO S4K7I3" id="Comentario">
                     <div class="bloque">
                         <?php
-                        // Verifica si las funciones de la extensión están disponibles
-                        if (function_exists('calcular_suma') && function_exists('calcular_multiplicacion') && function_exists('operaciones_combinadas')) {
-                            // Llama a las funciones y muestra los resultados
-                            $suma = calcular_suma(5, 3);
-                            $multiplicacion = calcular_multiplicacion(4, 2);
-                            $combinadas = operaciones_combinadas(10);
-
-                            echo "<p>El resultado de la suma es: " . $suma . "</p>";
-                            echo "<p>El resultado de la multiplicación es: " . $multiplicacion . "</p>";
-                            echo "<p>" . $combinadas . "</p>";
+                        if (function_exists('conectar_bd')) {
+                            $resultado = conectar_bd();
+                            guardarLog("conectar_bd: " . $resultado);
+                            echo "<p>Resultado de la conexión a la base de datos: " . $resultado . "</p>";
                         } else {
-                            echo "<p>Las funciones de la extensión suprarust no están disponibles.</p>";
+                            echo "<p>La función conectar_bd de la extensión suprarust no está disponible.</p>";
                         }
                         ?>
                     </div>
