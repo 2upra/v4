@@ -1,11 +1,12 @@
+#![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
 use mysql_async::prelude::*;
-use mysql_async::{Pool, Row, Error as MySqlError, PooledConn};
+use mysql_async::{Pool, Error as MySqlError};
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use std::env;
 use dotenv::dotenv;
-use tokio;
+use tokio::runtime::{Runtime, Handle};
 use std::sync::Arc;
 
 lazy_static! {
@@ -27,58 +28,38 @@ lazy_static! {
     };
 }
 
-fn get_wpdb_pool() -> Result<PooledConn, MySqlError> {
-    MYSQL_POOL.get_conn() // Ahora MYSQL_POOL está en el alcance
-}
-
 #[php_function]
 pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<String, HashMap<String, String>>>, String> {
-    let pool_clone = MYSQL_POOL.clone(); // Ahora MYSQL_POOL está en el alcance
+    let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
+    // Crear un nuevo runtime de Tokio o usar uno existente
+    let rt = match Handle::try_current() {
+        Ok(handle) => {
+            // Si ya hay un runtime en el thread actual, úsalo
+            None
+        },
+        Err(_) => {
+            // Si no hay un runtime, crea uno nuevo
+            Some(Runtime::new().unwrap())
+        }
+    };
+
+    // Referencia al runtime, para usarla dentro del closure
+    let rt_ref = rt.as_ref();
+
     let meta_data_result = std::thread::spawn(move || {
-        // Usar el runtime de tokio para ejecutar código asíncrono
-        tokio::runtime::Runtime::new().unwrap().block_on(async {
-            let mut conn = match pool_clone.get_conn().await {
-                Ok(conn) => conn,
-                Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al obtener la conexión: {}", err)),
-            };
-
-            let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-            let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-
-            let sql_meta = format!(
-                "SELECT post_id, meta_key, meta_value 
-                 FROM wp_postmeta 
-                 WHERE meta_key IN ({}) AND post_id IN ({})",
-                meta_keys_placeholders, placeholders
-            );
-
-            let params = meta_keys
-                .iter()
-                .map(|s| s.to_string())
-                .chain(posts_ids.iter().map(|id| id.to_string()))
-                .collect::<Vec<String>>();
-
-            let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
-                Ok(result) => result,
-                Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al ejecutar la consulta: {}", err)),
-            };
-
-            let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
-            for row in meta_resultados {
-                let post_id: i64 = row.get("post_id").unwrap();
-                let meta_key: String = row.get("meta_key").unwrap();
-                let meta_value: String = row.get("meta_value").unwrap();
-
-                meta_data
-                    .entry(post_id)
-                    .or_insert_with(HashMap::new)
-                    .insert(meta_key, meta_value);
-            }
-
-            Ok(meta_data)
-        })
+        // Utilizar el runtime de tokio para ejecutar código asíncrono
+        let result = if let Some(rt) = rt_ref {
+            // Si se creó un nuevo runtime, ejecutar el código asíncrono dentro de él
+            rt.block_on(async { ejecutar_consulta(pool_clone, posts_ids, meta_keys).await })
+        } else {
+            // Si se está usando un runtime existente, ejecutar el código asíncrono dentro de él
+            tokio::task::block_in_place(|| {
+                Handle::current().block_on(async { ejecutar_consulta(pool_clone, posts_ids, meta_keys).await })
+            })
+        };
+        result
     }).join().unwrap();
 
     match meta_data_result {
@@ -95,11 +76,52 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
     }
 }
 
+async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> Result<HashMap<i64, HashMap<String, String>>, String> {
+    let mut conn = match pool_clone.get_conn().await {
+        Ok(conn) => conn,
+        Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al obtener la conexión: {}", err)),
+    };
+
+    let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+    let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+
+    let sql_meta = format!(
+        "SELECT post_id, meta_key, meta_value 
+         FROM wp_postmeta 
+         WHERE meta_key IN ({}) AND post_id IN ({})",
+        meta_keys_placeholders, placeholders
+    );
+
+    let params = meta_keys
+        .iter()
+        .map(|s| s.to_string())
+        .chain(posts_ids.iter().map(|id| id.to_string()))
+        .collect::<Vec<String>>();
+
+    let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
+        Ok(result) => result,
+        Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al ejecutar la consulta: {}", err)),
+    };
+
+    let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
+    for row in meta_resultados {
+        let post_id: i64 = row.get("post_id").unwrap();
+        let meta_key: String = row.get("meta_key").unwrap();
+        let meta_value: String = row.get("meta_value").unwrap();
+
+        meta_data
+            .entry(post_id)
+            .or_insert_with(HashMap::new)
+            .insert(meta_key, meta_value);
+    }
+
+    Ok(meta_data)
+}
+
 #[php_module]
 pub fn module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
-
 
 /*
 
