@@ -8,10 +8,8 @@ use mysql::*;
 use std::collections::HashMap;
 use std::env;
 use std::path::Path;
-use once_cell::sync::Lazy;
 
-// Crear un pool de conexiones estático y global con Lazy
-static GLOBAL_POOL: Lazy<Result<Pool, String>> = Lazy::new(|| {
+fn get_db_pool() -> Result<Pool, String> {
     let project_dir = "/var/www/wordpress/wp-content/themes/2upra3v/suprarust";
     let env_path = Path::new(project_dir).join(".env");
     dotenv::from_path(&env_path).map_err(|e| format!("Error al cargar el archivo .env: {}", e))?;
@@ -32,12 +30,11 @@ static GLOBAL_POOL: Lazy<Result<Pool, String>> = Lazy::new(|| {
     );
 
     Pool::new(url.as_str()).map_err(|e| format!("Error al crear el pool de conexiones: {}", e))
-});
+}
 
 #[php_function]
 pub fn conectar_bd_sin_lazy_static() -> String {
-    // Usar el pool global
-    match &*GLOBAL_POOL {
+    match get_db_pool() {
         Ok(pool) => match pool.get_conn() {
             Ok(mut conn) => match conn.query_drop("SELECT 1") {
                 Ok(_) => "Conexión exitosa a la base de datos.".to_string(),
@@ -45,25 +42,24 @@ pub fn conectar_bd_sin_lazy_static() -> String {
             },
             Err(err) => format!("Error al obtener conexión del pool: {}", err),
         },
-        Err(err) => err.clone(),
+        Err(err) => err,
     }
 }
 
 #[php_function]
 pub fn solo_conectar_bd() -> String {
-    // Usar el pool global
-    match &*GLOBAL_POOL {
+    match get_db_pool() {
         Ok(_) => "Pool de conexiones creado con éxito.".to_string(),
-        Err(err) => err.clone(),
+        Err(err) => err,
     }
 }
 
+// Nueva función que recibe la conexión como parámetro
 fn obtener_metadatos_posts_rust(
     conn: &mut PooledConn,
     posts_ids: Vec<i64>,
 ) -> Result<Zval, String> {
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
-
     let (meta_data, logs) = match ejecutar_consulta(conn, posts_ids, meta_keys) {
         Ok((meta_data, logs)) => (meta_data, logs),
         Err(err) => return Err(err),
@@ -88,12 +84,12 @@ fn obtener_metadatos_posts_rust(
     Ok(res_map.into_zval(false).unwrap())
 }
 
+// Función que obtiene la conexión y llama a obtener_metadatos_posts_rust
 #[php_function]
 pub fn obtener_metadatos_con_conexion(posts_ids: Vec<i64>) -> Result<Zval, String> {
-    // Usar el pool global
-    let pool = match &*GLOBAL_POOL {
+    let pool = match get_db_pool() {
         Ok(pool) => pool,
-        Err(err) => return Err(err.clone()),
+        Err(err) => return Err(err),
     };
 
     let mut conn = match pool.get_conn() {
@@ -111,7 +107,6 @@ fn ejecutar_consulta(
 ) -> Result<(HashMap<i64, HashMap<String, String>>, Vec<String>), String> {
     let mut logs = Vec::new();
 
-    // Usar declaración preparada para evitar inyección SQL y mejorar el rendimiento
     let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
     let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
@@ -122,18 +117,15 @@ fn ejecutar_consulta(
         meta_keys_placeholders, placeholders
     );
 
-    // Crear un solo vector de parámetros
-    let params: Vec<Value> = meta_keys
+    let params_vec: Vec<String> = meta_keys
         .iter()
-        .map(|s| s.to_string().into())
-        .chain(posts_ids.iter().map(|id| (*id).into()))
+        .map(|s| s.to_string())
+        .chain(posts_ids.iter().map(|id| id.to_string()))
         .collect();
 
-    // Ejecutar la consulta preparada usando prep_exec
-    let meta_resultados: Result<Vec<Row>, mysql::Error> = conn.prep_exec(sql_meta, params)
-    .map(|result| {
-        result.map(|row| row.unwrap()).collect()
-    });
+    let params: Vec<&str> = params_vec.iter().map(|s| s.as_str()).collect();
+
+    let meta_resultados: Result<Vec<Row>, mysql::Error> = conn.exec(sql_meta, params);
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
 
@@ -154,7 +146,6 @@ fn ejecutar_consulta(
             return Err(format!("[ejecutar_consulta] Error en la consulta: {}", err));
         }
     }
-
     Ok((meta_data, logs))
 }
 
