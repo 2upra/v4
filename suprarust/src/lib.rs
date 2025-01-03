@@ -54,20 +54,13 @@ pub fn solo_conectar_bd() -> String {
     }
 }
 
-#[php_function]
-pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String> {
-    let pool = match get_db_pool() {
-        Ok(pool) => pool,
-        Err(err) => return Err(err),
-    };
-
-    let mut conn = match pool.get_conn() {
-        Ok(conn) => conn,
-        Err(err) => return Err(format!("Error al obtener la conexión: {}", err)),
-    };
-
+// Nueva función que recibe la conexión como parámetro
+fn obtener_metadatos_posts_rust(
+    conn: &mut PooledConn,
+    posts_ids: Vec<i64>,
+) -> Result<Zval, String> {
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
-    let (meta_data, logs) = match ejecutar_consulta(&mut conn, posts_ids, meta_keys) {
+    let (meta_data, logs) = match ejecutar_consulta(conn, posts_ids, meta_keys) {
         Ok((meta_data, logs)) => (meta_data, logs),
         Err(err) => return Err(err),
     };
@@ -89,6 +82,22 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String>
     res_map.insert("logs".to_string(), logs.into_zval(false).unwrap());
 
     Ok(res_map.into_zval(false).unwrap())
+}
+
+// Función que obtiene la conexión y llama a obtener_metadatos_posts_rust
+#[php_function]
+pub fn obtener_metadatos_con_conexion(posts_ids: Vec<i64>) -> Result<Zval, String> {
+    let pool = match get_db_pool() {
+        Ok(pool) => pool,
+        Err(err) => return Err(err),
+    };
+
+    let mut conn = match pool.get_conn() {
+        Ok(conn) => conn,
+        Err(err) => return Err(format!("Error al obtener la conexión: {}", err)),
+    };
+
+    obtener_metadatos_posts_rust(&mut conn, posts_ids)
 }
 
 fn ejecutar_consulta(
