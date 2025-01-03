@@ -117,29 +117,34 @@ fn ejecutar_consulta(
         meta_keys_placeholders, placeholders
     );
 
-    let params_vec: Vec<String> = meta_keys
+    let params_vec: Vec<GenericValue> = meta_keys
         .iter()
-        .map(|s| s.to_string())
-        .chain(posts_ids.iter().map(|id| id.to_string()))
+        .map(|s| GenericValue::from(*s))
+        .chain(posts_ids.iter().map(|id| GenericValue::from(*id)))
         .collect();
 
-    let params: Vec<&str> = params_vec.iter().map(|s| s.as_str()).collect();
-
-    let meta_resultados: Result<Vec<Row>, mysql::Error> = conn.exec(sql_meta, params);
+    let meta_resultados: Result<Vec<Row>, mysql::Error> = conn.exec_iter(sql_meta, params_vec).collect();
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
 
     match meta_resultados {
         Ok(rows) => {
-            for row in rows.into_iter() {
-                let post_id: i64 = row.get("post_id").unwrap_or(0);
-                let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
-                let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
+            for row_result in rows {
+                match row_result {
+                    Ok(row) => {
+                        let post_id: i64 = row.get("post_id").unwrap_or(0);
+                        let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
+                        let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
 
-                meta_data
-                    .entry(post_id)
-                    .or_insert_with(HashMap::new)
-                    .insert(meta_key, meta_value);
+                        meta_data
+                            .entry(post_id)
+                            .or_insert_with(HashMap::new)
+                            .insert(meta_key, meta_value);
+                    }
+                    Err(e) => {
+                        logs.push(format!("Error al procesar una fila: {}", e));
+                    }
+                }
             }
         }
         Err(err) => {
