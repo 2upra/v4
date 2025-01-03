@@ -120,8 +120,8 @@ fn ejecutar_consulta(
 
     let params_vec: Vec<GenericValue> = meta_keys
         .iter()
-        .map(|s| GenericValue::Text(s.to_string()))
-        .chain(posts_ids.iter().map(|id| GenericValue::Int((*id).into())))
+        .map(GenericValue::from)
+        .chain(posts_ids.iter().map(|id| GenericValue::from(*id)))
         .collect();
 
     let meta_resultados = conn.exec_iter(sql_meta, params_vec);
