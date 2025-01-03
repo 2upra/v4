@@ -92,7 +92,7 @@ fn ejecutar_consulta(
     let mut conn = match pool.get_conn() {
         Ok(conn) => conn,
         Err(err) => {
-            logs.push(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err));
+            // logs.push(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err));
             return Err(format!(
                 "[ejecutar_consulta] Error al obtener la conexión: {}",
                 err
@@ -100,17 +100,16 @@ fn ejecutar_consulta(
         }
     };
 
-    // Solo se registran los logs de conexión, placeholders y consulta SQL
-    logs.push("[ejecutar_consulta] Conexión a la base de datos establecida.".to_string());
+    // logs.push("[ejecutar_consulta] Conexión a la base de datos establecida.".to_string());
 
     let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-    logs.push(format!("[ejecutar_consulta] Placeholders para post_ids: {}", placeholders));
+    // logs.push(format!("[ejecutar_consulta] Placeholders para post_ids: {}", placeholders));
 
     let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-    logs.push(format!(
-        "[ejecutar_consulta] Placeholders para meta_keys: {}",
-        meta_keys_placeholders
-    ));
+    // logs.push(format!(
+    //     "[ejecutar_consulta] Placeholders para meta_keys: {}",
+    //     meta_keys_placeholders
+    // ));
 
     let sql_meta = format!(
         "SELECT post_id, meta_key, meta_value
@@ -118,16 +117,17 @@ fn ejecutar_consulta(
          WHERE meta_key IN ({}) AND post_id IN ({})",
         meta_keys_placeholders, placeholders
     );
-    logs.push(format!("[ejecutar_consulta] Consulta SQL: {}", sql_meta));
+    // logs.push(format!("[ejecutar_consulta] Consulta SQL: {}", sql_meta));
 
     let params_vec: Vec<String> = meta_keys
         .iter()
         .map(|s| s.to_string())
         .chain(posts_ids.iter().map(|id| id.to_string()))
         .collect();
+    // logs.push(format!("[ejecutar_consulta] Parámetros (como strings): {:?}", params_vec));
 
     let params: Vec<&str> = params_vec.iter().map(|s| s.as_str()).collect();
-    // Se elimina el log de los parámetros
+    // logs.push(format!("[ejecutar_consulta] Parámetros (como &str): {:?}", params));
 
     let meta_resultados: Result<Vec<Row>, mysql::Error> =
         conn.exec(sql_meta, params);
@@ -137,20 +137,34 @@ fn ejecutar_consulta(
     match meta_resultados {
         Ok(rows) => {
             // logs.push(format!("[ejecutar_consulta] Consulta ejecutada con éxito. Filas obtenidas: {}", rows.len()));
-            for row in rows.into_iter() {
-                // Se eliminan los logs dentro del bucle for
-                let post_id: i64 = row.get("post_id").unwrap_or_else(|| {
-                    logs.push("[ejecutar_consulta] Fila sin post_id".to_string());
-                    0 // Valor predeterminado en caso de que no haya post_id
-                });
-                let meta_key: String = row.get("meta_key").unwrap_or_else(|| {
-                    logs.push("[ejecutar_consulta] Fila sin meta_key".to_string());
-                    "".to_string() // Valor predeterminado en caso de que no haya meta_key
-                });
-                let meta_value: String = row.get("meta_value").unwrap_or_else(|| {
-                    logs.push("[ejecutar_consulta] Fila sin meta_value".to_string());
-                    "".to_string() // Valor predeterminado en caso de que no haya meta_value
-                });
+            for (i, row) in rows.into_iter().enumerate() {
+                // logs.push(format!("[ejecutar_consulta] Procesando fila {}: {:?}", i, row));
+                let post_id: i64 = match row.get("post_id") {
+                    Some(v) => v,
+                    None => {
+                        // logs.push(format!("[ejecutar_consulta] Fila {} sin post_id", i));
+                        continue;
+                    }
+                };
+                let meta_key: String = match row.get("meta_key") {
+                    Some(v) => v,
+                    None => {
+                        // logs.push(format!("[ejecutar_consulta] Fila {} sin meta_key", i));
+                        continue;
+                    }
+                };
+                let meta_value: String = match row.get("meta_value") {
+                    Some(v) => v,
+                    None => {
+                        // logs.push(format!("[ejecutar_consulta] Fila {} sin meta_value", i));
+                        continue;
+                    }
+                };
+
+                // logs.push(format!(
+                //     "[ejecutar_consulta] Fila {}: post_id={}, meta_key={}, meta_value={}",
+                //     i, post_id, meta_key, meta_value
+                // ));
 
                 meta_data
                     .entry(post_id)
@@ -159,11 +173,11 @@ fn ejecutar_consulta(
             }
         },
         Err(err) => {
-            logs.push(format!("[ejecutar_consulta] Error en la consulta: {}", err));
+            // logs.push(format!("[ejecutar_consulta] Error en la consulta: {}", err));
             return Err(format!("[ejecutar_consulta] Error en la consulta: {}", err));
         }
     }
-    logs.push("[ejecutar_consulta] Fin de la función ejecutar_consulta".to_string());
+    // logs.push("[ejecutar_consulta] Fin de la función ejecutar_consulta".to_string());
     Ok((meta_data, logs))
 }
 
