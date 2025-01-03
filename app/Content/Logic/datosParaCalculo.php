@@ -1,23 +1,20 @@
 <?
 
 /*
-3.9 segundos
 2.5 segundos
 */
 
 function obtenerDatosFeed($userId)
 {
+    rendimientolog("[obtenerDatosFeed] Inicio de la función para el usuario ID: " . $userId);
     $tiempoInicio = microtime(true);
-    $log = "[obtenerDatosFeed] Inicio de la función para el usuario ID: $userId. \n";
 
     try {
-        /*if (!comprobarConexionBD()) {
-            $log .= "[obtenerDatosFeed] Error: No se pudo conectar a la base de datos. \n";
-            return []; 
-        }*/
+        if (!comprobarConexionBD()) {
+            return [];
+        }
 
         if (!validarUsuario($userId)) {
-            $log .= "[obtenerDatosFeed] Error: Usuario no válido ($userId). \n";
             return [];
         }
 
@@ -25,36 +22,25 @@ function obtenerDatosFeed($userId)
         $intereses = obtenerInteresesUsuario($userId);
         $vistas = vistasDatos($userId);
         generarMetaDeIntereses($userId);
-        $log .= "[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos. \n";
+        rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos");
 
         $postsIds = obtenerIdsPostsRecientes();
         if (empty($postsIds)) {
-            $log .= "[obtenerDatosFeed] Aviso: No se encontraron posts en los últimos 365 días. \n";
+            guardarLog("[obtenerDatosFeed] Aviso: No se encontraron posts en los últimos 365 días");
             rendimientolog("[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos");
             return [];
         }
 
-        $resultadoRust = obtener_metadatos_con_conexion($postsIds);
-
-        if (isset($resultadoRust['error'])) {
-            $log .= "[obtenerDatosFeed] Error en la extensión Rust: " . $resultadoRust['error'] . " \n";
-        }
-
-        $metaData = $resultadoRust['meta_data'] ?? [];
-        $logsRust = $resultadoRust['logs'] ?? [];
-
-        foreach ($logsRust as $logEntry) {
-            $log .= "[obtenerDatosFeed] Log desde Rust: $logEntry \n";
-        }
-
+        $metaData = obtenerMetadatosPosts($postsIds);
         $metaRoles = procesarMetadatosRoles($metaData);
         $likesPorPost = obtenerLikesPorPost($postsIds);
         $postsResultados = obtenerDatosBasicosPosts($postsIds);
         $postContenido = procesarContenidoPosts($postsResultados);
 
         $tiempoFin = microtime(true);
-        $log .= "[obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: " . ($tiempoFin - $tiempoInicio) . " segundos. \n";
-        guardarLog($log);
+        $tiempoTotal = $tiempoFin - $tiempoInicio;
+        rendimientolog("[obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: " . $tiempoTotal . " segundos");
+
         return [
             'siguiendo'        => $siguiendo,
             'interesesUsuario' => $intereses,
@@ -66,12 +52,12 @@ function obtenerDatosFeed($userId)
             'post_content'     => $postContenido,
         ];
     } catch (Exception $e) {
-        $log .= "[obtenerDatosFeed] Error crítico: " . $e->getMessage() . " \n";
-        guardarLog($log);
+        guardarLog("[obtenerDatosFeed] Error crítico: " . $e->getMessage());
         rendimientolog("[obtenerDatosFeed] Terminó con error crítico (Exception) en " . (microtime(true) - $tiempoInicio) . " segundos");
         return [];
     }
 }
+
 function obtenerUsuariosSeguidos($userId)
 {
     $tiempoInicio = microtime(true);
@@ -93,6 +79,7 @@ function obtenerUsuariosSeguidos($userId)
     } else {
 
         $siguiendo = maybe_unserialize($siguiendo[0]);
+        //si no es un array devolver un array vacio
         $siguiendo = is_array($siguiendo) ? $siguiendo : [];
     }
 
@@ -166,33 +153,44 @@ function obtenerIdsPostsRecientes()
     return $postsIds;
 }
 
+//usa function guardarCache($cacheKey, $data, $exp) y function obtenerCache($cacheKey) aca
 function obtenerMetadatosPosts($postsIds)
 {
     global $wpdb;
     $tiempoInicio = microtime(true);
+    $log = "[obtenerMetadatosPosts] ";
 
-    $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
     $metaKeys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan'];
-    $metaKeysPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
-
-    $sqlMeta = "
-        SELECT post_id, meta_key, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key IN ($metaKeysPlaceholders) AND post_id IN ($placeholders)
-    ";
-    $preparedSqlMeta = $wpdb->prepare($sqlMeta, array_merge($metaKeys, $postsIds));
-    $metaResultados = $wpdb->get_results($preparedSqlMeta);
-
-    if ($wpdb->last_error) {
-        guardarLog("[obtenerMetadatosPosts] Error: Fallo al obtener metadata: " . $wpdb->last_error);
-    }
-    rendimientolog("[obtenerMetadatosPosts] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
-
     $metaData = [];
-    foreach ($metaResultados as $meta) {
-        $metaData[$meta->post_id][$meta->meta_key] = $meta->meta_value;
+
+    foreach ($postsIds as $postId) {
+        $cacheKey = 'post_metadata_' . $postId;
+        $cachedData = obtenerCache($cacheKey);
+
+        if ($cachedData !== false) {
+            $metaData[$postId] = $cachedData;
+            $log .= "Datos de caché encontrados para post_id: $postId. ";
+        } else {
+            $log .= "Datos de caché no encontrados para post_id: $postId. ";
+            $postMetaData = [];
+            foreach ($metaKeys as $metaKey) {
+                $metaValue = get_post_meta($postId, $metaKey, true);
+                if ($metaValue) {
+                    $postMetaData[$metaKey] = $metaValue;
+                }
+            }
+
+            if (!empty($postMetaData)) {
+                guardarCache($cacheKey, $postMetaData, 4 * HOUR_IN_SECONDS);
+                $log .= "Datos guardados en caché para post_id: $postId. ";
+                $metaData[$postId] = $postMetaData;
+            }
+        }
     }
-    rendimientolog("[obtenerMetadatosPosts] Tiempo para procesar \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    $tiempoTotal = microtime(true) - $tiempoInicio;
+    $log .= "\n Tiempo total de ejecución: $tiempoTotal segundos.";
+    guardarLog($log);
 
     return $metaData;
 }
