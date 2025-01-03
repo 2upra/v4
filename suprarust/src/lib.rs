@@ -1,12 +1,20 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
 use mysql::Pool;
-use mysql::prelude::Queryable; // Importa el trait Queryable aquí
+use mysql::prelude::Queryable;
 use std::env;
+use std::path::Path;
 use dotenv::dotenv;
 
 fn get_db_pool() -> Result<Pool, String> {
-    dotenv().ok();
+    // Obtén la ruta al directorio del proyecto.
+    let project_dir = "/var/www/wordpress/wp-content/themes/2upra3v/suprarust";
+
+    // Construye la ruta completa al archivo .env.
+    let env_path = Path::new(project_dir).join(".env");
+
+    // Carga las variables de entorno desde la ruta especificada.
+    dotenv::from_path(&env_path).map_err(|e| format!("Error al cargar el archivo .env: {}", e))?;
 
     let db_user = env::var("DB_USER").map_err(|_| "Variable DB_USER no encontrada en .env".to_string())?;
     let db_password = env::var("DB_PASSWORD").map_err(|_| "Variable DB_PASSWORD no encontrada en .env".to_string())?;
