@@ -11,10 +11,10 @@ function obtenerDatosFeed($userId)
     $log = "[obtenerDatosFeed] Inicio de la función para el usuario ID: $userId. \n";
 
     try {
-        if (!comprobarConexionBD()) {
+        /*if (!comprobarConexionBD()) {
             $log .= "[obtenerDatosFeed] Error: No se pudo conectar a la base de datos. \n";
-            return [];
-        }
+            return []; 
+        }*/
 
         if (!validarUsuario($userId)) {
             $log .= "[obtenerDatosFeed] Error: Usuario no válido ($userId). \n";
@@ -34,7 +34,7 @@ function obtenerDatosFeed($userId)
             return [];
         }
 
-        $resultadoRust = obtener_metadatos_posts_rust($postsIds);
+        $resultadoRust = obtener_metadatos_con_conexion($postsIds);
 
         if (isset($resultadoRust['error'])) {
             $log .= "[obtenerDatosFeed] Error en la extensión Rust: " . $resultadoRust['error'] . " \n";
