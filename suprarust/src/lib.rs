@@ -1,7 +1,7 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
 use mysql_async::prelude::*;
-use mysql_async::{Pool, Error as MySqlError};
+use mysql_async::{Pool, Row};
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 use std::env;
@@ -33,16 +33,10 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
     let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
-    // Crear un nuevo runtime de Tokio o usar uno existente
+    // Intentar obtener un handle al runtime actual, o crear uno nuevo si no existe.
     let rt = match Handle::try_current() {
-        Ok(handle) => {
-            // Si ya hay un runtime en el thread actual, úsalo
-            None
-        },
-        Err(_) => {
-            // Si no hay un runtime, crea uno nuevo
-            Some(Runtime::new().unwrap())
-        }
+        Ok(handle) => None, // Ya existe un runtime, no necesitamos crear uno nuevo.
+        Err(_) => Some(Runtime::new().unwrap()), // No hay un runtime, crear uno nuevo.
     };
 
     // Referencia al runtime, para usarla dentro del closure
