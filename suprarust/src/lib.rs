@@ -10,8 +10,8 @@ use ext_php_rs::types::Zval;
 use mysql::prelude::*;
 use mysql::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use serde_json;
+use std::collections::HashMap;
 use std::env;
 
 // Estructuras para los datos de los posts y likes
@@ -159,21 +159,21 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
-    // --- Corrección definitiva para 'vistas' ---
+    // --- Corrección para 'vistas' ---
     let vistas: Vec<i64> = conn.query_map(
-        format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
-        |meta_value: String| {
-            serde_json::from_str::<VistasData>(&meta_value)
-                .map(|vistas_data| vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect())
-                .unwrap_or_else(|err| {
-                    eprintln!("Error al deserializar vistas_posts: {}", err);
-                    vec![]
-                })
-        },
-    ).unwrap_or_else(|err| {
-        eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
-        vec![]
-    });
+    format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
+    |meta_value: String| {
+        serde_json::from_str::<VistasData>(&meta_value)
+            .map(|vistas_data| vistas_data.0.values().map(|vista| vista.count).collect())
+            .unwrap_or_else(|err| {
+                eprintln!("Error al deserializar vistas_posts: {}", err);
+                vec![]
+            })
+    },
+).unwrap_or_else(|err| {
+    eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
+    vec![]
+});
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365))
