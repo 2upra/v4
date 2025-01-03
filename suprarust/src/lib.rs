@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use std::env;
 use dotenv::dotenv;
-use tokio::runtime::{Runtime, Handle};
+use tokio::runtime::Runtime;
 use std::sync::Arc;
 
 lazy_static! {
@@ -33,28 +33,13 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
     let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
-    // Intentar obtener un handle al runtime actual, o crear uno nuevo si no existe.
-    let rt = match Handle::try_current() {
-        Ok(handle) => None, // Ya existe un runtime, no necesitamos crear uno nuevo.
-        Err(_) => Some(Runtime::new().unwrap()), // No hay un runtime, crear uno nuevo.
-    };
+    // Crear un nuevo runtime de Tokio.
+    let rt = Runtime::new().unwrap();
 
-    // Referencia al runtime, para usarla dentro del closure
-    let rt_ref = rt.as_ref();
-
-    let meta_data_result = std::thread::spawn(move || {
-        // Utilizar el runtime de tokio para ejecutar código asíncrono
-        let result = if let Some(rt) = rt_ref {
-            // Si se creó un nuevo runtime, ejecutar el código asíncrono dentro de él
-            rt.block_on(async { ejecutar_consulta(pool_clone, posts_ids, meta_keys).await })
-        } else {
-            // Si se está usando un runtime existente, ejecutar el código asíncrono dentro de él
-            tokio::task::block_in_place(|| {
-                Handle::current().block_on(async { ejecutar_consulta(pool_clone, posts_ids, meta_keys).await })
-            })
-        };
-        result
-    }).join().unwrap();
+    // Ejecutar el código asíncrono dentro del runtime.
+    let meta_data_result = rt.block_on(async {
+        ejecutar_consulta(pool_clone, posts_ids, meta_keys).await
+    });
 
     match meta_data_result {
         Ok(meta_data) => {
@@ -73,7 +58,7 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
 async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> Result<HashMap<i64, HashMap<String, String>>, String> {
     let mut conn = match pool_clone.get_conn().await {
         Ok(conn) => conn,
-        Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al obtener la conexión: {}", err)),
+        Err(err) => return Err(format!("[ejecutar_consulta] Error al obtener la conexión: {}", err)),
     };
 
     let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
@@ -94,7 +79,7 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
 
     let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
         Ok(result) => result,
-        Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al ejecutar la consulta: {}", err)),
+        Err(err) => return Err(format!("[ejecutar_consulta] Error al ejecutar la consulta: {}", err)),
     };
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
