@@ -129,7 +129,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     let siguiendo: Vec<i64> = conn
         .query_map(
             format!(
-                "SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'siguiendo'",
+                "SELECT meta_value FROM wpsg_usermeta WHERE user_id = {} AND meta_key = 'siguiendo'",
                 usu
             ),
             |meta_value: String| meta_value.parse().unwrap_or(0),
@@ -159,19 +159,9 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
-    // --- Obtener 'vistas' (deserializando datos serializados de PHP) ---
-    #[derive(Debug, Deserialize, Serialize)]
-    struct Vista {
-        count: i64,
-        last_view: i64,
-    }
-
-    #[derive(Debug, Deserialize, Serialize)]
-    struct VistasData(HashMap<i64, Vista>);
-
     // --- Corrección definitiva para 'vistas' ---
     let vistas: Vec<i64> = conn.query_map(
-    format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
+    format!("SELECT meta_value FROM wpsg_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
     |meta_value: String| {
         serde_json::from_str::<VistasData>(&meta_value)
             .map(|vistas_data| vistas_data.0.values().flat_map(|vista| vec![vista.count]).collect::<Vec<i64>>()) // Usar flat_map
@@ -192,7 +182,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     let postsIds: Vec<u64> = conn
         .query_map(
             format!(
-                "SELECT ID FROM wp_posts WHERE post_type = 'social_post' AND post_date > '{}'",
+                "SELECT ID FROM wpsg_posts WHERE post_type = 'social_post' AND post_date > '{}'",
                 fechaLimite
             ),
             |id: u64| id,
@@ -209,7 +199,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
                 .collect::<Vec<String>>()
                 .join(",");
             let metaRes: Vec<(u64, String, String)> = conn.query_map(
-                format!("SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id IN ({}) AND meta_key IN ('datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan')", postsIdsStr),
+                format!("SELECT post_id, meta_key, meta_value FROM wpsg_postmeta WHERE post_id IN ({}) AND meta_key IN ('datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan')", postsIdsStr),
                 |(post_id, meta_key, meta_value)| (post_id, meta_key, meta_value),
             ).unwrap_or_default();
 
@@ -238,7 +228,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
                 .collect::<Vec<String>>()
                 .join(",");
             let likesRes: Vec<(u64, String, u32)> = conn.query_map(
-                format!("SELECT post_id, like_type, COUNT(*) as cantidad FROM wp_post_likes WHERE post_id IN ({}) GROUP BY post_id, like_type", postsIdsStr),
+                format!("SELECT post_id, like_type, COUNT(*) as cantidad FROM wpsg_post_likes WHERE post_id IN ({}) GROUP BY post_id, like_type", postsIdsStr),
                 |(post_id, like_type, cantidad)| (post_id, like_type, cantidad),
             ).unwrap_or_default();
 
@@ -267,7 +257,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
             let postsRes: Vec<(u64, String)> = conn
                 .query_map(
                     format!(
-                        "SELECT ID, post_content FROM wp_posts WHERE ID IN ({})",
+                        "SELECT ID, post_content FROM wpsg_posts WHERE ID IN ({})",
                         postsIdsStr
                     ),
                     |(id, post_content)| (id, post_content),
