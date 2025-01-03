@@ -159,12 +159,22 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
-    // --- Corrección para 'vistas' ---
+    // --- Obtener 'vistas' (deserializando datos serializados de PHP) ---
+    #[derive(Debug, Deserialize, Serialize)]
+    struct Vista {
+        count: i64,
+        last_view: i64,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct VistasData(HashMap<i64, Vista>);
+
+    // --- Corrección definitiva para 'vistas' ---
     let vistas: Vec<i64> = conn.query_map(
     format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
     |meta_value: String| {
         serde_json::from_str::<VistasData>(&meta_value)
-            .map(|vistas_data| vistas_data.0.values().map(|vista| vista.count).collect())
+            .map(|vistas_data| vistas_data.0.values().flat_map(|vista| vec![vista.count]).collect::<Vec<i64>>()) // Usar flat_map
             .unwrap_or_else(|err| {
                 eprintln!("Error al deserializar vistas_posts: {}", err);
                 vec![]
