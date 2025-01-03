@@ -1,5 +1,6 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
+use ext_php_rs::types::Zval;
 use mysql_async::prelude::*;
 use mysql_async::{Pool, Row};
 use std::collections::HashMap;
@@ -29,7 +30,7 @@ lazy_static! {
 }
 
 #[php_function]
-pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<HashMap<String, PhpValue>, String> {
+pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<HashMap<String, Zval>, String> {
     let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
@@ -49,14 +50,14 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<HashMap<Strin
                 post_meta.insert(post_id.to_string(), meta_map);
                 result_vec.push(post_meta);
             }
-            final_result.insert("meta_data".to_string(), result_vec.into_php_value());
+            final_result.insert("meta_data".to_string(), result_vec.into_zval(false).unwrap());
         }
         Err(err) => {
-            final_result.insert("error".to_string(), err.into_php_value());
+            final_result.insert("error".to_string(), err.into_zval(false).unwrap());
         }
     }
 
-    final_result.insert("logs".to_string(), logs.into_php_value());
+    final_result.insert("logs".to_string(), logs.into_zval(false).unwrap());
 
     Ok(final_result)
 }
