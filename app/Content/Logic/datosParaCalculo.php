@@ -1,20 +1,7 @@
 <?
 
 /*
-date cuenta que la funcion que mas dura es obtenerUsuariosSeguidos, por que?, por favor, optimiza
-[03-Jan-2025 02:07:41 UTC] [obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': 2.5033950805664E-5 segundos
-[03-Jan-2025 02:07:41 UTC] [obtenerInteresesUsuario] Tiempo para obtener 'intereses': 0.0041661262512207 segundos
-[03-Jan-2025 02:07:41 UTC] [vistasDatos] Tiempo para obtener 'vistas': 0.00016307830810547 segundos
-[03-Jan-2025 02:07:42 UTC] [obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: 0.37098288536072 segundos
-[03-Jan-2025 02:07:42 UTC] [obtenerIdsPostsRecientes] Tiempo para obtener $postsIds: 0.13574695587158 segundos
-[03-Jan-2025 02:07:43 UTC] [obtenerMetadatosPosts] Tiempo para obtener $metaResultados: 1.2430272102356 segundos
-[03-Jan-2025 02:07:43 UTC] [obtenerMetadatosPosts] Tiempo para procesar $metaResultados: 1.2733039855957 segundos
-[03-Jan-2025 02:07:43 UTC] [procesarMetadatosRoles] Tiempo para procesar $metaRoles: 0.037637948989868 segundos
-[03-Jan-2025 02:07:43 UTC] [obtenerLikesPorPost] Tiempo para obtener $likesResultados: 0.11741900444031 segundos
-[03-Jan-2025 02:07:43 UTC] [obtenerLikesPorPost] Tiempo para procesar $likesPorPost: 0.1185359954834 segundos
-[03-Jan-2025 02:07:44 UTC] [obtenerDatosBasicosPosts] Tiempo para obtener $postsResultados: 0.51601195335388 segundos
-[03-Jan-2025 02:07:44 UTC] [procesarContenidoPosts] Tiempo para procesar $postContenido: 0.0042049884796143 segundos
-[03-Jan-2025 02:07:44 UTC] [obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: 2.4578440189362 segundos
+2.5 segundos
 */
 
 function obtenerDatosFeed($userId) {
@@ -43,7 +30,7 @@ function obtenerDatosFeed($userId) {
             return [];
         }
 
-        $metaData = obtenerMetadatosPosts($postsIds);
+        $metaData = obtener_metadatos_posts_rust($postsIds);
         $metaRoles = procesarMetadatosRoles($metaData);
         $likesPorPost = obtenerLikesPorPost($postsIds);
         $postsResultados = obtenerDatosBasicosPosts($postsIds);
@@ -74,7 +61,7 @@ function obtenerDatosFeed($userId) {
 function obtenerUsuariosSeguidos($userId) {
     $tiempoInicio = microtime(true);
 
-    // Intentamos obtener los seguidos de una sola consulta, en lugar de usar get_user_meta
+
     global $wpdb;
     $siguiendo = $wpdb->get_col(
         $wpdb->prepare(
@@ -87,11 +74,10 @@ function obtenerUsuariosSeguidos($userId) {
 
     if (empty($siguiendo)) {
         guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
-        $siguiendo = [];  // Retornar un array vacio en lugar de null/false
+        $siguiendo = [];  
     } else {
-      //Como meta_value es un string, hay que unserializarlo
+
       $siguiendo = maybe_unserialize($siguiendo[0]);
-      //si no es un array devolver un array vacio
       $siguiendo = is_array($siguiendo) ? $siguiendo : [];
     }
 
