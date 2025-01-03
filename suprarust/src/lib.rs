@@ -4,11 +4,10 @@ use mysql::Pool;
 use mysql::prelude::Queryable;
 use std::env;
 use std::path::Path;
-use dotenv::dotenv;
 use ext_php_rs::types::Zval;
 use std::collections::HashMap;
-use mysql::prelude::*;
 use mysql::*;
+use ext_php_rs::convert::IntoZval; // Importa el trait IntoZval
 
 fn get_db_pool() -> Result<Pool, String> {
     let project_dir = "/var/www/wordpress/wp-content/themes/2upra3v/suprarust";
