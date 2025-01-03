@@ -8,7 +8,7 @@ use mysql::*;
 use std::collections::HashMap;
 use std::env;
 use std::path::Path;
-use once_cell::sync::Lazy; // Importar once_cell
+use once_cell::sync::Lazy;
 
 // Crear un pool de conexiones estático y global con Lazy
 static GLOBAL_POOL: Lazy<Result<Pool, String>> = Lazy::new(|| {
@@ -122,12 +122,6 @@ fn ejecutar_consulta(
         meta_keys_placeholders, placeholders
     );
 
-    // Preparar la consulta
-    let mut stmt = match conn.prep(sql_meta) {
-        Ok(stmt) => stmt,
-        Err(err) => return Err(format!("[ejecutar_consulta] Error al preparar la consulta: {}", err)),
-    };
-
     // Crear un solo vector de parámetros
     let params: Vec<Value> = meta_keys
         .iter()
@@ -135,30 +129,25 @@ fn ejecutar_consulta(
         .chain(posts_ids.iter().map(|id| (*id).into()))
         .collect();
 
-    // Ejecutar la consulta preparada
-    let meta_resultados = stmt.exec_iter(params);
+    // Ejecutar la consulta preparada usando prep_exec
+    let meta_resultados: Result<Vec<Row>, mysql::Error> = conn.prep_exec(sql_meta, params)
+    .map(|result| {
+        result.map(|row| row.unwrap()).collect()
+    });
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
 
     match meta_resultados {
-        Ok(mut result) => {
-          let rows: Result<Vec<Row>, mysql::Error> = result.map(|row_result| row_result).collect();
-            match rows {
-                Ok(rows) => {
-                    for row in rows.into_iter() {
-                        let post_id: i64 = row.get("post_id").unwrap_or(0);
-                        let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
-                        let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
+        Ok(rows) => {
+            for row in rows.into_iter() {
+                let post_id: i64 = row.get("post_id").unwrap_or(0);
+                let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
+                let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
 
-                        meta_data
-                            .entry(post_id)
-                            .or_insert_with(HashMap::new)
-                            .insert(meta_key, meta_value);
-                    }
-                }
-                Err(err) => {
-                    return Err(format!("[ejecutar_consulta] Error en la consulta: {}", err));
-                }
+                meta_data
+                    .entry(post_id)
+                    .or_insert_with(HashMap::new)
+                    .insert(meta_key, meta_value);
             }
         }
         Err(err) => {
