@@ -1,13 +1,12 @@
-#![cfg_attr(windows, feature(abi_vectorcall))]
-
 use ext_php_rs::prelude::*;
 use mysql_async::prelude::*;
 use mysql_async::{Pool, Row, Error as MySqlError, PooledConn};
 use std::collections::HashMap;
-use std::sync::Arc;
 use lazy_static::lazy_static;
 use std::env;
 use dotenv::dotenv;
+use tokio;
+use std::sync::Arc;
 
 lazy_static! {
     static ref MYSQL_POOL: Arc<Pool> = {
@@ -29,12 +28,12 @@ lazy_static! {
 }
 
 fn get_wpdb_pool() -> Result<PooledConn, MySqlError> {
-    MYSQL_POOL.get_conn()
+    MYSQL_POOL.get_conn() // Ahora MYSQL_POOL está en el alcance
 }
 
 #[php_function]
 pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<String, HashMap<String, String>>>, String> {
-    let pool_clone = MYSQL_POOL.clone();
+    let pool_clone = MYSQL_POOL.clone(); // Ahora MYSQL_POOL está en el alcance
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
     let meta_data_result = std::thread::spawn(move || {
@@ -44,7 +43,7 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
                 Ok(conn) => conn,
                 Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al obtener la conexión: {}", err)),
             };
-            
+
             let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
             let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
@@ -77,7 +76,7 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
                     .or_insert_with(HashMap::new)
                     .insert(meta_key, meta_value);
             }
-            
+
             Ok(meta_data)
         })
     }).join().unwrap();
