@@ -277,7 +277,7 @@ function obtenerDatosBasicosPosts($postsIds) {
     $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
 
     $sqlPosts = "
-        SELECT ID, post_author, post_date
+        SELECT ID, post_author, post_date, post_content
         FROM {$wpdb->posts}
         WHERE ID IN ($placeholders)
     ";
@@ -290,6 +290,9 @@ function obtenerDatosBasicosPosts($postsIds) {
 
     return $postsResultados;
 }
+/*
+[03-Jan-2025 02:01:43 UTC] PHP Warning:  Undefined property: stdClass::$post_content in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Logic/datosParaCalculo.php on line 304
+*/
 
 /**
  * Procesa el contenido de los posts.
