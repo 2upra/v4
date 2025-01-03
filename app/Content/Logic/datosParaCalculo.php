@@ -1,12 +1,22 @@
 <?
 
+/*
+date cuenta que la funcion que mas dura es obtenerUsuariosSeguidos, por que?, por favor, optimiza
+[03-Jan-2025 02:07:41 UTC] [obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': 2.5033950805664E-5 segundos
+[03-Jan-2025 02:07:41 UTC] [obtenerInteresesUsuario] Tiempo para obtener 'intereses': 0.0041661262512207 segundos
+[03-Jan-2025 02:07:41 UTC] [vistasDatos] Tiempo para obtener 'vistas': 0.00016307830810547 segundos
+[03-Jan-2025 02:07:42 UTC] [obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: 0.37098288536072 segundos
+[03-Jan-2025 02:07:42 UTC] [obtenerIdsPostsRecientes] Tiempo para obtener $postsIds: 0.13574695587158 segundos
+[03-Jan-2025 02:07:43 UTC] [obtenerMetadatosPosts] Tiempo para obtener $metaResultados: 1.2430272102356 segundos
+[03-Jan-2025 02:07:43 UTC] [obtenerMetadatosPosts] Tiempo para procesar $metaResultados: 1.2733039855957 segundos
+[03-Jan-2025 02:07:43 UTC] [procesarMetadatosRoles] Tiempo para procesar $metaRoles: 0.037637948989868 segundos
+[03-Jan-2025 02:07:43 UTC] [obtenerLikesPorPost] Tiempo para obtener $likesResultados: 0.11741900444031 segundos
+[03-Jan-2025 02:07:43 UTC] [obtenerLikesPorPost] Tiempo para procesar $likesPorPost: 0.1185359954834 segundos
+[03-Jan-2025 02:07:44 UTC] [obtenerDatosBasicosPosts] Tiempo para obtener $postsResultados: 0.51601195335388 segundos
+[03-Jan-2025 02:07:44 UTC] [procesarContenidoPosts] Tiempo para procesar $postContenido: 0.0042049884796143 segundos
+[03-Jan-2025 02:07:44 UTC] [obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: 2.4578440189362 segundos
+*/
 
-/**
- * Función principal para obtener datos del feed.
- *
- * @param int $userId ID del usuario.
- * @return array Datos del feed.
- */
 function obtenerDatosFeed($userId) {
     rendimientolog("[obtenerDatosFeed] Inicio de la función para el usuario ID: " . $userId);
     $tiempoInicio = microtime(true);
@@ -61,11 +71,35 @@ function obtenerDatosFeed($userId) {
     }
 }
 
-/**
- * Comprueba la conexión a la base de datos.
- *
- * @return bool True si la conexión es exitosa, false en caso contrario.
- */
+function obtenerUsuariosSeguidos($userId) {
+    $tiempoInicio = microtime(true);
+
+    // Intentamos obtener los seguidos de una sola consulta, en lugar de usar get_user_meta
+    global $wpdb;
+    $siguiendo = $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT meta_value 
+             FROM {$wpdb->usermeta} 
+             WHERE user_id = %d AND meta_key = 'siguiendo'",
+            $userId
+        )
+    );
+
+    if (empty($siguiendo)) {
+        guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
+        $siguiendo = [];  // Retornar un array vacio en lugar de null/false
+    } else {
+      //Como meta_value es un string, hay que unserializarlo
+      $siguiendo = maybe_unserialize($siguiendo[0]);
+      //si no es un array devolver un array vacio
+      $siguiendo = is_array($siguiendo) ? $siguiendo : [];
+    }
+
+    rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $siguiendo;
+}
+
+
 function comprobarConexionBD() {
     global $wpdb;
     $tiempoInicio = microtime(true);
@@ -78,12 +112,6 @@ function comprobarConexionBD() {
     return true;
 }
 
-/**
- * Valida el ID del usuario.
- *
- * @param int $userId ID del usuario.
- * @return bool True si el ID es válido, false en caso contrario.
- */
 function validarUsuario($userId) {
     $tiempoInicio = microtime(true);
     if (!$userId) {
@@ -94,28 +122,6 @@ function validarUsuario($userId) {
     return true;
 }
 
-/**
- * Obtiene los usuarios seguidos por un usuario.
- *
- * @param int $userId ID del usuario.
- * @return array Usuarios seguidos.
- */
-function obtenerUsuariosSeguidos($userId) {
-    $tiempoInicio = microtime(true);
-    $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
-    if ($siguiendo === false) {
-        guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
-    }
-    rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
-    return $siguiendo;
-}
-
-/**
- * Obtiene los intereses de un usuario.
- *
- * @param int $userId ID del usuario.
- * @return array Intereses del usuario.
- */
 function obtenerInteresesUsuario($userId) {
     global $wpdb;
     $tiempoInicio = microtime(true);
@@ -131,12 +137,6 @@ function obtenerInteresesUsuario($userId) {
     return $intereses;
 }
 
-/**
- * Obtiene las vistas de los posts de un usuario.
- *
- * @param int $userId ID del usuario.
- * @return array Vistas de los posts.
- */
 function vistasDatos($userId) {
     $tiempoInicio = microtime(true);
     $vistas = get_user_meta($userId, 'vistas_posts', true);
@@ -144,11 +144,6 @@ function vistasDatos($userId) {
     return $vistas;
 }
 
-/**
- * Obtiene los IDs de los posts recientes.
- *
- * @return array IDs de los posts.
- */
 function obtenerIdsPostsRecientes() {
     $tiempoInicio = microtime(true);
     $args = [
@@ -165,12 +160,6 @@ function obtenerIdsPostsRecientes() {
     return $postsIds;
 }
 
-/**
- * Obtiene los metadatos de los posts.
- *
- * @param array $postsIds IDs de los posts.
- * @return array Metadatos de los posts.
- */
 function obtenerMetadatosPosts($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
@@ -201,12 +190,6 @@ function obtenerMetadatosPosts($postsIds) {
     return $metaData;
 }
 
-/**
- * Procesa los metadatos de roles (artista, fan).
- *
- * @param array $metaData Metadatos de los posts.
- * @return array Roles de los posts.
- */
 function procesarMetadatosRoles($metaData) {
     $tiempoInicio = microtime(true);
     $metaRoles = [];
@@ -220,12 +203,6 @@ function procesarMetadatosRoles($metaData) {
     return $metaRoles;
 }
 
-/**
- * Obtiene los likes por post.
- *
- * @param array $postsIds IDs de los posts.
- * @return array Likes por post.
- */
 function obtenerLikesPorPost($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
@@ -264,12 +241,7 @@ function obtenerLikesPorPost($postsIds) {
     return $likesPorPost;
 }
 
-/**
- * Obtiene los datos básicos de los posts (ID, autor, fecha).
- *
- * @param array $postsIds IDs de los posts.
- * @return array Datos básicos de los posts.
- */
+
 function obtenerDatosBasicosPosts($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
@@ -290,16 +262,7 @@ function obtenerDatosBasicosPosts($postsIds) {
 
     return $postsResultados;
 }
-/*
-[03-Jan-2025 02:01:43 UTC] PHP Warning:  Undefined property: stdClass::$post_content in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Logic/datosParaCalculo.php on line 304
-*/
 
-/**
- * Procesa el contenido de los posts.
- *
- * @param array $postsResultados Datos básicos de los posts.
- * @return array Contenido de los posts.
- */
 function procesarContenidoPosts($postsResultados) {
     $tiempoInicio = microtime(true);
     $postContenido = [];
@@ -309,10 +272,6 @@ function procesarContenidoPosts($postsResultados) {
     rendimientolog("[procesarContenidoPosts] Tiempo para procesar \$postContenido: " . (microtime(true) - $tiempoInicio) . " segundos");
     return $postContenido;
 }
-
-
-
-
 
 function obtenerDatosFeedConCache($userId)
 {
