@@ -41,7 +41,7 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String>
         ejecutar_consulta(pool_clone, posts_ids, meta_keys).await
     });
 
-    let mut final_result = HashMap::new();
+    let mut final_result: HashMap<String, Zval> = HashMap::new();
 
     match meta_data_result {
         Ok(meta_data) => {
@@ -51,16 +51,15 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String>
                 post_meta.insert(post_id.to_string(), meta_map);
                 result_vec.push(post_meta);
             }
-            final_result.insert("meta_data".to_string(), result_vec);
+            final_result.insert("meta_data".to_string(), result_vec.into_zval(false).unwrap());
         }
         Err(err) => {
-            final_result.insert("error".to_string(), err);
+            final_result.insert("error".to_string(), err.into_zval(false).unwrap());
         }
     }
 
-    final_result.insert("logs".to_string(), logs);
+    final_result.insert("logs".to_string(), logs.into_zval(false).unwrap());
 
-    // Convertir a Zval (PHP array) y devolver
     final_result.into_zval(false).map_err(|e| e.to_string())
 }
 
@@ -121,6 +120,7 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
 pub fn module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
+
 /*
 
 te muestro un codigo viejo que no funcionaba pero al menos copilaba
