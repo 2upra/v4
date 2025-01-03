@@ -9,6 +9,7 @@ use std::env;
 use dotenv::dotenv;
 use tokio::runtime::Runtime;
 use std::sync::Arc;
+use ext_php_rs::convert::IntoZval; // Import the IntoZval trait
 
 lazy_static! {
     static ref MYSQL_POOL: Arc<Pool> = {
