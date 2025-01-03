@@ -97,7 +97,7 @@ function obtenerUsuariosSeguidos($userId) {
       $siguiendo = is_array($siguiendo) ? $siguiendo : [];
     }
 
-    rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $siguiendo;
 }
 
@@ -108,7 +108,7 @@ function comprobarConexionBD() {
 
     if (!$wpdb) {
         //guardarLog("[comprobarConexionBD] Error crítico: No se pudo acceder a la base de datos wpdb");
-        rendimientolog("[comprobarConexionBD] Terminó con error crítico (sin acceso a \$wpdb) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        //rendimientolog("[comprobarConexionBD] Terminó con error crítico (sin acceso a \$wpdb) en " . (microtime(true) - $tiempoInicio) . " segundos");
         return false;
     }
     return true;
@@ -118,7 +118,7 @@ function validarUsuario($userId) {
     $tiempoInicio = microtime(true);
     if (!$userId) {
         //guardarLog("[validarUsuario] Error: ID de usuario no válido");
-        rendimientolog("[validarUsuario] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        //rendimientolog("[validarUsuario] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
         return false;
     }
     return true;
@@ -135,14 +135,14 @@ function obtenerInteresesUsuario($userId) {
     if ($wpdb->last_error) {
         //guardarLog("[obtenerInteresesUsuario] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
     }
-    rendimientolog("[obtenerInteresesUsuario] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerInteresesUsuario] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $intereses;
 }
 
 function vistasDatos($userId) {
     $tiempoInicio = microtime(true);
     $vistas = get_user_meta($userId, 'vistas_posts', true);
-    rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $vistas;
 }
 
@@ -158,7 +158,7 @@ function obtenerIdsPostsRecientes() {
         'no_found_rows'  => true,
     ];
     $postsIds = get_posts($args);
-    rendimientolog("[obtenerIdsPostsRecientes] Tiempo para obtener \$postsIds: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerIdsPostsRecientes] Tiempo para obtener \$postsIds: " . (microtime(true) - $tiempoInicio) . " segundos");
     return $postsIds;
 }
 
@@ -182,13 +182,13 @@ function obtenerMetadatosPosts($postsIds) {
     if ($wpdb->last_error) {
         //guardarLog("[obtenerMetadatosPosts] Error: Fallo al obtener metadata: " . $wpdb->last_error);
     }
-    rendimientolog("[obtenerMetadatosPosts] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerMetadatosPosts] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
     $metaData = [];
     foreach ($metaResultados as $meta) {
         $metaData[$meta->post_id][$meta->meta_key] = $meta->meta_value;
     }
-    rendimientolog("[obtenerMetadatosPosts] Tiempo para procesar \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerMetadatosPosts] Tiempo para procesar \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
     return $metaData;
 }
@@ -202,7 +202,7 @@ function procesarMetadatosRoles($metaData) {
             'fan'     => isset($meta['fan']) ? filter_var($meta['fan'], FILTER_VALIDATE_BOOLEAN) : false,
         ];
     }
-    rendimientolog("[procesarMetadatosRoles] Tiempo para procesar \$metaRoles: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[procesarMetadatosRoles] Tiempo para procesar \$metaRoles: " . (microtime(true) - $tiempoInicio) . " segundos");
     return $metaRoles;
 }
 
@@ -226,7 +226,7 @@ function obtenerLikesPorPost($postsIds) {
     if ($wpdb->last_error) {
         //guardarLog("[obtenerLikesPorPost] Error: Fallo al obtener likes: " . $wpdb->last_error);
     }
-    rendimientolog("[obtenerLikesPorPost] Tiempo para obtener \$likesResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerLikesPorPost] Tiempo para obtener \$likesResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
     $likesPorPost = [];
     foreach ($likesResultados as $like) {
@@ -239,7 +239,7 @@ function obtenerLikesPorPost($postsIds) {
         }
         $likesPorPost[$like->post_id][$like->like_type] = (int)$like->cantidad;
     }
-    rendimientolog("[obtenerLikesPorPost] Tiempo para procesar \$likesPorPost: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerLikesPorPost] Tiempo para procesar \$likesPorPost: " . (microtime(true) - $tiempoInicio) . " segundos");
 
     return $likesPorPost;
 }
@@ -261,7 +261,7 @@ function obtenerDatosBasicosPosts($postsIds) {
     if ($wpdb->last_error) {
         //guardarLog("[obtenerDatosBasicosPosts] Error: Fallo al obtener posts: " . $wpdb->last_error);
     }
-    rendimientolog("[obtenerDatosBasicosPosts] Tiempo para obtener \$postsResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[obtenerDatosBasicosPosts] Tiempo para obtener \$postsResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
     return $postsResultados;
 }
@@ -272,7 +272,7 @@ function procesarContenidoPosts($postsResultados) {
     foreach ($postsResultados as $post) {
         $postContenido[$post->ID] = $post->post_content;
     }
-    rendimientolog("[procesarContenidoPosts] Tiempo para procesar \$postContenido: " . (microtime(true) - $tiempoInicio) . " segundos");
+    //rendimientolog("[procesarContenidoPosts] Tiempo para procesar \$postContenido: " . (microtime(true) - $tiempoInicio) . " segundos");
     return $postContenido;
 }
 
