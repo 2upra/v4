@@ -1,8 +1,6 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 
 use ext_php_rs::prelude::*;
-use ext_php_rs::zend::ExecuteData;
-use ext_php_rs::types::{Zval, ZStr};
 use mysql_async::prelude::*;
 use mysql_async::{Pool, Row, Error as MySqlError, PooledConn};
 use std::collections::HashMap;
@@ -13,13 +11,13 @@ use dotenv::dotenv;
 
 lazy_static! {
     static ref MYSQL_POOL: Arc<Pool> = {
-        dotenv().ok(); // Carga las variables de entorno desde .env
+        dotenv().ok();
 
         let db_user = env::var("DB_USER").expect("Variable DB_USER no encontrada en .env");
         let db_password = env::var("DB_PASSWORD").expect("Variable DB_PASSWORD no encontrada en .env");
         let db_host = env::var("DB_HOST").expect("Variable DB_HOST no encontrada en .env");
         let db_name = env::var("DB_NAME").expect("Variable DB_NAME no encontrada en .env");
-        let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string()); // Puerto 3306 por defecto
+        let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string());
 
         let url = format!(
             "mysql://{}:{}@{}:{}/{}",
@@ -40,45 +38,48 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Vec<HashMap<S
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
     let meta_data_result = std::thread::spawn(move || {
-        let mut conn = match pool_clone.get_conn().await {
-            Ok(conn) => conn,
-            Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al obtener la conexión: {}", err)),
-        };
-        
-        let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-        let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+        // Usar el runtime de tokio para ejecutar código asíncrono
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let mut conn = match pool_clone.get_conn().await {
+                Ok(conn) => conn,
+                Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al obtener la conexión: {}", err)),
+            };
+            
+            let placeholders = posts_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+            let meta_keys_placeholders = meta_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
-        let sql_meta = format!(
-            "SELECT post_id, meta_key, meta_value 
-             FROM wp_postmeta 
-             WHERE meta_key IN ({}) AND post_id IN ({})",
-            meta_keys_placeholders, placeholders
-        );
+            let sql_meta = format!(
+                "SELECT post_id, meta_key, meta_value 
+                 FROM wp_postmeta 
+                 WHERE meta_key IN ({}) AND post_id IN ({})",
+                meta_keys_placeholders, placeholders
+            );
 
-        let params = meta_keys
-            .iter()
-            .map(|s| s.to_string())
-            .chain(posts_ids.iter().map(|id| id.to_string()))
-            .collect::<Vec<String>>();
+            let params = meta_keys
+                .iter()
+                .map(|s| s.to_string())
+                .chain(posts_ids.iter().map(|id| id.to_string()))
+                .collect::<Vec<String>>();
 
-        let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
-            Ok(result) => result,
-            Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al ejecutar la consulta: {}", err)),
-        };
+            let meta_resultados: Vec<Row> = match conn.exec(sql_meta, params).await {
+                Ok(result) => result,
+                Err(err) => return Err(format!("[obtenerMetadatosPosts] Error al ejecutar la consulta: {}", err)),
+            };
 
-        let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
-        for row in meta_resultados {
-            let post_id: i64 = row.get("post_id").unwrap();
-            let meta_key: String = row.get("meta_key").unwrap();
-            let meta_value: String = row.get("meta_value").unwrap();
+            let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
+            for row in meta_resultados {
+                let post_id: i64 = row.get("post_id").unwrap();
+                let meta_key: String = row.get("meta_key").unwrap();
+                let meta_value: String = row.get("meta_value").unwrap();
 
-            meta_data
-                .entry(post_id)
-                .or_insert_with(HashMap::new)
-                .insert(meta_key, meta_value);
-        }
-        
-        Ok(meta_data)
+                meta_data
+                    .entry(post_id)
+                    .or_insert_with(HashMap::new)
+                    .insert(meta_key, meta_value);
+            }
+            
+            Ok(meta_data)
+        })
     }).join().unwrap();
 
     match meta_data_result {
@@ -101,9 +102,9 @@ pub fn module(module: ModuleBuilder) -> ModuleBuilder {
 }
 
 
-
 /*
 
+te muestro un codigo viejo que no funcionaba pero al menos copilaba
 #![allow(non_snake_case)]
 use chrono::prelude::*;
 use dotenv::dotenv;
