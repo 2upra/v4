@@ -1,6 +1,7 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
-use mysql::{Pool, Error};
+use mysql::Pool;
+use mysql::prelude::Queryable; // Importa el trait Queryable aquí
 use std::env;
 use dotenv::dotenv;
 
@@ -27,6 +28,7 @@ pub fn conectar_bd_sin_lazy_static() -> String {
         Ok(pool) => {
             match pool.get_conn() {
                 Ok(mut conn) => {
+                    // Ahora puedes usar query_drop porque Queryable está en el ámbito
                     match conn.query_drop("SELECT 1") {
                         Ok(_) => "Conexión exitosa a la base de datos.".to_string(),
                         Err(err) => format!("Error al ejecutar consulta de prueba: {}", err),
@@ -35,6 +37,14 @@ pub fn conectar_bd_sin_lazy_static() -> String {
                 Err(err) => format!("Error al obtener conexión del pool: {}", err),
             }
         }
+        Err(err) => err,
+    }
+}
+
+#[php_function]
+pub fn solo_conectar_bd() -> String {
+    match get_db_pool() {
+        Ok(_) => "Pool de conexiones creado con éxito.".to_string(),
         Err(err) => err,
     }
 }
