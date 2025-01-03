@@ -4,17 +4,20 @@
 2.5 segundos
 */
 
-function obtenerDatosFeed($userId)
-{
-    rendimientolog("[obtenerDatosFeed] Inicio de la función para el usuario ID: " . $userId);
+function obtenerDatosFeed($userId) {
+    $log = "[obtenerDatosFeed] Inicio para usuario ID: $userId \n";
     $tiempoInicio = microtime(true);
 
     try {
         if (!comprobarConexionBD()) {
+            $log .= "[obtenerDatosFeed] Error: No se pudo conectar a la base de datos. \n";
+            guardarLog($log);
             return [];
         }
 
         if (!validarUsuario($userId)) {
+            $log .= "[obtenerDatosFeed] Error: Usuario no válido. \n";
+            guardarLog($log);
             return [];
         }
 
@@ -22,16 +25,25 @@ function obtenerDatosFeed($userId)
         $intereses = obtenerInteresesUsuario($userId);
         $vistas = vistasDatos($userId);
         generarMetaDeIntereses($userId);
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos");
+        $log .= "[obtenerDatosFeed] Tiempo para vistas y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos \n";
 
         $postsIds = obtenerIdsPostsRecientes();
         if (empty($postsIds)) {
-            guardarLog("[obtenerDatosFeed] Aviso: No se encontraron posts en los últimos 365 días");
-            rendimientolog("[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos");
+            $log .= "[obtenerDatosFeed] Aviso: No se encontraron posts recientes. \n";
+            guardarLog($log);
+            $log .= "[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos \n";
             return [];
         }
+        $cacheKey = 'metaData_' . md5(implode('_', $postsIds));
+        $metaData = obtenerCache($cacheKey);
 
-        $metaData = obtenerMetadatosPosts($postsIds);
+        if ($metaData === false) {
+            $metaData = obtenerMetadatosPosts($postsIds);
+            guardarCache($cacheKey, $metaData, 14400); 
+        } else {
+            $log .= "[obtenerDatosFeed] MetaData obtenido de la caché. \n";
+        }
+
         $metaRoles = procesarMetadatosRoles($metaData);
         $likesPorPost = obtenerLikesPorPost($postsIds);
         $postsResultados = obtenerDatosBasicosPosts($postsIds);
@@ -39,7 +51,8 @@ function obtenerDatosFeed($userId)
 
         $tiempoFin = microtime(true);
         $tiempoTotal = $tiempoFin - $tiempoInicio;
-        rendimientolog("[obtenerDatosFeed] Fin de la función. Tiempo total de ejecución: " . $tiempoTotal . " segundos");
+        $log .= "[obtenerDatosFeed] Fin. Tiempo total: $tiempoTotal segundos";
+        guardarLog($log);
 
         return [
             'siguiendo'        => $siguiendo,
@@ -51,15 +64,16 @@ function obtenerDatosFeed($userId)
             'author_results'   => $postsResultados,
             'post_content'     => $postContenido,
         ];
+
     } catch (Exception $e) {
-        guardarLog("[obtenerDatosFeed] Error crítico: " . $e->getMessage());
-        rendimientolog("[obtenerDatosFeed] Terminó con error crítico (Exception) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        $log .= "[obtenerDatosFeed] Error: " . $e->getMessage() . "\n";
+        guardarLog($log);
+        $log .= "[obtenerDatosFeed] Terminó con error en " . (microtime(true) - $tiempoInicio) . " segundos \n";
         return [];
     }
 }
 
-function obtenerUsuariosSeguidos($userId)
-{
+function obtenerUsuariosSeguidos($userId) {
     $tiempoInicio = microtime(true);
 
 
@@ -75,12 +89,12 @@ function obtenerUsuariosSeguidos($userId)
 
     if (empty($siguiendo)) {
         guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
-        $siguiendo = [];
+        $siguiendo = [];  
     } else {
 
-        $siguiendo = maybe_unserialize($siguiendo[0]);
-        //si no es un array devolver un array vacio
-        $siguiendo = is_array($siguiendo) ? $siguiendo : [];
+      $siguiendo = maybe_unserialize($siguiendo[0]);
+      //si no es un array devolver un array vacio
+      $siguiendo = is_array($siguiendo) ? $siguiendo : [];
     }
 
     rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
@@ -88,8 +102,7 @@ function obtenerUsuariosSeguidos($userId)
 }
 
 
-function comprobarConexionBD()
-{
+function comprobarConexionBD() {
     global $wpdb;
     $tiempoInicio = microtime(true);
 
@@ -101,8 +114,7 @@ function comprobarConexionBD()
     return true;
 }
 
-function validarUsuario($userId)
-{
+function validarUsuario($userId) {
     $tiempoInicio = microtime(true);
     if (!$userId) {
         guardarLog("[validarUsuario] Error: ID de usuario no válido");
@@ -112,8 +124,7 @@ function validarUsuario($userId)
     return true;
 }
 
-function obtenerInteresesUsuario($userId)
-{
+function obtenerInteresesUsuario($userId) {
     global $wpdb;
     $tiempoInicio = microtime(true);
     $tablaIntereses = INTERES_TABLE;
@@ -128,16 +139,14 @@ function obtenerInteresesUsuario($userId)
     return $intereses;
 }
 
-function vistasDatos($userId)
-{
+function vistasDatos($userId) {
     $tiempoInicio = microtime(true);
     $vistas = get_user_meta($userId, 'vistas_posts', true);
     rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $vistas;
 }
 
-function obtenerIdsPostsRecientes()
-{
+function obtenerIdsPostsRecientes() {
     $tiempoInicio = microtime(true);
     $args = [
         'post_type'      => 'social_post',
@@ -153,50 +162,38 @@ function obtenerIdsPostsRecientes()
     return $postsIds;
 }
 
-//usa function guardarCache($cacheKey, $data, $exp) y function obtenerCache($cacheKey) aca
-function obtenerMetadatosPosts($postsIds)
-{
+
+function obtenerMetadatosPosts($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
-    $log = "[obtenerMetadatosPosts] ";
 
+    $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
     $metaKeys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan'];
-    $metaData = [];
+    $metaKeysPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
 
-    foreach ($postsIds as $postId) {
-        $cacheKey = 'post_metadata_' . $postId;
-        $cachedData = obtenerCache($cacheKey);
+    $sqlMeta = "
+        SELECT post_id, meta_key, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key IN ($metaKeysPlaceholders) AND post_id IN ($placeholders)
+    ";
+    $preparedSqlMeta = $wpdb->prepare($sqlMeta, array_merge($metaKeys, $postsIds));
+    $metaResultados = $wpdb->get_results($preparedSqlMeta);
 
-        if ($cachedData !== false) {
-            $metaData[$postId] = $cachedData;
-            $log .= "Datos de caché encontrados para post_id: $postId. ";
-        } else {
-            $log .= "Datos de caché no encontrados para post_id: $postId. ";
-            $postMetaData = [];
-            foreach ($metaKeys as $metaKey) {
-                $metaValue = get_post_meta($postId, $metaKey, true);
-                if ($metaValue) {
-                    $postMetaData[$metaKey] = $metaValue;
-                }
-            }
-
-            if (!empty($postMetaData)) {
-                guardarCache($cacheKey, $postMetaData, 4 * HOUR_IN_SECONDS);
-                $log .= "Datos guardados en caché para post_id: $postId. ";
-                $metaData[$postId] = $postMetaData;
-            }
-        }
+    if ($wpdb->last_error) {
+        guardarLog("[obtenerMetadatosPosts] Error: Fallo al obtener metadata: " . $wpdb->last_error);
     }
+    rendimientolog("[obtenerMetadatosPosts] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
-    $tiempoTotal = microtime(true) - $tiempoInicio;
-    $log .= "\n Tiempo total de ejecución: $tiempoTotal segundos.";
-    guardarLog($log);
+    $metaData = [];
+    foreach ($metaResultados as $meta) {
+        $metaData[$meta->post_id][$meta->meta_key] = $meta->meta_value;
+    }
+    rendimientolog("[obtenerMetadatosPosts] Tiempo para procesar \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
 
     return $metaData;
 }
 
-function procesarMetadatosRoles($metaData)
-{
+function procesarMetadatosRoles($metaData) {
     $tiempoInicio = microtime(true);
     $metaRoles = [];
     foreach ($metaData as $postId => $meta) {
@@ -209,8 +206,7 @@ function procesarMetadatosRoles($metaData)
     return $metaRoles;
 }
 
-function obtenerLikesPorPost($postsIds)
-{
+function obtenerLikesPorPost($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
     $tablaLikes = "{$wpdb->prefix}post_likes";
@@ -249,8 +245,7 @@ function obtenerLikesPorPost($postsIds)
 }
 
 
-function obtenerDatosBasicosPosts($postsIds)
-{
+function obtenerDatosBasicosPosts($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
 
@@ -271,8 +266,7 @@ function obtenerDatosBasicosPosts($postsIds)
     return $postsResultados;
 }
 
-function procesarContenidoPosts($postsResultados)
-{
+function procesarContenidoPosts($postsResultados) {
     $tiempoInicio = microtime(true);
     $postContenido = [];
     foreach ($postsResultados as $post) {
