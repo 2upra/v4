@@ -9,7 +9,7 @@ use std::env;
 use dotenv::dotenv;
 use tokio::runtime::Runtime;
 use std::sync::Arc;
-use ext_php_rs::convert::IntoZval; // Import the IntoZval trait
+use ext_php_rs::convert::IntoZval;
 
 lazy_static! {
     static ref MYSQL_POOL: Arc<Pool> = {
@@ -31,7 +31,7 @@ lazy_static! {
 }
 
 #[php_function]
-pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<HashMap<String, Zval>, String> {
+pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<Zval, String> {
     let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
@@ -51,16 +51,17 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<HashMap<Strin
                 post_meta.insert(post_id.to_string(), meta_map);
                 result_vec.push(post_meta);
             }
-            final_result.insert("meta_data".to_string(), result_vec.into_zval(false).unwrap());
+            final_result.insert("meta_data".to_string(), result_vec);
         }
         Err(err) => {
-            final_result.insert("error".to_string(), err.into_zval(false).unwrap());
+            final_result.insert("error".to_string(), err);
         }
     }
 
-    final_result.insert("logs".to_string(), logs.into_zval(false).unwrap());
+    final_result.insert("logs".to_string(), logs);
 
-    Ok(final_result)
+    // Convertir a Zval (PHP array) y devolver
+    final_result.into_zval(false).map_err(|e| e.to_string())
 }
 
 async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> (Result<HashMap<i64, HashMap<String, String>>, String>, Vec<String>) {
@@ -99,14 +100,18 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
     for row in meta_resultados {
-        let post_id: i64 = row.get("post_id").unwrap();
-        let meta_key: String = row.get("meta_key").unwrap();
-        let meta_value: String = row.get("meta_value").unwrap();
+        let post_id: i64 = row.get("post_id").unwrap_or(0);
+        let meta_key: String = row.get("meta_key").unwrap_or_else(|| "".to_string());
+        let meta_value: String = row.get("meta_value").unwrap_or_else(|| "".to_string());
 
-        meta_data
-            .entry(post_id)
-            .or_insert_with(HashMap::new)
-            .insert(meta_key, meta_value);
+        if post_id != 0 && !meta_key.is_empty() {
+            meta_data
+                .entry(post_id)
+                .or_insert_with(HashMap::new)
+                .insert(meta_key, meta_value);
+        } else {
+            logs.push(format!("[ejecutar_consulta] Se encontró una fila con post_id vacío o meta_key vacía"));
+        }
     }
 
     (Ok(meta_data), logs)
@@ -116,7 +121,6 @@ async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys
 pub fn module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
-
 /*
 
 te muestro un codigo viejo que no funcionaba pero al menos copilaba
