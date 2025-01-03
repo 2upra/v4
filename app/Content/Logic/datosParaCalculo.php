@@ -1,6 +1,7 @@
 <?
 
 /*
+3.9 segundos
 2.5 segundos
 */
 
