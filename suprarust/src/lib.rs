@@ -149,7 +149,6 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
         .into_iter()
         .collect();
 
-
     #[derive(Debug, Deserialize, Serialize)]
     struct Vista {
         count: i64,
@@ -173,9 +172,9 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
         eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
         vec![]
     })
-    .into_iter()  // Agrega into_iter()
-    .flatten() // Agrega flatten()
-    .collect(); // Ahora collect() recolecta un Vec<i64>
+    .into_iter()
+    .flatten()
+    .collect();
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365))
@@ -274,13 +273,17 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     };
 
     // --- Preparar los resultados para PHP ---
+    let siguiendoZval = siguiendo.into_zval(false).unwrap();
+    let interesesZval = intereses.into_zval(false).unwrap();
+    let vistasZval = vistas.into_zval(false).unwrap();
+
     let mut resultado: Vec<Zval> = vec![];
     for id in postsIds {
         let mut datos = vec![];
         datos.push(id.into_zval(false).unwrap());
-        datos.push(siguiendo.into_zval(false).unwrap());
-        datos.push(intereses.into_zval(false).unwrap());
-        datos.push(vistas.into_zval(false).unwrap());
+        datos.push(siguiendoZval.clone());
+        datos.push(interesesZval.clone());
+        datos.push(vistasZval.clone());
         datos.push(match metaData.get(&id).cloned() {
             Some(meta_data) => meta_data.into_zval(false).unwrap_or_default(),
             None => Zval::new(),
