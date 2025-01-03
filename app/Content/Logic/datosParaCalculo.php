@@ -22,7 +22,7 @@ function obtenerDatosFeed($userId) {
 
         $siguiendo = obtenerUsuariosSeguidos($userId);
         $intereses = obtenerInteresesUsuario($userId);
-        $vistas = obtenerVistasPosts($userId);
+        $vistas = vistasDatos($userId);
         generarMetaDeIntereses($userId);
         rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos");
 
@@ -137,10 +137,10 @@ function obtenerInteresesUsuario($userId) {
  * @param int $userId ID del usuario.
  * @return array Vistas de los posts.
  */
-function obtenerVistasPosts($userId) {
+function vistasDatos($userId) {
     $tiempoInicio = microtime(true);
     $vistas = get_user_meta($userId, 'vistas_posts', true);
-    rendimientolog("[obtenerVistasPosts] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
+    rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $vistas;
 }
 
