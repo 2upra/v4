@@ -1,3 +1,5 @@
+/*
+
 #![allow(non_snake_case)]
 use chrono::prelude::*;
 use dotenv::dotenv;
@@ -309,3 +311,5 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
+
+    */

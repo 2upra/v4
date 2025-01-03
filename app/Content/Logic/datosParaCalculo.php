@@ -1,140 +1,43 @@
 <?
 
-function obtenerDatosFeed($userId)
-{
+
+/**
+ * Función principal para obtener datos del feed.
+ *
+ * @param int $userId ID del usuario.
+ * @return array Datos del feed.
+ */
+function obtenerDatosFeed($userId) {
     rendimientolog("[obtenerDatosFeed] Inicio de la función para el usuario ID: " . $userId);
     $tiempoInicio = microtime(true);
+
     try {
-        global $wpdb;
-        if (!$wpdb) {
-            guardarLog("[obtenerDatosFeed] Error crítico: No se pudo acceder a la base de datos wpdb");
-            rendimientolog("[obtenerDatosFeed] Terminó con error crítico (sin acceso a \$wpdb) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        if (!comprobarConexionBD()) {
             return [];
         }
 
-        if (!$userId) {
-            guardarLog("[obtenerDatosFeed] Error: ID de usuario no válido");
-            rendimientolog("[obtenerDatosFeed] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        if (!validarUsuario($userId)) {
             return [];
         }
 
-        $tablaLikes = "{$wpdb->prefix}post_likes";
-        $tablaIntereses = INTERES_TABLE;
-
-        $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
-        if ($siguiendo === false) {
-            guardarLog("[obtenerDatosFeed] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $intereses = $wpdb->get_results($wpdb->prepare(
-            "SELECT interest, intensity FROM $tablaIntereses WHERE user_id = %d",
-            $userId
-        ), OBJECT_K);
-        if ($wpdb->last_error) {
-            guardarLog("[obtenerDatosFeed] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $vistas = get_user_meta($userId, 'vistas_posts', true);
+        $siguiendo = obtenerUsuariosSeguidos($userId);
+        $intereses = obtenerInteresesUsuario($userId);
+        $vistas = obtenerVistasPosts($userId);
         generarMetaDeIntereses($userId);
         rendimientolog("[obtenerDatosFeed] Tiempo para obtener 'vistas' y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos");
 
-        $args = [
-            'post_type'      => 'social_post',
-            'posts_per_page' => 50000,
-            'date_query'     => [
-                'after' => date('Y-m-d', strtotime('-365 days'))
-            ],
-            'fields'         => 'ids',
-            'no_found_rows'  => true,
-        ];
-        $postsIds = get_posts($args);
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener \$postsIds: " . (microtime(true) - $tiempoInicio) . " segundos");
-
+        $postsIds = obtenerIdsPostsRecientes();
         if (empty($postsIds)) {
             guardarLog("[obtenerDatosFeed] Aviso: No se encontraron posts en los últimos 365 días");
             rendimientolog("[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos");
             return [];
         }
 
-        $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
-        $metaKeys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan'];
-        $metaKeysPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
-
-        $sqlMeta = "
-            SELECT post_id, meta_key, meta_value
-            FROM {$wpdb->postmeta}
-            WHERE meta_key IN ($metaKeysPlaceholders) AND post_id IN ($placeholders)
-        ";
-        $preparedSqlMeta = $wpdb->prepare($sqlMeta, array_merge($metaKeys, $postsIds));
-        $metaResultados = $wpdb->get_results($preparedSqlMeta);
-
-        if ($wpdb->last_error) {
-            guardarLog("[obtenerDatosFeed] Error: Fallo al obtener metadata: " . $wpdb->last_error);
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $metaData = [];
-        foreach ($metaResultados as $meta) {
-            $metaData[$meta->post_id][$meta->meta_key] = $meta->meta_value;
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para procesar \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $metaRoles = [];
-        foreach ($metaData as $postId => $meta) {
-            $metaRoles[$postId] = [
-                'artista' => isset($meta['artista']) ? filter_var($meta['artista'], FILTER_VALIDATE_BOOLEAN) : false,
-                'fan'     => isset($meta['fan']) ? filter_var($meta['fan'], FILTER_VALIDATE_BOOLEAN) : false,
-            ];
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para procesar \$metaRoles: " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $sqlLikes = "
-            SELECT post_id, like_type, COUNT(*) as cantidad
-            FROM $tablaLikes
-            WHERE post_id IN ($placeholders)
-            GROUP BY post_id, like_type
-        ";
-
-        $args = array_merge([$sqlLikes], $postsIds);
-        $likesResultados = $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], $args));
-
-        if ($wpdb->last_error) {
-            guardarLog("[obtenerDatosFeed] Error: Fallo al obtener likes: " . $wpdb->last_error);
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener \$likesResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $likesPorPost = [];
-        foreach ($likesResultados as $like) {
-            if (!isset($likesPorPost[$like->post_id])) {
-                $likesPorPost[$like->post_id] = [
-                    'like' => 0,
-                    'favorito' => 0,
-                    'no_me_gusta' => 0
-                ];
-            }
-            $likesPorPost[$like->post_id][$like->like_type] = (int)$like->cantidad;
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para procesar \$likesPorPost: " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $sqlPosts = "
-            SELECT ID, post_author, post_date, post_content
-            FROM {$wpdb->posts}
-            WHERE ID IN ($placeholders)
-        ";
-        $postsResultados = $wpdb->get_results($wpdb->prepare($sqlPosts, $postsIds), OBJECT_K);
-
-        if ($wpdb->last_error) {
-            guardarLog("[obtenerDatosFeed] Error: Fallo al obtener posts: " . $wpdb->last_error);
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para obtener \$postsResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
-
-        $postContenido = [];
-        foreach ($postsResultados as $post) {
-            $postContenido[$post->ID] = $post->post_content;
-        }
-        rendimientolog("[obtenerDatosFeed] Tiempo para procesar \$postContenido: " . (microtime(true) - $tiempoInicio) . " segundos");
+        $metaData = obtenerMetadatosPosts($postsIds);
+        $metaRoles = procesarMetadatosRoles($metaData);
+        $likesPorPost = obtenerLikesPorPost($postsIds);
+        $postsResultados = obtenerDatosBasicosPosts($postsIds);
+        $postContenido = procesarContenidoPosts($postsResultados);
 
         $tiempoFin = microtime(true);
         $tiempoTotal = $tiempoFin - $tiempoInicio;
@@ -150,6 +53,7 @@ function obtenerDatosFeed($userId)
             'author_results'   => $postsResultados,
             'post_content'     => $postContenido,
         ];
+
     } catch (Exception $e) {
         guardarLog("[obtenerDatosFeed] Error crítico: " . $e->getMessage());
         rendimientolog("[obtenerDatosFeed] Terminó con error crítico (Exception) en " . (microtime(true) - $tiempoInicio) . " segundos");
@@ -157,34 +61,269 @@ function obtenerDatosFeed($userId)
     }
 }
 
-function obtenerDatosFeedConCache($userId) {
-    $cache_key = 'feed_datos_' . $userId;
-    ob_start(); // Inicia la captura de salida
-    $datos = obtenerDatosFeedRust($userId);
-    $output = ob_get_clean(); // Obtiene la salida capturada y limpia el búfer
+/**
+ * Comprueba la conexión a la base de datos.
+ *
+ * @return bool True si la conexión es exitosa, false en caso contrario.
+ */
+function comprobarConexionBD() {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
 
-    if (!empty($output)) {
-        // Haz algo con la salida, como escribirla en un archivo de log
-        error_log("Salida de la extensión Rust: " . $output);
+    if (!$wpdb) {
+        guardarLog("[comprobarConexionBD] Error crítico: No se pudo acceder a la base de datos wpdb");
+        rendimientolog("[comprobarConexionBD] Terminó con error crítico (sin acceso a \$wpdb) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        return false;
     }
-
-    return $datos;
+    return true;
 }
-/*
+
+/**
+ * Valida el ID del usuario.
+ *
+ * @param int $userId ID del usuario.
+ * @return bool True si el ID es válido, false en caso contrario.
+ */
+function validarUsuario($userId) {
+    $tiempoInicio = microtime(true);
+    if (!$userId) {
+        guardarLog("[validarUsuario] Error: ID de usuario no válido");
+        rendimientolog("[validarUsuario] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Obtiene los usuarios seguidos por un usuario.
+ *
+ * @param int $userId ID del usuario.
+ * @return array Usuarios seguidos.
+ */
+function obtenerUsuariosSeguidos($userId) {
+    $tiempoInicio = microtime(true);
+    $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
+    if ($siguiendo === false) {
+        guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
+    }
+    rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $siguiendo;
+}
+
+/**
+ * Obtiene los intereses de un usuario.
+ *
+ * @param int $userId ID del usuario.
+ * @return array Intereses del usuario.
+ */
+function obtenerInteresesUsuario($userId) {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
+    $tablaIntereses = INTERES_TABLE;
+    $intereses = $wpdb->get_results($wpdb->prepare(
+        "SELECT interest, intensity FROM $tablaIntereses WHERE user_id = %d",
+        $userId
+    ), OBJECT_K);
+    if ($wpdb->last_error) {
+        guardarLog("[obtenerInteresesUsuario] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
+    }
+    rendimientolog("[obtenerInteresesUsuario] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $intereses;
+}
+
+/**
+ * Obtiene las vistas de los posts de un usuario.
+ *
+ * @param int $userId ID del usuario.
+ * @return array Vistas de los posts.
+ */
+function obtenerVistasPosts($userId) {
+    $tiempoInicio = microtime(true);
+    $vistas = get_user_meta($userId, 'vistas_posts', true);
+    rendimientolog("[obtenerVistasPosts] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $vistas;
+}
+
+/**
+ * Obtiene los IDs de los posts recientes.
+ *
+ * @return array IDs de los posts.
+ */
+function obtenerIdsPostsRecientes() {
+    $tiempoInicio = microtime(true);
+    $args = [
+        'post_type'      => 'social_post',
+        'posts_per_page' => 50000,
+        'date_query'     => [
+            'after' => date('Y-m-d', strtotime('-365 days'))
+        ],
+        'fields'         => 'ids',
+        'no_found_rows'  => true,
+    ];
+    $postsIds = get_posts($args);
+    rendimientolog("[obtenerIdsPostsRecientes] Tiempo para obtener \$postsIds: " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $postsIds;
+}
+
+/**
+ * Obtiene los metadatos de los posts.
+ *
+ * @param array $postsIds IDs de los posts.
+ * @return array Metadatos de los posts.
+ */
+function obtenerMetadatosPosts($postsIds) {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
+
+    $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
+    $metaKeys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan'];
+    $metaKeysPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
+
+    $sqlMeta = "
+        SELECT post_id, meta_key, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key IN ($metaKeysPlaceholders) AND post_id IN ($placeholders)
+    ";
+    $preparedSqlMeta = $wpdb->prepare($sqlMeta, array_merge($metaKeys, $postsIds));
+    $metaResultados = $wpdb->get_results($preparedSqlMeta);
+
+    if ($wpdb->last_error) {
+        guardarLog("[obtenerMetadatosPosts] Error: Fallo al obtener metadata: " . $wpdb->last_error);
+    }
+    rendimientolog("[obtenerMetadatosPosts] Tiempo para obtener \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    $metaData = [];
+    foreach ($metaResultados as $meta) {
+        $metaData[$meta->post_id][$meta->meta_key] = $meta->meta_value;
+    }
+    rendimientolog("[obtenerMetadatosPosts] Tiempo para procesar \$metaResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    return $metaData;
+}
+
+/**
+ * Procesa los metadatos de roles (artista, fan).
+ *
+ * @param array $metaData Metadatos de los posts.
+ * @return array Roles de los posts.
+ */
+function procesarMetadatosRoles($metaData) {
+    $tiempoInicio = microtime(true);
+    $metaRoles = [];
+    foreach ($metaData as $postId => $meta) {
+        $metaRoles[$postId] = [
+            'artista' => isset($meta['artista']) ? filter_var($meta['artista'], FILTER_VALIDATE_BOOLEAN) : false,
+            'fan'     => isset($meta['fan']) ? filter_var($meta['fan'], FILTER_VALIDATE_BOOLEAN) : false,
+        ];
+    }
+    rendimientolog("[procesarMetadatosRoles] Tiempo para procesar \$metaRoles: " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $metaRoles;
+}
+
+/**
+ * Obtiene los likes por post.
+ *
+ * @param array $postsIds IDs de los posts.
+ * @return array Likes por post.
+ */
+function obtenerLikesPorPost($postsIds) {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
+    $tablaLikes = "{$wpdb->prefix}post_likes";
+
+    $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
+
+    $sqlLikes = "
+        SELECT post_id, like_type, COUNT(*) as cantidad
+        FROM $tablaLikes
+        WHERE post_id IN ($placeholders)
+        GROUP BY post_id, like_type
+    ";
+
+    $args = array_merge([$sqlLikes], $postsIds);
+    $likesResultados = $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], $args));
+
+    if ($wpdb->last_error) {
+        guardarLog("[obtenerLikesPorPost] Error: Fallo al obtener likes: " . $wpdb->last_error);
+    }
+    rendimientolog("[obtenerLikesPorPost] Tiempo para obtener \$likesResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    $likesPorPost = [];
+    foreach ($likesResultados as $like) {
+        if (!isset($likesPorPost[$like->post_id])) {
+            $likesPorPost[$like->post_id] = [
+                'like' => 0,
+                'favorito' => 0,
+                'no_me_gusta' => 0
+            ];
+        }
+        $likesPorPost[$like->post_id][$like->like_type] = (int)$like->cantidad;
+    }
+    rendimientolog("[obtenerLikesPorPost] Tiempo para procesar \$likesPorPost: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    return $likesPorPost;
+}
+
+/**
+ * Obtiene los datos básicos de los posts (ID, autor, fecha).
+ *
+ * @param array $postsIds IDs de los posts.
+ * @return array Datos básicos de los posts.
+ */
+function obtenerDatosBasicosPosts($postsIds) {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
+
+    $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
+
+    $sqlPosts = "
+        SELECT ID, post_author, post_date
+        FROM {$wpdb->posts}
+        WHERE ID IN ($placeholders)
+    ";
+    $postsResultados = $wpdb->get_results($wpdb->prepare($sqlPosts, $postsIds), OBJECT_K);
+
+    if ($wpdb->last_error) {
+        guardarLog("[obtenerDatosBasicosPosts] Error: Fallo al obtener posts: " . $wpdb->last_error);
+    }
+    rendimientolog("[obtenerDatosBasicosPosts] Tiempo para obtener \$postsResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    return $postsResultados;
+}
+
+/**
+ * Procesa el contenido de los posts.
+ *
+ * @param array $postsResultados Datos básicos de los posts.
+ * @return array Contenido de los posts.
+ */
+function procesarContenidoPosts($postsResultados) {
+    $tiempoInicio = microtime(true);
+    $postContenido = [];
+    foreach ($postsResultados as $post) {
+        $postContenido[$post->ID] = $post->post_content;
+    }
+    rendimientolog("[procesarContenidoPosts] Tiempo para procesar \$postContenido: " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $postContenido;
+}
+
+
+
+
+
 function obtenerDatosFeedConCache($userId)
 {
     $cache_key = 'feed_datos_' . $userId;
-    //$datos = obtenerCache($cache_key);
-    //$datos = obtenerDatosFeed($userId);
-    $datos = obtenerDatosFeedRust($userId); 
-     if (false === $datos) {
+    $datos = obtenerCache($cache_key);
+
+    if (false === $datos) {
         guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
         $datos = obtenerDatosFeed($userId);
         guardarCache($cache_key, $datos, 43200); // Guarda en caché por 12 horas
         guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
     } else {
         guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
-    } 
+    }
 
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
         //guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
@@ -193,5 +332,3 @@ function obtenerDatosFeedConCache($userId)
 
     return $datos;
 }
-
-*/

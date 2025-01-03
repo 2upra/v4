@@ -16,3 +16,6 @@ serde_php = "0.5.0"  # O la versión más reciente
 
 [lib]
 crate-type = ["cdylib"]
+
+[profile.dev]
+debug = true
