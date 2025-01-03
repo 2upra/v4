@@ -29,7 +29,7 @@ lazy_static! {
 }
 
 #[php_function]
-pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<(Vec<HashMap<String, HashMap<String, String>>>, Vec<String>), (String, Vec<String>)> {
+pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<HashMap<String, PhpValue>, String> {
     let pool_clone = MYSQL_POOL.clone();
     let meta_keys = vec!["datosAlgoritmo", "Verificado", "postAut", "artista", "fan"];
 
@@ -39,18 +39,26 @@ pub fn obtener_metadatos_posts_rust(posts_ids: Vec<i64>) -> Result<(Vec<HashMap<
         ejecutar_consulta(pool_clone, posts_ids, meta_keys).await
     });
 
+    let mut final_result = HashMap::new();
+
     match meta_data_result {
         Ok(meta_data) => {
-            let mut result_vec = Vec::new();
+            let mut result_vec: Vec<HashMap<String, HashMap<String, String>>> = Vec::new();
             for (post_id, meta_map) in meta_data {
                 let mut post_meta = HashMap::new();
                 post_meta.insert(post_id.to_string(), meta_map);
                 result_vec.push(post_meta);
             }
-            Ok((result_vec, logs))
+            final_result.insert("meta_data".to_string(), result_vec.into_php_value());
         }
-        Err(err) => Err((err, logs)),
+        Err(err) => {
+            final_result.insert("error".to_string(), err.into_php_value());
+        }
     }
+
+    final_result.insert("logs".to_string(), logs.into_php_value());
+
+    Ok(final_result)
 }
 
 async fn ejecutar_consulta(pool_clone: Arc<Pool>, posts_ids: Vec<i64>, meta_keys: Vec<&str>) -> (Result<HashMap<i64, HashMap<String, String>>, String>, Vec<String>) {
