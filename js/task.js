@@ -24,12 +24,10 @@ function initTareas() {
         archivarTarea();
         ocultarBotones();
         borrarTareaVacia();
-        crearTareaEnter();
-        organizarSecciones();
-        crearSesionFront();
-        hacerDivisoresEditables();
         window.dividirTareas();
+        subTarea();
         initNotas();
+        initEnter();
     }
 }
 
@@ -60,6 +58,70 @@ function enviarTarea() {
     });
 }
 
+//aqui necesito recibir la id de la tarea que se crea
+function enviarTareaHandler(ev) {
+    const tit = document.getElementById('tituloTarea');
+    const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
+
+    if (ev.key === 'Enter') {
+        ev.preventDefault();
+
+        setTimeout(() => {
+            if (tit.value.trim().length === 0) return;
+
+            if (tit.value.length > 140) {
+                alert('El título no puede superar los 140 caracteres.');
+                return;
+            }
+
+            const data = {
+                titulo: tit.value,
+                importancia: importancia.valor,
+                tipo: tipoTarea.valor
+            };
+
+            const tituloParaEnviar = tit.value;
+            tit.value = '';
+            console.log('llamando a crearTarea desde enviarTareaHandler');
+            enviarAjax('crearTarea', {...data, titulo: tituloParaEnviar})
+                .then(async rta => {
+                    let log = '';
+                    if (rta.success) {
+                        log = `Tarea creada con ID ${rta.data.tareaId}.`;
+                        alert('Tarea creada.');
+
+                        const {tareaNueva} = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+
+                        if (tareaNueva && listaTareas) {
+                            const primerDivisor = listaTareas.querySelector('.divisorTarea');
+
+                            if (primerDivisor) {
+                                primerDivisor.insertAdjacentHTML('afterend', tareaNueva);
+                            } else {
+                                listaTareas.insertAdjacentHTML('afterbegin', tareaNueva);
+                            }
+                            initTareas();
+                            window.guardarOrden();
+                        } else {
+                            console.error('No se recibió respuesta o no se encontró la lista de tareas.');
+                        }
+                    } else {
+                        log = 'Error al crear tarea.';
+                        if (rta.data) {
+                            log += ' Detalles: ' + rta.data;
+                        }
+                        alert(log);
+                    }
+                    console.log(log);
+                })
+                .catch(err => {
+                    alert('Error al crear. Revisa la consola.');
+                    console.error(err);
+                });
+        }, 0);
+    }
+}
+
 function pegarTareaHandler(ev) {
     ev.preventDefault();
     const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
@@ -76,6 +138,7 @@ function pegarTareaHandler(ev) {
             return;
         }
         if (titulo) {
+            console.log('llamando a crearTarea desde pegarTarea');
             return enviarAjax('crearTarea', {
                 titulo: titulo,
                 importancia: importancia.valor,
@@ -118,50 +181,6 @@ function pegarTareaHandler(ev) {
         });
 }
 
-function enviarTareaHandler(ev) {
-    const tit = document.getElementById('tituloTarea');
-    let enviando = false;
-
-    if (ev.key === 'Enter' && !enviando) {
-        if (tit.value.length > 140) {
-            alert('El título no puede superar los 140 caracteres.');
-            return;
-        }
-
-        enviando = true;
-        const data = {
-            titulo: tit.value,
-            importancia: importancia.valor,
-            tipo: tipoTarea.valor
-        };
-
-        enviarAjax('crearTarea', data)
-            .then(rta => {
-                if (rta.success) {
-                    alert('Tarea creada.');
-                    tit.value = '';
-                    limpiar = false;
-                    arriba = true;
-                    window.reiniciarContenido(limpiar, arriba, 'tarea');
-                    initTareas();
-                } else {
-                    let m = 'Error al crear tarea.';
-                    if (rta.data) {
-                        m += ' Detalles: ' + rta.data;
-                    }
-                    alert(m);
-                }
-            })
-            .catch(err => {
-                alert('Error al crear. Revisa la consola.');
-                console.error(err);
-            })
-            .finally(() => {
-                enviando = false;
-            });
-    }
-}
-
 function selectorTipoTarea() {
     importancia.selector = document.getElementById('sImportancia');
     tipoTarea.selector = document.getElementById('sTipo');
@@ -197,168 +216,53 @@ function selectorTipoTarea() {
     actSel(tipoTarea, 'una vez');
 }
 
-/*
-mira, cuando duplica una tarea
-<li class="POST-tarea EDYQHV 468  draggable-element Pendiente" filtro="tarea" tipo-tarea="una vez" id-post="468" autor="1" draggable="true" sesion="pendiente" estado="Pendiente" data-submenu-initialized="true" data-seccion="General">
+function editarTarea() {
+    const tareas = document.querySelectorAll('.tituloTarea');
 
-tiene que tomar la sesion(no data-seccion) y estado y enviarlo al servidor de lo que copio
-
-*/
-
-function crearTareaEnter() {
-    const contenedor = document.querySelector('.clase-tarea'); 
-
-    contenedor.addEventListener('keydown', ev => {
-        if (ev.target.classList.contains('tituloTarea') && ev.key === 'Enter' && ev.target.contentEditable === 'true') {
-            ev.preventDefault();
-            const tarea = ev.target.closest('.POST-tarea');
-            const nuevaTarea = tarea.cloneNode(true);
-            const nuevoTitulo = nuevaTarea.querySelector('.tituloTarea');
-            nuevoTitulo.textContent = '';
-            nuevoTitulo.dataset.tarea = 0;
-            nuevaTarea.id = '';
-            tarea.after(nuevaTarea);
-
-            let valorAntiguo = '';
-            let seCancelo = false;
-
-            nuevoTitulo.contentEditable = true;
-            nuevoTitulo.spellcheck = false;
-            nuevoTitulo.focus();
-            nuevoTitulo.setAttribute('placeholder', 'Nueva tarea');
-
-            const rango = document.createRange();
-            const seleccion = window.getSelection();
-            rango.selectNodeContents(nuevoTitulo);
-            rango.collapse(false);
-            seleccion.removeAllRanges();
-            seleccion.addRange(rango);
-
-            const borrarTarea = () => {
-                if (nuevaTarea && nuevaTarea.parentNode) {
-                    nuevaTarea.remove();
-                    seCancelo = true;
-                }
-            };
-
-            nuevoTitulo.addEventListener('keydown', ev => {
-                if (ev.key === 'Backspace' && nuevoTitulo.textContent === '') {
-                    borrarTarea();
-                }
-            });
-
-            const guardarNuevaTarea = titulo => {
-                if (seCancelo) return;
-
-                const valorNuevo = titulo.textContent.trim();
-
-                if (valorAntiguo !== valorNuevo && valorNuevo !== '') {
-                    titulo.contentEditable = false;
-                    titulo.removeAttribute('placeholder');
-                    const dat = {id: 0, titulo: valorNuevo};
-
-                    enviarAjax('modificarTarea', dat)
-                        .then(rta => {
-                            let log = '';
-                            if (rta.success) {
-                                log = 'Tarea creada con éxito. ID: ' + rta.data.id;
-                                valorAntiguo = valorNuevo;
-
-                                const nuevaTareaCreada = titulo.closest('.POST-tarea');
-                                nuevaTareaCreada.id = 'tarea-' + rta.data.id;
-                                titulo.dataset.tarea = rta.data.id;
-
-                                editarTarea();
-                            } else {
-                                titulo.textContent = valorAntiguo;
-                                log = 'Error al crear tarea.';
-                                if (rta.data) log += ' Detalles: ' + rta.data;
-                            }
-                            console.log(log);
-                        })
-                        .catch(err => {
-                            titulo.textContent = valorAntiguo;
-                            console.log('Error al crear tarea.');
-                        });
-                } else if (valorNuevo === '') {
-                    borrarTarea();
-                }
-            };
-
-            nuevoTitulo.addEventListener('blur', () => {
-                setTimeout(() => {
-                    if (!nuevoTitulo.matches(':focus')) {
-                        guardarNuevaTarea(nuevoTitulo);
-                    }
-                }, 100);
-            });
+    tareas.forEach(tarea => {
+        // Verifica si la tarea ya tiene un event listener agregado
+        if (!tarea.dataset.eventoAgregado) {
+            tarea.addEventListener('click', manejarClicTarea);
+            tarea.dataset.eventoAgregado = 'true';
         }
     });
 }
 
-function editarTarea() {
-    const tareas = document.querySelectorAll('.tituloTarea');
-    let timeoutId = null;
+function manejarClicTarea(ev) {
+    ev.preventDefault();
+    const tarea = this; // 'this' se refiere al elemento que disparó el evento
+    const id = tarea.dataset.tarea;
+    let valorAnt = tarea.textContent.trim();
+    tarea.contentEditable = true;
+    tarea.spellcheck = false;
+    tarea.focus();
 
-    tareas.forEach(t => {
-        t.addEventListener('click', ev => {
-            ev.preventDefault();
-            const id = t.dataset.tarea;
-            let valorAnt = t.textContent.trim();
-            t.contentEditable = true;
-            t.spellcheck = false;
-            t.focus();
+    const off = calcularPosicionCursor(ev, tarea);
+    setCursorPos(tarea, off);
 
-            const off = calcularPosicionCursor(ev, t);
-            setCursorPos(t, off);
+    const salirEdicion = () => {
+        if (tarea.textContent.trim().length > 180) {
+            alert('El título no puede superar los 180 caracteres.');
+            tarea.textContent = valorAnt;
+        } else if (tarea.textContent.trim() !== '' && tarea.textContent.trim() !== valorAnt) {
+            guardarEdicion(tarea, id, valorAnt);
+        }
+        tarea.contentEditable = false;
+        // Remover los event listeners después de usarlos
+        tarea.removeEventListener('blur', salirEdicion);
+        tarea.removeEventListener('paste', manejarPegado);
+    };
 
-            const salirEdicion = () => {
-                if (t.textContent.trim().length > 140) {
-                    alert('El título no puede superar los 140 caracteres.');
-                    t.textContent = valorAnt;
-                    t.contentEditable = false;
-                    t.removeEventListener('input', t.onInput);
-                    t.removeEventListener('blur', t.onBlur);
-                } else if (t.textContent.trim() !== '' && t.textContent.trim() !== valorAnt) {
-                    // Condición adicional
-                    guardarEdicion(t, id, valorAnt);
-                    t.contentEditable = false;
-                    t.removeEventListener('input', t.onInput);
-                    t.removeEventListener('blur', t.onBlur);
-                } else {
-                    t.contentEditable = false;
-                    t.removeEventListener('input', t.onInput);
-                    t.removeEventListener('blur', t.onBlur);
-                }
-            };
+    const manejarPegado = ev => {
+        ev.preventDefault();
+        const texto = ev.clipboardData.getData('text/plain').trim();
+        const nuevoTexto = texto.substring(0, 180 - tarea.textContent.trim().length);
+        document.execCommand('insertText', false, nuevoTexto);
+    };
 
-            t.onInput = () => {
-                clearTimeout(timeoutId);
-                timeoutId = setTimeout(() => {
-                    salirEdicion();
-                }, 6000);
-            };
-
-            t.onBlur = () => {
-                setTimeout(() => {
-                    if (!t.matches(':focus')) {
-                        salirEdicion();
-                    }
-                }, 100);
-            };
-
-            t.onPaste = ev => {
-                ev.preventDefault();
-                const texto = ev.clipboardData.getData('text/plain').trim();
-                const nuevoTexto = texto.substring(0, 140 - t.textContent.trim().length);
-                document.execCommand('insertText', false, nuevoTexto);
-            };
-
-            t.addEventListener('input', t.onInput);
-            t.addEventListener('blur', t.onBlur);
-            t.addEventListener('paste', t.onPaste);
-        });
-    });
+    // Usar una función con nombre para poder removerla después
+    tarea.addEventListener('blur', salirEdicion);
+    tarea.addEventListener('paste', manejarPegado);
 }
 
 function guardarEdicion(t, id, valorAnt) {
@@ -370,15 +274,14 @@ function guardarEdicion(t, id, valorAnt) {
         t.style.border = 'none';
         t.style.boxShadow = 'none';
         const dat = {id, titulo: valorNuevo};
+        console.log('Llamando modificarTarea desde guardarEdicion');
         enviarAjax('modificarTarea', dat)
             .then(rta => {
                 if (!rta.success) {
                     t.textContent = valorAnt;
                     let m = 'Error al modificar.';
                     if (rta.data) m += ' Detalles: ' + rta.data;
-                    alert(m);
                 } else {
-                    alert('Título modificado con éxito.');
                     valorAnt = valorNuevo;
                 }
             })
@@ -392,49 +295,6 @@ function guardarEdicion(t, id, valorAnt) {
         t.style.border = 'none';
         t.style.boxShadow = 'none';
     }
-}
-
-function borrarTareaVacia() {
-    const tareas = document.querySelectorAll('.tituloTarea');
-
-    tareas.forEach(tarea => {
-        let borrar = false;
-
-        tarea.addEventListener('keydown', ev => {
-            if (ev.key === 'Backspace' && tarea.textContent.trim() === '') {
-                if (borrar) {
-                    const id = tarea.dataset.tarea;
-                    const tareaCompleta = tarea.closest('.POST-tarea');
-
-                    // Eliminar event listeners antes de remover la tarea
-                    tarea.removeEventListener('input', tarea.onInput);
-                    tarea.removeEventListener('blur', tarea.onBlur);
-                    tarea.removeEventListener('paste', tarea.onPaste);
-
-                    tareaCompleta.remove();
-
-                    let log = 'Se borró la tarea con ID: ' + id;
-
-                    const data = {
-                        id: id
-                    };
-                    enviarAjax('borrarTarea', data)
-                        .then(resp => {
-                            log += ', \n  Respuesta recibida: ' + resp;
-                            console.log(log);
-                        })
-                        .catch(error => {
-                            log += ', \n  Error: ' + error;
-                            console.error(log);
-                        });
-                } else {
-                    borrar = true;
-                }
-            } else {
-                borrar = false;
-            }
-        });
-    });
 }
 
 function calcularPosicionCursor(ev, el) {
@@ -472,18 +332,67 @@ function setCursorPos(el, off) {
 }
 
 function prioridadTarea() {
-    const botonPrioridad = document.querySelector('.prioridadTareas');
+    const boton = document.querySelector('.prioridadTareas');
 
-    botonPrioridad.addEventListener('click', () => {
-        const limpiar = true;
-        const arriba = false;
-        const clase = 'tarea';
-        const prioridad = true;
-        window.reiniciarContenido(limpiar, arriba, clase, prioridad);
+    boton.addEventListener('click', async () => {
+        const lista = document.querySelector('.social-post-list.clase-tarea');
+        const divisores = Array.from(lista.querySelectorAll('.divisorTarea'));
+        let log = '';
+
+        for (const divisor of divisores) {
+            const seccion = divisor.dataset.valor;
+            let tarea = divisor.nextElementSibling;
+            const tareasSeccion = [];
+
+            while (tarea && tarea.classList.contains('POST-tarea') && tarea.dataset.seccion === seccion) {
+                tareasSeccion.push({
+                    tarea: tarea,
+                    id: tarea.getAttribute('id-post'),
+                    impnum: parseInt(tarea.getAttribute('impnum'))
+                });
+                tarea = tarea.nextElementSibling;
+            }
+
+            tareasSeccion.sort((a, b) => b.impnum - a.impnum);
+
+            const tablaTareas = [];
+            tareasSeccion.forEach((t, i) => {
+                const indiceDeseado = Array.from(lista.children).indexOf(divisor) + 1 + i;
+                const indiceActual = Array.from(lista.children).indexOf(t.tarea);
+
+                if (indiceActual !== indiceDeseado) {
+                    const tareaReferencia = lista.children[indiceDeseado];
+                    if (tareaReferencia) {
+                        lista.insertBefore(t.tarea, tareaReferencia);
+                    } else {
+                        lista.appendChild(t.tarea);
+                    }
+                }
+
+                tablaTareas.push({
+                    ID: t.id,
+                    Imp: t.impnum,
+                    'Indice Actual': indiceActual,
+                    'Indice Deseado': indiceDeseado
+                });
+            });
+
+            if (tablaTareas.length > 0) {
+                //console.table(tablaTareas);
+            }
+            log += `Se ordenaron ${tareasSeccion.length} tareas en la sección "${seccion}". \n`;
+        }
+
+        //console.log(log);
+        window.guardarOrden();
+        try {
+            //window.guardarOrden();
+        } catch (error) {
+            console.error('Error al guardar el orden:', error);
+        }
     });
 }
 
-//necesito que cuando se archive una tarea, no elimine del dom, simplemente se mueva al final del ul donde se encuentra, que suele ser <ul class="social-post-list clase-tarea" data-filtro="tarea" data-posttype="tarea" data-tab-id="tareas">, y cuando se desarchiva, la coloca abajo siempre de <p data-valor="General" class="divisorTarea General" style="font-weight: bold; cursor: pointer; padding: 5px 20px; margin-right: auto; display: flex; width: 100%; align-items: center;">
 function archivarTarea() {
     document.querySelectorAll('.divArchivado').forEach(div => {
         div.addEventListener('click', async function () {
@@ -534,52 +443,60 @@ function archivarTarea() {
     });
 }
 
+
+
 function completarTarea() {
     document.querySelectorAll('.completaTarea').forEach(boton => {
-        boton.addEventListener('click', function () {
-            let log = '';
-            const botonClicado = this;
-            const tarea = botonClicado.closest('.draggable-element');
-            const tareaId = botonClicado.dataset.tarea;
-            const dat = {id: tareaId};
-            const estado = tarea.classList.contains('completada') ? 'pendiente' : 'completada';
-            dat.estado = estado;
-            const esHabito = botonClicado.classList.contains('habito');
-            const esHabitoFlexible = botonClicado.classList.contains('habitoFlexible');
-
-            enviarAjax('completarTarea', dat)
-                .then(rta => {
-                    if (rta.success) {
-                        if (estado === 'completada') {
-                            if (!esHabito && !esHabitoFlexible) {
-                                tarea.classList.add('completada');
-                                tarea.style.textDecoration = 'line-through';
-                            }
-
-                            if (window.filtrosGlobales && window.filtrosGlobales.includes('ocultarCompletadas') && !esHabito) {
-                                tarea.style.display = 'none';
-                            }
-
-                            if (esHabito || esHabitoFlexible) {
-                                log += 'Reinicio de tarea porque es habito o habito flexible';
-                                window.reiniciarPost(tareaId, 'tarea');
-                            }
-                        } else {
-                            tarea.classList.remove('completada');
-                            tarea.style.textDecoration = 'none';
-                            tarea.style.display = '';
-                        }
-                    } else {
-                        let m = 'Error al cambiar el estado de la tarea.';
-                        if (rta.data) m += ' Detalles: ' + rta.data;
-                        alert(m);
-                    }
-                })
-                .catch(err => {
-                    alert('Error al completar la tarea.');
-                });
-        });
+        // Verifica si el botón ya tiene un event listener agregado
+        if (!boton.dataset.eventoAgregado) {
+            boton.addEventListener('click', manejarClicCompletar);
+            boton.dataset.eventoAgregado = 'true';
+        }
     });
+}
+
+function manejarClicCompletar() {
+    let log = '';
+    const botonClicado = this;
+    const tarea = botonClicado.closest('.draggable-element');
+    const tareaId = botonClicado.dataset.tarea;
+    const dat = {id: tareaId};
+    const estado = tarea.classList.contains('completada') ? 'pendiente' : 'completada';
+    dat.estado = estado;
+    const esHabito = botonClicado.classList.contains('habito');
+    const esHabitoFlexible = botonClicado.classList.contains('habitoFlexible');
+
+    enviarAjax('completarTarea', dat)
+        .then(rta => {
+            if (rta.success) {
+                if (estado === 'completada') {
+                    if (!esHabito && !esHabitoFlexible) {
+                        tarea.classList.add('completada');
+                        tarea.style.textDecoration = 'line-through';
+                    }
+
+                    if (window.filtrosGlobales && window.filtrosGlobales.includes('ocultarCompletadas') && !esHabito) {
+                        tarea.style.display = 'none';
+                    }
+
+                    if (esHabito || esHabitoFlexible) {
+                        log += 'Reinicio de tarea porque es habito o habito flexible';
+                        window.reiniciarPost(tareaId, 'tarea');
+                    }
+                } else {
+                    tarea.classList.remove('completada');
+                    tarea.style.textDecoration = 'none';
+                    tarea.style.display = '';
+                }
+            } else {
+                let m = 'Error al cambiar el estado de la tarea.';
+                if (rta.data) m += ' Detalles: ' + rta.data;
+                alert(m);
+            }
+        })
+        .catch(err => {
+            alert('Error al completar la tarea.');
+        });
 }
 
 function cambiarFrecuencia() {
@@ -666,8 +583,8 @@ function cambiarPrioridad() {
             ops.classList.add('opcionesPrioridad');
             ops.innerHTML = `
           <p data-prioridad="baja">${window.iconbaja} baja</p>
-          <p data-prioridad="media">${window.iconMedia} Media</p>
-          <p data-prioridad="alta">${window.iconAlta} Alta</p>
+          <p data-prioridad="media">${window.iconMedia} media</p>
+          <p data-prioridad="alta">${window.iconAlta} alta</p>
           <p data-prioridad="importante">${window.iconimportante} importante</p>
         `;
             const menu = li.nextElementSibling;
@@ -689,42 +606,50 @@ function cambiarPrioridad() {
                     const padre = div.querySelector('.importanciaTarea');
                     let span = padre.querySelector('.tituloImportancia');
                     const svg = padre.querySelector('svg');
-                    if (svg) {
-                        if (prio === 'baja') {
-                            if (!span) {
-                                span = document.createElement('span');
-                                span.classList.add('tituloImportancia');
-                                padre.appendChild(span);
-                            }
-                            span.textContent = 'baja';
+
+                    if (prio === 'baja') {
+                        if (!span) {
+                            span = document.createElement('span');
+                            span.classList.add('tituloImportancia');
+                            padre.appendChild(span);
+                        }
+                        span.textContent = 'baja';
+                        if (svg) {
                             svg.outerHTML = window.iconbaja;
-                        } else if (prio === 'media') {
-                            if (!span) {
-                                span = document.createElement('span');
-                                span.classList.add('tituloImportancia');
-                                padre.appendChild(span);
-                            }
-                            span.textContent = 'media';
+                        }
+                    } else if (prio === 'media') {
+                        if (!span) {
+                            span = document.createElement('span');
+                            span.classList.add('tituloImportancia');
+                            padre.appendChild(span);
+                        }
+                        span.textContent = 'media';
+                        if (svg) {
                             svg.outerHTML = window.iconMedia;
-                        } else if (prio === 'alta') {
-                            if (!span) {
-                                span = document.createElement('span');
-                                span.classList.add('tituloImportancia');
-                                padre.appendChild(span);
-                            }
-                            span.textContent = 'alta';
+                        }
+                    } else if (prio === 'alta') {
+                        if (!span) {
+                            span = document.createElement('span');
+                            span.classList.add('tituloImportancia');
+                            padre.appendChild(span);
+                        }
+                        span.textContent = 'alta';
+                        if (svg) {
                             svg.outerHTML = window.iconAlta;
-                        } else if (prio === 'importante') {
-                            if (!span) {
-                                span = document.createElement('span');
-                                span.classList.add('tituloImportancia');
-                                padre.appendChild(span);
-                            }
-                            span.textContent = 'importante';
+                        }
+                    } else if (prio === 'importante') {
+                        if (!span) {
+                            span = document.createElement('span');
+                            span.classList.add('tituloImportancia');
+                            padre.appendChild(span);
+                        }
+                        span.textContent = 'importante';
+                        if (svg) {
                             svg.outerHTML = window.iconimportante;
                         }
-                    } else {
-                        console.error('No se encontraron los elementos .tituloImportancia o svg dentro del div');
+                    }
+                    if (!svg) {
+                        span.textContent = prio;
                     }
                 });
             });
@@ -762,6 +687,50 @@ async function borrarTareasCompletadas() {
     boton.listener = handleClick;
 }
 
+window.guardarOrden = function () {
+    const lista = document.querySelector('.clase-tarea');
+    if (!lista) return;
+
+    const tareas = Array.from(lista.querySelectorAll('.draggable-element'));
+    if (tareas.length < 2) return;
+
+    const tareaMovida = tareas[0];
+    const segundaTarea = tareas[0];
+    lista.insertBefore(tareaMovida, segundaTarea.nextSibling);
+
+    const ordenNuevo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
+    const nuevaPosicion = ordenNuevo.indexOf(tareaMovida.getAttribute('id-post'));
+
+    let sesionArriba = null;
+    let dataSeccionArriba = null;
+    let anterior = tareaMovida.previousElementSibling;
+    while (anterior) {
+        if (anterior.classList.contains('POST-tarea')) {
+            sesionArriba = anterior.getAttribute('sesion');
+            if (dataSeccionArriba === null) {
+                dataSeccionArriba = anterior.getAttribute('data-seccion');
+            }
+        } else if (anterior.classList.contains('divisorTarea')) {
+            if (sesionArriba === null) {
+                sesionArriba = anterior.getAttribute('data-valor');
+            }
+            if (dataSeccionArriba === null) {
+                dataSeccionArriba = anterior.getAttribute('data-valor');
+            }
+        }
+        if (sesionArriba !== null && dataSeccionArriba !== null) break;
+        anterior = anterior.previousElementSibling;
+    }
+
+    guardarOrdenTareas({
+        idTareaMovida: tareaMovida.getAttribute('id-post'),
+        nuevaPosicion: nuevaPosicion,
+        ordenNuevo: ordenNuevo,
+        sesionArriba: sesionArriba,
+        dataSeccionArriba: dataSeccionArriba
+    });
+};
+
 function moverTarea() {
     const lista = document.querySelector('.clase-tarea');
     if (!lista) return;
@@ -798,40 +767,33 @@ function moverTarea() {
         ev.preventDefault();
 
         const mouseY = ev.clientY;
+        const rectLista = lista.getBoundingClientRect();
 
         if (!movimientoRealizado && Math.abs(mouseY - posInicialY) > tolerancia) {
             movimientoRealizado = true;
         }
 
-        let anterior = arrastrandoElem.previousElementSibling;
-        let siguiente = arrastrandoElem.nextElementSibling;
-        let encontradoAnterior = false;
-        let encontradoSiguiente = false;
+        if (mouseY < rectLista.top || mouseY > rectLista.bottom) {
+            return;
+        }
 
-        while (anterior || siguiente) {
-            if (anterior && !encontradoAnterior) {
-                const rectAnt = anterior.getBoundingClientRect();
-                if (mouseY < rectAnt.top + rectAnt.height / 2) {
-                    lista.insertBefore(arrastrandoElem, anterior);
-                    encontradoAnterior = true;
-                } else {
-                    anterior = anterior.previousElementSibling;
-                }
-            }
+        const elemsVisibles = Array.from(lista.children).filter(child => child.style.display !== 'none' && child !== arrastrandoElem);
+        let insertado = false;
 
-            if (siguiente && !encontradoSiguiente) {
-                const rectSig = siguiente.getBoundingClientRect();
-                if (mouseY > rectSig.top + rectSig.height / 2) {
-                    lista.insertBefore(arrastrandoElem, siguiente.nextSibling);
-                    encontradoSiguiente = true;
-                } else {
-                    siguiente = siguiente.nextElementSibling;
-                }
-            }
+        for (let i = 0; i < elemsVisibles.length; i++) {
+            const elem = elemsVisibles[i];
+            const rectElem = elem.getBoundingClientRect();
+            const elemMedio = rectElem.top + rectElem.height / 2;
 
-            if (encontradoAnterior || encontradoSiguiente) {
-                return;
+            if (mouseY < elemMedio) {
+                lista.insertBefore(arrastrandoElem, elem);
+                insertado = true;
+                break;
             }
+        }
+
+        if (!insertado && elemsVisibles.length > 0) {
+            lista.appendChild(arrastrandoElem);
         }
     };
 
@@ -841,19 +803,19 @@ function moverTarea() {
         let anterior = arrastrandoElem.previousElementSibling;
         while (anterior) {
             if (anterior.classList.contains('POST-tarea')) {
-                if (sesionArriba === null) {
-                    sesionArriba = anterior.getAttribute('sesion');
-                }
+                sesionArriba = anterior.getAttribute('sesion');
                 if (dataSeccionArriba === null) {
                     dataSeccionArriba = anterior.getAttribute('data-seccion');
                 }
-                if (sesionArriba !== null && dataSeccionArriba !== null) break;
             } else if (anterior.classList.contains('divisorTarea')) {
+                if (sesionArriba === null) {
+                    sesionArriba = anterior.getAttribute('data-valor'); // Usar data-valor para la sesión
+                }
                 if (dataSeccionArriba === null) {
                     dataSeccionArriba = anterior.getAttribute('data-valor');
                 }
-                if (sesionArriba !== null && dataSeccionArriba !== null) break;
             }
+            if (sesionArriba !== null && dataSeccionArriba !== null) break;
             anterior = anterior.previousElementSibling;
         }
         return {sesionArriba, dataSeccionArriba};
@@ -867,7 +829,6 @@ function moverTarea() {
         const {sesionArriba, dataSeccionArriba} = obtenerSesionYDataSeccionArriba();
 
         if (movimientoRealizado) {
-            // Actualizar atributos en el elemento HTML
             if (dataSeccionArriba) {
                 arrastrandoElem.setAttribute('data-seccion', dataSeccionArriba);
             }
@@ -881,7 +842,7 @@ function moverTarea() {
             log += `\n  Orden nuevo: ${ordenNuevo}`;
             log += `\n  Sesión de la tarea de arriba: ${sesionArriba}`;
             log += `\n  Data-seccion de la tarea de arriba: ${dataSeccionArriba}`;
-            console.log(log);
+            //console.log(log);
 
             guardarOrdenTareas({
                 idTareaMovida: idTareaArrastrada,
@@ -915,7 +876,7 @@ function moverTarea() {
 
 function guardarOrdenTareas({idTareaMovida, nuevaPosicion, ordenNuevo, sesionArriba}) {
     let log = `Guardando orden:\n  Tarea movida: ${idTareaMovida}\n  Nueva posición: ${nuevaPosicion}\n  Orden nuevo: ${ordenNuevo}\n SesionArriba: ${sesionArriba}`;
-    console.log(log);
+    //console.log(log);
 
     enviarAjax('actualizarOrdenTareas', {tareaMovida: idTareaMovida, nuevaPosicion, ordenNuevo, sesionArriba})
         .then(res => {
@@ -928,4 +889,112 @@ function guardarOrdenTareas({idTareaMovida, nuevaPosicion, ordenNuevo, sesionArr
         .catch(err => {
             console.error('Error en la petición AJAX:', err);
         });
+}
+
+/*
+
+<li class="POST-tarea EDYQHV 497  draggable-element pendiente" filtro="tarea" tipo-tarea="una vez" id-post="497" autor="1" draggable="true" sesion="" estado="pendiente" data-submenu-initialized="true" data-seccion="General">
+    <p class="tituloTarea" data-tarea="497">Titutlo de la tarea</p>
+<li class="POST-tarea EDYQHV 496  draggable-element pendiente" filtro="tarea" tipo-tarea="una vez" id-post="496" autor="1" draggable="true" sesion="" estado="pendiente" data-submenu-initialized="true" data-seccion="General">
+    <p class="tituloTarea" data-tarea="496">Titutlo de la tarea</p>
+
+*/
+
+function subTarea() {
+    const listaTareas = document.querySelector('.clase-tarea');
+
+    listaTareas.addEventListener('keydown', event => {
+        const elementoActual = document.activeElement;
+
+        if (elementoActual.classList.contains('tituloTarea') && elementoActual.isContentEditable) {
+            const tareaActual = elementoActual.closest('.POST-tarea');
+            const idTareaActual = tareaActual.getAttribute('id-post');
+
+            if (event.shiftKey && event.key === 'Tab') {
+                event.preventDefault();
+                if (tareaActual.classList.contains('subtarea')) {
+                    tareaActual.classList.remove('subtarea');
+
+                    const data = {
+                        id: idTareaActual,
+                        subtarea: false
+                    };
+
+                    enviarAjax('crearSubtarea', data)
+                        .then(res => {
+                            console.log('Subtarea eliminada exitosamente');
+                        })
+                        .catch(error => {
+                            console.error('Error al eliminar subtarea:', error);
+                        });
+                }
+            } else if (event.key === 'Tab') {
+                event.preventDefault();
+
+                const tareaAnterior = tareaActual.previousElementSibling;
+                if (tareaAnterior && tareaAnterior.classList.contains('POST-tarea')) {
+                    tareaActual.classList.add('subtarea');
+
+                    const idTareaAnterior = tareaAnterior.getAttribute('id-post');
+
+                    const data = {
+                        id: idTareaActual,
+                        padre: idTareaAnterior,
+                        subtarea: true
+                    };
+
+                    enviarAjax('crearSubtarea', data)
+                        .then(res => {
+                            console.log('Subtarea creada exitosamente');
+                        })
+                        .catch(error => {
+                            console.error('Error al crear subtarea:', error);
+                        });
+                }
+            }
+        }
+    });
+}
+
+function borrarTareaVacia() {
+    const tareas = document.querySelectorAll('.tituloTarea');
+
+    tareas.forEach(tarea => {
+        let borrar = false;
+
+        tarea.addEventListener('keydown', ev => {
+            if (ev.key === 'Backspace' && tarea.textContent.trim() === '') {
+                if (borrar) {
+                    const id = tarea.dataset.tarea;
+                    const tareaCompleta = tarea.closest('.POST-tarea');
+
+                    // Eliminar event listeners antes de remover la tarea
+                    tarea.removeEventListener('input', tarea.onInput);
+                    tarea.removeEventListener('blur', tarea.onBlur);
+                    tarea.removeEventListener('paste', tarea.onPaste);
+
+                    tareaCompleta.remove();
+
+                    let log = 'Se borró la tarea con ID: ' + id;
+
+                    const data = {
+                        id: id
+                    };
+                    enviarAjax('borrarTarea', data)
+                        .then(resp => {
+                            log += ', \n  Respuesta recibida: ' + resp;
+                            console.log(log);
+                        })
+                        .catch(error => {
+                            log += ', \n  Error: ' + error;
+                            console.error(log);
+                        });
+                } else {
+                    borrar = true;
+                }
+            } else {
+                borrar = false;
+            }
+        });
+    });
 }

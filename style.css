@@ -9032,16 +9032,21 @@ svg#emptystate {
     margin: auto;
 }
 
+
 .POST-tarea {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-content: center;
     align-items: center;
-    padding: 5px 20px;
+    padding: 3px 20px;
     gap: 10px;
     background: unset;
     border: unset;
+}
+
+.subtarea {
+    padding-left: 40px !important;
 }
 
 button.completaTarea {
@@ -9087,7 +9092,10 @@ p.tituloTarea {
 }
 
 span.tituloImportancia {
-    display: none;
+    font-size: 11px;
+    border: var(--borde);
+    padding: 3px 10px;
+    border-radius: 50px;
 }
 
 

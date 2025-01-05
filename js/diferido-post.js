@@ -94,7 +94,7 @@
             const listas = tabActivo.querySelectorAll('.social-post-list');
 
             if (listas.length === 1) {
-                console.log('Caso 1: Una sola lista');
+                //console.log('Caso 1: Una sola lista');
                 manejarScrollVentana(tabActivo, listas[0]);
             }
         }, 20);
@@ -110,7 +110,7 @@
         const alturaVisible = lista.clientHeight;
 
         if (scrollTop + alturaVisible >= alturaLista - 100) {
-            console.log('Cargando contenido en lista:', lista.id);
+            //console.log('Cargando contenido en lista:', lista.id);
             precargarContenido(lista, tabActivo);
         }
     }
@@ -121,7 +121,7 @@
         const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
         if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
-            console.log('Cargando contenido en caso 1');
+            //console.log('Cargando contenido en caso 1');
             precargarContenido(lista, tabActivo);
         }
     }
@@ -162,10 +162,12 @@
 
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
         let log = '';
+        let respuestaCompleta = null; // Variable para almacenar la respuesta completa
+
         if (estaCargando) {
             log += 'La función ya está en ejecución.\n';
-            console.log(log);
-            return;
+            //console.log(log);
+            return {log, respuestaCompleta}; // Devuelve log y respuestaCompleta
         }
 
         let {filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {};
@@ -188,7 +190,7 @@
         while (!listaPublicaciones && intentos < maxIntentos) {
             intentos++;
             log += `No se encontró listaPublicaciones, intento: ${intentos}.\n`;
-            console.log(log);
+            //console.log(log);
             await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
             listaPublicaciones = document.querySelector(`.tab.active .social-post-list.clase-${posttype}`);
             ({filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {});
@@ -196,9 +198,9 @@
 
         if (!listaPublicaciones) {
             log += 'No se encontró listaPublicaciones después de varios intentos.\n';
-            console.log(log);
+            //console.log(log);
             estaCargando = false;
-            return;
+            return {log, respuestaCompleta}; // Devuelve log y respuestaCompleta
         }
 
         const idUsuario = window.idUsuarioActual;
@@ -233,15 +235,18 @@
 
             const textoRespuesta = await respuesta.text();
             log += `Texto de la respuesta: ${textoRespuesta.substring(0, 200)}... (truncado).\n`;
+            respuestaCompleta = textoRespuesta; // Guardar la respuesta completa
             await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba, id);
         } catch (error) {
             log += `Error en la petición AJAX: ${error}.\n`;
-            console.error(log);
+            //console.error(log);
         } finally {
             estaCargando = false;
             log += 'La función ha finalizado.\n';
-            console.log(log);
+            //console.log(log);
         }
+
+        return {log, respuestaCompleta}; // Devuelve log y respuestaCompleta
     }
 
     async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false, id = null) {
@@ -262,51 +267,24 @@
         eliminarMarcadorCarga(listaPublicaciones);
     }
 
-    /*
-    manejarContenido:  Se recibió la ID: 381 para reemplazar la publicación. Se encontró un elemento con la clase .EDYQHV y el atributo id-post="381". Hay 1 publicación(es) válida(s) para reemplazar. Publicación con ID 381 encontrada y hay publicaciones válidas. Reemplazando contenido. 
-    porque no reinicia las funciones y eventos cuando se recibe una id 
-    */
-
     function manejarContenido(publiValidas, listaPubli, arriba = false, id = null) {
         let log = '';
+        //aqui necesito que si recibe una id, entonces, si no la puedo remplazar, la agrega
         if (id) {
-            log += `Se recibió la ID: ${id} para reemplazar la publicación. `;
             const postExistente = listaPubli.querySelector(`.EDYQHV[id-post="${id}"]`);
-
-            if (postExistente) {
-                log += `Se encontró un elemento con la clase .EDYQHV y el atributo id-post="${id}". `;
-            } else {
-                log += `No se encontró ningún elemento con la clase .EDYQHV y el atributo id-post="${id}". `;
-            }
-
-            if (publiValidas.length > 0) {
-                log += `Hay ${publiValidas.length} publicación(es) válida(s) para reemplazar. `;
-            } else {
-                log += `No hay publicaciones válidas para reemplazar. `;
-            }
+            log += `Se recibió ID: ${id}. `;
+            log += postExistente ? `Elemento .EDYQHV[id-post="${id}"] encontrado. ` : `No se encontró .EDYQHV[id-post="${id}"]. `;
+            log += publiValidas.length > 0 ? `${publiValidas.length} publicación(es) válida(s). ` : `No hay publicaciones válidas. `;
 
             if (postExistente && publiValidas.length > 0) {
-                log += `Publicación con ID ${id} encontrada y hay publicaciones válidas. Reemplazando contenido. `;
                 postExistente.outerHTML = publiValidas[0];
-
-                // Reinicializar funciones y eventos después de reemplazar la publicación
-                log += `Reinicializando funciones y eventos después de reemplazar publicación. `;
-                const funciones = ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas', 'initNotas'];
-                funciones.forEach(func => {
-                    if (typeof window[func] === 'function') {
-                        window[func]();
-                        log += `Función ${func} reinicializada. `;
-                    }
-                });
+                log += `Publicación ${id} reemplazada. Reinicializando funciones y eventos. `;
+                reiniciarFuncionesYEventos();
                 reiniciarEventosPostTag();
             } else {
-                log += `No se puede reemplazar la publicación con ID ${id}. `;
-                if (!postExistente) {
-                    log += `La publicación no existe en el DOM. `;
-                }
-                if (publiValidas.length === 0) {
-                    log += `No hay publicaciones válidas para reemplazar. `;
-                }
+                log += `No se puede reemplazar la publicación ${id}. `;
+                if (!postExistente) log += `Publicación no existe en el DOM. `;
+                if (publiValidas.length === 0) log += `No hay publicaciones válidas. `;
             }
         } else if (publiValidas.length > 0) {
             log += `Insertando ${publiValidas.length} nuevas publicaciones. `;
@@ -317,33 +295,36 @@
             const publiEnDOM = listaPubli.querySelectorAll('.EDYQHV');
             const exceso = publiEnDOM.length - MAX_POSTS;
             if (exceso > 0) {
-                log += `Excedido el límite de publicaciones en ${exceso}. Eliminando publicaciones antiguas. `;
+                log += `Excedido límite de publicaciones en ${exceso}. Eliminando antiguas. `;
                 for (let i = 0; i < exceso; i++) {
                     const elim = publiEnDOM[i];
                     const idPubli = elim.getAttribute('id-post')?.trim();
                     if (idPubli) {
                         publicacionesCargadas.delete(idPubli);
-                        log += `Eliminada publicación con ID ${idPubli}. `;
+                        log += `Eliminada publicación ${idPubli}. `;
                     }
                     elim.remove();
                 }
             }
 
             log += `Reinicializando funciones y eventos. `;
-            const funciones = ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas', 'initNotas'];
-            funciones.forEach(func => {
-                if (typeof window[func] === 'function') {
-                    window[func]();
-                    log += `Función ${func} reinicializada. `;
-                }
-            });
-
+            reiniciarFuncionesYEventos();
             reiniciarEventosPostTag();
         } else {
             log += `No hay publicaciones válidas. Deteniendo carga. `;
             detenerCarga();
         }
-        console.log('manejarContenido: ', log);
+
+        //console.log('manejarContenido:', log);
+    }
+
+    function reiniciarFuncionesYEventos() {
+        const funciones = ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas', 'initNotas'];
+        funciones.forEach(func => {
+            if (typeof window[func] === 'function') {
+                window[func]();
+            }
+        });
     }
 
     function insertarMarcadorCarga(lista, filtro) {
@@ -387,17 +368,17 @@
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log += `No hay más publicaciones. `;
             detenerCarga();
-            console.log('validarRespuesta: ', log);
+            //console.log('validarRespuesta: ', log);
             return null;
         }
         if (!respuestaLimpia) {
             log += `Respuesta vacía recibida. `;
             detenerCarga();
-            console.log('validarRespuesta: ', log);
+            //console.log('validarRespuesta: ', log);
             return null;
         }
         log += `Respuesta válida. Parseando a DOM. `;
-        console.log('validarRespuesta: ', log);
+        //console.log('validarRespuesta: ', log);
         return new DOMParser().parseFromString(respuesta, 'text/html');
     }
 
@@ -420,7 +401,7 @@
         if (publicacionesNuevas.length === 0) {
             log += `No se encontraron publicaciones nuevas en la respuesta. `;
             detenerCarga();
-            console.log('procesarPublicaciones: ', log);
+            //console.log('procesarPublicaciones: ', log);
             return [];
         }
 
@@ -461,7 +442,7 @@
             }
         });
         contadorDeSamples();
-        console.log('procesarPublicaciones: ', log);
+        //console.log('procesarPublicaciones: ', log);
         return publicacionesValidas;
     }
 
@@ -500,16 +481,18 @@
         }
     }
 
-    window.reiniciarPost = function (id, clase) {
-        window.reiniciarContenido(false, false, clase, false, null, id);
+    window.reiniciarPost = async function (id, clase) {
+        const respuesta = await window.reiniciarContenido(false, false, clase, false, null, id);
+        return respuesta;
     };
 
-    //Recordatiorio: prioridad simplmente para las tareas - cambia el filtro de tareas a tareasPrioridad
-    window.reiniciarContenido = function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
+    window.reiniciarContenido = async function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
         let classClase = clase ? `clase-${clase}` : '';
         const lista = document.querySelector(`.tab.active .social-post-list.${classClase}`);
+        let respuestaCompleta = null;
+
         if (!lista) {
-            return;
+            return {log: 'No se encontró la lista', respuestaCompleta};
         }
 
         publicacionesCargadas.clear();
@@ -520,12 +503,17 @@
         }
         actualizarUIBusqueda('');
         resetearCarga();
-        cargarMasContenido(lista, null, null, null, arriba, prioridad, id).then(() => {
-            if (typeof callback === 'function') {
-                callback();
-            }
-        });
+
+        const {log, respuestaCompleta: respuesta} = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
+        respuestaCompleta = respuesta;
+
+        if (typeof callback === 'function') {
+            callback();
+        }
+
+        return {log, respuestaCompleta};
     };
+
     function resetearCarga() {
         log('Ejecutando resetearCarga');
         paginaActual = 1;
@@ -745,13 +733,13 @@ window.contadorDeSamples = () => {
                 } else {
                     // Mostrar un mensaje de error si algo salió mal
                     resultadosElement.textContent = '0 resultados';
-                    console.error(data.data.message || 'Error desconocido.');
+                    //console.error(data.data.message || 'Error desconocido.');
                 }
             })
             .catch(error => {
                 // Manejar errores de la solicitud
                 resultadosElement.textContent = '0 resultados';
-                console.error('Error en la solicitud AJAX:', error);
+                //console.error('Error en la solicitud AJAX:', error);
             });
     }
 

@@ -69,6 +69,7 @@ function publicaciones($args = [], $isAjax = false, $paged = 1)
             : get_user_meta($usu, 'tipoUsuario', true);
         $args = array_merge($defaults, $args);
         $log = "Funcion publicaciones \n";
+
         if (!empty($args['id'])) {
             $log .= "Se procesara la publicacion con ID: " . $args['id'] . " \n";
             $queryArgs = [
@@ -86,10 +87,27 @@ function publicaciones($args = [], $isAjax = false, $paged = 1)
                 return false;
             }
         } else {
+
+            if ($args['post_type'] === 'tarea') {
+                $log .= "Antes de configuracionQueryArgs, post_type tarea, IDs: " . (isset($queryArgs['post__in']) ? implode(', ', $queryArgs['post__in']) : 'No hay IDs definidos') . " \n";
+            }
             $queryArgs = configuracionQueryArgs($args, $paged, $userId, $usu, $tipoUsuario);
+            if ($args['post_type'] === 'tarea') {
+                $log .= "Después de configuracionQueryArgs, post_type tarea, IDs: " . (isset($queryArgs['post__in']) ? implode(', ', $queryArgs['post__in']) : 'No hay IDs definidos') . " \n";
+            }
         }
         $colecciones = obtenerColeccionesParaMomento($args, $usu);
+
+        if ($args['post_type'] === 'tarea') {
+            $log .= "Antes de procesarPublicaciones, post_type tarea, IDs: " . (isset($queryArgs['post__in']) ? implode(', ', $queryArgs['post__in']) : 'No hay IDs definidos') . " \n";
+        }
+
         $output = procesarPublicaciones($queryArgs, $args, $isAjax);
+
+        if ($args['post_type'] === 'tarea') {
+            $log .= "Después de procesarPublicaciones, post_type tarea, IDs: " . (isset($queryArgs['post__in']) ? implode(', ', $queryArgs['post__in']) : 'No hay IDs definidos') . " \n";
+        }
+
         if ($args['filtro'] === 'momento') {
             $output = $colecciones . $output;
         }
@@ -100,11 +118,11 @@ function publicaciones($args = [], $isAjax = false, $paged = 1)
             wp_die();
         }
         $log .= "Retornando output";
-        guardarLog($log);
+        //guardarLog($log);
         return $output;
     } catch (Exception $e) {
         $log .= "Error: " . $e->getMessage();
-        guardarLog($log);
+        //guardarLog($log);
         return false;
     }
 }
@@ -161,7 +179,7 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
     }
 }
 
-function preOrdenamiento($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
+function preOrdenamiento($args, $paged, $usu, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
 {
     try {
         global $wpdb;
@@ -181,31 +199,29 @@ function preOrdenamiento($args, $paged, $usuarioActual, $identifier, $isAdmin, $
         }
 
         if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || !in_array($args['filtro'], ['rola', 'momento', 'tiendaPerfil', 'rolaListLike']))) {
-            $queryArgs = ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
+            $queryArgs = ordenamiento($queryArgs, $filtroTiempo, $usu, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
         }
 
         if ($args['post_type'] === 'colecciones') {
-            $queryArgs = ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
+            $queryArgs = ordenamientoColecciones($queryArgs, $filtroTiempo, $usu, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
         }
 
         if ($args['post_type'] === 'tarea') {
             if ($args['filtro'] === 'tareaPrioridad') {
-                //esto hay que optimizarlo
-                $queryArgs = ordenamientoTareasPorPrioridad($queryArgs, $usuarioActual);
-                $queryArgs = ordenamientoTareas($queryArgs, $usuarioActual, $args);
+                $prioridad = true;
+                $queryArgs = ordenamientoTareas($queryArgs, $usu, $args, $prioridad);
             } else {
-                $queryArgs = ordenamientoTareas($queryArgs, $usuarioActual, $args);
+                $queryArgs = ordenamientoTareas($queryArgs, $usu, $args);
             }
+            $log = "Orden de IDs después de ordenamientoTareas en preOrdenamiento: " . implode(', ', $queryArgs['post__in']);
+            //guardarLog($log);
         }
-
 
         return $queryArgs;
     } catch (Exception $e) {
-
         return false;
     }
 }
-
 
 
 
@@ -504,13 +520,13 @@ function ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $s
 
 function aplicarFiltrosUsuario($queryArgs, $usuarioActual)
 {
-    //guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $usuarioActual");
+    ////guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $usuarioActual");
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
-    //guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
+    ////guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
 
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
-        //guardarLog("No hay filtros aplicables o el formato es incorrecto.");
+        ////guardarLog("No hay filtros aplicables o el formato es incorrecto.");
         return $queryArgs;
     }
 
@@ -521,34 +537,34 @@ function aplicarFiltrosUsuario($queryArgs, $usuarioActual)
     // Filtro para ocultar posts descargados
     if (in_array('ocultarDescargados', $filtrosUsuario)) {
         $descargasAnteriores = get_user_meta($usuarioActual, 'descargas', true) ?: [];
-        //guardarLog("Descargas anteriores: " . print_r($descargasAnteriores, true));
+        ////guardarLog("Descargas anteriores: " . print_r($descargasAnteriores, true));
         if (!empty($descargasAnteriores)) {
             $post_not_in = array_merge(
                 $post_not_in,
                 array_keys($descargasAnteriores)
             );
-            //guardarLog("Post__not_in después de ocultar descargados: " . print_r($post_not_in, true));
+            ////guardarLog("Post__not_in después de ocultar descargados: " . print_r($post_not_in, true));
         }
     }
 
     // Filtro para ocultar posts en colección
     if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
         $samplesGuardados = get_user_meta($usuarioActual, 'samplesGuardados', true) ?: [];
-        //guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
+        ////guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
         if (!empty($samplesGuardados)) {
             $guardadosIDs = array_keys($samplesGuardados);
             $post_not_in = array_merge(
                 $post_not_in,
                 $guardadosIDs
             );
-            //guardarLog("Post__not_in después de ocultar en colección: " . print_r($post_not_in, true));
+            ////guardarLog("Post__not_in después de ocultar en colección: " . print_r($post_not_in, true));
         }
     }
 
     // Filtro para mostrar solo los posts que le han gustado al usuario
     if (in_array('mostrarMeGustan', $filtrosUsuario)) {
         $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
-        //guardarLog("Post IDs que le gustan al usuario: " . print_r($userLikedPostIds, true));
+        ////guardarLog("Post IDs que le gustan al usuario: " . print_r($userLikedPostIds, true));
         if (!empty($userLikedPostIds)) {
             if (!empty($post_in)) {
                 $post_in = array_intersect($post_in, $userLikedPostIds);
@@ -556,26 +572,26 @@ function aplicarFiltrosUsuario($queryArgs, $usuarioActual)
                 $post_in = $userLikedPostIds;
             }
 
-            //guardarLog("Post__in después de aplicar mostrarMeGustan: " . print_r($post_in, true));
+            ////guardarLog("Post__in después de aplicar mostrarMeGustan: " . print_r($post_in, true));
 
             if (empty($post_in)) {
                 $queryArgs['posts_per_page'] = 0;
-                //guardarLog("No hay posts que mostrar después de aplicar mostrarMeGustan.");
+                ////guardarLog("No hay posts que mostrar después de aplicar mostrarMeGustan.");
             }
         } else {
             $queryArgs['posts_per_page'] = 0;
-            //guardarLog("No hay posts que le gusten al usuario, posts_per_page se establece en 0.");
+            ////guardarLog("No hay posts que le gusten al usuario, posts_per_page se establece en 0.");
         }
     }
 
     // Eliminar los IDs en post_not_in de post_in para evitar conflictos
     if (!empty($post_in) && !empty($post_not_in)) {
         $post_in = array_diff($post_in, $post_not_in);
-        //guardarLog("Post__in después de eliminar IDs en post__not_in: " . print_r($post_in, true));
+        ////guardarLog("Post__in después de eliminar IDs en post__not_in: " . print_r($post_in, true));
 
         if (empty($post_in)) {
             $queryArgs['posts_per_page'] = 0;
-            //guardarLog("No hay posts que mostrar después de aplicar los filtros.");
+            ////guardarLog("No hay posts que mostrar después de aplicar los filtros.");
         }
     }
 

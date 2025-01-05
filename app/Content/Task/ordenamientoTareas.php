@@ -1,87 +1,120 @@
 <?
 
-//aqui necesito que ordene las tareas bien, creo que falla al identificar sesiones o estado, no tiene que diferenciar entre minisculas o mayusculas, y la sescion archivado, es equivalante a el estado archivado
-function ordenamientoTareas($queryArgs, $usu, $args)
+function ordenamientoTareas($queryArgs, $usu, $args, $prioridad = false)
 {
+    $ordenarServidor = false;
+
     $orden = get_user_meta($usu, 'ordenTareas', true);
     $log = "Funcion ordenamientoTareas \n";
+
     if (!is_array($orden)) {
         $orden = [];
     }
 
-    $todasTareasArgs = [
-        'post_type'      => 'tarea',
-        'author'         => $usu,
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-    ];
-    $todasTareas = get_posts($todasTareasArgs);
+    if (!$ordenarServidor) {
+        $log .= "Iniciando proceso de actualización de orden (ordenamiento desactivado).\n";
+        $todasTareasArgs = [
+            'post_type'      => 'tarea',
+            'author'         => $usu,
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        ];
+        $todasTareas = get_posts($todasTareasArgs);
+        $log .= "Se obtuvieron todas las tareas del usuario $usu. Total: " . count($todasTareas) . ".\n";
 
-    if (!empty($todasTareas) && is_array($todasTareas)) {
-        $nuevasTareas = array_diff($todasTareas, $orden);
+        $ordenValido = array_intersect($orden, $todasTareas);
+        $log .= "IDs de orden coincidentes con las tareas del usuario: " . count($ordenValido) . ".\n";
 
-        if (!empty($nuevasTareas)) {
-            $orden = array_merge($nuevasTareas, $orden);
+        $faltantes = array_diff($todasTareas, $ordenValido);
+        $log .= "IDs de tareas faltantes en el orden actual: " . count($faltantes) . ".\n";
+
+        $ordenFinal = array_merge($ordenValido, $faltantes);
+        $log .= "Nuevo orden calculado. IDs: " . implode(', ', $ordenFinal) . ".\n";
+
+        if ($ordenFinal !== $orden) {
+            $log .= "Se actualizó el orden de las tareas.\n";
+            $log .= "Se actualizaron las IDs de ordenTareas para el usuario $usu";
+            update_user_meta($usu, 'ordenTareas', $ordenFinal);
+        } else {
+            $log .= "El orden actual coincide con el orden calculado. No se realizaron cambios.\n";
         }
+        //guardarLog("ordenamientoTareas: \n" . $log);
 
-        $incompletas = [];
-        $completadas = [];
-        $archivadas = [];
-        $gruposSesion = [];
+        $queryArgs['post__in'] = $ordenFinal;
+        $queryArgs['orderby'] = 'post__in';
+    } else {
+        $todasTareasArgs = [
+            'post_type'      => 'tarea',
+            'author'         => $usu,
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        ];
+        $todasTareas = get_posts($todasTareasArgs);
 
-        foreach ($orden as $id) {
-            $post = get_post($id);
+        if (!empty($todasTareas) && is_array($todasTareas)) {
+            $nuevasTareas = array_diff($todasTareas, $orden);
 
-            if (!empty($post) && $post->post_status === 'publish') {
+            if (!empty($nuevasTareas)) {
+                $orden = array_merge($orden, $nuevasTareas);
+                update_user_meta($usu, 'ordenTareas', $orden);
+                $log .= "Se agregaron nuevas tareas al orden. \n";
+            }
+
+            $incompletas = [];
+            $completadas = [];
+            $archivadas = [];
+            $gruposSesion = [];
+
+            foreach ($orden as $id) {
+                $post = get_post($id);
                 $estado = strtolower(get_post_meta($id, 'estado', true));
                 $sesion = strtolower(get_post_meta($id, 'sesion', true));
 
-                if ($estado === 'completada') {
-                    $completadas[] = $id;
-                } elseif ($estado === 'archivado') {
-                    $archivadas[] = $id;
-                } else {
-                    if (!empty($sesion)) {
-                        $gruposSesion[$sesion][] = $id;
-                    } else {
-                        $incompletas[] = $id;
-                    }
-                }
-            } else {
-                if (!empty($post)) {
-                    $estado = strtolower(get_post_meta($id, 'estado', true));
-                    if ($estado === 'archivado') {
+                if ($post && $post->post_status === 'publish') {
+                    if ($estado === 'completada') {
+                        $completadas[] = $id;
+                    } elseif ($estado === 'archivado') {
                         $archivadas[] = $id;
+                    } else {
+                        if (!empty($sesion)) {
+                            $gruposSesion[$sesion][] = $id;
+                        } else {
+                            $incompletas[] = $id;
+                        }
                     }
+                } else if ($post && $estado === 'archivado') {
+                    $archivadas[] = $id;
+                } else if ($post) {
+                    $log .= "La tarea con ID $id no está publicada. \n";
+                } else {
+                    $log .= "La tarea con ID $id no existe. \n";
                 }
-                $log .= "La tarea con ID $id no existe o no está publicada. \n";
             }
+
+            $ordenFinal = [];
+
+            foreach ($gruposSesion as $sesion => $tareas) {
+                $ordenFinal = array_merge($ordenFinal, $tareas);
+            }
+
+            $ordenFinal = array_merge($ordenFinal, $incompletas, $completadas, $archivadas);
+
+            if ($ordenFinal !== $orden) {
+                $log .= "Se actualizó el orden de las tareas. \n,  Se actualizaron las IDs de ordenTareas para el usuario $usu";
+                update_user_meta($usu, 'ordenTareas', $ordenFinal);
+            }
+
+            $queryArgs['post__in'] = $ordenFinal;
+            $queryArgs['orderby'] = 'post__in';
         }
-
-        $ordenIncompletas = [];
-        foreach ($gruposSesion as $sesion => $tareas) {
-            $ordenIncompletas = array_merge($ordenIncompletas, $tareas);
-        }
-
-        $ordenIncompletas = array_merge($ordenIncompletas, $incompletas);
-        $ordenFinal = array_merge($ordenIncompletas, $completadas, $archivadas);
-
-        if ($ordenFinal !== $orden) {
-            $log .= "Se actualizó el orden de las tareas. \n";
-            update_user_meta($usu, 'ordenTareas', $ordenFinal);
-            $orden = $ordenFinal;
-        }
-
-        $queryArgs['post__in'] = $orden;
-        $queryArgs['orderby'] = 'post__in';
-        $log .= "Retornando \$queryArgs.";
-        guardarLog($log);
     }
 
+    //$log .= "Retornando \$queryArgs.";
+    guardarLog($log);
     return $queryArgs;
 }
 
-
+//esto funciona mal, no tiene que diferenciar entre mayuscola o miniscula el estado, creo
 function ordenamientoTareasPorPrioridad($queryArgs, $usu)
 {
     global $wpdb;
@@ -105,7 +138,7 @@ function ordenamientoTareasPorPrioridad($queryArgs, $usu)
     }
 
     foreach ($todasTareas as $tareaId) {
-        $estado = get_post_meta($tareaId, 'estado', true);
+        $estado = strtolower(get_post_meta($tareaId, 'estado', true));
         if ($estado === 'pendiente') {
             $tareasPend[] = $tareaId;
         } else {
@@ -145,8 +178,8 @@ function ordenamientoTareasPorPrioridad($queryArgs, $usu)
     unset($queryArgs['meta_key']);
     unset($queryArgs['meta_query']);
     unset($queryArgs['order']);
-    unset($queryArgs['meta_key']);
     unset($queryArgs['orderby']);
+
 
     return $queryArgs;
 }

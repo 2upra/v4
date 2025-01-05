@@ -24,7 +24,7 @@ add_action('rest_api_init', function () {
                 return false;
             }
 
-            $response = verificarToken($request); 
+            $response = verificarToken($request);
             if (is_wp_error($response)) {
                 chatLog('Error en la verificación del token: ' . $response->get_error_message());
                 return false;
@@ -41,7 +41,8 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function verificarToken($request) {
+function verificarToken($request)
+{
     // Obtener el token y user_id desde los parámetros o los headers
     $token = $request->get_param('token') ?: $request->get_header('X-WP-Token');
     $user_id = $request->get_param('user_id') ?: $request->get_header('X-User-ID');
@@ -78,17 +79,31 @@ function verificarToken($request) {
     }
 }
 
-function generarToken() {
+/*
+evita esto aca, no quiero ver esos logs
+[04-Jan-2025 01:05:18 UTC] PHP Warning:  Undefined array key "GALLEKEY" in C:\Users\1u\Local Sites\2upra\app\public\wp-content\themes\v4\app\Chat\api.php on line 88
+[04-Jan-2025 01:05:18 UTC] PHP Deprecated:  hash_hmac(): Passing null to parameter #3 ($key) of type string is deprecated in C:\Users\1u\Local Sites\2upra\app\public\wp-content\themes\v4\app\Chat\api.php on line 90
+*/
+
+function generarToken()
+{
     if (!is_user_logged_in()) {
-        chatLog('Error: Intento de generación de token sin usuario autenticado.');
         wp_send_json_error('Usuario no autenticado');
     }
 
-    $user_id = get_current_user_id();
-    $secret_key = ($_ENV['GALLEKEY']);
-    $rounded_time = floor(time() / 86400);
-    $token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
+    $usu = get_current_user_id();
+    $claveSecreta = $_ENV['GALLEKEY'] ?? '';
+    $tiempoRedondeado = floor(time() / 86400);
+    $log = "generarToken:";
 
-    wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
+    if (empty($claveSecreta)) {
+        $log .= "Error: La clave secreta no está definida.";
+        //guardarLog($log);
+        wp_send_json_error('Error interno del servidor');
+    }
+
+    $token = hash_hmac('sha256', $usu . $tiempoRedondeado, $claveSecreta);
+    $log .= "\n Token generado para el usuario $usu";
+    //guardarLog($log);
+    wp_send_json_success(['token' => $token, 'usu' => $usu]);
 }
-

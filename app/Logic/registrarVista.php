@@ -36,7 +36,7 @@ function guardarVista() {
             update_user_meta($userId, 'vistas_posts', $vistasUsuario);
             update_user_meta($userId, 'vistas_totales_usuario', $vistasTotalesUsuario);
 
-            if ($vistasTotalesUsuario % 5 === 0) {
+            if ($vistasTotalesUsuario % 6 === 0) {
                 reiniciarFeed($userId);
             }
         }

@@ -12,55 +12,83 @@ function htmlTareas($filtro)
     $autorId = get_post_field('post_author', $tareaId);
     $proxima = get_post_meta($tareaId, 'fechaProxima', true);
     $sesion = get_post_meta($tareaId, 'sesion', true);
+    $impnum = get_post_meta($tareaId, 'impnum', true);
 
     if ($filtro === 'tareaPrioridad') {
         $filtro = 'tarea';
     }
 
-    $impIcono = '';
-    switch ($imp) {
-        case 'baja':
-            $impIcono = $GLOBALS['baja'];
-            break;
-        case 'media':
-            $impIcono = $GLOBALS['media'];
-            break;
-        case 'alta':
-            $impIcono = $GLOBALS['alta'];
-            break;
-        case 'importante':
-            $impIcono = $GLOBALS['importante'];
-            break;
-        default:
-            guardarLog("htmlTareas: Importancia no reconocida: $imp");
-            $impIcono = '';
-    }
+    $mostrarIcono = get_user_meta($autorId, 'mostrarIconoTareas', true);
+    $mostrarIcono = ($mostrarIcono === '') ? true : (bool)$mostrarIcono;
 
-    $tipoIcono = '';
-    switch ($tipo) {
-        case 'una vez':
-            $tipoIcono = $GLOBALS['unavez'];
-            break;
-        case 'habito':
-            $tipoIcono = $GLOBALS['habito'];
-            break;
-        case 'habito rigido':
-            $tipoIcono = $GLOBALS['habito'];
-            break;
-        case 'habito flexible':
-            $tipoIcono = $GLOBALS['habito'];
-            break;
-        case 'meta':
-            $tipoIcono = $GLOBALS['meta'];
-            break;
-        default:
-            guardarLog("htmlTareas: Tipo no reconocido: $tipo");
-            $tipoIcono = '';
-    }
+    $impIcono = obtenerIconoImportancia($imp, $mostrarIcono);
+    $tipoIcono = obtenerIconoTipo($tipo, $mostrarIcono);
 
-    return generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion);
+    return generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion, $impnum);
 }
 
+
+function obtenerIconoImportancia($imp, $mostrarIcono)
+{
+    $log = "obtenerIconoImportancia: ";
+    if (!$mostrarIcono) {
+        $log .= "Se retorna el texto de importancia: $imp";
+        guardarLog($log);
+        return $imp;
+    }
+
+    switch ($imp) {
+        case 'baja':
+            $icono = $GLOBALS['baja'];
+            break;
+        case 'media':
+            $icono = $GLOBALS['media'];
+            break;
+        case 'alta':
+            $icono = $GLOBALS['alta'];
+            break;
+        case 'importante':
+            $icono = $GLOBALS['importante'];
+            break;
+        default:
+            $icono = '';
+            $log .= "Importancia no reconocida: $imp, ";
+    }
+    $log .= "Se retorna el icono de importancia: $icono";
+    //guardarLog($log);
+    return $icono;
+}
+
+function obtenerIconoTipo($tipo, $mostrarIcono)
+{
+    $log = "obtenerIconoTipo: ";
+    if (!$mostrarIcono) {
+        $log .= "Se retorna el texto de tipo: $tipo";
+        //guardarLog($log);
+        return $tipo;
+    }
+
+    switch ($tipo) {
+        case 'una vez':
+            $icono = $GLOBALS['unavez'];
+            break;
+        case 'habito':
+        case 'habito rigido':
+        case 'habito flexible':
+            $icono = $GLOBALS['habito'];
+            break;
+        case 'meta':
+            $icono = $GLOBALS['meta'];
+            break;
+        default:
+            $icono = '';
+            $log .= "Tipo no reconocido: $tipo, ";
+    }
+
+    $log .= "Se retorna el icono de tipo: $icono";
+    //guardarLog($log);
+    return $icono;
+}
 
 function obtenerFrecuenciaTexto($frecuencia)
 {
@@ -118,11 +146,14 @@ function botonesHabitos($tareaId, $frecuencia, $proxima)
     return ob_get_clean();
 }
 
-function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion)
+function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion, $impnum)
 {
     $clase = ($estado === 'completada') ? 'completada' : '';
     $estilo = ($estado === 'completada') ? 'style="text-decoration: line-through;"' : '';
     $esHabito = ($tipo === 'habito' || $tipo === 'habito rigido');
+
+    $mostrarIcono = get_user_meta($autorId, 'mostrarIconoTareas', true);
+    $mostrarIcono = ($mostrarIcono === '') ? false : (bool)$mostrarIcono;
 
     ob_start();
 ?>
@@ -135,7 +166,9 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
         autor="<? echo esc_attr($autorId); ?>"
         draggable="true" <? echo $estilo; ?>
         sesion="<? echo esc_attr($sesion) ?>"
-        estado="<? echo esc_attr($estado) ?>">
+        estado="<? echo esc_attr($estado) ?>"
+        impnum="<? echo esc_attr($impnum) ?>"
+        importancia="<? echo esc_attr($imp) ?>">
 
         <button class="completaTarea <? if ($esHabito) echo 'habito'; ?>" data-tarea="<? echo $tareaId; ?>">
             <? echo $GLOBALS['verificadoCirculo']; ?>
@@ -145,22 +178,30 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
             <? echo $titulo; ?>
         </p>
 
+        <p class="idtarea" style="display: none;">
+            <? echo $tareaId ?>
+        </p>
+
         <? if ($esHabito) {
             echo botonesHabitos($tareaId, $frecuencia, $proxima);
         } ?>
-   
-        <div class="divSesion" data-tarea="<? echo $tareaId; ?>"  style="display: none; cursor: pointer;">
+
+        <div class="divSesion" data-tarea="<? echo $tareaId; ?>" style="display: none; cursor: pointer;">
             <p class="sesionTarea">
                 <? echo $GLOBALS['carpetaIcon']; ?>
             </p>
         </div>
 
         <div class="divImportancia" data-tarea="<? echo $tareaId; ?>">
-            <p class="importanciaTarea svgtask">
-                <? echo $impIcono; ?>
-                <span class="tituloImportancia"><? echo $imp; ?></span>
+            <p class="importanciaTarea <? if ($mostrarIcono) echo 'svgtask'; ?>">
+                <? if ($mostrarIcono) : ?>
+                    <? echo $impIcono; ?>
+                <? else : ?>
+                    <span class="tituloImportancia"><? echo $imp; ?></span>
+                <? endif; ?>
             </p>
         </div>
+
         <p class="tipoTarea svgtask" style="display: none;"><? echo $tipoIcono; ?></p>
         <p class="estadoTarea" style="display: none;"><? echo $estado; ?></p>
         <? echo opcionesPost($tareaId, $autorId) ?>

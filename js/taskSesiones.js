@@ -1,11 +1,26 @@
 let mapa = {general: [], archivado: []};
 const lista = document.querySelector('.social-post-list.clase-tarea');
 
-//todo esto funciona bien, pero necesito que la sesion de archivo siempre este al final, es todo
+/*
+mme doy cuenta qu cuando hay una sesion que tiene espacios en su nombre, esto falla
+taskSesiones.js?ver=0.2.313.1087995295:117  Uncaught (in promise) InvalidCharacterError: Failed to execute 'add' on 'DOMTokenList': The token provided ('test test') contains HTML space characters, which are not valid in tokens.
+    at crearSeccion (taskSesiones.js?ver=0.2.313.1087995295:117:27)
+    at taskSesiones.js?ver=0.2.313.1087995295:151:39
+    at Array.forEach (<anonymous>)
+    at organizarSecciones (taskSesiones.js?ver=0.2.313.1087995295:151:20)
+    at window.dividirTareas (taskSesiones.js?ver=0.2.313.1087995295:14:5)
+    at initTareas (task.js?ver=0.2.313.642048965:28:16)
+    at ajaxPage.js?ver=0.2.313.361655110:98:72
+    at Array.forEach (<anonymous>)
+    at initScripts (ajaxPage.js?ver=0.2.313.361655110:98:15)
+    at reinit (ajaxPage.js?ver=0.2.313.361655110:102:9)
+*/
 
 window.dividirTareas = async function () {
     if (!lista) return;
-
+    organizarSecciones();
+    crearSesionFront();
+    hacerDivisoresEditables();
     window.addEventListener('reiniciar', organizarSecciones);
 };
 
@@ -34,18 +49,19 @@ function actualizarMapa() {
             }
         }
     });
-    console.log(log + `Mapa actualizado: ${JSON.stringify(mapa)}`);
+    //console.log(log + `Mapa actualizado: ${JSON.stringify(mapa)}`);
 }
 
 function alternarVisibilidadSeccion(divisor) {
-    const valorDivisor = divisor.dataset.valor;
+    const valorDivisorCodificado = divisor.dataset.valor;
+    const valorDivisor = decodeURIComponent(valorDivisorCodificado); // Decodificar el nombre
     const items = Array.from(lista.children).filter(item => item.tagName === 'LI');
-    let visible = localStorage.getItem(`seccion-${valorDivisor}`) !== 'oculto';
+    let visible = localStorage.getItem(`seccion-${valorDivisorCodificado}`) !== 'oculto';
     visible = !visible;
     let log = `alternarVisibilidadSeccion: Alternando visibilidad de la sección ${valorDivisor}. `;
 
     items.forEach(item => {
-        if (item.dataset.seccion === valorDivisor) {
+        if (item.dataset.seccion === valorDivisorCodificado) { // Usar el nombre codificado
             item.style.display = visible ? '' : 'none';
             log += `Tarea ID: ${item.getAttribute('id-post')}, Visibilidad: ${visible ? 'visible' : 'oculta'}. `;
         }
@@ -53,13 +69,14 @@ function alternarVisibilidadSeccion(divisor) {
 
     const flecha = divisor.querySelector('span:last-child');
     flecha.innerHTML = visible ? (window.fechaabajo || '↓') : (window.fechaallado || '↑');
-    localStorage.setItem(`seccion-${valorDivisor}`, visible ? 'visible' : 'oculto');
-    console.log(log);
+    localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
+    //console.log(log);
 }
 
-function configurarInteraccionSeccion(divisor, nom, items) {
+function configurarInteraccionSeccion(divisor, nomCodificado, items) {
+    const nom = decodeURIComponent(nomCodificado); // Decodificar el nombre
     const flecha = divisor.querySelector('span:last-child');
-    let visible = localStorage.getItem(`seccion-${nom}`) !== 'oculto';
+    let visible = localStorage.getItem(`seccion-${nomCodificado}`) !== 'oculto'; // Usar el nombre codificado
     items.forEach(item => (item.style.display = visible ? '' : 'none'));
     flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
 
@@ -83,7 +100,8 @@ function configurarInteraccionSeccion(divisor, nom, items) {
 
 function crearSeccion(nom, items) {
     let log = `crearSeccion: Creando sección: ${nom}. `;
-    let divisor = document.querySelector(`[data-valor="${nom}"]`);
+    const nomCodificado = encodeURIComponent(nom); // Codificar el nombre de la sesión
+    let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
 
     if (items.length === 0) {
         if (divisor) {
@@ -91,7 +109,7 @@ function crearSeccion(nom, items) {
             divisor.style.color = 'gray';
         }
         log += `Sección ${nom} vacía, se omite.`;
-        console.log(log);
+        //console.log(log);
         return;
     }
 
@@ -104,9 +122,9 @@ function crearSeccion(nom, items) {
         divisor.style.display = 'flex';
         divisor.style.width = '100%';
         divisor.style.alignItems = 'center';
-        divisor.textContent = nom;
-        divisor.dataset.valor = nom;
-        divisor.classList.add('divisorTarea', nom);
+        divisor.textContent = nom; // Mostrar el nombre original
+        divisor.dataset.valor = nomCodificado; // Usar el nombre codificado en data-valor
+        divisor.classList.add('divisorTarea', nomCodificado); // Usar el nombre codificado aquí
 
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
@@ -114,20 +132,19 @@ function crearSeccion(nom, items) {
         lista.appendChild(divisor);
     }
 
-    configurarInteraccionSeccion(divisor, nom, items);
+    configurarInteraccionSeccion(divisor, nomCodificado, items); // Usar el nombre codificado
 
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
     items.forEach(item => {
-        item.setAttribute('data-seccion', nom);
+        item.setAttribute('data-seccion', nomCodificado); // Usar el nombre codificado
         if (item.parentNode) item.parentNode.removeChild(item);
         lista.insertBefore(item, anterior.nextSibling);
         anterior = item;
     });
 
-    console.log(log);
+    //console.log(log);
 }
-
 function eliminarSeparadoresExistentes() {
     const separadores = Array.from(lista.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea'));
     separadores.forEach(separador => separador.remove());
@@ -149,7 +166,7 @@ function organizarSecciones() {
         log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
     }
     log += `Archivado (${mapa.archivado.length}). `;
-    console.log(log);
+    //console.log(log);
     generarLogFinal();
 }
 
@@ -165,14 +182,11 @@ function generarLogFinal() {
         }
     });
     log = `generarLogFinal: Orden final: ${final.join(', ')}`;
-    console.log(log);
+    //console.log(log);
 }
 
 /*
-necesito una nueva funcion 
-Detectar cambio de nombre de sesión, mirad, las sesiones se crean pero cuando el usuario cambia el nombre no detecta, para hacerlo, necesito cambiar la sesion de todas las tareas dentro de esa sesion cuando se cambia el nombre. 
 
-asi que simplemente necesito que cuando un usuaro cambia el nombre de una sesion, se enviara al servidor el nombre viejo por el nombre nuevo, asi el servidor se encarga de asignar las tareas viejas con el nombre de esa sesion a la nueva, dame el js primero
 */
 
 function crearSesionFront() {
@@ -203,7 +217,7 @@ function crearSesionFront() {
                 nuevaSesion.textContent = textoEditado;
             }
             nuevaSesion.dataset.valor = textoEditado;
-            console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
+            //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
         });
     });
 }
@@ -239,14 +253,14 @@ function hacerDivisoresEditables() {
                         await enviarAjax('actualizarSesion', datos);
                         
                         valorOriginal = textoEditado;
-                        console.log('Sesión actualizada y tareas reasignadas');
+                        //console.log('Sesión actualizada y tareas reasignadas');
                     } catch (error) {
-                        console.error('Error al actualizar sesión:', error);
+                        //console.error('Error al actualizar sesión:', error);
                         divisor.textContent = valorOriginal;
                         divisor.dataset.valor = valorOriginal;
                     }
                 } else {
-                    console.log('El nombre de la sesión no ha cambiado');
+                    //console.log('El nombre de la sesión no ha cambiado');
                 }
             });
         }

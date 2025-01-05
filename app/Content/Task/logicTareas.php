@@ -103,7 +103,8 @@ function formTareaEstilo()
 
 
 
-function borrarTarea() {
+function borrarTarea()
+{
     $log = '';
     if (!current_user_can('edit_posts')) {
         $log .= 'No tienes permisos.';
@@ -127,7 +128,7 @@ function borrarTarea() {
         wp_send_json_error('Tarea no encontrada.');
     }
 
-    $res = wp_delete_post($id, true); 
+    $res = wp_delete_post($id, true);
 
     if (is_wp_error($res)) {
         $msg = $res->get_error_message();
@@ -144,7 +145,8 @@ function borrarTarea() {
 add_action('wp_ajax_borrarTarea', 'borrarTarea');
 
 
-function modificarTarea() {
+function modificarTarea()
+{
     $log = '';
     if (!current_user_can('edit_posts')) {
         $log .= 'No tienes permisos.';
@@ -202,20 +204,27 @@ function modificarTarea() {
 
 add_action('wp_ajax_modificarTarea', 'modificarTarea');
 
-
-function crearTarea() {
+//aqui agrega sesion y estado, si recibe sesion y estado, guarda el mismo valor en las metas del mismo nombre
+function crearTarea()
+{
     $log = '';
     if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
+        $log = 'No tienes permisos.';
+        guardarLog("crearTarea: $log");
+        wp_send_json_error($log);
     }
 
     $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
     $imp = isset($_POST['importancia']) ? sanitize_text_field($_POST['importancia']) : 'media';
     $tip = isset($_POST['tipo']) ? sanitize_text_field($_POST['tipo']) : 'una vez';
     $frec = isset($_POST['frecuencia']) ? (int) sanitize_text_field($_POST['frecuencia']) : 1;
+    $ses = isset($_POST['sesion']) ? sanitize_text_field($_POST['sesion']) : '';
+    $est = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
 
     if (empty($tit)) {
-        wp_send_json_error('Título vacío.');
+        $log = 'Título vacío.';
+        guardarLog("crearTarea: $log");
+        wp_send_json_error($log);
     }
 
     $impnum = 0;
@@ -253,10 +262,11 @@ function crearTarea() {
             'impnum' => $impnum,
             'tipo' => $tip,
             'tipnum' => $tipnum,
-            'estado' => 'pendiente',
+            'estado' => $est,
             'frecuencia' => $frec,
             'fecha' => $fec,
             'fechaProxima' => $fecprox,
+            'sesion' => $ses
         ),
     );
 
@@ -264,14 +274,14 @@ function crearTarea() {
 
     if (is_wp_error($tareaId)) {
         $msg = $tareaId->get_error_message();
-        $log .= "Error al crear tarea: $msg \n";
-        guardarLog("crearTarea:  \n $log");
-        return $tareaId; // Devuelve el objeto WP_Error
+        $log .= "Error al crear tarea: $msg";
+        guardarLog("crearTarea: $log");
+        wp_send_json_error($msg);
     }
 
-    $log .= "Tarea creada con id $tareaId";
-    guardarLog("crearTarea:  \n $log");
-    return $tareaId; // Devuelve el ID de la tarea creada
+    $log .= "Tarea creada con id $tareaId, sesion $ses, estado $est";
+    guardarLog("crearTarea: $log");
+    wp_send_json_success(array('tareaId' => $tareaId));
 }
 
 
@@ -361,7 +371,7 @@ function archivarTarea()
     $usu = get_current_user_id();
     $orden = get_user_meta($usu, 'ordenTareas', true);
     $estadoActual = get_post_meta($id, 'estado', true);
-    
+
     $log .= "Estado inicial de la tarea: $estadoActual. \n";
 
     if ($estadoActual == 'archivado') {
@@ -459,7 +469,11 @@ add_action('wp_ajax_cambiarFrecuencia', 'cambiarFrecuencia');
 
 
 
-//separa la logica de actualizar sesion o estado pero manten todo funcionando igual
+/*
+El cambio principal que necesitas hacer es en la función `actualizarOrden`.
+Ya no se trata de insertar la tarea movida en el nuevo orden,
+sino de reemplazar el orden antiguo con el nuevo.
+*/
 
 function actualizarOrdenTareas()
 {
@@ -470,12 +484,14 @@ function actualizarOrdenTareas()
     $sesionArr = isset($_POST['sesionArriba']) ? strtolower(sanitize_text_field($_POST['sesionArriba'])) : null;
     $ordenTar = get_user_meta($usu, 'ordenTareas', true) ?: [];
 
-    $log = "actualizarOrdenTareas: \n  Usuario ID: $usu, \n  Tarea movida: $tareaMov, \n  Nuevo orden: " . implode(',', $ordenNue) . ", \n  Orden actual: " . implode(',', $ordenTar) . ", \n  Sesion arriba: $sesionArr";
+    $log = "actualizarOrdenTareas: \n  Usuario ID: $usu, \n  Tarea movida: $tareaMov, \n  Nuevo orden recibido: " . implode(',', $ordenNue) . ", \n  Orden antes de cambiar: " . implode(',', $ordenTar) . ", \n  Sesion arriba: $sesionArr";
+
 
     if ($tareaMov !== null && !empty($ordenNue)) {
-        $ordenTar = actualizarOrden($ordenTar, $tareaMov, $ordenNue);
+        $ordenTar = actualizarOrden($ordenTar, $ordenNue);
         actualizarSesionEstado($tareaMov, $sesionArr);
-        //guardarLog($log);
+        $log .= ", \n  Orden de tareas actualizado exitosamente para el usuario $usu";
+        guardarLog($log);
         wp_send_json_success(['ordenTareas' => $ordenTar]);
     } else {
         $log .= ", \n  Error: ";
@@ -485,73 +501,87 @@ function actualizarOrdenTareas()
         if (empty($ordenNue)) {
             $log .= ($tareaMov === null ? ", " : "") . "ordenNuevo está vacío";
         }
-        //guardarLog($log);
+        guardarLog($log);
         wp_send_json_error(['error' => 'Falta información para actualizar el orden de tareas.'], 400);
     }
 }
 
-function actualizarOrden($ordenTar, $tareaMov, $ordenNue)
+function actualizarOrden($ordenTar, $ordenNue)
 {
     $log = "actualizarOrden: ";
-    $indiceVie = array_search($tareaMov, $ordenTar, true);
-    if ($indiceVie !== false) {
-        unset($ordenTar[$indiceVie]);
-        $ordenTar = array_values($ordenTar);
-        $log .= "\n  Tarea $tareaMov eliminada del índice antiguo: $indiceVie";
-    } else {
-        $log .= "\n  Tarea $tareaMov no encontrada en el orden actual";
-    }
-
-    $indiceNue = array_search($tareaMov, $ordenNue, true);
-    $log .= ", \n  Nuevo índice para tarea $tareaMov: $indiceNue";
-
-    array_splice($ordenTar, $indiceNue, 0, $tareaMov);
-    $log .= ", \n  Tarea $tareaMov insertada en el nuevo orden";
 
     $usu = get_current_user_id();
-    update_user_meta($usu, 'ordenTareas', $ordenTar);
-    $log .= ", \n  Se actualizaron las IDs de ordenTareas para el usuario $usu, \n  Orden final guardado: " . implode(',', $ordenTar);
+    update_user_meta($usu, 'ordenTareas', $ordenNue);
+    $log .= "\n  Se actualizó el orden de tareas para el usuario $usu a: " . implode(',', $ordenNue);
 
-    //guardarLog($log);
-    return $ordenTar;
+    guardarLog($log);
+    return $ordenNue;
 }
 
-function actualizarSesionEstado($tareaMov, $sesionArr) {
+function actualizarSesionEstado($tareaMov, $sesionArr)
+{
     $log = "actualizarSesionEstado: ";
-    if ($sesionArr) {
-        $estadoAct = strtolower(get_post_meta($tareaMov, 'estado', true));
-        $sesionTarea = get_post_meta($tareaMov, 'sesion', true);
 
-        $log .= "\n  Se recibió: '$sesionArr' para la tarea '$tareaMov'.";
-        $log .= "\n  Estado actual de la tarea '$tareaMov' es '$estadoAct'.";
-        $log .= "\n  Sesión actual de la tarea '$tareaMov' es '$sesionTarea'.";
+    // Tratar 'null' como string
+    $sesionArrString = $sesionArr;
+    if (is_null($sesionArr)) {
+        $sesionArrString = "null";
+    }
 
-        if (strtolower($sesionArr) === 'archivado' && $estadoAct !== 'archivado') {
+    // Si $sesionArr es 'null' o null, usar "General"
+    $sesionParaActualizar = ($sesionArrString === 'null' || is_null($sesionArr)) ? "General" : $sesionArr;
+
+    $estadoAct = strtolower(get_post_meta($tareaMov, 'estado', true));
+    $sesionTarea = get_post_meta($tareaMov, 'sesion', true);
+
+    // Si $sesionTarea es null, 'null' o una cadena vacía, forzar a "General"
+    if (is_null($sesionTarea) || $sesionTarea === '' || $sesionTarea === 'null') {
+        $sesionTarea = "General";
+    }
+
+    $log .= "\n  Se recibió: '" . var_export($sesionArrString, true) . "' para la tarea '$tareaMov'.";
+    $log .= "\n  Estado actual de la tarea '$tareaMov' es '$estadoAct'.";
+    $log .= "\n  Sesión actual de la tarea '$tareaMov' es '" . var_export($sesionTarea, true) . "'.";
+
+    // Si la sesión es "General", no se cambie el estado
+    if (strtolower($sesionParaActualizar) !== 'general') {
+        if (strtolower($sesionParaActualizar) === 'archivado' && $estadoAct !== 'archivado') {
             update_post_meta($tareaMov, 'estado', 'Archivado');
             $log .= "\n  Se actualizó el estado de la tarea '$tareaMov' a 'Archivado'.";
-        } elseif (strtolower($sesionArr) !== 'archivado' && $estadoAct === 'archivado') {
+        } elseif (strtolower($sesionParaActualizar) !== 'archivado' && $estadoAct === 'archivado') {
             update_post_meta($tareaMov, 'estado', 'Pendiente');
             $log .= "\n  Se actualizó el estado de la tarea '$tareaMov' a 'Pendiente'.";
         } else {
             $log .= "\n  No se actualizó el estado de la tarea '$tareaMov' porque no era necesario.";
         }
-        
-        update_post_meta($tareaMov, 'sesion', $sesionArr);
-        $log .= "\n  Se actualizó la sesión de la tarea '$tareaMov' a '$sesionArr'.";
-
-        $estadoFin = strtolower(get_post_meta($tareaMov, 'estado', true));
-        $sesionFin = get_post_meta($tareaMov, 'sesion', true);
-
-        $log .= "\n  Estado final de la tarea '$tareaMov' es '$estadoFin'.";
-        $log .= "\n  Sesión final de la tarea '$tareaMov' es '$sesionFin'.";
     } else {
-        $log .= "\n  No se actualizó la sesión de la tarea '$tareaMov' porque \$sesionArr está vacío.";
+        $log .= "\n  La sesion es 'General', no se cambia el estado.";
     }
-    guardarLog($log);
+
+    // Actualizar la sesión siempre que $sesionParaActualizar sea diferente a la actual
+    if ($sesionParaActualizar !== $sesionTarea) {
+        update_post_meta($tareaMov, 'sesion', $sesionParaActualizar);
+        $log .= "\n  Se actualizó la sesión de la tarea '$tareaMov' a '$sesionParaActualizar'.";
+    } else {
+        $log .= "\n  No se actualizó la sesión de la tarea '$tareaMov' porque es la misma que la actual.";
+    }
+
+    $estadoFin = strtolower(get_post_meta($tareaMov, 'estado', true));
+    $sesionFin = get_post_meta($tareaMov, 'sesion', true);
+
+    // Si $sesionFin es null, 'null' o una cadena vacía, forzar a "General"
+    if (is_null($sesionFin) || $sesionFin === '' || $sesionFin === 'null') {
+        $sesionFin = "General";
+        update_post_meta($tareaMov, 'sesion', $sesionFin);
+        $log .= "\n  Se corrigió la sesión final de la tarea '$tareaMov' a 'General'.";
+    }
+
+    $log .= "\n  Estado final de la tarea '$tareaMov' es '$estadoFin'.";
+    $log .= "\n  Sesión final de la tarea '$tareaMov' es '$sesionFin'.";
+
+    //guardarLog($log);
 }
-
 add_action('wp_ajax_actualizarOrdenTareas', 'actualizarOrdenTareas');
-
 
 function borrarTareasCompletadas()
 {
@@ -600,7 +630,7 @@ function actualizarSesion()
     if (empty($valAnt) || empty($valNue)) {
         wp_send_json_error('Faltan datos.');
     }
-    
+
     $log = "El usuario " . get_current_user_id() . " actualizo la sesion: $valAnt a: $valNue";
 
     $args = array(
@@ -635,3 +665,65 @@ function actualizarSesion()
 }
 
 add_action('wp_ajax_actualizarSesion', 'actualizarSesion');
+
+
+function crearSubtarea()
+{
+    if (!current_user_can('edit_posts')) {
+        $msg = 'No tienes permisos.';
+        guardarLog("crearSubtarea: $msg");
+        wp_send_json_error($msg);
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
+    $idPadre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
+    $log = '';
+
+    if (!$esSubtarea) {
+        $res = wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ), true);
+
+        if (is_wp_error($res)) {
+            $msg = $res->get_error_message();
+            guardarLog("crearSubtarea: $msg");
+            wp_send_json_error($msg);
+        }
+
+        delete_post_meta($id, 'subtarea');
+        $log .= "Se eliminó la subtarea $id. ";
+        guardarLog("crearSubtarea: $log");
+        wp_send_json_success();
+    }
+
+    if ($idPadre) {
+        $tareaPadre = get_post($idPadre);
+        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
+            $msg = 'Tarea padre no encontrada.';
+            guardarLog("crearSubtarea: $msg");
+            wp_send_json_error($msg);
+        }
+
+        $res = wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => $idPadre
+        ), true);
+
+        if (is_wp_error($res)) {
+            $msg = $res->get_error_message();
+            guardarLog("crearSubtarea: $msg");
+            wp_send_json_error($msg);
+        }
+
+        update_post_meta($id, 'subtarea', $idPadre);
+        $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
+    }
+
+    guardarLog("crearSubtarea: $log");
+    wp_send_json_success();
+}
+
+
+add_action('wp_ajax_crearSubtarea', 'crearSubtarea');

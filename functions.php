@@ -455,6 +455,8 @@ function scriptsOrdenados()
         'icons'             => '1.0.1',
         'notas'             => '1.0.1',
         'taskSesiones'      => '1.0.1',
+        'filtros'           => '1.0.1',
+        'taskEnter'         => '1.0.1',
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
