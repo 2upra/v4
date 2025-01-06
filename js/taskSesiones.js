@@ -161,8 +161,8 @@ function actualizarMapa() {
 /*
 Esto en verdad no esta funcionando bien 
 
-crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe o fue eliminada, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Se limpiaron las tareas previas de la sección General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. ID: 337442. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de General. Verificando si el divisor sigue en el DOM... ERROR: El divisor para General NO está en el DOM después de insertar la tarea 337442. Recreando el divisor...Nuevo divisor recreado e insertado antes de la tarea actual para General. Tareas insertadas correctamente en la sección General. crearSeccion: Proceso de creación de sección General finalizado.
-taskSesiones.js?ver=0.2.337:281 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe o fue eliminada, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Se limpiaron las tareas previas de la sección Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. ID: 337444. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de Archivado. Verificando si el divisor sigue en el DOM... ERROR: El divisor para Archivado NO está en el DOM después de insertar la tarea 337444. Recreando el divisor...Nuevo divisor recreado e insertado antes de la tarea actual para Archivado. Tareas insertadas correctamente en la sección Archivado. crearSeccion: Proceso de creación de sección Archivado finalizado.
+crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Se limpiaron las tareas previas de la sección General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. ID: 337442. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de General. Verificando si el divisor original (General) sigue en el DOM... ERROR: El divisor original para General NO está en el DOM después de insertar la tarea 337442. No se encontró el divisor para General en el DOM. Creando uno nuevo.Nuevo divisor creado e insertado para General. Referencia a divisor actualizada para General. Tareas insertadas correctamente en la sección General. crearSeccion: Proceso de creación de sección General finalizado.
+taskSesiones.js?ver=0.2.339:244 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Se limpiaron las tareas previas de la sección Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. ID: 337444. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de Archivado. Verificando si el divisor original (Archivado) sigue en el DOM... ERROR: El divisor original para Archivado NO está en el DOM después de insertar la tarea 337444. No se encontró el divisor para Archivado en el DOM. Creando uno nuevo.Nuevo divisor creado e insertado para Archivado. Referencia a divisor actualizada para Archivado. Tareas insertadas correctamente en la sección Archivado. crearSeccion: Proceso de creación de sección Archivado finalizado.
 
 La primera vez funciona bien pero la segunda vez que se reinicia dice que Iniciando creación de sección: General. pero en veradd no crea nada, necesito que verdad compruebe si la creo o porque demonios no aparece en el dom o que esta pasando, por favor arreglalo
 */
@@ -184,7 +184,7 @@ function crearSeccion(nom, items) {
         log += `Se encontró un divisor existente para ${nom}. `;
     }
 
-    // Limpiar solo las tareas LI de la sección actual, no el divisor
+    // Limpiar solo las tareas LI de la sección actual, no el divisor, incluyendo tareas completadas
     let siguiente = divisor.nextElementSibling;
     while (siguiente && siguiente.tagName === 'LI' && siguiente.dataset.seccion === nomCodificado) {
         log += `crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}. `;
@@ -224,20 +224,20 @@ function crearSeccion(nom, items) {
                 log += `El divisor original para ${nom} SI está en el DOM después de insertar la tarea ${item.getAttribute('id-post')}. `;
             } else {
                 log += `ERROR: El divisor original para ${nom} NO está en el DOM después de insertar la tarea ${item.getAttribute('id-post')}. `;
-                // IMPORTANTE: Actualizar la referencia al divisor
+
+                // Buscar un nuevo divisor (podría haberse creado en una iteración anterior)
                 divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`);
                 if (!divisor) {
                     log += `No se encontró el divisor para ${nom} en el DOM. Creando uno nuevo.`;
                     divisor = crearNuevoDivisor(nom, nomCodificado);
                     listaSec.insertBefore(divisor, item);
                     log += `Nuevo divisor creado e insertado para ${nom}. `;
-
                 }
-                anterior = divisor;
-                log += `Referencia a divisor actualizada para ${nom}. `;
+                // Clave: NO actualizar anterior aquí, solo cuando se inserta el divisor
             }
         });
         log += `Tareas insertadas correctamente en la sección ${nom}. `;
+        anterior = divisor;
     }
 
     log += `crearSeccion: Proceso de creación de sección ${nom} finalizado.`;
