@@ -1,3 +1,26 @@
+/*
+No borres las funciones comentadas 
+
+mirad, el problema no lo identifico, cuando carga la primera vez, las sesiones aparecen correctamente, pero al recargar por ajax, las sesiones no aparecen, los logs actuales no bridan mucha informacion al respecto
+
+primera vez
+actualizarMapa: Tareas encontradas: 4. Tarea ID: 337442, Estado: pendiente, Sesión: . Tarea ID: 337441, Estado: pendiente, Sesión: . Tarea ID: 337444, Estado: archivado, Sesión: . Tarea ID: 337443, Estado: archivado, Sesión: general. Mapa actualizado: {"general":[{},{}],"archivado":[{},{}]}
+taskSesiones.js?ver=0.2.320:120 crearSeccion: Creando sección: General. Insertando 2 tareas en la sección General. 
+taskSesiones.js?ver=0.2.320:120 crearSeccion: Creando sección: Archivado. Insertando 2 tareas en la sección Archivado. 
+taskSesiones.js?ver=0.2.320:27 organizarSecciones: Reorganizando tareas... Secciones reorganizadas: General (2), Archivado (2). 
+taskSesiones.js?ver=0.2.320:43 generarLogFinal: Orden final: General - Divisor, General - 337442, General - 337441, Archivado - Divisor, Archivado - 337444, Archivado - 337443
+contarVistaPost.js?ver=0.2.320:54 
+Despues de ajax
+taskSesiones.js?ver=0.2.320:72 actualizarMapa: Tareas encontradas: 4. Tarea ID: 337442, Estado: pendiente, Sesión: . Tarea ID: 337441, Estado: pendiente, Sesión: . Tarea ID: 337444, Estado: archivado, Sesión: . Tarea ID: 337443, Estado: archivado, Sesión: general. Mapa actualizado: {"general":[{},{}],"archivado":[{},{}]}
+taskSesiones.js?ver=0.2.320:120 crearSeccion: Creando sección: General. Insertando 2 tareas en la sección General. 
+taskSesiones.js?ver=0.2.320:120 crearSeccion: Creando sección: Archivado. Insertando 2 tareas en la sección Archivado. 
+taskSesiones.js?ver=0.2.320:27 organizarSecciones: Reorganizando tareas... Secciones reorganizadas: General (2), Archivado (2). 
+taskSesiones.js?ver=0.2.320:43 generarLogFinal: Orden final: General - Divisor, Archivado - Divisor, General - Divisor, General - 337442, General - 337441, Archivado - Divisor, Archivado - 337444, Archivado - 33744
+
+si puedes depurar esta parte del codigo más para entender el problema en profundidad
+
+*/
+
 let mapa = {general: [], archivado: []};
 const listaSec = document.querySelector('.social-post-list.clase-tarea');
 
@@ -52,9 +75,18 @@ function actualizarMapa() {
     log = `actualizarMapa: Tareas encontradas: ${items.length}. `;
     items.forEach(item => {
         const est = item.getAttribute('estado')?.toLowerCase();
-        const sesion = item.getAttribute('sesion')?.toLowerCase();
         const idPost = item.getAttribute('id-post');
-        log += `Tarea ID: ${idPost}, Estado: ${est}, Sesión: ${sesion}. `;
+
+        // Depuración: Verificar si el atributo 'sesion' existe y su valor
+        let sesion;
+        if (item.hasAttribute('sesion')) {
+            sesion = item.getAttribute('sesion')?.toLowerCase();
+            log += `Tarea ID: ${idPost}, Estado: ${est}, Sesión (leída del atributo): ${sesion}. `;
+        } else {
+            sesion = ''; // O un valor predeterminado si es apropiado
+            log += `Tarea ID: ${idPost}, Estado: ${est}, Sesión: (atributo 'sesion' no encontrado). `;
+        }
+        // Fin de la depuración
 
         if (est === 'archivado') {
             mapa['archivado'].push(item);
