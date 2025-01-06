@@ -1,14 +1,49 @@
 let mapa = {general: [], archivado: []};
 const listaSec = document.querySelector('.social-post-list.clase-tarea');
 
-//porque cuando se vuelve a llamar dividirTarea, no vuelve a crear las sesiones??? solo la primera vez que se carga la pagina
 window.dividirTarea = async function () {
     if (!listaSec) return;
     organizarSecciones();
-    hacerDivisoresEditables();
-    window.addEventListener('reiniciar', organizarSecciones);
+    //hacerDivisoresEditables();
 };
 
+//STEP 1
+function organizarSecciones() {
+    let log = 'organizarSecciones: Reorganizando tareas... ';
+    actualizarMapa();
+    //eliminarSeparadoresExistentes();
+    crearSeccion('General', mapa.general);
+
+    const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
+    otrasSecciones.forEach(seccion => crearSeccion(seccion, mapa[seccion]));
+
+    crearSeccion('Archivado', mapa.archivado);
+
+    log += `Secciones reorganizadas: General (${mapa.general.length}), `;
+    if (otrasSecciones.length > 0) {
+        log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
+    }
+    log += `Archivado (${mapa.archivado.length}). `;
+    console.log(log);
+    generarLogFinal();
+}
+
+function generarLogFinal() {
+    let log = '';
+    const final = [];
+    Array.from(listaSec.children).forEach(item => {
+        if (item.tagName === 'LI') {
+            const idPost = item.getAttribute('id-post');
+            final.push(`${item.getAttribute('data-seccion') || 'Sin sección'} - ${idPost || 'sin ID'}`);
+        } else if (item.tagName === 'P') {
+            final.push(`${item.textContent} - Divisor`);
+        }
+    });
+    log = `generarLogFinal: Orden final: ${final.join(', ')}`;
+    console.log(log);
+}
+
+//STEP 2
 function actualizarMapa() {
     let log = '';
     mapa = {general: [], archivado: []};
@@ -34,57 +69,10 @@ function actualizarMapa() {
             }
         }
     });
-    //console.log(log + `Mapa actualizado: ${JSON.stringify(mapa)}`);
+    console.log(log + `Mapa actualizado: ${JSON.stringify(mapa)}`);
 }
 
-function alternarVisibilidadSeccion(divisor) {
-    const valorDivisorCodificado = divisor.dataset.valor;
-    const valorDivisor = decodeURIComponent(valorDivisorCodificado); // Decodificar el nombre
-    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
-    let visible = localStorage.getItem(`seccion-${valorDivisorCodificado}`) !== 'oculto';
-    visible = !visible;
-    let log = `alternarVisibilidadSeccion: Alternando visibilidad de la sección ${valorDivisor}. `;
-
-    items.forEach(item => {
-        if (item.dataset.seccion === valorDivisorCodificado) {
-            // Usar el nombre codificado
-            item.style.display = visible ? '' : 'none';
-            log += `Tarea ID: ${item.getAttribute('id-post')}, Visibilidad: ${visible ? 'visible' : 'oculta'}. `;
-        }
-    });
-
-    const flecha = divisor.querySelector('span:last-child');
-    flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
-    localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
-    //console.log(log);
-}
-
-function configurarInteraccionSeccion(divisor, nomCodificado, items) {
-    const nom = decodeURIComponent(nomCodificado); // Decodificar el nombre
-    const flecha = divisor.querySelector('span:last-child');
-    let visible = localStorage.getItem(`seccion-${nomCodificado}`) !== 'oculto'; // Usar el nombre codificado
-    items.forEach(item => (item.style.display = visible ? '' : 'none'));
-    flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
-
-    if (nom === 'General') {
-        const iconoAgregar = document.createElement('span');
-        iconoAgregar.innerHTML = window.iconoPlus;
-        iconoAgregar.style.marginLeft = 'auto';
-        iconoAgregar.classList.add('iconoPlus');
-        divisor.insertBefore(iconoAgregar, flecha.nextSibling);
-
-        iconoAgregar.onclick = event => {
-            event.stopPropagation();
-            crearSesionFront(divisor); // Se llama a la función aquí, pasando el divisor como parámetro
-        };
-    }
-
-    divisor.onclick = event => {
-        event.stopPropagation();
-        alternarVisibilidadSeccion(divisor);
-    };
-}
-
+//STEP 3
 function crearSeccion(nom, items) {
     let log = `crearSeccion: Creando sección: ${nom}. `;
     const nomCodificado = encodeURIComponent(nom);
@@ -118,7 +106,8 @@ function crearSeccion(nom, items) {
         listaSec.appendChild(divisor);
     }
 
-    configurarInteraccionSeccion(divisor, nomCodificado, items);
+    //no borrar esto
+    //configurarInteraccionSeccion(divisor, nomCodificado, items); 
 
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
@@ -128,6 +117,92 @@ function crearSeccion(nom, items) {
         listaSec.insertBefore(item, anterior.nextSibling);
         anterior = item;
     });
+    console.log(log);
+}
+
+/*
+//STEP 4
+function configurarInteraccionSeccion(divisor, nomCodificado, items) {
+    const nom = decodeURIComponent(nomCodificado); // Decodificar el nombre
+    const flecha = divisor.querySelector('span:last-child');
+    let visible = localStorage.getItem(`seccion-${nomCodificado}`) !== 'oculto'; // Usar el nombre codificado
+    items.forEach(item => (item.style.display = visible ? '' : 'none'));
+    flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
+
+    if (nom === 'General') {
+        const iconoAgregar = document.createElement('span');
+        iconoAgregar.innerHTML = window.iconoPlus;
+        iconoAgregar.style.marginLeft = 'auto';
+        iconoAgregar.classList.add('iconoPlus');
+        divisor.insertBefore(iconoAgregar, flecha.nextSibling);
+
+        iconoAgregar.onclick = event => {
+            event.stopPropagation();
+            crearSesionFront(divisor); // Se llama a la función aquí, pasando el divisor como parámetro
+        };
+    }
+
+    divisor.onclick = event => {
+        event.stopPropagation();
+        alternarVisibilidadSeccion(divisor);
+    };
+}
+
+//STEP 5
+function crearSesionFront() {
+    const botonPlus = document.querySelector('.iconoPlus');
+    const listaSecTareas = document.querySelector('.clase-tarea');
+
+    botonPlus.addEventListener('click', () => {
+        const textoInicial = 'Nueva sesión';
+        const nuevaSesion = document.createElement('p');
+        nuevaSesion.dataset.valor = textoInicial;
+        nuevaSesion.classList.add('divisorTarea');
+        nuevaSesion.contentEditable = true;
+        nuevaSesion.textContent = textoInicial;
+
+        const spanFlecha = document.createElement('span');
+        spanFlecha.style.marginLeft = '5px';
+        spanFlecha.innerHTML = window.fechaabajo;
+
+        nuevaSesion.appendChild(spanFlecha);
+        listaSecTareas.prepend(nuevaSesion);
+
+        nuevaSesion.focus();
+
+        nuevaSesion.addEventListener('blur', () => {
+            let textoEditado = nuevaSesion.textContent;
+            if (textoEditado == '') {
+                textoEditado = 'Nueva sesión';
+                nuevaSesion.textContent = textoEditado;
+            }
+            nuevaSesion.dataset.valor = textoEditado;
+            console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
+        });
+    });
+}
+
+
+//STEP 6
+function alternarVisibilidadSeccion(divisor) {
+    const valorDivisorCodificado = divisor.dataset.valor;
+    const valorDivisor = decodeURIComponent(valorDivisorCodificado); // Decodificar el nombre
+    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
+    let visible = localStorage.getItem(`seccion-${valorDivisorCodificado}`) !== 'oculto';
+    visible = !visible;
+    let log = `alternarVisibilidadSeccion: Alternando visibilidad de la sección ${valorDivisor}. `;
+
+    items.forEach(item => {
+        if (item.dataset.seccion === valorDivisorCodificado) { // Usar el nombre codificado
+            item.style.display = visible ? '' : 'none';
+            log += `Tarea ID: ${item.getAttribute('id-post')}, Visibilidad: ${visible ? 'visible' : 'oculta'}. `;
+        }
+    });
+
+    const flecha = divisor.querySelector('span:last-child');
+    flecha.innerHTML = visible ? (window.fechaabajo || '↓') : (window.fechaallado || '↑');
+    localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
+    console.log(log);
 }
 
 function eliminarSeparadoresExistentes() {
@@ -135,74 +210,7 @@ function eliminarSeparadoresExistentes() {
     separadores.forEach(separador => separador.remove());
 }
 
-function organizarSecciones() {
-    let log = 'organizarSecciones: Reorganizando tareas... ';
-    actualizarMapa();
-    eliminarSeparadoresExistentes();
-    crearSeccion('General', mapa.general);
-
-    const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
-    otrasSecciones.forEach(seccion => crearSeccion(seccion, mapa[seccion]));
-
-    crearSeccion('Archivado', mapa.archivado);
-
-    log += `Secciones reorganizadas: General (${mapa.general.length}), `;
-    if (otrasSecciones.length > 0) {
-        log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
-    }
-    log += `Archivado (${mapa.archivado.length}). `;
-    //console.log(log);
-    generarLogFinal();
-}
-
-function generarLogFinal() {
-    let log = '';
-    const final = [];
-    Array.from(listaSec.children).forEach(item => {
-        if (item.tagName === 'LI') {
-            const idPost = item.getAttribute('id-post');
-            final.push(`${item.getAttribute('data-seccion') || 'Sin sección'} - ${idPost || 'sin ID'}`);
-        } else if (item.tagName === 'P') {
-            final.push(`${item.textContent} - Divisor`);
-        }
-    });
-    log = `generarLogFinal: Orden final: ${final.join(', ')}`;
-    //console.log(log);
-}
-
-function crearSesionFront(divisorGeneral) {
-    // Se recibe el divisor de General como parámetro
-    const listaSecTareas = document.querySelector('.clase-tarea');
-
-    const textoInicial = 'Nueva sesión';
-    const nuevaSesion = document.createElement('p');
-    nuevaSesion.dataset.valor = textoInicial;
-    nuevaSesion.classList.add('divisorTarea');
-    nuevaSesion.contentEditable = true;
-    nuevaSesion.textContent = textoInicial;
-
-    const spanFlecha = document.createElement('span');
-    spanFlecha.style.marginLeft = '5px';
-    spanFlecha.innerHTML = window.fechaabajo;
-
-    nuevaSesion.appendChild(spanFlecha);
-
-    // Insertar la nueva sesión después del divisor de General
-    divisorGeneral.parentNode.insertBefore(nuevaSesion, divisorGeneral.nextSibling);
-
-    nuevaSesion.focus();
-
-    nuevaSesion.addEventListener('blur', () => {
-        let textoEditado = nuevaSesion.textContent;
-        if (textoEditado == '') {
-            textoEditado = 'Nueva sesión';
-            nuevaSesion.textContent = textoEditado;
-        }
-        nuevaSesion.dataset.valor = textoEditado;
-        //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
-    });
-}
-
+//STEP 7
 function hacerDivisoresEditables() {
     const divisores = document.querySelectorAll('.divisorTarea');
 
@@ -213,18 +221,18 @@ function hacerDivisoresEditables() {
         if (valor !== 'General' && valor !== 'Archivado') {
             divisor.contentEditable = true;
 
-            let valorOriginal = valor;
+            let valorOriginal = valor; 
 
             divisor.addEventListener('blur', async () => {
                 let textoEditado = divisor.textContent;
-
+                
                 if (textoEditado === '') {
                     textoEditado = valorOriginal;
                     divisor.textContent = textoEditado;
                 }
-
+                
                 divisor.dataset.valor = textoEditado;
-
+                
                 if (textoEditado !== valorOriginal) {
                     let datos = {
                         valorOriginal: valorOriginal,
@@ -232,18 +240,20 @@ function hacerDivisoresEditables() {
                     };
                     try {
                         await enviarAjax('actualizarSesion', datos);
-
+                        
                         valorOriginal = textoEditado;
-                        //console.log('Sesión actualizada y tareas reasignadas');
+                        console.log('Sesión actualizada y tareas reasignadas');
                     } catch (error) {
                         //console.error('Error al actualizar sesión:', error);
                         divisor.textContent = valorOriginal;
                         divisor.dataset.valor = valorOriginal;
                     }
                 } else {
-                    //console.log('El nombre de la sesión no ha cambiado');
+                    console.log('El nombre de la sesión no ha cambiado');
                 }
             });
         }
     });
 }
+
+*/

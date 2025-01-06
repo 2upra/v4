@@ -14,7 +14,7 @@ async function enviarAjax(action, data = {}) {
         ...data
     });
 
-    console.log(`Enviando solicitud AJAX: ${action} | Datos: ${JSON.stringify(data)} | Llamadas: ${enviarAjax.llamadas[llave]}`);
+    //console.log(`Enviando solicitud AJAX: ${action} | Datos: ${JSON.stringify(data)} | Llamadas: ${enviarAjax.llamadas[llave]}`);
 
     try {
         const response = await fetch(ajaxUrl, {
