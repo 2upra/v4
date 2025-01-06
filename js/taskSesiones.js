@@ -4,17 +4,23 @@ No borres las funciones comentadas
 mirad, el problema no lo identifico, cuando carga la primera vez, las sesiones aparecen correctamente, pero al recargar por ajax, las sesiones no aparecen, los logs actuales no bridan mucha informacion al respecto
 
 primera vez
-actualizarMapa: Tareas encontradas: 4. Tarea ID: 337442, Estado: pendiente, Sesión (leída del atributo): . Tarea ID: 337441, Estado: pendiente, Sesión (leída del atributo): . Tarea ID: 337444, Estado: archivado, Sesión (leída del atributo): . Tarea ID: 337443, Estado: archivado, Sesión (leída del atributo): general. Mapa actualizado: {"general":[{},{}],"archivado":[{},{}]}
-taskSesiones.js?ver=0.2.321:152 crearSeccion: Creando sección: General. Insertando 2 tareas en la sección General. 
-taskSesiones.js?ver=0.2.321:152 crearSeccion: Creando sección: Archivado. Insertando 2 tareas en la sección Archivado. 
-taskSesiones.js?ver=0.2.321:50 organizarSecciones: Reorganizando tareas... Secciones reorganizadas: General (2), Archivado (2). 
-taskSesiones.js?ver=0.2.321:66 generarLogFinal: Orden final: General - Divisor, General - 337442, General - 337441, Archivado - Divisor, Archivado - 337444, Archivado - 337443
+actualizarMapa: Tareas encontradas: 2. 
+taskSesiones.js?ver=0.2.324:114 Tarea ID: 337442, Estado: pendiente, Sesión: "". Elemento con sesión vacía: <li class="POST-tarea EDYQHV 337442  draggable-element pendiente " filtro="tarea" tipo-tarea="una ve.... 
+taskSesiones.js?ver=0.2.324:114 Tarea ID: 337444, Estado: archivado, Sesión: "". Elemento con sesión vacía: <li class="POST-tarea EDYQHV 337444  draggable-element archivado " filtro="tarea" tipo-tarea="una ve.... 
+taskSesiones.js?ver=0.2.324:117 Mapa actualizado.
+taskSesiones.js?ver=0.2.324:165 crearSeccion: Creando sección: General. Insertando 1 tareas en la sección General. 
+taskSesiones.js?ver=0.2.324:165 crearSeccion: Creando sección: Archivado. Insertando 1 tareas en la sección Archivado. 
+taskSesiones.js?ver=0.2.324:49 organizarSecciones: Reorganizando tareas... Secciones reorganizadas: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.324:65 generarLogFinal: Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
 Despues de ajax
-actualizarMapa: Tareas encontradas: 4. Tarea ID: 337442, Estado: pendiente, Sesión (leída del atributo): . Tarea ID: 337441, Estado: pendiente, Sesión (leída del atributo): . Tarea ID: 337444, Estado: archivado, Sesión (leída del atributo): . Tarea ID: 337443, Estado: archivado, Sesión (leída del atributo): general. Mapa actualizado: {"general":[{},{}],"archivado":[{},{}]}
-taskSesiones.js?ver=0.2.321:152 crearSeccion: Creando sección: General. Insertando 2 tareas en la sección General. 
-taskSesiones.js?ver=0.2.321:152 crearSeccion: Creando sección: Archivado. Insertando 2 tareas en la sección Archivado. 
-taskSesiones.js?ver=0.2.321:50 organizarSecciones: Reorganizando tareas... Secciones reorganizadas: General (2), Archivado (2). 
-taskSesiones.js?ver=0.2.321:66 generarLogFinal: Orden final: General - Divisor, Archivado - Divisor, General - Divisor, General - 337442, General - 337441, Archivado - Divisor, Archivado - 337444, Archivado - 337443
+actualizarMapa: Tareas encontradas: 2. 
+Tarea ID: 337442, Estado: pendiente, Sesión: "". Elemento con sesión vacía: <li class="POST-tarea EDYQHV 337442  draggable-element pendiente " filtro="tarea" tipo-tarea="una ve.... 
+taskSesiones.js?ver=0.2.324:114 Tarea ID: 337444, Estado: archivado, Sesión: "". Elemento con sesión vacía: <li class="POST-tarea EDYQHV 337444  draggable-element archivado " filtro="tarea" tipo-tarea="una ve.... 
+taskSesiones.js?ver=0.2.324:117 Mapa actualizado.
+taskSesiones.js?ver=0.2.324:165 crearSeccion: Creando sección: General. Insertando 1 tareas en la sección General. 
+taskSesiones.js?ver=0.2.324:165 crearSeccion: Creando sección: Archivado. Insertando 1 tareas en la sección Archivado. 
+taskSesiones.js?ver=0.2.324:49 organizarSecciones: Reorganizando tareas... Secciones reorganizadas: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.324:65 generarLogFinal: Orden final: General - Divisor, Archivado - Divisor, General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
 
 si puedes depurar esta parte del codigo más para entender el problema en profundidad
 
@@ -31,51 +37,63 @@ window.dividirTarea = async function () {
 
 //STEP 1
 function organizarSecciones() {
-    let log = 'organizarSecciones: Reorganizando tareas... ';
+    let log = 'organizarSecciones: Iniciando reorganización de tareas... ';
     actualizarMapa();
-    //eliminarSeparadoresExistentes();
+
+    log += 'Mapa actualizado. ';
+
     crearSeccion('General', mapa.general);
+    log += `Sección General creada con ${mapa.general.length} tareas. `;
 
     const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
-    otrasSecciones.forEach(seccion => crearSeccion(seccion, mapa[seccion]));
+    log += `Otras secciones encontradas: ${otrasSecciones.length > 0 ? otrasSecciones.join(', ') : 'Ninguna'}. `;
+
+    otrasSecciones.forEach(seccion => {
+        crearSeccion(seccion, mapa[seccion]);
+        log += `Sección ${seccion} creada con ${mapa[seccion].length} tareas. `;
+    });
 
     crearSeccion('Archivado', mapa.archivado);
+    log += `Sección Archivado creada con ${mapa.archivado.length} tareas. `;
 
-    log += `Secciones reorganizadas: General (${mapa.general.length}), `;
+    log += `Resumen de secciones: General (${mapa.general.length}), `;
     if (otrasSecciones.length > 0) {
         log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
     }
     log += `Archivado (${mapa.archivado.length}). `;
+
     console.log(log);
     generarLogFinal();
 }
 
 function generarLogFinal() {
-    let log = '';
+    let log = 'generarLogFinal: Generando log final... ';
     const final = [];
-    Array.from(listaSec.children).forEach(item => {
+    Array.from(listaSec.children).forEach((item, index) => {
+        log += `Procesando elemento ${index + 1}. `;
         if (item.tagName === 'LI') {
             const idPost = item.getAttribute('id-post');
-            final.push(`${item.getAttribute('data-seccion') || 'Sin sección'} - ${idPost || 'sin ID'}`);
+            const seccion = item.getAttribute('data-seccion') || 'Sin sección';
+            final.push(`${seccion} - ${idPost || 'sin ID'}`);
+            log += `Elemento LI: Sección - ${seccion}, ID - ${idPost || 'sin ID'}. `;
         } else if (item.tagName === 'P') {
             final.push(`${item.textContent} - Divisor`);
+            log += `Elemento P: ${item.textContent} - Divisor. `;
         }
     });
-    log = `generarLogFinal: Orden final: ${final.join(', ')}`;
+    log += `Orden final: ${final.join(', ')}`;
     console.log(log);
 }
 
-//STEP 2
 function actualizarMapa() {
-    let log = '';
+    let log = 'actualizarMapa: Iniciando actualización de mapa. ';
     mapa = { general: [], archivado: [] };
     const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
 
-    log = `actualizarMapa: Tareas encontradas: ${items.length}. `;
-    console.log(log); // Imprimir el log inicial aquí
+    log += `Tareas encontradas: ${items.length}. `;
 
-    items.forEach(item => {
-        let logItem = ''; // Variable temporal para cada ítem
+    items.forEach((item, index) => {
+        let logItem = `Procesando tarea ${index + 1}: `;
         const est = item.getAttribute('estado')?.toLowerCase() || '';
         const idPost = item.getAttribute('id-post');
 
@@ -100,39 +118,60 @@ function actualizarMapa() {
 
         if (est === 'archivado') {
             mapa['archivado'].push(item);
+            logItem += `Tarea agregada a Archivado. `;
         } else if (est === 'pendiente') {
             if (!sesion) {
                 mapa['general'].push(item);
+                logItem += `Tarea agregada a General. `;
             } else {
                 if (!mapa[sesion]) {
                     mapa[sesion] = [];
+                    logItem += `Sección ${sesion} creada en el mapa. `;
                 }
                 mapa[sesion].push(item);
+                logItem += `Tarea agregada a sección ${sesion}. `;
             }
+        } else {
+            logItem += `Tarea no agregada (estado no es archivado ni pendiente). `;
         }
         
-        console.log(logItem); // Imprimir el log de cada ítem individualmente
+        console.log(logItem);
     });
 
-    console.log(`Mapa actualizado.`); // Imprimir mensaje final
+    log += `Mapa final: ${JSON.stringify(mapa)}. `;
+    console.log(log);
 }
 
 //STEP 3
 function crearSeccion(nom, items) {
-    let log = `crearSeccion: Creando sección: ${nom}. `;
-    const nomCodificado = encodeURIComponent(nom);
-    let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
+    let log = `crearSeccion: Iniciando creación de sección: ${nom}. `;
 
+    // Codificar el nombre de la sección para usarlo como data-valor
+    const nomCodificado = encodeURIComponent(nom);
+    log += `Nombre de sección codificado: ${nomCodificado}. `;
+
+    // Buscar si la sección ya existe
+    let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
+    log += `Buscando sección existente con data-valor: ${nomCodificado}. `;
+
+    // Si no hay tareas para la sección:
     if (items.length === 0) {
+        log += `La sección ${nom} no tiene tareas. `;
         if (divisor) {
             divisor.textContent = `No hay tareas en la sección ${nom}`;
             divisor.style.color = 'gray';
+            log += `Se actualizó el texto del divisor para ${nom}. `;
+        } else {
+            log += `No se encontró un divisor para ${nom}. `;
         }
         log += `Sección ${nom} vacía, se omite.`;
+        console.log(log);
         return;
     }
 
+    // Si la sección no existe, crearla
     if (!divisor) {
+        log += `La sección ${nom} no existe, creando nuevo divisor. `;
         divisor = document.createElement('p');
         divisor.style.fontWeight = 'bold';
         divisor.style.cursor = 'pointer';
@@ -145,23 +184,39 @@ function crearSeccion(nom, items) {
         divisor.dataset.valor = nomCodificado;
         divisor.classList.add('divisorTarea', nomCodificado);
 
+        // Crear la flecha para expandir/contraer
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
         divisor.appendChild(flecha);
+
+        // Agregar la sección a la lista de secciones
         listaSec.appendChild(divisor);
+        log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
+    } else {
+        log += `Se encontró un divisor existente para ${nom}. `;
     }
 
     //no borrar esto
     //configurarInteraccionSeccion(divisor, nomCodificado, items); 
 
+    // Insertar las tareas en la sección
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
-    items.forEach(item => {
+    items.forEach((item, index) => {
+        log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. `;
         item.setAttribute('data-seccion', nomCodificado);
-        if (item.parentNode) item.parentNode.removeChild(item);
+        log += `Atributo data-seccion establecido como ${nomCodificado} para la tarea. `;
+
+        if (item.parentNode) {
+            log += `Removiendo tarea de su padre actual. `;
+            item.parentNode.removeChild(item);
+        }
+
         listaSec.insertBefore(item, anterior.nextSibling);
+        log += `Tarea insertada en listaSec después de ${anterior.textContent}. `;
         anterior = item;
     });
+
     console.log(log);
 }
 
