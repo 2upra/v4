@@ -4,7 +4,6 @@ const listaSec = document.querySelector('.social-post-list.clase-tarea');
 window.dividirTarea = async function () {
     if (!listaSec) return;
     organizarSecciones();
-    crearSesionFront();
     hacerDivisoresEditables();
     window.addEventListener('reiniciar', organizarSecciones);
 };
@@ -46,14 +45,15 @@ function alternarVisibilidadSeccion(divisor) {
     let log = `alternarVisibilidadSeccion: Alternando visibilidad de la sección ${valorDivisor}. `;
 
     items.forEach(item => {
-        if (item.dataset.seccion === valorDivisorCodificado) { // Usar el nombre codificado
+        if (item.dataset.seccion === valorDivisorCodificado) {
+            // Usar el nombre codificado
             item.style.display = visible ? '' : 'none';
             log += `Tarea ID: ${item.getAttribute('id-post')}, Visibilidad: ${visible ? 'visible' : 'oculta'}. `;
         }
     });
 
     const flecha = divisor.querySelector('span:last-child');
-    flecha.innerHTML = visible ? (window.fechaabajo || '↓') : (window.fechaallado || '↑');
+    flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
     localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
     //console.log(log);
 }
@@ -74,6 +74,7 @@ function configurarInteraccionSeccion(divisor, nomCodificado, items) {
 
         iconoAgregar.onclick = event => {
             event.stopPropagation();
+            crearSesionFront(divisor); // Se llama a la función aquí, pasando el divisor como parámetro
         };
     }
 
@@ -85,7 +86,7 @@ function configurarInteraccionSeccion(divisor, nomCodificado, items) {
 
 function crearSeccion(nom, items) {
     let log = `crearSeccion: Creando sección: ${nom}. `;
-    const nomCodificado = encodeURIComponent(nom); // Codificar el nombre de la sesión
+    const nomCodificado = encodeURIComponent(nom);
     let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
 
     if (items.length === 0) {
@@ -94,7 +95,6 @@ function crearSeccion(nom, items) {
             divisor.style.color = 'gray';
         }
         log += `Sección ${nom} vacía, se omite.`;
-        //console.log(log);
         return;
     }
 
@@ -107,9 +107,9 @@ function crearSeccion(nom, items) {
         divisor.style.display = 'flex';
         divisor.style.width = '100%';
         divisor.style.alignItems = 'center';
-        divisor.textContent = nom; // Mostrar el nombre original
-        divisor.dataset.valor = nomCodificado; // Usar el nombre codificado en data-valor
-        divisor.classList.add('divisorTarea', nomCodificado); // Usar el nombre codificado aquí
+        divisor.textContent = nom;
+        divisor.dataset.valor = nomCodificado;
+        divisor.classList.add('divisorTarea', nomCodificado);
 
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
@@ -117,19 +117,18 @@ function crearSeccion(nom, items) {
         listaSec.appendChild(divisor);
     }
 
-    configurarInteraccionSeccion(divisor, nomCodificado, items); // Usar el nombre codificado
+    configurarInteraccionSeccion(divisor, nomCodificado, items);
 
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
     items.forEach(item => {
-        item.setAttribute('data-seccion', nomCodificado); // Usar el nombre codificado
+        item.setAttribute('data-seccion', nomCodificado);
         if (item.parentNode) item.parentNode.removeChild(item);
         listaSec.insertBefore(item, anterior.nextSibling);
         anterior = item;
     });
-
-    //console.log(log);
 }
+
 function eliminarSeparadoresExistentes() {
     const separadores = Array.from(listaSec.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea'));
     separadores.forEach(separador => separador.remove());
@@ -170,40 +169,36 @@ function generarLogFinal() {
     //console.log(log);
 }
 
-/*
-
-*/
-
-function crearSesionFront() {
-    const botonPlus = document.querySelector('.iconoPlus');
+function crearSesionFront(divisorGeneral) {
+    // Se recibe el divisor de General como parámetro
     const listaSecTareas = document.querySelector('.clase-tarea');
 
-    botonPlus.addEventListener('click', () => {
-        const textoInicial = 'Nueva sesión';
-        const nuevaSesion = document.createElement('p');
-        nuevaSesion.dataset.valor = textoInicial;
-        nuevaSesion.classList.add('divisorTarea');
-        nuevaSesion.contentEditable = true;
-        nuevaSesion.textContent = textoInicial;
+    const textoInicial = 'Nueva sesión';
+    const nuevaSesion = document.createElement('p');
+    nuevaSesion.dataset.valor = textoInicial;
+    nuevaSesion.classList.add('divisorTarea');
+    nuevaSesion.contentEditable = true;
+    nuevaSesion.textContent = textoInicial;
 
-        const spanFlecha = document.createElement('span');
-        spanFlecha.style.marginLeft = '5px';
-        spanFlecha.innerHTML = window.fechaabajo;
+    const spanFlecha = document.createElement('span');
+    spanFlecha.style.marginLeft = '5px';
+    spanFlecha.innerHTML = window.fechaabajo;
 
-        nuevaSesion.appendChild(spanFlecha);
-        listaSecTareas.prepend(nuevaSesion);
+    nuevaSesion.appendChild(spanFlecha);
 
-        nuevaSesion.focus();
+    // Insertar la nueva sesión después del divisor de General
+    divisorGeneral.parentNode.insertBefore(nuevaSesion, divisorGeneral.nextSibling);
 
-        nuevaSesion.addEventListener('blur', () => {
-            let textoEditado = nuevaSesion.textContent;
-            if (textoEditado == '') {
-                textoEditado = 'Nueva sesión';
-                nuevaSesion.textContent = textoEditado;
-            }
-            nuevaSesion.dataset.valor = textoEditado;
-            //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
-        });
+    nuevaSesion.focus();
+
+    nuevaSesion.addEventListener('blur', () => {
+        let textoEditado = nuevaSesion.textContent;
+        if (textoEditado == '') {
+            textoEditado = 'Nueva sesión';
+            nuevaSesion.textContent = textoEditado;
+        }
+        nuevaSesion.dataset.valor = textoEditado;
+        //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
     });
 }
 
@@ -217,18 +212,18 @@ function hacerDivisoresEditables() {
         if (valor !== 'General' && valor !== 'Archivado') {
             divisor.contentEditable = true;
 
-            let valorOriginal = valor; 
+            let valorOriginal = valor;
 
             divisor.addEventListener('blur', async () => {
                 let textoEditado = divisor.textContent;
-                
+
                 if (textoEditado === '') {
                     textoEditado = valorOriginal;
                     divisor.textContent = textoEditado;
                 }
-                
+
                 divisor.dataset.valor = textoEditado;
-                
+
                 if (textoEditado !== valorOriginal) {
                     let datos = {
                         valorOriginal: valorOriginal,
@@ -236,7 +231,7 @@ function hacerDivisoresEditables() {
                     };
                     try {
                         await enviarAjax('actualizarSesion', datos);
-                        
+
                         valorOriginal = textoEditado;
                         //console.log('Sesión actualizada y tareas reasignadas');
                     } catch (error) {
@@ -251,4 +246,3 @@ function hacerDivisoresEditables() {
         }
     });
 }
-
