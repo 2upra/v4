@@ -60,7 +60,7 @@ function taskTabs()
                             <? echo formTarea() ?>
                         </div>
                         <? echo publicaciones(['post_type' => 'tarea', 'filtro' => 'tarea', 'posts' => 50, 'tab_id' => 'tareas']); ?>
-                        <div class="notasMentales">
+                        <div class="notasMentales" style="display: none;">
                             <? echo publicaciones(['post_type' => 'notas', 'filtro' => 'notas', 'posts' => 12, 'tab_id' => 'tareas']); ?>
                         </div>
                     </div>
