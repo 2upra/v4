@@ -9374,3 +9374,8 @@ p.contenidoNotaP {
     align-items: center;
 	outline: none !important;
 }
+
+button.tiempoTareas {
+    height: 15px;
+    width: 15px;
+}

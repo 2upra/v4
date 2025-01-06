@@ -154,12 +154,14 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
 
     $mostrarIcono = get_user_meta($autorId, 'mostrarIconoTareas', true);
     $mostrarIcono = ($mostrarIcono === '') ? false : (bool)$mostrarIcono;
-
+    $esSubtarea = get_post_meta($tareaId, 'subtarea', true);
+    $hoy = date('Y-m-d');
+    $dif = floor((strtotime($proxima) - strtotime($hoy)) / (60 * 60 * 24));
     ob_start();
 ?>
 
     <li
-        class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $tareaId; ?> <? echo $clase; ?> draggable-element <? echo $estado; ?>"
+        class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $tareaId; ?> <? echo $clase; ?> draggable-element <? echo $estado; ?> <? if ($esSubtarea) echo 'subtarea';?>"
         filtro="<? echo esc_attr($filtro); ?>"
         tipo-tarea="<? echo esc_attr($tipo); ?>"
         id-post="<? echo $tareaId; ?>"
@@ -168,7 +170,11 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
         sesion="<? echo esc_attr($sesion) ?>"
         estado="<? echo esc_attr($estado) ?>"
         impnum="<? echo esc_attr($impnum) ?>"
-        importancia="<? echo esc_attr($imp) ?>">
+        importancia="<? echo esc_attr($imp) ?>"
+        subtarea="<? if ($esSubtarea) echo 'true'; else echo 'false'; ?>"
+        padre="<? echo esc_attr($esSubtarea) ?>"
+        dif="<? echo esc_attr($dif) ?>"
+        >
 
         <button class="completaTarea <? if ($esHabito) echo 'habito'; ?>" data-tarea="<? echo $tareaId; ?>">
             <? echo $GLOBALS['verificadoCirculo']; ?>
@@ -178,7 +184,7 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
             <? echo $titulo; ?>
         </p>
 
-        <p class="idtarea" style="display: none;">
+        <p class="idtarea" style="display: none; font-size: 11px;">
             <? echo $tareaId ?>
         </p>
 

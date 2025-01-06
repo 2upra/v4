@@ -14,8 +14,6 @@ function restarPinkys($userID, $cantidad)
     update_user_meta($userID, 'pinky', $nuevas_monedas);
 }
 
-add_action('before_delete_post', 'restarPinkysEliminacion');
-
 function restarPinkysEliminacion($postID)
 {
     $post = get_post($postID);

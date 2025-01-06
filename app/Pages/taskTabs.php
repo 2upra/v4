@@ -16,19 +16,23 @@ function taskTabs()
                 <div class="taskConfig">
 
                     <button class="borrarTareasCompletadas">
-                        <?php echo $GLOBALS['borradorIcon']; ?>
+                        <? echo $GLOBALS['borradorIcon']; ?>
                     </button>
 
                     <button class="prioridadTareas">
-                        <?php echo $GLOBALS['estrellaCuatro']; ?>
+                        <? echo $GLOBALS['estrellaCuatro']; ?>
+                    </button>
+
+                    <button class="tiempoTareas" style="display: none;">
+                        <? echo $GLOBALS['tiempoIcon']; ?>
                     </button>
 
                     <button class="restablecerTareas" style="display: none;">
-                        <?php echo $GLOBALS['iconViento']; ?>
+                        <? echo $GLOBALS['iconViento']; ?>
                     </button>
 
                     <button class="ORDENPOSTSL" id="ORDENPOSTSL">
-                        <?php echo $GLOBALS['iconFiltro']; ?>
+                        <? echo $GLOBALS['iconFiltro']; ?>
                     </button>
 
                     <div class="opcionCheckBox modal" id="filtrosPost" style="display: none;">

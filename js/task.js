@@ -15,7 +15,6 @@ function initTareas() {
         selectorTipoTarea();
         enviarTarea();
         editarTarea();
-        moverTarea();
         completarTarea();
         cambiarPrioridad();
         prioridadTarea();
@@ -24,10 +23,12 @@ function initTareas() {
         archivarTarea();
         ocultarBotones();
         borrarTareaVacia();
-        window.dividirTareas();
+
         subTarea();
-        initNotas();
-        initEnter();
+        window.initNotas();
+        window.initEnter();
+        window.initMoverTarea();
+        window.dividirTarea();
     }
 }
 
@@ -58,7 +59,77 @@ function enviarTarea() {
     });
 }
 
-//aqui necesito recibir la id de la tarea que se crea
+//necesito ajustar lo de pegar tareas, porque ya no se usa reiniciarContenido sino reiniciarPost
+function pegarTareaHandler(ev) {
+    ev.preventDefault();
+    const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
+    const lineas = textoPegado
+        .split('\n')
+        .map(linea => linea.trim())
+        .filter(linea => linea);
+    const maxTareas = 30;
+    const lineasProcesadas = lineas.slice(0, maxTareas);
+    const tit = document.getElementById('tituloTarea');
+    const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
+
+    if (lineasProcesadas.some(linea => linea.length > 140)) {
+        alert('Ningún título puede superar los 140 caracteres.');
+        return;
+    }
+
+    const promesas = lineasProcesadas.map(titulo => {
+        return enviarAjax('crearTarea', {
+            titulo: titulo,
+            importancia: importancia.valor,
+            tipo: tipoTarea.valor
+        });
+    });
+
+    Promise.all(promesas)
+        .then(async respuestas => {
+            let todasExitosas = respuestas.every(rta => rta.success);
+            let log = 'pegarTareaHandler: ';
+
+            if (todasExitosas) {
+                log += `Tareas creadas exitosamente. Se procesaron ${lineasProcesadas.length} tareas.`;
+                tit.value = '';
+
+                for (const rta of respuestas) {
+                    if (rta.data && rta.data.tareaId) {
+                        const tareaNueva = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+
+                        if (tareaNueva && listaTareas) {
+                            const primerDivisor = listaTareas.querySelector('.divisorTarea');
+
+                            if (primerDivisor) {
+                                primerDivisor.insertAdjacentHTML('afterend', tareaNueva);
+                            } else {
+                                listaTareas.insertAdjacentHTML('afterbegin', tareaNueva);
+                            }
+                        } else {
+                            log += `\n No se pudo agregar la tarea con ID ${rta.data.tareaId} a la lista.`;
+                        }
+                    }
+                }
+
+                initTareas();
+                window.guardarOrden();
+            } else {
+                respuestas.forEach((rta, index) => {
+                    if (!rta.success) {
+                        log += `\n Error al crear la tarea "${lineasProcesadas[index]}". Detalles: ${rta.data || 'Sin detalles'}`;
+                    }
+                });
+            }
+            console.log(log);
+        })
+        .catch(err => {
+            console.error('pegarTareaHandler: Error al crear tareas:', err);
+            alert('Error al crear tareas. Revisa la consola.');
+        });
+}
+
+//te dejo un ejemplo correcto
 function enviarTareaHandler(ev) {
     const tit = document.getElementById('tituloTarea');
     const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
@@ -82,15 +153,13 @@ function enviarTareaHandler(ev) {
 
             const tituloParaEnviar = tit.value;
             tit.value = '';
-            console.log('llamando a crearTarea desde enviarTareaHandler');
+
             enviarAjax('crearTarea', {...data, titulo: tituloParaEnviar})
                 .then(async rta => {
-                    let log = '';
                     if (rta.success) {
-                        log = `Tarea creada con ID ${rta.data.tareaId}.`;
                         alert('Tarea creada.');
 
-                        const {tareaNueva} = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+                        const tareaNueva = await window.reiniciarPost(rta.data.tareaId, 'tarea');
 
                         if (tareaNueva && listaTareas) {
                             const primerDivisor = listaTareas.querySelector('.divisorTarea');
@@ -100,85 +169,28 @@ function enviarTareaHandler(ev) {
                             } else {
                                 listaTareas.insertAdjacentHTML('afterbegin', tareaNueva);
                             }
+
                             initTareas();
                             window.guardarOrden();
                         } else {
-                            console.error('No se recibió respuesta o no se encontró la lista de tareas.');
+                            console.error('enviarTareaHandler: No se recibió respuesta o no se encontró la lista de tareas.');
+                            console.error(`enviarTareaHandler: tareaNueva=${tareaNueva}, listaTareas=${listaTareas}`);
                         }
                     } else {
-                        log = 'Error al crear tarea.';
+                        let m = 'enviarTareaHandler: Error al crear tarea.';
                         if (rta.data) {
-                            log += ' Detalles: ' + rta.data;
+                            m += ' Detalles: ' + rta.data;
                         }
-                        alert(log);
+                        alert(m);
                     }
-                    console.log(log);
                 })
                 .catch(err => {
+                    console.error('enviarTareaHandler: Error al crear tarea.');
                     alert('Error al crear. Revisa la consola.');
                     console.error(err);
                 });
         }, 0);
     }
-}
-
-function pegarTareaHandler(ev) {
-    ev.preventDefault();
-    const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
-    const lineas = textoPegado.split('\n');
-    const maxTareas = 30;
-    const lineasProcesadas = lineas.slice(0, maxTareas);
-    const tit = document.getElementById('tituloTarea');
-    let enviando = false;
-
-    const promesas = lineasProcesadas.map(linea => {
-        const titulo = linea.trim();
-        if (titulo.length > 140) {
-            alert('El título no puede superar los 140 caracteres.');
-            return;
-        }
-        if (titulo) {
-            console.log('llamando a crearTarea desde pegarTarea');
-            return enviarAjax('crearTarea', {
-                titulo: titulo,
-                importancia: importancia.valor,
-                tipo: tipoTarea.valor
-            });
-        }
-        return Promise.resolve(null);
-    });
-
-    enviando = true;
-    Promise.all(promesas)
-        .then(respuestas => {
-            let todasExitosas = true;
-            let mensajeError = '';
-
-            respuestas.forEach(rta => {
-                if (rta && !rta.success) {
-                    todasExitosas = false;
-                    mensajeError += rta.data ? ' Detalles: ' + rta.data : '';
-                }
-            });
-
-            if (todasExitosas) {
-                alert(`Tareas creadas. Se procesaron ${lineasProcesadas.length} tareas.`);
-                tit.value = '';
-                limpiar = false;
-                arriba = true;
-                window.reiniciarContenido(limpiar, arriba, 'tarea');
-                initTareas();
-            } else {
-                alert('Error al crear algunas tareas.' + mensajeError);
-            }
-        })
-        .catch(err => {
-            alert('Error al crear. Revisa la consola.');
-            console.error(err);
-        })
-        .finally(() => {
-            enviando = false;
-        });
 }
 
 function selectorTipoTarea() {
@@ -222,13 +234,13 @@ function editarTarea() {
     tareas.forEach(tarea => {
         // Verifica si la tarea ya tiene un event listener agregado
         if (!tarea.dataset.eventoAgregado) {
-            tarea.addEventListener('click', manejarClicTarea);
+            tarea.addEventListener('click', manejarEditarTarea);
             tarea.dataset.eventoAgregado = 'true';
         }
     });
 }
 
-function manejarClicTarea(ev) {
+function manejarEditarTarea(ev) {
     ev.preventDefault();
     const tarea = this; // 'this' se refiere al elemento que disparó el evento
     const id = tarea.dataset.tarea;
@@ -331,8 +343,17 @@ function setCursorPos(el, off) {
     sel.addRange(rango);
 }
 
+/*
+las tareas tienen un dif, y es importante tomarlo en cuenta cuando el tipo-tarea es habito o habito rigido, 
+<li class="POST-tarea EDYQHV 472  draggable-element pendiente " filtro="tarea" tipo-tarea="habito rigido" id-post="472" autor="1" draggable="true" sesion="general" estado="pendiente" impnum="4" importancia="importante" subtarea="false" padre="" dif="-1" data-submenu-initialized="true" data-seccion="General">
+
+prioridadTarea funciona muy bien pero tiene que tener en cuenta el dif, el dif simplemente es el tiempo que se tiene para completar una tarea, mientras menor sea el numero (tambien hay negativo), mas arriba, asi que, si, tiene que mantenerse la prioridad por el impnum pero dentro de los impnum, si es un habito, primero van los que tienen menor dif
+*/
+
 function prioridadTarea() {
     const boton = document.querySelector('.prioridadTareas');
+
+    if (boton.dataset.eventoAgregado) return;
 
     boton.addEventListener('click', async () => {
         const lista = document.querySelector('.social-post-list.clase-tarea');
@@ -348,15 +369,47 @@ function prioridadTarea() {
                 tareasSeccion.push({
                     tarea: tarea,
                     id: tarea.getAttribute('id-post'),
-                    impnum: parseInt(tarea.getAttribute('impnum'))
+                    impnum: parseInt(tarea.getAttribute('impnum')),
+                    padre: tarea.getAttribute('padre'),
+                    dif: parseInt(tarea.getAttribute('dif')),
+                    tipo: tarea.getAttribute('tipo-tarea')
                 });
                 tarea = tarea.nextElementSibling;
             }
 
-            tareasSeccion.sort((a, b) => b.impnum - a.impnum);
+            const tareasConPadre = tareasSeccion.filter(t => t.padre);
+            const tareasSinPadre = tareasSeccion.filter(t => !t.padre);
+
+            tareasSinPadre.sort((a, b) => {
+                if (b.impnum !== a.impnum) {
+                    return b.impnum - a.impnum;
+                } else if ((a.tipo === 'habito' || a.tipo === 'habito rigido') && (b.tipo === 'habito' || b.tipo === 'habito rigido')) {
+                    return a.dif - b.dif;
+                } else {
+                    return 0;
+                }
+            });
+
+            const tareasOrdenadas = [];
+
+            tareasSinPadre.forEach(tareaSinPadre => {
+                tareasOrdenadas.push(tareaSinPadre);
+                const subtareas = tareasConPadre.filter(t => t.padre === tareaSinPadre.id);
+                subtareas.sort((a, b) => {
+                    if (b.impnum !== a.impnum) {
+                        return b.impnum - a.impnum;
+                    } else if ((a.tipo === 'habito' || a.tipo === 'habito rigido') && (b.tipo === 'habito' || b.tipo === 'habito rigido')) {
+                        return a.dif - b.dif;
+                    } else {
+                        return 0;
+                    }
+                });
+
+                tareasOrdenadas.push(...subtareas);
+            });
 
             const tablaTareas = [];
-            tareasSeccion.forEach((t, i) => {
+            tareasOrdenadas.forEach((t, i) => {
                 const indiceDeseado = Array.from(lista.children).indexOf(divisor) + 1 + i;
                 const indiceActual = Array.from(lista.children).indexOf(t.tarea);
 
@@ -372,6 +425,9 @@ function prioridadTarea() {
                 tablaTareas.push({
                     ID: t.id,
                     Imp: t.impnum,
+                    Padre: t.padre,
+                    Dif: t.dif,
+                    Tipo: t.tipo,
                     'Indice Actual': indiceActual,
                     'Indice Deseado': indiceDeseado
                 });
@@ -380,17 +436,20 @@ function prioridadTarea() {
             if (tablaTareas.length > 0) {
                 //console.table(tablaTareas);
             }
-            log += `Se ordenaron ${tareasSeccion.length} tareas en la sección "${seccion}". \n`;
+            log += `Se ordenaron ${tareasOrdenadas.length} tareas en la sección "${seccion}". \n`;
         }
+        log += `Se ejecuto prioridadTareas. \n`;
 
         //console.log(log);
-        window.guardarOrden();
         try {
-            //window.guardarOrden();
+            window.guardarOrden();
+            console.log(log);
         } catch (error) {
             console.error('Error al guardar el orden:', error);
         }
     });
+
+    boton.dataset.eventoAgregado = 'true';
 }
 
 function archivarTarea() {
@@ -443,11 +502,9 @@ function archivarTarea() {
     });
 }
 
-
-
+//se que esto oculta la tarea cuando el filtro esta activado pero, no la tiene que ocultar, sino eliminar del dom
 function completarTarea() {
     document.querySelectorAll('.completaTarea').forEach(boton => {
-        // Verifica si el botón ya tiene un event listener agregado
         if (!boton.dataset.eventoAgregado) {
             boton.addEventListener('click', manejarClicCompletar);
             boton.dataset.eventoAgregado = 'true';
@@ -476,10 +533,8 @@ function manejarClicCompletar() {
                     }
 
                     if (window.filtrosGlobales && window.filtrosGlobales.includes('ocultarCompletadas') && !esHabito) {
-                        tarea.style.display = 'none';
-                    }
-
-                    if (esHabito || esHabitoFlexible) {
+                        tarea.remove();
+                    } else if (esHabito || esHabitoFlexible) {
                         log += 'Reinicio de tarea porque es habito o habito flexible';
                         window.reiniciarPost(tareaId, 'tarea');
                     }
@@ -576,83 +631,56 @@ function actualizarFrecuencia(data, div) {
 function cambiarPrioridad() {
     const divs = document.querySelectorAll('.divImportancia');
     divs.forEach(div => {
-        div.addEventListener('click', () => {
-            const id = div.dataset.tarea;
-            const li = document.querySelector(`.POST-tarea[id-post="${id}"]`);
-            const ops = document.createElement('div');
-            ops.classList.add('opcionesPrioridad');
-            ops.innerHTML = `
-          <p data-prioridad="baja">${window.iconbaja} baja</p>
-          <p data-prioridad="media">${window.iconMedia} media</p>
-          <p data-prioridad="alta">${window.iconAlta} alta</p>
-          <p data-prioridad="importante">${window.iconimportante} importante</p>
-        `;
-            const menu = li.nextElementSibling;
-            if (menu && menu.classList.contains('opcionesPrioridad')) {
-                menu.remove();
-            } else {
-                li.after(ops);
-            }
-            const ps = ops.querySelectorAll('p');
-            ps.forEach(p => {
-                p.addEventListener('click', () => {
-                    const prio = p.dataset.prioridad;
-                    const data = {
-                        tareaId: id,
-                        prioridad: prio
-                    };
-                    enviarAjax('cambiarPrioridad', data);
-                    ops.remove();
-                    const padre = div.querySelector('.importanciaTarea');
-                    let span = padre.querySelector('.tituloImportancia');
-                    const svg = padre.querySelector('svg');
+        // Verifica si el div ya tiene un event listener agregado
+        if (!div.dataset.eventoAgregado) {
+            div.addEventListener('click', manejarClicPrioridad);
+            div.dataset.eventoAgregado = 'true';
+        }
+    });
+}
 
-                    if (prio === 'baja') {
-                        if (!span) {
-                            span = document.createElement('span');
-                            span.classList.add('tituloImportancia');
-                            padre.appendChild(span);
-                        }
-                        span.textContent = 'baja';
-                        if (svg) {
-                            svg.outerHTML = window.iconbaja;
-                        }
-                    } else if (prio === 'media') {
-                        if (!span) {
-                            span = document.createElement('span');
-                            span.classList.add('tituloImportancia');
-                            padre.appendChild(span);
-                        }
-                        span.textContent = 'media';
-                        if (svg) {
-                            svg.outerHTML = window.iconMedia;
-                        }
-                    } else if (prio === 'alta') {
-                        if (!span) {
-                            span = document.createElement('span');
-                            span.classList.add('tituloImportancia');
-                            padre.appendChild(span);
-                        }
-                        span.textContent = 'alta';
-                        if (svg) {
-                            svg.outerHTML = window.iconAlta;
-                        }
-                    } else if (prio === 'importante') {
-                        if (!span) {
-                            span = document.createElement('span');
-                            span.classList.add('tituloImportancia');
-                            padre.appendChild(span);
-                        }
-                        span.textContent = 'importante';
-                        if (svg) {
-                            svg.outerHTML = window.iconimportante;
-                        }
+function manejarClicPrioridad() {
+    const div = this;
+    const id = div.dataset.tarea;
+    const li = document.querySelector(`.POST-tarea[id-post="${id}"]`);
+    const ops = document.createElement('div');
+    ops.classList.add('opcionesPrioridad');
+    ops.innerHTML = `
+    <p data-prioridad="baja">${window.iconbaja} baja</p>
+    <p data-prioridad="media">${window.iconMedia} media</p>
+    <p data-prioridad="alta">${window.iconAlta} alta</p>
+    <p data-prioridad="importante">${window.iconimportante} importante</p>
+  `;
+    const menu = li.nextElementSibling;
+    if (menu && menu.classList.contains('opcionesPrioridad')) {
+        menu.remove();
+    } else {
+        li.after(ops);
+    }
+
+    const ps = ops.querySelectorAll('p');
+    ps.forEach(p => {
+        p.addEventListener('click', () => {
+            const prio = p.dataset.prioridad;
+            const data = {
+                tareaId: id,
+                prioridad: prio
+            };
+
+            enviarAjax('cambiarPrioridad', data)
+                .then(rta => {
+                    if (rta.success) {
+                        ops.remove();
+                        window.reiniciarPost(id, 'tarea');
+                    } else {
+                        let m = 'Error al cambiar la prioridad de la tarea.';
+                        if (rta.data) m += ' Detalles: ' + rta.data;
+                        alert(m);
                     }
-                    if (!svg) {
-                        span.textContent = prio;
-                    }
+                })
+                .catch(err => {
+                    alert('Error al cambiar la prioridad.');
                 });
-            });
         });
     });
 }
@@ -730,175 +758,6 @@ window.guardarOrden = function () {
         dataSeccionArriba: dataSeccionArriba
     });
 };
-
-function moverTarea() {
-    const lista = document.querySelector('.clase-tarea');
-    if (!lista) return;
-
-    if (lista.listenersAdded) return;
-    lista.listenersAdded = true;
-
-    let arrastrandoElem = null;
-    let ordenViejo = [];
-    let idTareaArrastrada = null;
-    let posInicialY = null;
-    const tolerancia = 10;
-    let movimientoRealizado = false;
-
-    const iniciarArrastre = ev => {
-        const elem = ev.target.closest('.draggable-element');
-        if (!elem) return;
-
-        arrastrandoElem = elem;
-        idTareaArrastrada = elem.getAttribute('id-post');
-        ordenViejo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
-        posInicialY = ev.clientY;
-        movimientoRealizado = false;
-
-        arrastrandoElem.classList.add('dragging');
-        document.body.classList.add('dragging-active');
-
-        lista.addEventListener('mousemove', duranteArrastre);
-        lista.addEventListener('mouseup', terminarArrastre);
-    };
-
-    const duranteArrastre = ev => {
-        if (!arrastrandoElem) return;
-        ev.preventDefault();
-
-        const mouseY = ev.clientY;
-        const rectLista = lista.getBoundingClientRect();
-
-        if (!movimientoRealizado && Math.abs(mouseY - posInicialY) > tolerancia) {
-            movimientoRealizado = true;
-        }
-
-        if (mouseY < rectLista.top || mouseY > rectLista.bottom) {
-            return;
-        }
-
-        const elemsVisibles = Array.from(lista.children).filter(child => child.style.display !== 'none' && child !== arrastrandoElem);
-        let insertado = false;
-
-        for (let i = 0; i < elemsVisibles.length; i++) {
-            const elem = elemsVisibles[i];
-            const rectElem = elem.getBoundingClientRect();
-            const elemMedio = rectElem.top + rectElem.height / 2;
-
-            if (mouseY < elemMedio) {
-                lista.insertBefore(arrastrandoElem, elem);
-                insertado = true;
-                break;
-            }
-        }
-
-        if (!insertado && elemsVisibles.length > 0) {
-            lista.appendChild(arrastrandoElem);
-        }
-    };
-
-    const obtenerSesionYDataSeccionArriba = () => {
-        let sesionArriba = null;
-        let dataSeccionArriba = null;
-        let anterior = arrastrandoElem.previousElementSibling;
-        while (anterior) {
-            if (anterior.classList.contains('POST-tarea')) {
-                sesionArriba = anterior.getAttribute('sesion');
-                if (dataSeccionArriba === null) {
-                    dataSeccionArriba = anterior.getAttribute('data-seccion');
-                }
-            } else if (anterior.classList.contains('divisorTarea')) {
-                if (sesionArriba === null) {
-                    sesionArriba = anterior.getAttribute('data-valor'); // Usar data-valor para la sesión
-                }
-                if (dataSeccionArriba === null) {
-                    dataSeccionArriba = anterior.getAttribute('data-valor');
-                }
-            }
-            if (sesionArriba !== null && dataSeccionArriba !== null) break;
-            anterior = anterior.previousElementSibling;
-        }
-        return {sesionArriba, dataSeccionArriba};
-    };
-
-    const terminarArrastre = () => {
-        if (!arrastrandoElem) return;
-
-        const ordenNuevo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
-        const nuevaPosicion = ordenNuevo.indexOf(idTareaArrastrada);
-        const {sesionArriba, dataSeccionArriba} = obtenerSesionYDataSeccionArriba();
-
-        if (movimientoRealizado) {
-            if (dataSeccionArriba) {
-                arrastrandoElem.setAttribute('data-seccion', dataSeccionArriba);
-            }
-            if (sesionArriba) {
-                arrastrandoElem.setAttribute('sesion', sesionArriba);
-            }
-
-            let log = 'Guardando orden:';
-            log += `\n  Tarea movida: ${idTareaArrastrada}`;
-            log += `\n  Nueva posición: ${nuevaPosicion}`;
-            log += `\n  Orden nuevo: ${ordenNuevo}`;
-            log += `\n  Sesión de la tarea de arriba: ${sesionArriba}`;
-            log += `\n  Data-seccion de la tarea de arriba: ${dataSeccionArriba}`;
-            //console.log(log);
-
-            guardarOrdenTareas({
-                idTareaMovida: idTareaArrastrada,
-                nuevaPosicion: nuevaPosicion,
-                ordenNuevo: ordenNuevo,
-                sesionArriba: sesionArriba,
-                dataSeccionArriba: dataSeccionArriba
-            });
-        }
-
-        arrastrandoElem.classList.remove('dragging');
-        document.body.classList.remove('dragging-active');
-        lista.removeEventListener('mousemove', duranteArrastre);
-        lista.removeEventListener('mouseup', terminarArrastre);
-
-        arrastrandoElem = null;
-        idTareaArrastrada = null;
-        ordenViejo = [];
-        posInicialY = null;
-        movimientoRealizado = false;
-    };
-
-    lista.addEventListener('mousedown', ev => {
-        if (ev.target.closest('.draggable-element')) iniciarArrastre(ev);
-    });
-
-    lista.addEventListener('dragstart', ev => {
-        ev.preventDefault();
-    });
-}
-
-function guardarOrdenTareas({idTareaMovida, nuevaPosicion, ordenNuevo, sesionArriba}) {
-    let log = `Guardando orden:\n  Tarea movida: ${idTareaMovida}\n  Nueva posición: ${nuevaPosicion}\n  Orden nuevo: ${ordenNuevo}\n SesionArriba: ${sesionArriba}`;
-    //console.log(log);
-
-    enviarAjax('actualizarOrdenTareas', {tareaMovida: idTareaMovida, nuevaPosicion, ordenNuevo, sesionArriba})
-        .then(res => {
-            if (res && res.success) {
-                //console.log('Orden de tareas actualizado exitosamente.');
-            } else {
-                console.error('Error al actualizar el orden de tareas:', res ? res.data.error : 'Respuesta vacía o success: false');
-            }
-        })
-        .catch(err => {
-            console.error('Error en la petición AJAX:', err);
-        });
-}
-
-/*
-
-<li class="POST-tarea EDYQHV 497  draggable-element pendiente" filtro="tarea" tipo-tarea="una vez" id-post="497" autor="1" draggable="true" sesion="" estado="pendiente" data-submenu-initialized="true" data-seccion="General">
-    <p class="tituloTarea" data-tarea="497">Titutlo de la tarea</p>
-<li class="POST-tarea EDYQHV 496  draggable-element pendiente" filtro="tarea" tipo-tarea="una vez" id-post="496" autor="1" draggable="true" sesion="" estado="pendiente" data-submenu-initialized="true" data-seccion="General">
-    <p class="tituloTarea" data-tarea="496">Titutlo de la tarea</p>
-
-*/
 
 function subTarea() {
     const listaTareas = document.querySelector('.clase-tarea');

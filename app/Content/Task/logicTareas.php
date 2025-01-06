@@ -204,7 +204,7 @@ function modificarTarea()
 
 add_action('wp_ajax_modificarTarea', 'modificarTarea');
 
-//aqui agrega sesion y estado, si recibe sesion y estado, guarda el mismo valor en las metas del mismo nombre
+//aqui necesito que cuando llega un padre, haga lo que hace crearSubtarea
 function crearTarea()
 {
     $log = '';
@@ -220,6 +220,7 @@ function crearTarea()
     $frec = isset($_POST['frecuencia']) ? (int) sanitize_text_field($_POST['frecuencia']) : 1;
     $ses = isset($_POST['sesion']) ? sanitize_text_field($_POST['sesion']) : '';
     $est = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
+    $pad = isset($_POST['padre']) ? (int) sanitize_text_field($_POST['padre']) : 0;
 
     if (empty($tit)) {
         $log = 'Título vacío.';
@@ -270,6 +271,17 @@ function crearTarea()
         ),
     );
 
+    // Si se recibe un padre, se crea como subtarea
+    if ($pad) {
+        $tareaPadre = get_post($pad);
+        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
+            $msg = 'Tarea padre no encontrada.';
+            guardarLog("crearTarea: $msg");
+            wp_send_json_error($msg);
+        }
+        $args['post_parent'] = $pad;
+    }
+
     $tareaId = wp_insert_post($args);
 
     if (is_wp_error($tareaId)) {
@@ -279,16 +291,19 @@ function crearTarea()
         wp_send_json_error($msg);
     }
 
-    $log .= "Tarea creada con id $tareaId, sesion $ses, estado $est";
+    // Si es una subtarea, se actualiza el meta 'subtarea'
+    if ($pad) {
+        update_post_meta($tareaId, 'subtarea', $pad);
+        $log .= "Subtarea creada con id $tareaId, tarea padre $pad, sesion $ses, estado $est";
+    } else {
+        $log .= "Tarea creada con id $tareaId, sesion $ses, estado $est";
+    }
+
     guardarLog("crearTarea: $log");
     wp_send_json_success(array('tareaId' => $tareaId));
 }
 
-
 add_action('wp_ajax_crearTarea', 'crearTarea');
-
-
-
 
 function completarTarea()
 {
@@ -353,6 +368,7 @@ function completarTarea()
 add_action('wp_ajax_completarTarea', 'completarTarea');
 
 
+//necesito que cuando se archive una tarea, deje ser una subtarea en caso de que lo hubiera sido, y si tenia tareas hijos, sus tareas hijos tambien se archiven
 function archivarTarea()
 {
     if (!current_user_can('edit_posts')) {
@@ -378,6 +394,13 @@ function archivarTarea()
         update_post_meta($id, 'estado', 'pendiente');
         update_post_meta($id, 'sesion', 'General');
         $log .= "Se cambio el estado de la tarea $id a pendiente y la sesion a General.";
+         // Eliminar la relación de subtarea si la tarea estaba archivada y se desarchiva
+        wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ));
+        delete_post_meta($id, 'subtarea');
+        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
     } else {
         if (is_array($orden) && in_array($id, $orden)) {
             $pos = array_search($id, $orden);
@@ -387,8 +410,30 @@ function archivarTarea()
             $log .= "Se actualizo el orden de la tarea $id, moviendola al final. \n";
         }
 
+        // Archivar subtareas (tareas hijas)
+        $args = array(
+            'post_parent' => $id,
+            'post_type'   => 'tarea',
+            'numberposts' => -1,
+            'post_status' => 'any'
+        );
+        $subtareas = get_children($args);
+
+        foreach ($subtareas as $subtarea) {
+            update_post_meta($subtarea->ID, 'estado', 'archivado');
+            $log .= ", \n  Se archivó la subtarea {$subtarea->ID}.";
+        }
+
+        // Eliminar la relación de subtarea si la tarea se está archivando
+        wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ));
+        delete_post_meta($id, 'subtarea');
+        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
+
         update_post_meta($id, 'estado', 'archivado');
-        $log .= "Se cambio el estado de la tarea $id a archivado.";
+        $log .= ", \n  Se cambió el estado de la tarea $id a archivado.";
     }
 
     guardarLog($log);
@@ -396,6 +441,9 @@ function archivarTarea()
 }
 
 add_action('wp_ajax_archivarTarea', 'archivarTarea');
+
+
+
 
 function cambiarPrioridad()
 {
@@ -468,26 +516,30 @@ function cambiarFrecuencia()
 add_action('wp_ajax_cambiarFrecuencia', 'cambiarFrecuencia');
 
 
-
-/*
-El cambio principal que necesitas hacer es en la función `actualizarOrden`.
-Ya no se trata de insertar la tarea movida en el nuevo orden,
-sino de reemplazar el orden antiguo con el nuevo.
-*/
-
-function actualizarOrdenTareas()
-{
+function actualizarOrdenTareas() {
     $usu = get_current_user_id();
     $tareaMov = isset($_POST['tareaMovida']) ? intval($_POST['tareaMovida']) : null;
     $ordenNue = isset($_POST['ordenNuevo']) ? explode(',', $_POST['ordenNuevo']) : [];
     $ordenNue = array_map('intval', $ordenNue);
     $sesionArr = isset($_POST['sesionArriba']) ? strtolower(sanitize_text_field($_POST['sesionArriba'])) : null;
     $ordenTar = get_user_meta($usu, 'ordenTareas', true) ?: [];
+    $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
+    $padre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
 
     $log = "actualizarOrdenTareas: \n  Usuario ID: $usu, \n  Tarea movida: $tareaMov, \n  Nuevo orden recibido: " . implode(',', $ordenNue) . ", \n  Orden antes de cambiar: " . implode(',', $ordenTar) . ", \n  Sesion arriba: $sesionArr";
 
-
     if ($tareaMov !== null && !empty($ordenNue)) {
+        // Manejar creación o eliminación de subtareas
+        if ($esSubtarea) {
+            $log .= ", \n  " . manejarSubtarea($tareaMov, $padre);
+        } else {
+            // Si no es una subtarea, pero tiene el metadato 'subtarea', eliminarlo
+            $subtareaExistente = get_post_meta($tareaMov, 'subtarea', true);
+            if (!empty($subtareaExistente)) {
+                $log .= ", \n  " . manejarSubtarea($tareaMov, 0);
+            }
+        }
+
         $ordenTar = actualizarOrden($ordenTar, $ordenNue);
         actualizarSesionEstado($tareaMov, $sesionArr);
         $log .= ", \n  Orden de tareas actualizado exitosamente para el usuario $usu";
@@ -506,6 +558,49 @@ function actualizarOrdenTareas()
     }
 }
 
+function manejarSubtarea($id, $idPadre) {
+    $log = '';
+    if ($idPadre) {
+        $tareaPadre = get_post($idPadre);
+        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
+            return 'Error: Tarea padre no encontrada.';
+        }
+
+        $subtareaExistente = get_post_meta($id, 'subtarea', true);
+
+        if (empty($subtareaExistente)) {
+            $res = wp_update_post(array(
+                'ID' => $id,
+                'post_parent' => $idPadre
+            ), true);
+
+            if (is_wp_error($res)) {
+                return 'Error al crear subtarea: ' . $res->get_error_message();
+            }
+
+            update_post_meta($id, 'subtarea', $idPadre);
+            $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
+        } else {
+            $log .= "La subtarea $id ya existía como subtarea de $idPadre. No se realizaron cambios. ";
+        }
+    } else {
+        // Eliminar subtarea
+        $res = wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ), true);
+
+        if (is_wp_error($res)) {
+            return 'Error al eliminar subtarea: ' . $res->get_error_message();
+        }
+
+        delete_post_meta($id, 'subtarea');
+        $log .= "Se eliminó la subtarea $id. ";
+    }
+
+    return $log;
+}
+
 function actualizarOrden($ordenTar, $ordenNue)
 {
     $log = "actualizarOrden: ";
@@ -518,24 +613,22 @@ function actualizarOrden($ordenTar, $ordenNue)
     return $ordenNue;
 }
 
+//esto funciona bien, solo necesito que si una tarea padre si archiva, sus hijas tambien, o si desarchiva, sus hijas tambien, y si una hijo es archivado, entonces, deja de ser una subtarea, asi de simple. Por rendimiento, esto obviamente debe suceder si se trata de una subtarea o un tarea padre con hijas
 function actualizarSesionEstado($tareaMov, $sesionArr)
 {
     $log = "actualizarSesionEstado: ";
 
     // Tratar 'null' como string
-    $sesionArrString = $sesionArr;
-    if (is_null($sesionArr)) {
-        $sesionArrString = "null";
-    }
+    $sesionArrString = is_null($sesionArr) ? "null" : $sesionArr;
 
     // Si $sesionArr es 'null' o null, usar "General"
-    $sesionParaActualizar = ($sesionArrString === 'null' || is_null($sesionArr)) ? "General" : $sesionArr;
+    $sesionParaActualizar = ($sesionArrString === 'null') ? "General" : $sesionArr;
 
     $estadoAct = strtolower(get_post_meta($tareaMov, 'estado', true));
     $sesionTarea = get_post_meta($tareaMov, 'sesion', true);
 
     // Si $sesionTarea es null, 'null' o una cadena vacía, forzar a "General"
-    if (is_null($sesionTarea) || $sesionTarea === '' || $sesionTarea === 'null') {
+    if (empty($sesionTarea) || $sesionTarea === 'null') {
         $sesionTarea = "General";
     }
 
@@ -543,19 +636,59 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
     $log .= "\n  Estado actual de la tarea '$tareaMov' es '$estadoAct'.";
     $log .= "\n  Sesión actual de la tarea '$tareaMov' es '" . var_export($sesionTarea, true) . "'.";
 
+    // Obtener información sobre la tarea padre y las subtareas
+    $tarea = get_post($tareaMov);
+    $esSubtarea = !empty($tarea->post_parent);
+    $tieneSubtareas = false;
+    if (!$esSubtarea) {
+        $hijas = get_children(array(
+            'post_parent' => $tareaMov,
+            'post_type'   => 'tarea',
+            'numberposts' => -1,
+            'post_status' => 'any'
+        ));
+        $tieneSubtareas = !empty($hijas);
+    }
+    
     // Si la sesión es "General", no se cambie el estado
     if (strtolower($sesionParaActualizar) !== 'general') {
         if (strtolower($sesionParaActualizar) === 'archivado' && $estadoAct !== 'archivado') {
             update_post_meta($tareaMov, 'estado', 'Archivado');
             $log .= "\n  Se actualizó el estado de la tarea '$tareaMov' a 'Archivado'.";
+
+            // Si es una tarea padre, archivar también las subtareas
+            if ($tieneSubtareas) {
+                foreach ($hijas as $hija) {
+                    update_post_meta($hija->ID, 'estado', 'Archivado');
+                    $log .= "\n  Se actualizó el estado de la subtarea '{$hija->ID}' a 'Archivado'.";
+                }
+            }
         } elseif (strtolower($sesionParaActualizar) !== 'archivado' && $estadoAct === 'archivado') {
             update_post_meta($tareaMov, 'estado', 'Pendiente');
             $log .= "\n  Se actualizó el estado de la tarea '$tareaMov' a 'Pendiente'.";
+
+            // Si es una tarea padre, desarchivar también las subtareas
+            if ($tieneSubtareas) {
+                foreach ($hijas as $hija) {
+                    update_post_meta($hija->ID, 'estado', 'Pendiente');
+                    $log .= "\n  Se actualizó el estado de la subtarea '{$hija->ID}' a 'Pendiente'.";
+                }
+            }
         } else {
             $log .= "\n  No se actualizó el estado de la tarea '$tareaMov' porque no era necesario.";
         }
     } else {
         $log .= "\n  La sesion es 'General', no se cambia el estado.";
+    }
+
+    // Si es una subtarea y se archiva, eliminar la relación de subtarea
+    if ($esSubtarea && strtolower($sesionParaActualizar) === 'archivado') {
+        wp_update_post(array(
+            'ID' => $tareaMov,
+            'post_parent' => 0
+        ));
+        delete_post_meta($tareaMov, 'subtarea');
+        $log .= "\n  La tarea '$tareaMov' era una subtarea y se archivó, se eliminó la relación de subtarea.";
     }
 
     // Actualizar la sesión siempre que $sesionParaActualizar sea diferente a la actual
@@ -570,7 +703,7 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
     $sesionFin = get_post_meta($tareaMov, 'sesion', true);
 
     // Si $sesionFin es null, 'null' o una cadena vacía, forzar a "General"
-    if (is_null($sesionFin) || $sesionFin === '' || $sesionFin === 'null') {
+    if (empty($sesionFin) || $sesionFin === 'null') {
         $sesionFin = "General";
         update_post_meta($tareaMov, 'sesion', $sesionFin);
         $log .= "\n  Se corrigió la sesión final de la tarea '$tareaMov' a 'General'.";
@@ -579,9 +712,78 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
     $log .= "\n  Estado final de la tarea '$tareaMov' es '$estadoFin'.";
     $log .= "\n  Sesión final de la tarea '$tareaMov' es '$sesionFin'.";
 
-    //guardarLog($log);
+    guardarLog($log);
 }
+
 add_action('wp_ajax_actualizarOrdenTareas', 'actualizarOrdenTareas');
+
+//te muestro como se crean las subtareas 
+function crearSubtarea()
+{
+    if (!current_user_can('edit_posts')) {
+        $msg = 'No tienes permisos.';
+        guardarLog("crearSubtarea: $msg");
+        wp_send_json_error($msg);
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
+    $idPadre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
+    $log = '';
+
+    if (!$esSubtarea) {
+        $res = wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ), true);
+
+        if (is_wp_error($res)) {
+            $msg = $res->get_error_message();
+            guardarLog("crearSubtarea: $msg");
+            wp_send_json_error($msg);
+        }
+
+        delete_post_meta($id, 'subtarea');
+        $log .= "Se eliminó la subtarea $id. ";
+        guardarLog("crearSubtarea: $log");
+        wp_send_json_success();
+    }
+
+    if ($idPadre) {
+        $tareaPadre = get_post($idPadre);
+        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
+            $msg = 'Tarea padre no encontrada.';
+            guardarLog("crearSubtarea: $msg");
+            wp_send_json_error($msg);
+        }
+
+        $subtareaExistente = get_post_meta($id, 'subtarea', true);
+
+        if (empty($subtareaExistente)) {
+            $res = wp_update_post(array(
+                'ID' => $id,
+                'post_parent' => $idPadre
+            ), true);
+
+            if (is_wp_error($res)) {
+                $msg = $res->get_error_message();
+                guardarLog("crearSubtarea: $msg");
+                wp_send_json_error($msg);
+            }
+
+            update_post_meta($id, 'subtarea', $idPadre);
+            $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
+        } else {
+            $log .= "La subtarea $id ya existía como subtarea de $idPadre. No se realizaron cambios. ";
+        }
+    }
+
+    guardarLog("crearSubtarea: $log");
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_crearSubtarea', 'crearSubtarea');
+
 
 function borrarTareasCompletadas()
 {
@@ -665,65 +867,3 @@ function actualizarSesion()
 }
 
 add_action('wp_ajax_actualizarSesion', 'actualizarSesion');
-
-
-function crearSubtarea()
-{
-    if (!current_user_can('edit_posts')) {
-        $msg = 'No tienes permisos.';
-        guardarLog("crearSubtarea: $msg");
-        wp_send_json_error($msg);
-    }
-
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
-    $idPadre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
-    $log = '';
-
-    if (!$esSubtarea) {
-        $res = wp_update_post(array(
-            'ID' => $id,
-            'post_parent' => 0
-        ), true);
-
-        if (is_wp_error($res)) {
-            $msg = $res->get_error_message();
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
-        }
-
-        delete_post_meta($id, 'subtarea');
-        $log .= "Se eliminó la subtarea $id. ";
-        guardarLog("crearSubtarea: $log");
-        wp_send_json_success();
-    }
-
-    if ($idPadre) {
-        $tareaPadre = get_post($idPadre);
-        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
-            $msg = 'Tarea padre no encontrada.';
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
-        }
-
-        $res = wp_update_post(array(
-            'ID' => $id,
-            'post_parent' => $idPadre
-        ), true);
-
-        if (is_wp_error($res)) {
-            $msg = $res->get_error_message();
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
-        }
-
-        update_post_meta($id, 'subtarea', $idPadre);
-        $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
-    }
-
-    guardarLog("crearSubtarea: $log");
-    wp_send_json_success();
-}
-
-
-add_action('wp_ajax_crearSubtarea', 'crearSubtarea');

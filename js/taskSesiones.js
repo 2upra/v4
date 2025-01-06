@@ -1,23 +1,8 @@
 let mapa = {general: [], archivado: []};
-const lista = document.querySelector('.social-post-list.clase-tarea');
+const listaSec = document.querySelector('.social-post-list.clase-tarea');
 
-/*
-mme doy cuenta qu cuando hay una sesion que tiene espacios en su nombre, esto falla
-taskSesiones.js?ver=0.2.313.1087995295:117  Uncaught (in promise) InvalidCharacterError: Failed to execute 'add' on 'DOMTokenList': The token provided ('test test') contains HTML space characters, which are not valid in tokens.
-    at crearSeccion (taskSesiones.js?ver=0.2.313.1087995295:117:27)
-    at taskSesiones.js?ver=0.2.313.1087995295:151:39
-    at Array.forEach (<anonymous>)
-    at organizarSecciones (taskSesiones.js?ver=0.2.313.1087995295:151:20)
-    at window.dividirTareas (taskSesiones.js?ver=0.2.313.1087995295:14:5)
-    at initTareas (task.js?ver=0.2.313.642048965:28:16)
-    at ajaxPage.js?ver=0.2.313.361655110:98:72
-    at Array.forEach (<anonymous>)
-    at initScripts (ajaxPage.js?ver=0.2.313.361655110:98:15)
-    at reinit (ajaxPage.js?ver=0.2.313.361655110:102:9)
-*/
-
-window.dividirTareas = async function () {
-    if (!lista) return;
+window.dividirTarea = async function () {
+    if (!listaSec) return;
     organizarSecciones();
     crearSesionFront();
     hacerDivisoresEditables();
@@ -27,7 +12,7 @@ window.dividirTareas = async function () {
 function actualizarMapa() {
     let log = '';
     mapa = {general: [], archivado: []};
-    const items = Array.from(lista.children).filter(item => item.tagName === 'LI');
+    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
 
     log = `actualizarMapa: Tareas encontradas: ${items.length}. `;
     items.forEach(item => {
@@ -55,7 +40,7 @@ function actualizarMapa() {
 function alternarVisibilidadSeccion(divisor) {
     const valorDivisorCodificado = divisor.dataset.valor;
     const valorDivisor = decodeURIComponent(valorDivisorCodificado); // Decodificar el nombre
-    const items = Array.from(lista.children).filter(item => item.tagName === 'LI');
+    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
     let visible = localStorage.getItem(`seccion-${valorDivisorCodificado}`) !== 'oculto';
     visible = !visible;
     let log = `alternarVisibilidadSeccion: Alternando visibilidad de la sección ${valorDivisor}. `;
@@ -129,7 +114,7 @@ function crearSeccion(nom, items) {
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
         divisor.appendChild(flecha);
-        lista.appendChild(divisor);
+        listaSec.appendChild(divisor);
     }
 
     configurarInteraccionSeccion(divisor, nomCodificado, items); // Usar el nombre codificado
@@ -139,14 +124,14 @@ function crearSeccion(nom, items) {
     items.forEach(item => {
         item.setAttribute('data-seccion', nomCodificado); // Usar el nombre codificado
         if (item.parentNode) item.parentNode.removeChild(item);
-        lista.insertBefore(item, anterior.nextSibling);
+        listaSec.insertBefore(item, anterior.nextSibling);
         anterior = item;
     });
 
     //console.log(log);
 }
 function eliminarSeparadoresExistentes() {
-    const separadores = Array.from(lista.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea'));
+    const separadores = Array.from(listaSec.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea'));
     separadores.forEach(separador => separador.remove());
 }
 
@@ -173,7 +158,7 @@ function organizarSecciones() {
 function generarLogFinal() {
     let log = '';
     const final = [];
-    Array.from(lista.children).forEach(item => {
+    Array.from(listaSec.children).forEach(item => {
         if (item.tagName === 'LI') {
             const idPost = item.getAttribute('id-post');
             final.push(`${item.getAttribute('data-seccion') || 'Sin sección'} - ${idPost || 'sin ID'}`);
@@ -191,7 +176,7 @@ function generarLogFinal() {
 
 function crearSesionFront() {
     const botonPlus = document.querySelector('.iconoPlus');
-    const listaTareas = document.querySelector('.clase-tarea');
+    const listaSecTareas = document.querySelector('.clase-tarea');
 
     botonPlus.addEventListener('click', () => {
         const textoInicial = 'Nueva sesión';
@@ -206,7 +191,7 @@ function crearSesionFront() {
         spanFlecha.innerHTML = window.fechaabajo;
 
         nuevaSesion.appendChild(spanFlecha);
-        listaTareas.prepend(nuevaSesion);
+        listaSecTareas.prepend(nuevaSesion);
 
         nuevaSesion.focus();
 

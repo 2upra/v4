@@ -160,52 +160,108 @@
         }
     });
 
+
+    window.reiniciarPost = async function (id, clase) {
+        let log = `reiniciarPost: Iniciando reinicio del post con ID ${id} y clase ${clase}.`;
+        try {
+            const respuesta = await window.reiniciarContenido(false, false, clase, false, null, id);
+            log += ' reiniciarPost: Finalizado.';
+            console.log(log);
+            return respuesta;
+        } catch (error) {
+            log += ` Error en reiniciarPost: ${error}`;
+            console.error(log);
+            return null;
+        }
+    };
+    
+    window.reiniciarContenido = async function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
+        let log = `reiniciarContenido: Iniciando reinicio de contenido. limpiar=${limpiar}, arriba=${arriba}, clase=${clase}, prioridad=${prioridad}, id=${id}.`;
+        let classClase = clase ? `clase-${clase}` : '';
+        const lista = document.querySelector(`.tab.active .social-post-list.${classClase}`);
+        let respuestaCompleta = null;
+    
+        if (!lista) {
+            log += ' No se encontró la lista.';
+            console.error(log);
+            return null; // Devolvemos null directamente
+        }
+    
+        publicacionesCargadas.clear();
+        identificador = '';
+    
+        if (limpiar) {
+            lista.innerHTML = '';
+            log += ' Lista limpiada.';
+        }
+    
+        actualizarUIBusqueda('');
+        resetearCarga();
+    
+        try {
+            const resultadoCarga = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
+            respuestaCompleta = resultadoCarga; // Ya no es un objeto, es el string directamente
+    
+            log += ' reiniciarContenido: Contenido cargado exitosamente.';
+    
+            if (typeof callback === 'function') {
+                log += ' Ejecutando callback.';
+                callback();
+            }
+        } catch (error) {
+            log += ` Error en cargarMasContenido: ${error}`;
+            console.error(log);
+            return null; // Devolvemos null directamente
+        }
+    
+        log += ' reiniciarContenido: Finalizado.';
+        console.log(log);
+        return respuestaCompleta; // Devolvemos el string directamente
+    };
+    
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
         let log = '';
-        let respuestaCompleta = null; // Variable para almacenar la respuesta completa
-
+        let respuestaCompleta = null;
+    
         if (estaCargando) {
             log += 'La función ya está en ejecución.\n';
-            //console.log(log);
-            return {log, respuestaCompleta}; // Devuelve log y respuestaCompleta
+            return null; // Devolvemos null directamente
         }
-
-        let {filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {};
+    
+        let { filtro = '', tabId = '', posttype = '' } = listaPublicaciones ? listaPublicaciones.dataset : {};
         log += `Datos iniciales: filtro=${filtro}, tabId=${tabId}, posttype=${posttype}\n`;
         establecerIdUsuarioDesdeInput();
         estaCargando = true;
-
+    
         if (listaPublicaciones) {
             insertarMarcadorCarga(listaPublicaciones, filtro);
         }
-
+    
         if (prioridad && filtro === 'tarea') {
             filtro = 'tareaPrioridad';
             log += 'Se cambió el filtro a tareaPrioridad.\n';
         }
-
+    
         const maxIntentos = 5;
         let intentos = 0;
-
+    
         while (!listaPublicaciones && intentos < maxIntentos) {
             intentos++;
             log += `No se encontró listaPublicaciones, intento: ${intentos}.\n`;
-            //console.log(log);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
+            await new Promise(resolve => setTimeout(resolve, 1000));
             listaPublicaciones = document.querySelector(`.tab.active .social-post-list.clase-${posttype}`);
-            ({filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {});
+            ({ filtro = '', tabId = '', posttype = '' } = listaPublicaciones ? listaPublicaciones.dataset : {});
         }
-
+    
         if (!listaPublicaciones) {
             log += 'No se encontró listaPublicaciones después de varios intentos.\n';
-            //console.log(log);
             estaCargando = false;
-            return {log, respuestaCompleta}; // Devuelve log y respuestaCompleta
+            return null; // Devolvemos null directamente
         }
-
+    
         const idUsuario = window.idUsuarioActual;
         log += `ID de usuario actual: ${idUsuario}.\n`;
-
+    
         try {
             const data = new URLSearchParams({
                 action: 'cargar_mas_publicaciones',
@@ -221,32 +277,30 @@
                 id: id || ''
             });
             log += `Datos enviados en la petición: ${data.toString()}.\n`;
-
+    
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: data
             });
             log += `Respuesta recibida: ${respuesta.status} ${respuesta.statusText}.\n`;
-
+    
             if (!respuesta.ok) {
                 throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
-
+    
             const textoRespuesta = await respuesta.text();
             log += `Texto de la respuesta: ${textoRespuesta.substring(0, 200)}... (truncado).\n`;
-            respuestaCompleta = textoRespuesta; // Guardar la respuesta completa
+            respuestaCompleta = textoRespuesta; // Guardamos el string directamente
             await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba, id);
         } catch (error) {
             log += `Error en la petición AJAX: ${error}.\n`;
-            //console.error(log);
         } finally {
             estaCargando = false;
             log += 'La función ha finalizado.\n';
-            //console.log(log);
         }
-
-        return {log, respuestaCompleta}; // Devuelve log y respuestaCompleta
+    
+        return respuestaCompleta; // Devolvemos el string directamente
     }
 
     async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false, id = null) {
@@ -269,7 +323,6 @@
 
     function manejarContenido(publiValidas, listaPubli, arriba = false, id = null) {
         let log = '';
-        //aqui necesito que si recibe una id, entonces, si no la puedo remplazar, la agrega
         if (id) {
             const postExistente = listaPubli.querySelector(`.EDYQHV[id-post="${id}"]`);
             log += `Se recibió ID: ${id}. `;
@@ -315,7 +368,7 @@
             detenerCarga();
         }
 
-        //console.log('manejarContenido:', log);
+        console.log('manejarContenido:', log);
     }
 
     function reiniciarFuncionesYEventos() {
@@ -480,39 +533,6 @@
             }
         }
     }
-
-    window.reiniciarPost = async function (id, clase) {
-        const respuesta = await window.reiniciarContenido(false, false, clase, false, null, id);
-        return respuesta;
-    };
-
-    window.reiniciarContenido = async function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
-        let classClase = clase ? `clase-${clase}` : '';
-        const lista = document.querySelector(`.tab.active .social-post-list.${classClase}`);
-        let respuestaCompleta = null;
-
-        if (!lista) {
-            return {log: 'No se encontró la lista', respuestaCompleta};
-        }
-
-        publicacionesCargadas.clear();
-        identificador = '';
-
-        if (limpiar) {
-            lista.innerHTML = '';
-        }
-        actualizarUIBusqueda('');
-        resetearCarga();
-
-        const {log, respuestaCompleta: respuesta} = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
-        respuestaCompleta = respuesta;
-
-        if (typeof callback === 'function') {
-            callback();
-        }
-
-        return {log, respuestaCompleta};
-    };
 
     function resetearCarga() {
         log('Ejecutando resetearCarga');

@@ -1,81 +1,136 @@
 async function establecerFiltros() {
+    //console.log('establecerFiltros: Inicio');
     try {
-        const res = await enviarAjax('obtenerFiltrosTotal');
-        if (!res.success) {
-            console.error('establecerFiltros: Error al obtener filtros:', res.data?.message || 'Error desconocido');
-            return;
-        }
+        const response = await enviarAjax('obtenerFiltrosTotal');
+        //console.log('establecerFiltros: Respuesta de obtenerFiltrosTotal', response);
+        if (response.success) {
+            let {filtroPost, filtroTiempo} = response.data;
 
-        let {filtroPost, filtroTiempo} = res.data;
+            // Verificar si filtroPost es una cadena y tratar de deserializarla como JSON
+            if (typeof filtroPost === 'string') {
+                try {
+                    filtroPost = JSON.parse(filtroPost);
+                    //console.log('establecerFiltros: filtroPost deserializado como JSON:', filtroPost);
+                } catch (error) {
+                    console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
+                    filtroPost = {};
+                }
+            }
 
-        if (typeof filtroPost === 'string') {
-            try {
-                filtroPost = JSON.parse(filtroPost);
-            } catch (err) {
-                console.error('establecerFiltros: Error al parsear filtroPost como JSON', err);
+            // Si filtroPost es un array (posiblemente datos serializados), convertirlo a un objeto
+            if (Array.isArray(filtroPost)) {
+                const tempObj = {};
+                filtroPost.forEach(item => {
+                    tempObj[item] = true; // Asignar un valor genérico
+                });
+                filtroPost = tempObj;
+                //console.log('establecerFiltros: filtroPost convertido de array a objeto:', filtroPost);
+            }
+
+            // Asegurarse de que filtroPost sea un objeto
+            if (typeof filtroPost !== 'object' || filtroPost === null) {
                 filtroPost = {};
+                //console.log('establecerFiltros: filtroPost no era un objeto válido, inicializado como objeto vacío');
             }
-        }
 
-        if (Array.isArray(filtroPost)) {
-            const temp = {};
-            filtroPost.forEach(item => (temp[item] = true));
-            filtroPost = temp;
-        }
+            const hayFiltrosActivados = filtroTiempo !== 0 || Object.keys(filtroPost).length > 0;
+            //console.log('establecerFiltros: Hay filtros activados:', hayFiltrosActivados);
 
-        filtroPost = typeof filtroPost !== 'object' || filtroPost === null ? {} : filtroPost;
+            const botonRestablecer = document.querySelector('.restablecerBusqueda');
+            const botonPostRestablecer = document.querySelector('.postRestablecer');
+            const botonColeccionRestablecer = document.querySelector('.coleccionRestablecer');
 
-        const hayFiltros = filtroTiempo !== 0 || Object.keys(filtroPost).length > 0;
-        const btnRestablecer = document.querySelector('.restablecerBusqueda');
-        const btnPost = document.querySelector('.postRestablecer');
-        const btnColeccion = document.querySelector('.coleccionRestablecer');
+            // Ocultar ambos botones por defecto
+            if (botonPostRestablecer) {
+                botonPostRestablecer.style.display = 'none';
+                //console.log('establecerFiltros: Ocultando botonPostRestablecer');
+            }
+            if (botonColeccionRestablecer) {
+                botonColeccionRestablecer.style.display = 'none';
+                //console.log('establecerFiltros: Ocultando botonColeccionRestablecer');
+            }
 
-        if (btnPost) btnPost.style.display = 'none';
-        if (btnColeccion) btnColeccion.style.display = 'none';
+            if (hayFiltrosActivados) {
+                //console.log('establecerFiltros: Hay filtros activos, procesando...');
 
-        if (hayFiltros) {
-            const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
-            const hayFiltrosPost = Object.keys(filtroPost).some(filtro => filtrosPost.includes(filtro));
-            const hayFiltroColeccion = filtroPost.hasOwnProperty('misColecciones');
+                const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
+                const hayFiltrosPost = Object.keys(filtroPost).some(filtro => filtrosPost.includes(filtro));
+                //console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
+                const hayFiltroColeccion = filtroPost.hasOwnProperty('misColecciones');
+                //console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
 
-            if (hayFiltrosPost && btnPost) btnPost.style.display = 'block';
-            if (hayFiltroColeccion && btnColeccion) btnColeccion.style.display = 'block';
+                // Mostrar el botón correspondiente si es necesario
+                if (hayFiltrosPost && botonPostRestablecer) {
+                    botonPostRestablecer.style.display = 'block';
+                    //console.log('establecerFiltros: Mostrando botonPostRestablecer');
+                }
+                if (hayFiltroColeccion && botonColeccionRestablecer) {
+                    botonColeccionRestablecer.style.display = 'block';
+                    //console.log('establecerFiltros: Mostrando botonColeccionRestablecer');
+                }
 
-            if (btnRestablecer && !btnRestablecer.dataset.listenerAdded) {
-                const restablecerFiltro = async data => {
-                    try {
-                        const resRestablecer = await enviarAjax('restablecerFiltros', data);
-                        if (resRestablecer.success) {
-                            alert(resRestablecer.data.message);
-                            window.reiniciarContenido();
-                            window.recargarFiltros();
-                            if (btnPost) btnPost.style.display = 'none';
-                            if (btnColeccion) btnColeccion.style.display = 'none';
-                        } else {
-                            alert('Error: ' + (resRestablecer.data?.message || 'No se pudo restablecer'));
+                // Evento para restablecer filtros
+                if (botonRestablecer && !botonRestablecer.dataset.listenerAdded) {
+                    //console.log('establecerFiltros: Agregando event listener a botonRestablecer');
+
+                    // Función para restablecer filtros
+                    const restablecerFiltro = async function (data) {
+                        try {
+                            //console.log('establecerFiltros: Enviando solicitud para restablecer filtros', data);
+                            const restablecerResponse = await enviarAjax('restablecerFiltros', data);
+                            //console.log('establecerFiltros: Respuesta de restablecerFiltros', restablecerResponse);
+                            if (restablecerResponse.success) {
+                                alert(restablecerResponse.data.message);
+                                window.reiniciarContenido(); // Llamar a reiniciarContenido después del restablecimiento
+                                window.recargarFiltros();
+
+                                if (botonPostRestablecer) {
+                                    botonPostRestablecer.style.display = 'none';
+                                    //console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
+                                }
+                                if (botonColeccionRestablecer) {
+                                    botonColeccionRestablecer.style.display = 'none';
+                                    //console.log('establecerFiltros: Ocultando botonColeccionRestablecer tras restablecer');
+                                }
+                            } else {
+                                alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer'));
+                            }
+                        } catch (error) {
+                            console.error('establecerFiltros: Error al restablecer:', error);
+                            alert('Error en la solicitud.');
                         }
-                    } catch (err) {
-                        console.error('establecerFiltros: Error al restablecer:', err);
-                        alert('Error en la solicitud.');
+                    };
+
+                    // Evento click para botón de post
+                    if (botonPostRestablecer) {
+                        botonPostRestablecer.addEventListener('click', async function () {
+                            //console.log('establecerFiltros: Evento click en botonPostRestablecer');
+                            await restablecerFiltro({post: true});
+                        });
                     }
-                };
 
-                if (btnPost) {
-                    btnPost.addEventListener('click', async () => await restablecerFiltro({post: true}));
+                    // Evento click para botón de coleccion
+                    if (botonColeccionRestablecer) {
+                        botonColeccionRestablecer.addEventListener('click', async function () {
+                            //console.log('establecerFiltros: Evento click en botonColeccionRestablecer');
+                            await restablecerFiltro({coleccion: true});
+                        });
+                    }
+
+                    botonRestablecer.dataset.listenerAdded = true;
+                    //console.log('establecerFiltros: Listener agregado');
                 }
-
-                if (btnColeccion) {
-                    btnColeccion.addEventListener('click', async () => await restablecerFiltro({coleccion: true}));
-                }
-
-                btnRestablecer.dataset.listenerAdded = true;
             }
+        } else {
+            console.error('establecerFiltros: Error al obtener filtros:', response.data?.message || 'Error desconocido');
         }
-    } catch (err) {
-        console.error('establecerFiltros: Error en AJAX:', err);
+    } catch (error) {
+        console.error('establecerFiltros: Error en AJAX:', error);
     }
+    //console.log('establecerFiltros: Fin');
 }
 
+// Función para obtener el nombre del filtro según el valor
 function getNombreFiltro(filtroTiempo) {
     const filtros = {
         0: 'Feed',
@@ -83,42 +138,85 @@ function getNombreFiltro(filtroTiempo) {
         2: 'Semanal',
         3: 'Mensual'
     };
+    //console.log('Valor de filtroTiempo recibido:', filtroTiempo);
+    //console.log('Tipo de filtroTiempo:', typeof filtroTiempo);
     const nombreFiltro = filtros[filtroTiempo] || 'Feed';
+    //console.log('Nombre de filtro seleccionado:', nombreFiltro);
     return nombreFiltro;
 }
 
+// Función para actualizar el texto del botón
+
 async function actualizarBotonFiltro() {
+    //console.log('Iniciando actualizarBotonFiltro');
     try {
-        const res = await enviarAjax('obtenerFiltroActual', {});
-        if (res.success) {
-            const filtroActual = res.data.filtroTiempo;
-            const nombreFiltro = res.data.nombreFiltro || getNombreFiltro(filtroActual);
+        const response = await enviarAjax('obtenerFiltroActual', {});
+        //console.log('Respuesta completa del servidor:', response);
+
+        if (response.success) {
+            // Corregimos el acceso a los datos
+            const filtroActual = response.data.filtroTiempo;
+            //console.log('Filtro actual obtenido:', filtroActual);
+
+            // También podríamos usar directamente el nombreFiltro que viene del servidor
+            const nombreFiltro = response.data.nombreFiltro || getNombreFiltro(filtroActual);
+            //console.log('Nombre del filtro obtenido:', nombreFiltro);
+
             const botonFiltro = document.querySelector('.filtrosboton');
-            if (botonFiltro) botonFiltro.innerHTML = `${nombreFiltro} ${FLECHA_SVG}`;
+            //console.log('Botón encontrado:', botonFiltro);
+
+            if (botonFiltro) {
+                const nuevoContenido = `${nombreFiltro} ${FLECHA_SVG}`;
+                //console.log('Nuevo contenido del botón:', nuevoContenido);
+                botonFiltro.innerHTML = nuevoContenido;
+            }
+        } else {
+            //console.log('La respuesta no fue exitosa:', response);
         }
-    } catch (err) {
-        console.error('Error en actualizarBotonFiltro:', err);
+    } catch (error) {
+        console.error('Error en actualizarBotonFiltro:', error);
     }
 }
 
+// Modificar la función cambiarFiltroTiempo para actualizar el botón
 async function cambiarFiltroTiempo() {
-    const botonesFiltro = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
-    if (!botonesFiltro) return;
+    const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
 
-    botonesFiltro.forEach(boton => {
-        boton.addEventListener('click', async e => {
-            e.preventDefault();
-            const filtroTiempo = boton.classList.contains('filtroFeed') ? 0 : boton.classList.contains('filtroReciente') ? 1 : boton.classList.contains('filtroSemanal') ? 2 : boton.classList.contains('filtroMensual') ? 3 : 0;
+    if (!filtroButtons) {
+        //console.log('No se encontraron botones de filtro');
+        return;
+    }
 
-            const res = await enviarAjax('guardarFiltro', {filtroTiempo});
-            if (res.success) {
-                botonesFiltro.forEach(btn => btn.classList.remove('filtroSelec'));
-                boton.classList.add('filtroSelec');
-                await actualizarBotonFiltro();
+    filtroButtons.forEach(button => {
+        button.addEventListener('click', async event => {
+            event.preventDefault();
+
+            let filtroTiempo;
+            if (button.classList.contains('filtroFeed')) {
+                filtroTiempo = 0;
+            } else if (button.classList.contains('filtroReciente')) {
+                filtroTiempo = 1;
+            } else if (button.classList.contains('filtroSemanal')) {
+                filtroTiempo = 2;
+            } else if (button.classList.contains('filtroMensual')) {
+                filtroTiempo = 3;
+            } else {
+                filtroTiempo = 0;
+            }
+
+            //console.log('Enviando filtroTiempo:', filtroTiempo);
+
+            const resultado = await enviarAjax('guardarFiltro', {filtroTiempo: filtroTiempo});
+            //console.log('Resultado:', resultado);
+
+            if (resultado.success) {
+                filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
+                button.classList.add('filtroSelec');
+                await actualizarBotonFiltro(); // Actualizar el botón después de cambiar el filtro
                 window.reiniciarContenido();
                 establecerFiltros();
             } else {
-                console.error('Error al guardar el filtro:', res.message);
+                console.error('Error al guardar el filtro:', resultado.message);
             }
         });
     });
@@ -137,11 +235,19 @@ function filtrosPost() {
     async function cargar() {
         try {
             const r = await enviarAjax('obtenerFiltros');
-            act = r.success && r.data && r.data.filtros ? r.data.filtros : [];
-            act.forEach(f => {
-                const c = document.querySelector(`input[name="${f}"]`);
-                if (c) c.checked = true;
-            });
+            if (r.success && r.data && r.data.filtros) {
+                act = r.data.filtros;
+            } else {
+                act = [];
+            }
+            if (Array.isArray(act)) {
+                act.forEach(f => {
+                    const c = document.querySelector(`input[name="${f}"]`);
+                    if (c) {
+                        c.checked = true;
+                    }
+                });
+            }
         } catch (error) {
             act = [];
         }
@@ -149,7 +255,9 @@ function filtrosPost() {
     }
 
     function reiniciar() {
-        checks.forEach(c => (c.checked = act.includes(c.name)));
+        checks.forEach(c => {
+            c.checked = act.includes(c.name);
+        });
     }
 
     async function recargar() {
@@ -164,8 +272,17 @@ function filtrosPost() {
     }
 
     checks.forEach(c => {
-        c.addEventListener('change', () => {
-            act = this.checked ? [...(Array.isArray(act) ? act : []), this.name] : (Array.isArray(act) ? act : []).filter(f => f !== this.name);
+        c.addEventListener('change', function () {
+            if (!Array.isArray(act)) {
+                act = [];
+            }
+            if (this.checked) {
+                if (!act.includes(this.name)) {
+                    act.push(this.name);
+                }
+            } else {
+                act = act.filter(f => f !== this.name);
+            }
             window.filtrosGlobales = act;
         });
     });
@@ -176,8 +293,11 @@ function filtrosPost() {
         return;
     }
 
-    btnG.addEventListener('click', async () => {
-        const r = await enviarAjax('guardarFiltroPost', {filtros: JSON.stringify(Array.isArray(act) ? act : [])});
+    btnG.addEventListener('click', async function () {
+        const g = Array.isArray(act) ? act : [];
+        const r = await enviarAjax('guardarFiltroPost', {
+            filtros: JSON.stringify(g)
+        });
         if (r.success) {
             window.reiniciarContenido();
             establecerFiltros();
@@ -193,10 +313,14 @@ function filtrosPost() {
         return;
     }
 
-    btnR.addEventListener('click', async () => {
+    btnR.addEventListener('click', async function () {
         act = [];
-        checks.forEach(c => (c.checked = false));
-        const r = await enviarAjax('guardarFiltroPost', {filtros: JSON.stringify([])});
+        checks.forEach(c => {
+            c.checked = false;
+        });
+        const r = await enviarAjax('guardarFiltroPost', {
+            filtros: JSON.stringify([])
+        });
         if (r.success) {
             window.reiniciarContenido();
             establecerFiltros();

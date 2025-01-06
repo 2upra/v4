@@ -1,3 +1,4 @@
+let temporizadorGuardado = null;
 window.initEnter = function () {
     const tit = document.getElementById('tituloTarea');
 
@@ -8,16 +9,17 @@ window.initEnter = function () {
 
 async function crearTareaEnter() {
     const contenedor = document.querySelector('.clase-tarea');
-
     contenedor.addEventListener('keydown', manejarTeclaEnter);
 }
 
+//esto funciona bien solo que el cursor de editar texto al momento de recibir la tarea, debe estar al final, no al principio,
 async function manejarTeclaEnter(ev) {
     if (ev.target.classList.contains('tituloTarea') && ev.key === 'Enter' && ev.target.contentEditable === 'true') {
         ev.preventDefault();
         const tareaActual = ev.target.closest('.POST-tarea');
         const sesion = tareaActual.getAttribute('sesion');
         const estado = tareaActual.getAttribute('estado');
+        const padre = tareaActual.getAttribute('padre');
         const importancia = tareaActual.getAttribute('importancia');
         const tipo = tareaActual.getAttribute('tipo-tarea');
         const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
@@ -32,29 +34,23 @@ async function manejarTeclaEnter(ev) {
         nuevoTitulo.spellcheck = false;
         nuevoTitulo.setAttribute('placeholder', 'Nueva tarea');
 
-        // Elimina el listener anterior antes de agregar uno nuevo
-        nuevoTitulo.removeEventListener('blur', manejarBlur);
-        nuevoTitulo.addEventListener('blur', manejarBlur);
-
-        // Usar requestAnimationFrame para enfocar después del repintado
         requestAnimationFrame(() => {
             nuevoTitulo.focus();
-            // Colocar el cursor al inicio del campo editable
             const rango = document.createRange();
             const sel = window.getSelection();
-            rango.setStart(nuevoTitulo, 0);
-            rango.collapse(true);
+            rango.selectNodeContents(nuevoTitulo);
+            rango.collapse(false);
             sel.removeAllRanges();
             sel.addRange(rango);
         });
 
-        // Enviar la solicitud al servidor para crear la tarea real
         const data = {
             titulo: 'Nueva tarea',
             importancia: importancia,
             tipo: tipo,
             sesion: sesion,
-            estado: estado
+            estado: estado,
+            padre: padre
         };
 
         try {
@@ -62,10 +58,9 @@ async function manejarTeclaEnter(ev) {
             const rta = await enviarAjax('crearTarea', data);
 
             if (rta.success) {
-                const {respuestaCompleta} = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+                const respuestaCompleta = await window.reiniciarPost(rta.data.tareaId, 'tarea');
 
                 if (respuestaCompleta && listaTareas) {
-                    // Reemplazar la tarea duplicada con la tarea real
                     const nuevaTarea = document.createElement('div');
                     nuevaTarea.innerHTML = respuestaCompleta;
                     const tareaNueva = nuevaTarea.querySelector('.POST-tarea');
@@ -75,24 +70,20 @@ async function manejarTeclaEnter(ev) {
                     const nuevoTituloReal = tareaNueva.querySelector('.tituloTarea');
                     nuevoTituloReal.contentEditable = true;
                     nuevoTituloReal.spellcheck = false;
+                    nuevoTituloReal.dataset.tareaId = rta.data.tareaId; // Almacenar el ID de la tarea
 
-                    // Elimina el listener anterior antes de agregar uno nuevo
-                    nuevoTituloReal.removeEventListener('blur', manejarBlur);
-                    nuevoTituloReal.addEventListener('blur', manejarBlur);
+                    // Agregar el evento input para guardar el título
+                    nuevoTituloReal.addEventListener('input', manejarCambioTitulo);
 
-                    // Usar requestAnimationFrame para enfocar después del repintado
                     requestAnimationFrame(() => {
                         nuevoTituloReal.focus();
-                        // Colocar el cursor al inicio del campo editable en la tarea real
                         const rango = document.createRange();
                         const seleccion = window.getSelection();
-                        rango.setStart(nuevoTituloReal, 0);
-                        rango.collapse(true);
+                        rango.selectNodeContents(nuevoTituloReal);
+                        rango.collapse(false);
                         seleccion.removeAllRanges();
                         seleccion.addRange(rango);
                     });
-
-                    
 
                     initTareas();
                     window.guardarOrden();
@@ -117,14 +108,37 @@ async function manejarTeclaEnter(ev) {
     }
 }
 
-function manejarBlur() {
+//esto es importante porque al inicio se necesita manejar de esta forma el cambio de titulo
+function manejarCambioTitulo() {
     const nuevoTitulo = this;
-    setTimeout(() => {
-        if (!nuevoTitulo.matches(':focus')) {
-            if (nuevoTitulo.textContent.trim() === '') {
-                nuevoTitulo.textContent = 'Nueva tarea';
-            }
-            nuevoTitulo.contentEditable = false;
+    const tareaId = nuevoTitulo.dataset.tareaId;
+
+    clearTimeout(temporizadorGuardado); // Reiniciar el temporizador
+
+    temporizadorGuardado = setTimeout(() => {
+        const tituloActualizado = nuevoTitulo.textContent.trim();
+
+        if (tituloActualizado === '' || tituloActualizado === 'Nueva tarea') {
+            return;
         }
-    }, 100);
+
+        const data = {
+            id: tareaId,
+            titulo: tituloActualizado
+        };
+
+        enviarAjax('modificarTarea', data)
+            .then(rta => {
+                if (rta.success) {
+                    console.log('Título de tarea actualizado con éxito.');
+                } else {
+                    let m = 'Error al actualizar el título de la tarea.';
+                    if (rta.data) m += ' Detalles: ' + rta.data;
+                    alert(m);
+                }
+            })
+            .catch(err => {
+                console.error('Error al actualizar el título de la tarea:', err);
+            });
+    }, 1000); // Guardar después de 1 segundo de inactividad
 }
