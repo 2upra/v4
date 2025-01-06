@@ -1,4 +1,4 @@
-let mapa = {general: [], archivado: []};
+let mapa = { general: [], archivado: [] };
 const listaSec = document.querySelector('.social-post-list.clase-tarea');
 
 window.dividirTarea = async function () {
@@ -10,21 +10,24 @@ window.dividirTarea = async function () {
 
 function actualizarMapa() {
     let log = '';
-    mapa = {general: [], archivado: []};
+    mapa = { general: [], archivado: [] };
     const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
+    const separadoresExistentes = Array.from(listaSec.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea')).map(divisor => decodeURIComponent(divisor.dataset.valor));
 
     log = `actualizarMapa: Tareas encontradas: ${items.length}. `;
     items.forEach(item => {
         const est = item.getAttribute('estado')?.toLowerCase();
-        const sesion = item.getAttribute('sesion')?.toLowerCase();
+        let sesion = item.getAttribute('sesion')?.toLowerCase();
         const idPost = item.getAttribute('id-post');
         log += `Tarea ID: ${idPost}, Estado: ${est}, Sesión: ${sesion}. `;
 
         if (est === 'archivado') {
             mapa['archivado'].push(item);
         } else if (est === 'pendiente') {
-            if (!sesion || sesion === '' || sesion === 'pendiente') {
+            if (!sesion || sesion === '' || sesion === 'pendiente' || !separadoresExistentes.includes(sesion)) {
                 mapa['general'].push(item);
+                item.removeAttribute('sesion'); // Eliminar la sesión si no existe el separador
+                sesion = 'general';
             } else {
                 if (!mapa[sesion]) {
                     mapa[sesion] = [];
@@ -38,7 +41,7 @@ function actualizarMapa() {
 
 function alternarVisibilidadSeccion(divisor) {
     const valorDivisorCodificado = divisor.dataset.valor;
-    const valorDivisor = decodeURIComponent(valorDivisorCodificado); // Decodificar el nombre
+    const valorDivisor = decodeURIComponent(valorDivisorCodificado);
     const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
     let visible = localStorage.getItem(`seccion-${valorDivisorCodificado}`) !== 'oculto';
     visible = !visible;
@@ -46,7 +49,6 @@ function alternarVisibilidadSeccion(divisor) {
 
     items.forEach(item => {
         if (item.dataset.seccion === valorDivisorCodificado) {
-            // Usar el nombre codificado
             item.style.display = visible ? '' : 'none';
             log += `Tarea ID: ${item.getAttribute('id-post')}, Visibilidad: ${visible ? 'visible' : 'oculta'}. `;
         }
@@ -59,22 +61,23 @@ function alternarVisibilidadSeccion(divisor) {
 }
 
 function configurarInteraccionSeccion(divisor, nomCodificado, items) {
-    const nom = decodeURIComponent(nomCodificado); // Decodificar el nombre
+    const nom = decodeURIComponent(nomCodificado);
     const flecha = divisor.querySelector('span:last-child');
-    let visible = localStorage.getItem(`seccion-${nomCodificado}`) !== 'oculto'; // Usar el nombre codificado
+    let visible = localStorage.getItem(`seccion-${nomCodificado}`) !== 'oculto';
     items.forEach(item => (item.style.display = visible ? '' : 'none'));
     flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
 
-    if (nom === 'General') {
-        const iconoAgregar = document.createElement('span');
-        iconoAgregar.innerHTML = window.iconoPlus;
-        iconoAgregar.style.marginLeft = 'auto';
-        iconoAgregar.classList.add('iconoPlus');
-        divisor.insertBefore(iconoAgregar, flecha.nextSibling);
+    const iconoAgregar = divisor.querySelector('.iconoPlus');
+    if (nom === 'General' && !iconoAgregar) {
+        const nuevoIconoAgregar = document.createElement('span');
+        nuevoIconoAgregar.innerHTML = window.iconoPlus;
+        nuevoIconoAgregar.style.marginLeft = 'auto';
+        nuevoIconoAgregar.classList.add('iconoPlus');
+        divisor.insertBefore(nuevoIconoAgregar, flecha.nextSibling);
 
-        iconoAgregar.onclick = event => {
+        nuevoIconoAgregar.onclick = event => {
             event.stopPropagation();
-            crearSesionFront(divisor); // Se llama a la función aquí, pasando el divisor como parámetro
+            crearSesionFront(divisor);
         };
     }
 
@@ -89,15 +92,6 @@ function crearSeccion(nom, items) {
     const nomCodificado = encodeURIComponent(nom);
     let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
 
-    if (items.length === 0) {
-        if (divisor) {
-            divisor.textContent = `No hay tareas en la sección ${nom}`;
-            divisor.style.color = 'gray';
-        }
-        log += `Sección ${nom} vacía, se omite.`;
-        return;
-    }
-
     if (!divisor) {
         divisor = document.createElement('p');
         divisor.style.fontWeight = 'bold';
@@ -107,17 +101,23 @@ function crearSeccion(nom, items) {
         divisor.style.display = 'flex';
         divisor.style.width = '100%';
         divisor.style.alignItems = 'center';
-        divisor.textContent = nom;
         divisor.dataset.valor = nomCodificado;
         divisor.classList.add('divisorTarea', nomCodificado);
-
-        const flecha = document.createElement('span');
-        flecha.style.marginLeft = '5px';
-        divisor.appendChild(flecha);
         listaSec.appendChild(divisor);
     }
 
+    divisor.textContent = nom;
+    const flecha = document.createElement('span');
+    flecha.style.marginLeft = '5px';
+    divisor.appendChild(flecha);
+
     configurarInteraccionSeccion(divisor, nomCodificado, items);
+
+    if (items.length === 0) {
+        divisor.textContent = `No hay tareas en la sección ${nom}`;
+        divisor.style.color = 'gray';
+        log += `Sección ${nom} vacía, se indica.`;
+    }
 
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
@@ -129,15 +129,12 @@ function crearSeccion(nom, items) {
     });
 }
 
-function eliminarSeparadoresExistentes() {
-    const separadores = Array.from(listaSec.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea'));
-    separadores.forEach(separador => separador.remove());
-}
+// No se necesita la función eliminarSeparadoresExistentes()
 
 function organizarSecciones() {
     let log = 'organizarSecciones: Reorganizando tareas... ';
     actualizarMapa();
-    eliminarSeparadoresExistentes();
+    //  No llamar a eliminarSeparadoresExistentes()
     crearSeccion('General', mapa.general);
 
     const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
@@ -170,12 +167,9 @@ function generarLogFinal() {
 }
 
 function crearSesionFront(divisorGeneral) {
-    // Se recibe el divisor de General como parámetro
-    const listaSecTareas = document.querySelector('.clase-tarea');
-
     const textoInicial = 'Nueva sesión';
     const nuevaSesion = document.createElement('p');
-    nuevaSesion.dataset.valor = textoInicial;
+    nuevaSesion.dataset.valor = encodeURIComponent(textoInicial);
     nuevaSesion.classList.add('divisorTarea');
     nuevaSesion.contentEditable = true;
     nuevaSesion.textContent = textoInicial;
@@ -186,7 +180,6 @@ function crearSesionFront(divisorGeneral) {
 
     nuevaSesion.appendChild(spanFlecha);
 
-    // Insertar la nueva sesión después del divisor de General
     divisorGeneral.parentNode.insertBefore(nuevaSesion, divisorGeneral.nextSibling);
 
     nuevaSesion.focus();
@@ -197,7 +190,7 @@ function crearSesionFront(divisorGeneral) {
             textoEditado = 'Nueva sesión';
             nuevaSesion.textContent = textoEditado;
         }
-        nuevaSesion.dataset.valor = textoEditado;
+        nuevaSesion.dataset.valor = encodeURIComponent(textoEditado);
         //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
     });
 }
@@ -206,7 +199,7 @@ function hacerDivisoresEditables() {
     const divisores = document.querySelectorAll('.divisorTarea');
 
     divisores.forEach(divisor => {
-        const valor = divisor.dataset.valor;
+        const valor = decodeURIComponent(divisor.dataset.valor);
         const clase = divisor.classList;
 
         if (valor !== 'General' && valor !== 'Archivado') {
@@ -222,12 +215,12 @@ function hacerDivisoresEditables() {
                     divisor.textContent = textoEditado;
                 }
 
-                divisor.dataset.valor = textoEditado;
+                divisor.dataset.valor = encodeURIComponent(textoEditado);
 
                 if (textoEditado !== valorOriginal) {
                     let datos = {
-                        valorOriginal: valorOriginal,
-                        valorNuevo: textoEditado
+                        valorOriginal: encodeURIComponent(valorOriginal),
+                        valorNuevo: encodeURIComponent(textoEditado)
                     };
                     try {
                         await enviarAjax('actualizarSesion', datos);
@@ -237,7 +230,7 @@ function hacerDivisoresEditables() {
                     } catch (error) {
                         //console.error('Error al actualizar sesión:', error);
                         divisor.textContent = valorOriginal;
-                        divisor.dataset.valor = valorOriginal;
+                        divisor.dataset.valor = encodeURIComponent(valorOriginal);
                     }
                 } else {
                     //console.log('El nombre de la sesión no ha cambiado');
