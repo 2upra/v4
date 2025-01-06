@@ -131,10 +131,8 @@ function actualizarMapa() {
         let sesion = item.getAttribute('sesion')?.toLowerCase() || '';
         console.log("actualizarMapa: sesion (en el mapa original): " + item.getAttribute('sesion') + "Para la tarea ID: " + idPost)
 
-        // Forzar la sesión a 'general' si el estado no es 'archivado'
-        if (est !== "archivado") {
+        if (!sesion && est !== "archivado") {
             sesion = 'general';
-            item.setAttribute('sesion', sesion); // Actualizar el atributo en el elemento
         }
 
         logItem += `Tarea ID: ${idPost}, Estado: ${est}, Sesión: "${sesion}". `;
@@ -210,32 +208,38 @@ function crearSeccion(nom, items) {
         log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
     } else {
         log += `Se encontró un divisor existente para ${nom}. `;
-       
+        // Limpiar el contenido anterior relacionado con la sección
+        let siguiente = divisor.nextElementSibling;
+        while (siguiente && siguiente.tagName === 'LI' && siguiente.dataset.seccion === nomCodificado) {
+            console.log(`crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}`);
+            listaSec.removeChild(siguiente);
+            siguiente = divisor.nextElementSibling;
+        }
+        log += `Se limpiaron las tareas previas de la sección ${nom}. `;
     }
 
-    
+    //no borrar esto
+    //configurarInteraccionSeccion(divisor, nomCodificado, items); 
+
     // Insertar las tareas en la sección
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
-    
+    let anterior = divisor;
     items.forEach((item, index) => {
         log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. `;
         item.setAttribute('data-seccion', nomCodificado);
         log += `Atributo data-seccion establecido como ${nomCodificado} para la tarea. `;
 
-        // Mover la tarea al final de listaSec
         if (item.parentNode) {
             log += `Removiendo tarea de su padre actual. `;
             item.parentNode.removeChild(item);
         }
 
         console.log(`crearSeccion: Insertando tarea en sección ${nom}: ID ${item.getAttribute('id-post')}`);
-        listaSec.appendChild(item);
-        log += `Tarea insertada al final de listaSec. `;
-
+        listaSec.insertBefore(item, anterior.nextSibling);
+        log += `Tarea insertada en listaSec después de ${anterior.textContent}. `;
+        anterior = item;
     });
-    // Mover el divisor al inicio
-    listaSec.insertBefore(divisor, listaSec.firstChild);
-    log += `Divisor ${nom} movido al inicio de listaSec. `;
+
     console.log(log);
 }
 
