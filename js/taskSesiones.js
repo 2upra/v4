@@ -5,33 +5,34 @@ mirad, el problema no lo identifico, cuando carga la primera vez, las sesiones a
 
 los atributos sesion la primera vez no son necesarios para general y archivado, tampoco deberían ser necesarios para ajax y por lo visto ese tampoco es el problema no tengo idea 
 
+ya llevo mucho tiempo con este problema y he intentano de todo, por favor, haz algo con una solucion forzada o directa
+
 primera vez
 actualizarMapa: sesion (en el mapa original): generalPara la tarea ID: 337442
-taskSesiones.js?ver=0.2.329:139 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
-taskSesiones.js?ver=0.2.329:119 actualizarMapa: sesion (en el mapa original): archivadoPara la tarea ID: 337444
-taskSesiones.js?ver=0.2.329:139 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "archivado". Tarea agregada a Archivado. 
-taskSesiones.js?ver=0.2.329:143 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
-taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección General: ID 337442
-taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
-taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección Archivado: ID 337444
-taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
-taskSesiones.js?ver=0.2.329:84 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
-taskSesiones.js?ver=0.2.329:104 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
+taskSesiones.js?ver=0.2.330:151 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
+taskSesiones.js?ver=0.2.330:131 actualizarMapa: sesion (en el mapa original): archivadoPara la tarea ID: 337444
+taskSesiones.js?ver=0.2.330:151 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "archivado". Tarea agregada a Archivado. 
+taskSesiones.js?ver=0.2.330:155 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
+taskSesiones.js?ver=0.2.330:236 crearSeccion: Insertando tarea en sección General: ID 337442
+taskSesiones.js?ver=0.2.330:242 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
+taskSesiones.js?ver=0.2.330:236 crearSeccion: Insertando tarea en sección Archivado: ID 337444
+taskSesiones.js?ver=0.2.330:242 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
+taskSesiones.js?ver=0.2.330:96 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.330:116 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
 Despues de ajax
-contarVistaPost.js?ver=0.2.329:54 
-taskSesiones.js?ver=0.2.329:55 organizarSecciones: Eliminando divisor existente: General
-taskSesiones.js?ver=0.2.329:55 organizarSecciones: Eliminando divisor existente: Archivado
-taskSesiones.js?ver=0.2.329:119 actualizarMapa: sesion (en el mapa original): generalPara la tarea ID: 337442
-taskSesiones.js?ver=0.2.329:139 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
-taskSesiones.js?ver=0.2.329:119 actualizarMapa: sesion (en el mapa original): archivadoPara la tarea ID: 337444
-taskSesiones.js?ver=0.2.329:139 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "archivado". Tarea agregada a Archivado. 
-taskSesiones.js?ver=0.2.329:143 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
-taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección General: ID 337442
-taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
-taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección Archivado: ID 337444
-taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
-taskSesiones.js?ver=0.2.329:84 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
-taskSesiones.js?ver=0.2.329:104 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
+organizarSecciones: Eliminando divisor existente: General
+taskSesiones.js?ver=0.2.330:56 organizarSecciones: Eliminando divisor existente: Archivado
+taskSesiones.js?ver=0.2.330:131 actualizarMapa: sesion (en el mapa original): generalPara la tarea ID: 337442
+taskSesiones.js?ver=0.2.330:151 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
+taskSesiones.js?ver=0.2.330:131 actualizarMapa: sesion (en el mapa original): archivadoPara la tarea ID: 337444
+taskSesiones.js?ver=0.2.330:151 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "archivado". Tarea agregada a Archivado. 
+taskSesiones.js?ver=0.2.330:155 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
+taskSesiones.js?ver=0.2.330:236 crearSeccion: Insertando tarea en sección General: ID 337442
+taskSesiones.js?ver=0.2.330:242 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
+taskSesiones.js?ver=0.2.330:236 crearSeccion: Insertando tarea en sección Archivado: ID 337444
+taskSesiones.js?ver=0.2.330:242 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
+taskSesiones.js?ver=0.2.330:96 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.330:116 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
 
 por favor resuelvelo 
 
@@ -43,57 +44,32 @@ const listaSec = document.querySelector('.social-post-list.clase-tarea');
 window.dividirTarea = async function () {
     if (!listaSec) return;
     organizarSecciones();
-    //hacerDivisoresEditables();
 };
 
-//STEP 1
 function organizarSecciones() {
-    let log = 'organizarSecciones: Iniciando reorganización de tareas... ';
+    console.log('organizarSecciones: Iniciando reorganización forzada de tareas...');
 
-    // Eliminar todos los divisores existentes antes de actualizar el mapa
-    const divisoresExistentes = listaSec.querySelectorAll('.divisorTarea');
-    divisoresExistentes.forEach(divisor => {
-        console.log(`organizarSecciones: Eliminando divisor existente: ${divisor.textContent}`);
-        listaSec.removeChild(divisor);
-    });
-    log += 'Divisores existentes eliminados. ';
+    // Limpiar completamente listaSec
+    while (listaSec.firstChild) {
+        listaSec.removeChild(listaSec.firstChild);
+    }
+    console.log('listaSec ha sido completamente limpiada.');
 
     // Forzar la actualización del atributo 'sesion' en cada tarea
     const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
     items.forEach(item => {
         let est = item.getAttribute('estado')?.toLowerCase() || '';
-        if (est !== "archivado") {
-            item.setAttribute('sesion', 'general');
-        } else {
-            item.setAttribute('sesion', 'archivado');
-        }
+        item.setAttribute('sesion', est !== "archivado" ? 'general' : 'archivado');
     });
 
     actualizarMapa();
 
-    log += 'Mapa actualizado. ';
-
     crearSeccion('General', mapa.general);
-    log += `Sección General creada con ${mapa.general.length} tareas. `;
-
     const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
-    log += `Otras secciones encontradas: ${otrasSecciones.length > 0 ? otrasSecciones.join(', ') : 'Ninguna'}. `;
-
-    otrasSecciones.forEach(seccion => {
-        crearSeccion(seccion, mapa[seccion]);
-        log += `Sección ${seccion} creada con ${mapa[seccion].length} tareas. `;
-    });
-
+    otrasSecciones.forEach(seccion => crearSeccion(seccion, mapa[seccion]));
     crearSeccion('Archivado', mapa.archivado);
-    log += `Sección Archivado creada con ${mapa.archivado.length} tareas. `;
 
-    log += `Resumen de secciones: General (${mapa.general.length}), `;
-    if (otrasSecciones.length > 0) {
-        log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
-    }
-    log += `Archivado (${mapa.archivado.length}). `;
-
-    console.log(log);
+    console.log('organizarSecciones: Reorganización forzada completada.');
     generarLogFinal();
 }
 
@@ -117,18 +93,20 @@ function generarLogFinal() {
 }
 
 function actualizarMapa() {
-    let log = 'actualizarMapa: Iniciando actualización de mapa. ';
+    console.log('actualizarMapa: Iniciando actualización de mapa.');
     mapa = { general: [], archivado: [] };
-    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
-
-    log += `Tareas encontradas: ${items.length}. `;
+    
+    // Obtener tareas directamente desde el HTML después de la actualización AJAX
+    const items = Array.from(document.querySelectorAll('.social-post-list.clase-tarea li'));
+    console.log(`actualizarMapa: Tareas encontradas después de AJAX: ${items.length}.`);
 
     items.forEach((item, index) => {
         let logItem = `Procesando tarea ${index + 1}: `;
         let est = item.getAttribute('estado')?.toLowerCase() || '';
         const idPost = item.getAttribute('id-post');
         let sesion = item.getAttribute('sesion')?.toLowerCase() || '';
-        console.log("actualizarMapa: sesion (en el mapa original): " + item.getAttribute('sesion') + "Para la tarea ID: " + idPost)
+
+        console.log(`actualizarMapa: sesion (en el mapa original): ${sesion} para la tarea ID: ${idPost}`);
 
         if (!sesion && est !== "archivado") {
             sesion = 'general';
@@ -151,95 +129,48 @@ function actualizarMapa() {
         console.log(logItem);
     });
 
-    log += `Mapa final: ${JSON.stringify(mapa)}. `;
-    console.log(log);
+    console.log(`actualizarMapa: Mapa final: ${JSON.stringify(mapa)}.`);
 }
 
-//STEP 3
 function crearSeccion(nom, items) {
-    let log = `crearSeccion: Iniciando creación de sección: ${nom}. `;
+    console.log(`crearSeccion: Iniciando creación de sección: ${nom}.`);
 
-    // Codificar el nombre de la sección para usarlo como data-valor
     const nomCodificado = encodeURIComponent(nom);
-    log += `Nombre de sección codificado: ${nomCodificado}. `;
+    console.log(`crearSeccion: Nombre de sección codificado: ${nomCodificado}.`);
 
-    // Buscar si la sección ya existe
-    let divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`);
-    log += `Buscando sección existente con data-valor: ${nomCodificado}. `;
+    // Crear el divisor
+    let divisor = document.createElement('p');
+    divisor.style.fontWeight = 'bold';
+    divisor.style.cursor = 'pointer';
+    divisor.style.padding = '5px 20px';
+    divisor.style.marginRight = 'auto';
+    divisor.style.display = 'flex';
+    divisor.style.width = '100%';
+    divisor.style.alignItems = 'center';
+    divisor.textContent = nom;
+    divisor.dataset.valor = nomCodificado;
+    divisor.classList.add('divisorTarea', nomCodificado);
 
-    // Si no hay tareas para la sección:
-    if (items.length === 0) {
-        log += `La sección ${nom} no tiene tareas. `;
-        if (divisor) {
-            divisor.textContent = `No hay tareas en la sección ${nom}`;
-            divisor.style.color = 'gray';
-            log += `Se actualizó el texto del divisor para ${nom}. `;
-        } else {
-            log += `No se encontró un divisor para ${nom}. `;
-        }
-        log += `Sección ${nom} vacía, se omite.`;
-        console.log(log);
-        return;
-    }
+    const flecha = document.createElement('span');
+    flecha.style.marginLeft = '5px';
+    divisor.appendChild(flecha);
 
-    // Si la sección no existe, crearla
-    if (!divisor) {
-        log += `La sección ${nom} no existe, creando nuevo divisor. `;
-        divisor = document.createElement('p');
-        divisor.style.fontWeight = 'bold';
-        divisor.style.cursor = 'pointer';
-        divisor.style.padding = '5px 20px';
-        divisor.style.marginRight = 'auto';
-        divisor.style.display = 'flex';
-        divisor.style.width = '100%';
-        divisor.style.alignItems = 'center';
-        divisor.textContent = nom;
-        divisor.dataset.valor = nomCodificado;
-        divisor.classList.add('divisorTarea', nomCodificado);
-
-        // Crear la flecha para expandir/contraer
-        const flecha = document.createElement('span');
-        flecha.style.marginLeft = '5px';
-        divisor.appendChild(flecha);
-
-        // Agregar la sección a la lista de secciones
-        listaSec.appendChild(divisor);
-        log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
-    } else {
-        log += `Se encontró un divisor existente para ${nom}. `;
-        // Limpiar el contenido anterior relacionado con la sección
-        let siguiente = divisor.nextElementSibling;
-        while (siguiente && siguiente.tagName === 'LI' && siguiente.dataset.seccion === nomCodificado) {
-            console.log(`crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}`);
-            listaSec.removeChild(siguiente);
-            siguiente = divisor.nextElementSibling;
-        }
-        log += `Se limpiaron las tareas previas de la sección ${nom}. `;
-    }
-
+    listaSec.appendChild(divisor);
+    console.log(`crearSeccion: Nuevo divisor creado y agregado a listaSec para ${nom}.`);
     //no borrar esto
     //configurarInteraccionSeccion(divisor, nomCodificado, items); 
-
     // Insertar las tareas en la sección
-    log += `Insertando ${items.length} tareas en la sección ${nom}. `;
-    let anterior = divisor;
+    console.log(`crearSeccion: Insertando ${items.length} tareas en la sección ${nom}.`);
     items.forEach((item, index) => {
-        log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. `;
+        console.log(`crearSeccion: Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}.`);
         item.setAttribute('data-seccion', nomCodificado);
-        log += `Atributo data-seccion establecido como ${nomCodificado} para la tarea. `;
+        console.log(`crearSeccion: Atributo data-seccion establecido como ${nomCodificado} para la tarea.`);
 
-        if (item.parentNode) {
-            log += `Removiendo tarea de su padre actual. `;
-            item.parentNode.removeChild(item);
-        }
-
-        console.log(`crearSeccion: Insertando tarea en sección ${nom}: ID ${item.getAttribute('id-post')}`);
-        listaSec.insertBefore(item, anterior.nextSibling);
-        log += `Tarea insertada en listaSec después de ${anterior.textContent}. `;
-        anterior = item;
+        listaSec.appendChild(item);
+        console.log(`crearSeccion: Tarea insertada en listaSec para la sección ${nom}.`);
     });
 
-    console.log(log);
+    console.log(`crearSeccion: Creación de sección ${nom} completada.`);
 }
 
 /*
