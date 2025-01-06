@@ -177,8 +177,9 @@ function crearSeccion(nom, items) {
     log += `Nombre de sección codificado: ${nomCodificado}. `;
 
     // Verificar el estado de listaSec al inicio
-    console.log("2. ¿Existe listaSec?:", !!document.getElementById("listaSec"));
-    console.log("3. Contenido inicial de listaSec:", document.getElementById("listaSec").outerHTML);
+    console.log("2. ¿Existe listaSec?:", !! document.querySelector('.social-post-list.clase-tarea'));
+
+    console.log("3. Contenido inicial de listaSec:", document.querySelector('.social-post-list.clase-tarea').outerHTML);
 
     // 1. Buscar el divisor al principio de la función y usarlo consistentemente
     let divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`);
@@ -191,11 +192,11 @@ function crearSeccion(nom, items) {
         divisor = crearNuevoDivisor(nom, nomCodificado);
 
         // Verificar si listaSec existe antes de intentar añadir el divisor
-        if (document.getElementById("listaSec")) {
+        if (document.querySelector('.social-post-list.clase-tarea')) {
             listaSec.appendChild(divisor);
             log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
             console.log("5. Nuevo divisor creado y agregado a listaSec.");
-            console.log("6. Contenido de listaSec después de añadir divisor:", document.getElementById("listaSec").outerHTML);
+            console.log("6. Contenido de listaSec después de añadir divisor:", document.querySelector('.social-post-list.clase-tarea').outerHTML);
         } else {
             console.error("ERROR: listaSec no existe en el DOM al intentar añadir el nuevo divisor.");
             return; // Salir para evitar errores adicionales
@@ -211,7 +212,7 @@ function crearSeccion(nom, items) {
         log += `crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}. `;
         listaSec.removeChild(siguiente);
         siguiente = divisor.nextElementSibling;
-        console.log("8. Tarea eliminada. Contenido de listaSec:", document.getElementById("listaSec").outerHTML);
+        console.log("8. Tarea eliminada. Contenido de listaSec:", document.querySelector('.social-post-list.clase-tarea').outerHTML);
     }
     log += `Se limpiaron las tareas previas de la sección ${nom}. `;
 
@@ -247,7 +248,7 @@ function crearSeccion(nom, items) {
             log += `Insertando tarea en listaSec después de ${insertAfter.tagName === 'P' ? insertAfter.textContent : 'tarea ' + insertAfter.getAttribute('id-post')}. `;
             console.log(`11. Insertando tarea ${item.getAttribute('id-post')} después de ${insertAfter.tagName === 'P' ? insertAfter.textContent : 'tarea ' + insertAfter.getAttribute('id-post')}.`);
             listaSec.insertBefore(item, insertAfter.nextSibling);
-            console.log("12. Contenido de listaSec después de insertar tarea:", document.getElementById("listaSec").outerHTML);
+            console.log("12. Contenido de listaSec después de insertar tarea:", document.querySelector('.social-post-list.clase-tarea').outerHTML);
 
             // 6. Verificar si el divisor se ha movido accidentalmente (no debería ocurrir con este método)
             divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`); // Re-obtener el divisor
@@ -260,7 +261,7 @@ function crearSeccion(nom, items) {
                 console.warn(`13. Intentando recuperar el divisor perdido para ${nom}.`);
                 divisor = crearNuevoDivisor(nom, nomCodificado);
                 listaSec.insertBefore(divisor, item); // Intentar insertarlo antes de la tarea actual
-                console.log("14. Divisor de recuperación creado (probablemente). Contenido de listaSec:", document.getElementById("listaSec").outerHTML);
+                console.log("14. Divisor de recuperación creado (probablemente). Contenido de listaSec:", document.querySelector('.social-post-list.clase-tarea').outerHTML);
                 // return;  <- NO salir, intentar continuar
             }
          }
