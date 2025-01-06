@@ -161,8 +161,8 @@ function actualizarMapa() {
 /*
 Esto en verdad no esta funcionando bien 
 
-crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Se limpiaron las tareas previas de la sección General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. ID: 337442. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de General. ERROR: El divisor para General no se encuentra en el DOM después de la inserción. 
-taskSesiones.js?ver=0.2.334:251 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Se limpiaron las tareas previas de la sección Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. ID: 337444. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de Archivado. ERROR: El divisor para Archivado no se encuentra en el DOM después de la inserción. 
+crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Se limpiaron las tareas previas de la sección General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. ID: 337442. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de General. ERROR: El divisor para General desapareció del DOM después de insertar la tarea 337442. Tareas insertadas correctamente en la sección General. crearSeccion: Proceso de creación de sección General finalizado.
+taskSesiones.js?ver=0.2.335:245 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Se limpiaron las tareas previas de la sección Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. ID: 337444. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de Archivado. ERROR: El divisor para Archivado desapareció del DOM después de insertar la tarea 337444. Tareas insertadas correctamente en la sección Archivado. crearSeccion: Proceso de creación de sección Archivado finalizado.
 
 la segunda vez que se reinicia dice que Iniciando creación de sección: General. pero en veradd no crea nada, necesito que verdad compruebe si la creo o porque demonios no aparece en el dom o que esta pasando
 */
@@ -231,11 +231,27 @@ function crearSeccion(nom, items) {
             listaSec.insertBefore(item, anterior.nextSibling);
             anterior = item;
 
-            // Verificar si el divisor sigue en el DOM después de cada inserción
-            if (!document.body.contains(divisor)) {
-                log += `ERROR: El divisor para ${nom} desapareció del DOM después de insertar la tarea ${item.getAttribute('id-post')}. `;
-                console.error(log); // Loguear el error inmediatamente
-                return; // Salir de la función si el divisor desaparece
+            // Verificación detallada después de la inserción
+            log += `Verificando si el divisor sigue en el DOM... `;
+            if (document.body.contains(divisor)) {
+                log += `El divisor para ${nom} SI está en el DOM después de insertar la tarea ${item.getAttribute('id-post')}. `;
+                // Verificar si el divisor es visible
+                if (divisor.offsetWidth > 0 && divisor.offsetHeight > 0) {
+                    log += `El divisor para ${nom} ES visible.`;
+                } else {
+                    log += `El divisor para ${nom} NO ES visible.`;
+                }
+
+                // Verificar si listaSec contiene el divisor
+                if (listaSec.contains(divisor)) {
+                    log += `listaSec SI contiene el divisor para ${nom}.`;
+                } else {
+                    log += `listaSec NO contiene el divisor para ${nom}.`;
+                }
+            } else {
+                log += `ERROR: El divisor para ${nom} NO está en el DOM después de insertar la tarea ${item.getAttribute('id-post')}. `;
+                console.error(log);
+                return;
             }
         });
         log += `Tareas insertadas correctamente en la sección ${nom}. `;
