@@ -121,19 +121,18 @@ function actualizarMapa() {
 function crearSeccion(nom, items) {
     let log = `crearSeccion: Creando sección: ${nom}. `;
     const nomCodificado = encodeURIComponent(nom);
-    let divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`); // Selector más específico
+    let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
 
-    // Verificar si el divisor ya existe y si hay ítems
-    if (divisor && items.length === 0) {
-        divisor.textContent = `No hay tareas en la sección ${nom}`;
-        divisor.style.color = 'gray';
-        log += `Sección ${nom} vacía, se actualiza el texto del divisor existente.`;
-        console.log(log);
+    if (items.length === 0) {
+        if (divisor) {
+            divisor.textContent = `No hay tareas en la sección ${nom}`;
+            divisor.style.color = 'gray';
+        }
+        log += `Sección ${nom} vacía, se omite.`;
         return;
     }
 
     if (!divisor) {
-        // Crear el divisor solo si no existe
         divisor = document.createElement('p');
         divisor.style.fontWeight = 'bold';
         divisor.style.cursor = 'pointer';
@@ -144,39 +143,28 @@ function crearSeccion(nom, items) {
         divisor.style.alignItems = 'center';
         divisor.textContent = nom;
         divisor.dataset.valor = nomCodificado;
-        divisor.classList.add('divisorTarea'); // Se eliminó la clase duplicada
+        divisor.classList.add('divisorTarea', nomCodificado);
 
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
-        // Aquí podrías agregar la flecha como un ícono o SVG para mejor control
-        flecha.innerHTML = '▼'; // Ejemplo: flecha hacia abajo
         divisor.appendChild(flecha);
         listaSec.appendChild(divisor);
-        log += `Divisor para ${nom} creado. `;
-    } else {
-        log += `Divisor para ${nom} ya existe. `;
     }
 
-    // Si no hay ítems y el divisor no existía, no continuar
-    if (items.length === 0 && !divisor) {
-        log += `Sección ${nom} vacía, no se insertan tareas ni se crea divisor.`;
-        console.log(log);
-        return;
-    }
-    
-    if(items.length > 0){
-      log += `Insertando ${items.length} tareas en la sección ${nom}. `;
-      let anterior = divisor;
-      items.forEach(item => {
-          item.setAttribute('data-seccion', nomCodificado);
-          if (item.parentNode) item.parentNode.removeChild(item);
-          listaSec.insertBefore(item, anterior.nextSibling);
-          anterior = item;
-      });
-    }
+    //no borrar esto
+    //configurarInteraccionSeccion(divisor, nomCodificado, items); 
 
+    log += `Insertando ${items.length} tareas en la sección ${nom}. `;
+    let anterior = divisor;
+    items.forEach(item => {
+        item.setAttribute('data-seccion', nomCodificado);
+        if (item.parentNode) item.parentNode.removeChild(item);
+        listaSec.insertBefore(item, anterior.nextSibling);
+        anterior = item;
+    });
     console.log(log);
 }
+
 /*
 //STEP 4
 function configurarInteraccionSeccion(divisor, nomCodificado, items) {
