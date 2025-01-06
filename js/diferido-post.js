@@ -184,7 +184,16 @@
         if (!lista) {
             log += ' No se encontró la lista.';
             console.error(log);
-            return null; // Devolvemos null directamente
+            return null; 
+        }
+    
+        // Eliminar elementos no-(clase) si clase no es null
+        if (clase) {
+            const elementosAEliminar = lista.querySelectorAll(`.LNVHED:not(.clase-${clase})`);
+            elementosAEliminar.forEach(elemento => {
+                elemento.remove();
+            });
+            log += ` Eliminados elementos que no coinciden con la clase ${clase}.`;
         }
     
         publicacionesCargadas.clear();
@@ -200,7 +209,7 @@
     
         try {
             const resultadoCarga = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
-            respuestaCompleta = resultadoCarga; // Ya no es un objeto, es el string directamente
+            respuestaCompleta = resultadoCarga;
     
             log += ' reiniciarContenido: Contenido cargado exitosamente.';
     
@@ -211,12 +220,12 @@
         } catch (error) {
             log += ` Error en cargarMasContenido: ${error}`;
             console.error(log);
-            return null; // Devolvemos null directamente
+            return null;
         }
     
         log += ' reiniciarContenido: Finalizado.';
         console.log(log);
-        return respuestaCompleta; // Devolvemos el string directamente
+        return respuestaCompleta;
     };
     
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
