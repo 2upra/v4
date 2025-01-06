@@ -38,6 +38,15 @@ window.dividirTarea = async function () {
 //STEP 1
 function organizarSecciones() {
     let log = 'organizarSecciones: Iniciando reorganización de tareas... ';
+
+    // Eliminar todos los divisores existentes antes de actualizar el mapa
+    const divisoresExistentes = listaSec.querySelectorAll('.divisorTarea');
+    divisoresExistentes.forEach(divisor => {
+        console.log(`organizarSecciones: Eliminando divisor existente: ${divisor.textContent}`);
+        listaSec.removeChild(divisor);
+    });
+    log += 'Divisores existentes eliminados. ';
+
     actualizarMapa();
 
     log += 'Mapa actualizado. ';
