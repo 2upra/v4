@@ -6,31 +6,32 @@ mirad, el problema no lo identifico, cuando carga la primera vez, las sesiones a
 los atributos sesion la primera vez no son necesarios para general y archivado, tampoco deberían ser necesarios para ajax y por lo visto ese tampoco es el problema no tengo idea 
 
 primera vez
-actualizarMapa: sesion (en el mapa original): Para la tarea ID: 337442
-taskSesiones.js?ver=0.2.328:129 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
-taskSesiones.js?ver=0.2.328:109 actualizarMapa: sesion (en el mapa original): Para la tarea ID: 337444
-taskSesiones.js?ver=0.2.328:129 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "". Tarea agregada a Archivado. 
-taskSesiones.js?ver=0.2.328:133 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
-taskSesiones.js?ver=0.2.328:214 crearSeccion: Insertando tarea en sección General: ID 337442
-taskSesiones.js?ver=0.2.328:220 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
-taskSesiones.js?ver=0.2.328:214 crearSeccion: Insertando tarea en sección Archivado: ID 337444
-taskSesiones.js?ver=0.2.328:220 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
-taskSesiones.js?ver=0.2.328:74 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
-taskSesiones.js?ver=0.2.328:94 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
+actualizarMapa: sesion (en el mapa original): generalPara la tarea ID: 337442
+taskSesiones.js?ver=0.2.329:139 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
+taskSesiones.js?ver=0.2.329:119 actualizarMapa: sesion (en el mapa original): archivadoPara la tarea ID: 337444
+taskSesiones.js?ver=0.2.329:139 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "archivado". Tarea agregada a Archivado. 
+taskSesiones.js?ver=0.2.329:143 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
+taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección General: ID 337442
+taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
+taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección Archivado: ID 337444
+taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
+taskSesiones.js?ver=0.2.329:84 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.329:104 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
 Despues de ajax
-organizarSecciones: Eliminando divisor existente: General
-taskSesiones.js?ver=0.2.328:45 organizarSecciones: Eliminando divisor existente: Archivado
-taskSesiones.js?ver=0.2.328:109 actualizarMapa: sesion (en el mapa original): Para la tarea ID: 337442
-taskSesiones.js?ver=0.2.328:129 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
-taskSesiones.js?ver=0.2.328:109 actualizarMapa: sesion (en el mapa original): Para la tarea ID: 337444
-taskSesiones.js?ver=0.2.328:129 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "". Tarea agregada a Archivado. 
-taskSesiones.js?ver=0.2.328:133 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
-taskSesiones.js?ver=0.2.328:214 crearSeccion: Insertando tarea en sección General: ID 337442
-taskSesiones.js?ver=0.2.328:220 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
-taskSesiones.js?ver=0.2.328:214 crearSeccion: Insertando tarea en sección Archivado: ID 337444
-taskSesiones.js?ver=0.2.328:220 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
-taskSesiones.js?ver=0.2.328:74 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
-taskSesiones.js?ver=0.2.328:94 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
+contarVistaPost.js?ver=0.2.329:54 
+taskSesiones.js?ver=0.2.329:55 organizarSecciones: Eliminando divisor existente: General
+taskSesiones.js?ver=0.2.329:55 organizarSecciones: Eliminando divisor existente: Archivado
+taskSesiones.js?ver=0.2.329:119 actualizarMapa: sesion (en el mapa original): generalPara la tarea ID: 337442
+taskSesiones.js?ver=0.2.329:139 Procesando tarea 1: Tarea ID: 337442, Estado: pendiente, Sesión: "general". Tarea agregada a sección general. 
+taskSesiones.js?ver=0.2.329:119 actualizarMapa: sesion (en el mapa original): archivadoPara la tarea ID: 337444
+taskSesiones.js?ver=0.2.329:139 Procesando tarea 2: Tarea ID: 337444, Estado: archivado, Sesión: "archivado". Tarea agregada a Archivado. 
+taskSesiones.js?ver=0.2.329:143 actualizarMapa: Iniciando actualización de mapa. Tareas encontradas: 2. Mapa final: {"general":[{}],"archivado":[{}]}. 
+taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección General: ID 337442
+taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
+taskSesiones.js?ver=0.2.329:224 crearSeccion: Insertando tarea en sección Archivado: ID 337444
+taskSesiones.js?ver=0.2.329:230 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
+taskSesiones.js?ver=0.2.329:84 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.329:104 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
 
 por favor resuelvelo 
 
@@ -56,6 +57,17 @@ function organizarSecciones() {
         listaSec.removeChild(divisor);
     });
     log += 'Divisores existentes eliminados. ';
+
+    // Forzar la actualización del atributo 'sesion' en cada tarea
+    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
+    items.forEach(item => {
+        let est = item.getAttribute('estado')?.toLowerCase() || '';
+        if (est !== "archivado") {
+            item.setAttribute('sesion', 'general');
+        } else {
+            item.setAttribute('sesion', 'archivado');
+        }
+    });
 
     actualizarMapa();
 
