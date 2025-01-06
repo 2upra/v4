@@ -477,7 +477,6 @@ function archivarTarea() {
                         if (pGeneral) {
                             pGeneral.after(tarea);
                         }
-
                         logs += `Tarea ${tareaId} desarchivada y movida. `;
                     } else {
                         tarea.classList.add('archivado');

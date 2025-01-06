@@ -746,34 +746,32 @@ function procesarPublicaciones($queryArgs, $args, $is_ajax)
         return '';
     }
 
-
     $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
     $tipoPost = $args['post_type'];
 
-    if ($query->have_posts()) { // Abrimos <ul> solo si hay posts
-        $claseExtra = '';
-
-        if (!wp_doing_ajax()) {
-            $claseExtra = 'clase-' . esc_attr($filtro);
-            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-                $claseExtra = 'clase-rolastatus';
-            }
-
-            // Agregar la clase "masonary" si el filtro es "notas"
-            if ($filtro === 'notas') {
-                $claseExtra .= ' masonary';
-            }
-
-            echo '<ul class="social-post-list ' . esc_attr($claseExtra) . '" 
-                  data-filtro="' . esc_attr($filtro) . '" 
-                  data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+    $claseExtra = '';
+    if (!wp_doing_ajax()) {
+        $claseExtra = 'clase-' . esc_attr($filtro);
+        if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
+            $claseExtra = 'clase-rolastatus';
         }
 
+        // Agregar la clase "masonary" si el filtro es "notas"
         if ($filtro === 'notas') {
-            echo formNotas();
+            $claseExtra .= ' masonary';
         }
 
+        echo '<ul class="social-post-list ' . esc_attr($claseExtra) . '" 
+              data-filtro="' . esc_attr($filtro) . '" 
+              data-posttype="' . esc_attr($tipoPost) . '" 
+              data-tab-id="' . esc_attr($args['tab_id']) . '">';
+    }
+
+    if ($filtro === 'notas') {
+        echo formNotas();
+    }
+
+    if ($query->have_posts()) { // Si hay posts
         while ($query->have_posts()) {
             $query->the_post();
 
@@ -804,16 +802,14 @@ function procesarPublicaciones($queryArgs, $args, $is_ajax)
                     echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
-
-        if (!wp_doing_ajax()) {
-            echo '</ul>';
-        }
     } else { // Si no hay posts
-        if ($filtro === 'notas') {
-            echo formNotasUL();
-        } else {
+        if ($filtro !== 'notas') {
             echo nohayPost($filtro, $is_ajax);
         }
+    }
+
+    if (!wp_doing_ajax()) {
+        echo '</ul>';
     }
 
     wp_reset_postdata();
