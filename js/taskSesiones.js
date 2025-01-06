@@ -44,32 +44,57 @@ const listaSec = document.querySelector('.social-post-list.clase-tarea');
 window.dividirTarea = async function () {
     if (!listaSec) return;
     organizarSecciones();
+    //hacerDivisoresEditables();
 };
 
+//STEP 1
 function organizarSecciones() {
-    console.log('organizarSecciones: Iniciando reorganización forzada de tareas...');
+    let log = 'organizarSecciones: Iniciando reorganización de tareas... ';
 
-    // Limpiar completamente listaSec
-    while (listaSec.firstChild) {
-        listaSec.removeChild(listaSec.firstChild);
-    }
-    console.log('listaSec ha sido completamente limpiada.');
+    // Eliminar todos los divisores existentes antes de actualizar el mapa
+    const divisoresExistentes = listaSec.querySelectorAll('.divisorTarea');
+    divisoresExistentes.forEach(divisor => {
+        console.log(`organizarSecciones: Eliminando divisor existente: ${divisor.textContent}`);
+        listaSec.removeChild(divisor);
+    });
+    log += 'Divisores existentes eliminados. ';
 
     // Forzar la actualización del atributo 'sesion' en cada tarea
     const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
     items.forEach(item => {
         let est = item.getAttribute('estado')?.toLowerCase() || '';
-        item.setAttribute('sesion', est !== "archivado" ? 'general' : 'archivado');
+        if (est !== "archivado") {
+            item.setAttribute('sesion', 'general');
+        } else {
+            item.setAttribute('sesion', 'archivado');
+        }
     });
 
     actualizarMapa();
 
-    crearSeccion('General', mapa.general);
-    const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
-    otrasSecciones.forEach(seccion => crearSeccion(seccion, mapa[seccion]));
-    crearSeccion('Archivado', mapa.archivado);
+    log += 'Mapa actualizado. ';
 
-    console.log('organizarSecciones: Reorganización forzada completada.');
+    crearSeccion('General', mapa.general);
+    log += `Sección General creada con ${mapa.general.length} tareas. `;
+
+    const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
+    log += `Otras secciones encontradas: ${otrasSecciones.length > 0 ? otrasSecciones.join(', ') : 'Ninguna'}. `;
+
+    otrasSecciones.forEach(seccion => {
+        crearSeccion(seccion, mapa[seccion]);
+        log += `Sección ${seccion} creada con ${mapa[seccion].length} tareas. `;
+    });
+
+    crearSeccion('Archivado', mapa.archivado);
+    log += `Sección Archivado creada con ${mapa.archivado.length} tareas. `;
+
+    log += `Resumen de secciones: General (${mapa.general.length}), `;
+    if (otrasSecciones.length > 0) {
+        log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
+    }
+    log += `Archivado (${mapa.archivado.length}). `;
+
+    console.log(log);
     generarLogFinal();
 }
 
@@ -93,23 +118,23 @@ function generarLogFinal() {
 }
 
 function actualizarMapa() {
-    console.log('actualizarMapa: Iniciando actualización de mapa.');
+    let log = 'actualizarMapa: Iniciando actualización de mapa. ';
     mapa = { general: [], archivado: [] };
-    
-    // Obtener tareas directamente desde el HTML después de la actualización AJAX
-    const items = Array.from(document.querySelectorAll('.social-post-list.clase-tarea li'));
-    console.log(`actualizarMapa: Tareas encontradas después de AJAX: ${items.length}.`);
+    const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
+
+    log += `Tareas encontradas: ${items.length}. `;
 
     items.forEach((item, index) => {
         let logItem = `Procesando tarea ${index + 1}: `;
         let est = item.getAttribute('estado')?.toLowerCase() || '';
         const idPost = item.getAttribute('id-post');
         let sesion = item.getAttribute('sesion')?.toLowerCase() || '';
+        console.log("actualizarMapa: sesion (en el mapa original): " + item.getAttribute('sesion') + "Para la tarea ID: " + idPost)
 
-        console.log(`actualizarMapa: sesion (en el mapa original): ${sesion} para la tarea ID: ${idPost}`);
-
-        if (!sesion && est !== "archivado") {
+        // Forzar la sesión a 'general' si el estado no es 'archivado'
+        if (est !== "archivado") {
             sesion = 'general';
+            item.setAttribute('sesion', sesion); // Actualizar el atributo en el elemento
         }
 
         logItem += `Tarea ID: ${idPost}, Estado: ${est}, Sesión: "${sesion}". `;
@@ -129,48 +154,89 @@ function actualizarMapa() {
         console.log(logItem);
     });
 
-    console.log(`actualizarMapa: Mapa final: ${JSON.stringify(mapa)}.`);
+    log += `Mapa final: ${JSON.stringify(mapa)}. `;
+    console.log(log);
 }
 
+//STEP 3
 function crearSeccion(nom, items) {
-    console.log(`crearSeccion: Iniciando creación de sección: ${nom}.`);
+    let log = `crearSeccion: Iniciando creación de sección: ${nom}. `;
 
+    // Codificar el nombre de la sección para usarlo como data-valor
     const nomCodificado = encodeURIComponent(nom);
-    console.log(`crearSeccion: Nombre de sección codificado: ${nomCodificado}.`);
+    log += `Nombre de sección codificado: ${nomCodificado}. `;
 
-    // Crear el divisor
-    let divisor = document.createElement('p');
-    divisor.style.fontWeight = 'bold';
-    divisor.style.cursor = 'pointer';
-    divisor.style.padding = '5px 20px';
-    divisor.style.marginRight = 'auto';
-    divisor.style.display = 'flex';
-    divisor.style.width = '100%';
-    divisor.style.alignItems = 'center';
-    divisor.textContent = nom;
-    divisor.dataset.valor = nomCodificado;
-    divisor.classList.add('divisorTarea', nomCodificado);
+    // Buscar si la sección ya existe
+    let divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`);
+    log += `Buscando sección existente con data-valor: ${nomCodificado}. `;
 
-    const flecha = document.createElement('span');
-    flecha.style.marginLeft = '5px';
-    divisor.appendChild(flecha);
+    // Si no hay tareas para la sección:
+    if (items.length === 0) {
+        log += `La sección ${nom} no tiene tareas. `;
+        if (divisor) {
+            divisor.textContent = `No hay tareas en la sección ${nom}`;
+            divisor.style.color = 'gray';
+            log += `Se actualizó el texto del divisor para ${nom}. `;
+        } else {
+            log += `No se encontró un divisor para ${nom}. `;
+        }
+        log += `Sección ${nom} vacía, se omite.`;
+        console.log(log);
+        return;
+    }
 
-    listaSec.appendChild(divisor);
-    console.log(`crearSeccion: Nuevo divisor creado y agregado a listaSec para ${nom}.`);
-    //no borrar esto
-    //configurarInteraccionSeccion(divisor, nomCodificado, items); 
+    // Si la sección no existe, crearla
+    if (!divisor) {
+        log += `La sección ${nom} no existe, creando nuevo divisor. `;
+        divisor = document.createElement('p');
+        divisor.style.fontWeight = 'bold';
+        divisor.style.cursor = 'pointer';
+        divisor.style.padding = '5px 20px';
+        divisor.style.marginRight = 'auto';
+        divisor.style.display = 'flex';
+        divisor.style.width = '100%';
+        divisor.style.alignItems = 'center';
+        divisor.textContent = nom;
+        divisor.dataset.valor = nomCodificado;
+        divisor.classList.add('divisorTarea', nomCodificado);
+
+        // Crear la flecha para expandir/contraer
+        const flecha = document.createElement('span');
+        flecha.style.marginLeft = '5px';
+        divisor.appendChild(flecha);
+
+        // Agregar la sección a la lista de secciones
+        listaSec.appendChild(divisor);
+        log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
+    } else {
+        log += `Se encontró un divisor existente para ${nom}. `;
+       
+    }
+
+    
     // Insertar las tareas en la sección
-    console.log(`crearSeccion: Insertando ${items.length} tareas en la sección ${nom}.`);
+    log += `Insertando ${items.length} tareas en la sección ${nom}. `;
+    
     items.forEach((item, index) => {
-        console.log(`crearSeccion: Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}.`);
+        log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. `;
         item.setAttribute('data-seccion', nomCodificado);
-        console.log(`crearSeccion: Atributo data-seccion establecido como ${nomCodificado} para la tarea.`);
+        log += `Atributo data-seccion establecido como ${nomCodificado} para la tarea. `;
 
+        // Mover la tarea al final de listaSec
+        if (item.parentNode) {
+            log += `Removiendo tarea de su padre actual. `;
+            item.parentNode.removeChild(item);
+        }
+
+        console.log(`crearSeccion: Insertando tarea en sección ${nom}: ID ${item.getAttribute('id-post')}`);
         listaSec.appendChild(item);
-        console.log(`crearSeccion: Tarea insertada en listaSec para la sección ${nom}.`);
-    });
+        log += `Tarea insertada al final de listaSec. `;
 
-    console.log(`crearSeccion: Creación de sección ${nom} completada.`);
+    });
+    // Mover el divisor al inicio
+    listaSec.insertBefore(divisor, listaSec.firstChild);
+    log += `Divisor ${nom} movido al inicio de listaSec. `;
+    console.log(log);
 }
 
 /*
