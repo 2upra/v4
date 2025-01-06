@@ -54,7 +54,7 @@ function organizarSecciones() {
     // Eliminar todos los divisores existentes antes de actualizar el mapa
     const divisoresExistentes = listaSec.querySelectorAll('.divisorTarea');
     divisoresExistentes.forEach(divisor => {
-        console.log(`organizarSecciones: Eliminando divisor existente: ${divisor.textContent}`);
+        //console.log(`organizarSecciones: Eliminando divisor existente: ${divisor.textContent}`);
         listaSec.removeChild(divisor);
     });
     log += 'Divisores existentes eliminados. ';
@@ -94,7 +94,7 @@ function organizarSecciones() {
     }
     log += `Archivado (${mapa.archivado.length}). `;
 
-    console.log(log);
+    //console.log(log);
     generarLogFinal();
 }
 
@@ -114,7 +114,7 @@ function generarLogFinal() {
         }
     });
     log += `Orden final: ${final.join(', ')}`;
-    console.log(log);
+    //console.log(log);
 }
 
 function actualizarMapa() {
@@ -129,7 +129,7 @@ function actualizarMapa() {
         let est = item.getAttribute('estado')?.toLowerCase() || '';
         const idPost = item.getAttribute('id-post');
         let sesion = item.getAttribute('sesion')?.toLowerCase() || '';
-        console.log("actualizarMapa: sesion (en el mapa original): " + item.getAttribute('sesion') + "Para la tarea ID: " + idPost)
+        //console.log("actualizarMapa: sesion (en el mapa original): " + item.getAttribute('sesion') + "Para la tarea ID: " + idPost)
 
         if (!sesion && est !== "archivado") {
             sesion = 'general';
@@ -149,29 +149,39 @@ function actualizarMapa() {
             logItem += `Tarea agregada a sección ${sesion}. `;
         }
 
-        console.log(logItem);
+        //console.log(logItem);
     });
 
     log += `Mapa final: ${JSON.stringify(mapa)}. `;
-    console.log(log);
+    //console.log(log);
 }
 
 //STEP 3
+
+/*
+Esto en verdad no esta funcionando bien 
+
+crearSeccion: Insertando tarea en sección General: ID 337442
+taskSesiones.js?ver=0.2.333:243 crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de General. 
+taskSesiones.js?ver=0.2.333:237 crearSeccion: Insertando tarea en sección Archivado: ID 337444
+taskSesiones.js?ver=0.2.333:243 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Tarea insertada en listaSec después de Archivado. 
+taskSesiones.js?ver=0.2.333:97 organizarSecciones: Iniciando reorganización de tareas... Divisores existentes eliminados. Mapa actualizado. Sección General creada con 1 tareas. Otras secciones encontradas: Ninguna. Sección Archivado creada con 1 tareas. Resumen de secciones: General (1), Archivado (1). 
+taskSesiones.js?ver=0.2.333:117 generarLogFinal: Generando log final... Procesando elemento 1. Elemento P: General - Divisor. Procesando elemento 2. Elemento LI: Sección - General, ID - 337442. Procesando elemento 3. Elemento P: Archivado - Divisor. Procesando elemento 4. Elemento LI: Sección - Archivado, ID - 337444. Orden final: General - Divisor, General - 337442, Archivado - Divisor, Archivado - 337444
+
+la segunda vez que se reinicia dice que Iniciando creación de sección: General. pero en veradd no crea nada, necesito que verdad compruebe si la creo o porque demonios no aparece en el dom o que esta pasando
+*/
 function crearSeccion(nom, items) {
     let log = `crearSeccion: Iniciando creación de sección: ${nom}. `;
-
-    // Codificar el nombre de la sección para usarlo como data-valor
     const nomCodificado = encodeURIComponent(nom);
     log += `Nombre de sección codificado: ${nomCodificado}. `;
 
-    // Buscar si la sección ya existe
     let divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`);
     log += `Buscando sección existente con data-valor: ${nomCodificado}. `;
 
-    // Si no hay tareas para la sección:
     if (items.length === 0) {
         log += `La sección ${nom} no tiene tareas. `;
         if (divisor) {
+            log += `Se encontró un divisor existente para ${nom}. `;
             divisor.textContent = `No hay tareas en la sección ${nom}`;
             divisor.style.color = 'gray';
             log += `Se actualizó el texto del divisor para ${nom}. `;
@@ -179,11 +189,10 @@ function crearSeccion(nom, items) {
             log += `No se encontró un divisor para ${nom}. `;
         }
         log += `Sección ${nom} vacía, se omite.`;
-        console.log(log);
+        //console.log(log);
         return;
     }
 
-    // Si la sección no existe, crearla
     if (!divisor) {
         log += `La sección ${nom} no existe, creando nuevo divisor. `;
         divisor = document.createElement('p');
@@ -198,34 +207,29 @@ function crearSeccion(nom, items) {
         divisor.dataset.valor = nomCodificado;
         divisor.classList.add('divisorTarea', nomCodificado);
 
-        // Crear la flecha para expandir/contraer
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
         divisor.appendChild(flecha);
 
-        // Agregar la sección a la lista de secciones
         listaSec.appendChild(divisor);
         log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
     } else {
         log += `Se encontró un divisor existente para ${nom}. `;
-        // Limpiar el contenido anterior relacionado con la sección
-        let siguiente = divisor.nextElementSibling;
-        while (siguiente && siguiente.tagName === 'LI' && siguiente.dataset.seccion === nomCodificado) {
-            console.log(`crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}`);
-            listaSec.removeChild(siguiente);
-            siguiente = divisor.nextElementSibling;
-        }
-        log += `Se limpiaron las tareas previas de la sección ${nom}. `;
     }
 
-    //no borrar esto
-    //configurarInteraccionSeccion(divisor, nomCodificado, items); 
+    // Limpiar solo las tareas LI de la sección actual, no el divisor
+    let siguiente = divisor.nextElementSibling;
+    while (siguiente && siguiente.tagName === 'LI' && siguiente.dataset.seccion === nomCodificado) {
+        log += `crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}. `;
+        listaSec.removeChild(siguiente);
+        siguiente = divisor.nextElementSibling;
+    }
+    log += `Se limpiaron las tareas previas de la sección ${nom}. `;
 
-    // Insertar las tareas en la sección
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
     items.forEach((item, index) => {
-        log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. `;
+        log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. ID: ${item.getAttribute('id-post')}. `;
         item.setAttribute('data-seccion', nomCodificado);
         log += `Atributo data-seccion establecido como ${nomCodificado} para la tarea. `;
 
@@ -234,15 +238,18 @@ function crearSeccion(nom, items) {
             item.parentNode.removeChild(item);
         }
 
-        console.log(`crearSeccion: Insertando tarea en sección ${nom}: ID ${item.getAttribute('id-post')}`);
+        log += `Insertando tarea en listaSec después de ${anterior.tagName === 'P' ? anterior.textContent : 'tarea ' + anterior.getAttribute('id-post')}. `;
         listaSec.insertBefore(item, anterior.nextSibling);
-        log += `Tarea insertada en listaSec después de ${anterior.textContent}. `;
         anterior = item;
     });
 
+    // Verificar si el divisor está en el DOM después de la inserción
+    if (!document.contains(divisor)) {
+        log += `ERROR: El divisor para ${nom} no se encuentra en el DOM después de la inserción. `;
+    }
+
     console.log(log);
 }
-
 /*
 //STEP 4
 function configurarInteraccionSeccion(divisor, nomCodificado, items) {
@@ -300,7 +307,7 @@ function crearSesionFront() {
                 nuevaSesion.textContent = textoEditado;
             }
             nuevaSesion.dataset.valor = textoEditado;
-            console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
+            //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
         });
     });
 }
@@ -325,7 +332,7 @@ function alternarVisibilidadSeccion(divisor) {
     const flecha = divisor.querySelector('span:last-child');
     flecha.innerHTML = visible ? (window.fechaabajo || '↓') : (window.fechaallado || '↑');
     localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
-    console.log(log);
+    //console.log(log);
 }
 
 function eliminarSeparadoresExistentes() {
@@ -365,14 +372,14 @@ function hacerDivisoresEditables() {
                         await enviarAjax('actualizarSesion', datos);
                         
                         valorOriginal = textoEditado;
-                        console.log('Sesión actualizada y tareas reasignadas');
+                        //console.log('Sesión actualizada y tareas reasignadas');
                     } catch (error) {
                         //console.error('Error al actualizar sesión:', error);
                         divisor.textContent = valorOriginal;
                         divisor.dataset.valor = valorOriginal;
                     }
                 } else {
-                    console.log('El nombre de la sesión no ha cambiado');
+                    //console.log('El nombre de la sesión no ha cambiado');
                 }
             });
         }
