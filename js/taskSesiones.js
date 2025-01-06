@@ -170,43 +170,68 @@ taskSesiones.js?ver=0.2.340:244 crearSeccion: Iniciando creación de sección: A
 
 */
 function crearSeccion(nom, items) {
+    console.log("---------------------------------------");
+    console.log(`1. INICIO - crearSeccion: ${nom}`, items);
     let log = `crearSeccion: Iniciando creación de sección: ${nom}. `;
     const nomCodificado = encodeURIComponent(nom);
     log += `Nombre de sección codificado: ${nomCodificado}. `;
 
+    // Verificar el estado de listaSec al inicio
+    console.log("2. ¿Existe listaSec?:", !!document.getElementById("listaSec"));
+    console.log("3. Contenido inicial de listaSec:", document.getElementById("listaSec").outerHTML);
+
+    // 1. Buscar el divisor al principio de la función y usarlo consistentemente
     let divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`);
     log += `Buscando sección existente con data-valor: ${nomCodificado}. `;
+
+    console.log("4. ¿Se encontró el divisor inicialmente?:", divisor !== null);
 
     if (!divisor) {
         log += `La sección ${nom} no existe, creando nuevo divisor. `;
         divisor = crearNuevoDivisor(nom, nomCodificado);
-        listaSec.appendChild(divisor);
-        log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
+
+        // Verificar si listaSec existe antes de intentar añadir el divisor
+        if (document.getElementById("listaSec")) {
+            listaSec.appendChild(divisor);
+            log += `Nuevo divisor creado y agregado a listaSec para ${nom}. `;
+            console.log("5. Nuevo divisor creado y agregado a listaSec.");
+            console.log("6. Contenido de listaSec después de añadir divisor:", document.getElementById("listaSec").outerHTML);
+        } else {
+            console.error("ERROR: listaSec no existe en el DOM al intentar añadir el nuevo divisor.");
+            return; // Salir para evitar errores adicionales
+        }
     } else {
         log += `Se encontró un divisor existente para ${nom}. `;
+        console.log("7. Se encontró un divisor existente:", divisor);
     }
 
-    // Limpiar solo las tareas LI de la sección actual
+    // 2. Limpiar solo las tareas LI de la sección actual, no el divisor
     let siguiente = divisor.nextElementSibling;
     while (siguiente && siguiente.tagName === 'LI' && siguiente.dataset.seccion === nomCodificado) {
         log += `crearSeccion: Eliminando tarea existente en sección ${nom}: ID ${siguiente.getAttribute('id-post')}. `;
-        const tempSiguiente = siguiente.nextElementSibling; // Store next sibling before removal
         listaSec.removeChild(siguiente);
-        siguiente = tempSiguiente;
+        siguiente = divisor.nextElementSibling;
+        console.log("8. Tarea eliminada. Contenido de listaSec:", document.getElementById("listaSec").outerHTML);
     }
     log += `Se limpiaron las tareas previas de la sección ${nom}. `;
 
+    // 3. Manejar el caso de no tener tareas
     if (items.length === 0) {
+        log += `La sección ${nom} no tiene tareas. `;
         divisor.textContent = `No hay tareas en la sección ${nom}`;
         divisor.style.color = 'gray';
         log += `Se actualizó el texto del divisor para ${nom}. `;
+        console.log("9. No hay tareas. Se actualizó el texto del divisor.");
     } else {
-        divisor.textContent = nom;
-        divisor.style.color = '';
+        divisor.textContent = nom; // Restaurar el texto original si hay tareas
+        divisor.style.color = ''; // Restaurar el color original
         log += `Insertando ${items.length} tareas en la sección ${nom}. `;
-        let anterior = divisor;
-        items.forEach((item, index) => {
-            log += `Procesando tarea ${index + 1} de ${items.length} para la sección ${nom}. ID: ${item.getAttribute('id-post')}. `;
+        console.log("10. Insertando tareas...");
+
+        // 4. Clave: Usar un bucle for para mantener la referencia correcta al divisor
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            log += `Procesando tarea ${i + 1} de ${items.length} para la sección ${nom}. ID: ${item.getAttribute('id-post')}. `;
             item.setAttribute('data-seccion', nomCodificado);
             log += `Atributo data-seccion establecido como ${nomCodificado} para la tarea. `;
 
@@ -215,18 +240,41 @@ function crearSeccion(nom, items) {
                 item.parentNode.removeChild(item);
             }
 
-            // **Crucial Change:** Insert after the *current* divider
-            log += `Insertando tarea en listaSec después del divisor ${nomCodificado}. `;
-            listaSec.insertBefore(item, divisor.nextSibling);
-        });
+            // 5. Insertar la tarea DESPUÉS del divisor o la última tarea insertada
+            //    En la primera iteración, insertamos después del divisor.
+            //    En las siguientes, insertamos después del hermano siguiente de la tarea anterior (que es null al final)
+            const insertAfter = i === 0 ? divisor : items[i - 1];
+            log += `Insertando tarea en listaSec después de ${insertAfter.tagName === 'P' ? insertAfter.textContent : 'tarea ' + insertAfter.getAttribute('id-post')}. `;
+            console.log(`11. Insertando tarea ${item.getAttribute('id-post')} después de ${insertAfter.tagName === 'P' ? insertAfter.textContent : 'tarea ' + insertAfter.getAttribute('id-post')}.`);
+            listaSec.insertBefore(item, insertAfter.nextSibling);
+            console.log("12. Contenido de listaSec después de insertar tarea:", document.getElementById("listaSec").outerHTML);
+
+            // 6. Verificar si el divisor se ha movido accidentalmente (no debería ocurrir con este método)
+            divisor = document.querySelector(`.divisorTarea[data-valor="${nomCodificado}"]`); // Re-obtener el divisor
+            if (!divisor) {
+                // Si el divisor no se encuentra, algo muy extraño ha pasado, pero al menos no fallará.
+                log += `ERROR CRÍTICO: El divisor ${nom} ha desaparecido del DOM.`;
+                console.error(log);
+
+                // Intentar recuperarse creando el divisor de nuevo (aunque no debería ser necesario)
+                console.warn(`13. Intentando recuperar el divisor perdido para ${nom}.`);
+                divisor = crearNuevoDivisor(nom, nomCodificado);
+                listaSec.insertBefore(divisor, item); // Intentar insertarlo antes de la tarea actual
+                console.log("14. Divisor de recuperación creado (probablemente). Contenido de listaSec:", document.getElementById("listaSec").outerHTML);
+                // return;  <- NO salir, intentar continuar
+            }
+         }
         log += `Tareas insertadas correctamente en la sección ${nom}. `;
+        console.log("15. Tareas insertadas correctamente.");
     }
 
     log += `crearSeccion: Proceso de creación de sección ${nom} finalizado.`;
-    console.log(log);
+    console.log(`16. FIN - crearSeccion: ${nom}`);
+    console.log("---------------------------------------");
 }
 
 function crearNuevoDivisor(nom, nomCodificado) {
+    console.log(`crearNuevoDivisor: Creando divisor para ${nom} (${nomCodificado})`);
     let divisor = document.createElement('p');
     divisor.style.fontWeight = 'bold';
     divisor.style.cursor = 'pointer';
@@ -243,6 +291,7 @@ function crearNuevoDivisor(nom, nomCodificado) {
     flecha.style.marginLeft = '5px';
     divisor.appendChild(flecha);
 
+    console.log("crearNuevoDivisor: Divisor creado:", divisor);
     return divisor;
 }
 /*
