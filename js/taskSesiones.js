@@ -39,7 +39,6 @@ por favor resuelvelo
 */
 
 let mapa = {general: [], archivado: []};
-const listaSec = document.querySelector('.social-post-list.clase-tarea');
 
 window.dividirTarea = async function () {
     if (!listaSec) return;
@@ -50,6 +49,7 @@ window.dividirTarea = async function () {
 //STEP 1
 function organizarSecciones() {
     let log = 'organizarSecciones: Iniciando reorganización de tareas... ';
+    const listaSec = document.querySelector('.social-post-list.clase-tarea');
 
     // Eliminar todos los divisores existentes antes de actualizar el mapa
     const divisoresExistentes = listaSec.querySelectorAll('.divisorTarea');
@@ -99,6 +99,7 @@ function organizarSecciones() {
 }
 
 function generarLogFinal() {
+    const listaSec = document.querySelector('.social-post-list.clase-tarea');
     let log = 'generarLogFinal: Generando log final... ';
     const final = [];
     Array.from(listaSec.children).forEach((item, index) => {
@@ -119,6 +120,7 @@ function generarLogFinal() {
 
 function actualizarMapa() {
     let log = 'actualizarMapa: Iniciando actualización de mapa. ';
+    const listaSec = document.querySelector('.social-post-list.clase-tarea');
     mapa = {general: [], archivado: []};
     const items = Array.from(listaSec.children).filter(item => item.tagName === 'LI');
 
@@ -156,20 +158,8 @@ function actualizarMapa() {
     //console.log(log);
 }
 
-//STEP 3
-
-/*
-DIOS MIO EL DIVISOR NO SE CREA LA SEGUNDA VEZ QUE SE RECARGA CON AJAX; YA HE HECHO TODO LO POSIBLE Y NADA FUNCIONA EL ERROR SIEMPRE ES 
-ERROR: El divisor original para Archivado NO está en el DOM después de insertar la tarea 
-
-Y NUNCA SE CREA CUANDO AL MENOS QUE SEA LA PRIMERA VEZ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-crearSeccion: Iniciando creación de sección: General. Nombre de sección codificado: General. Buscando sección existente con data-valor: General. La sección General no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para General. Se limpiaron las tareas previas de la sección General. Insertando 1 tareas en la sección General. Procesando tarea 1 de 1 para la sección General. ID: 337442. Atributo data-seccion establecido como General para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de General. Verificando si el divisor original (General) sigue en el DOM... ERROR: El divisor original para General NO está en el DOM después de insertar la tarea 337442. No se encontró el divisor para General en el DOM. Creando uno nuevo.Nuevo divisor creado e insertado para General. Tareas insertadas correctamente en la sección General. crearSeccion: Proceso de creación de sección General finalizado.
-taskSesiones.js?ver=0.2.340:244 crearSeccion: Iniciando creación de sección: Archivado. Nombre de sección codificado: Archivado. Buscando sección existente con data-valor: Archivado. La sección Archivado no existe, creando nuevo divisor. Nuevo divisor creado y agregado a listaSec para Archivado. Se limpiaron las tareas previas de la sección Archivado. Insertando 1 tareas en la sección Archivado. Procesando tarea 1 de 1 para la sección Archivado. ID: 337444. Atributo data-seccion establecido como Archivado para la tarea. Removiendo tarea de su padre actual. Insertando tarea en listaSec después de Archivado. Verificando si el divisor original (Archivado) sigue en el DOM... ERROR: El divisor original para Archivado NO está en el DOM después de insertar la tarea 337444. No se encontró el divisor para Archivado en el DOM. Creando uno nuevo.Nuevo divisor creado e insertado para Archivado. Tareas insertadas correctamente en la sección Archivado. crearSeccion: Proceso de creación de sección Archivado finalizado.
-
-
-*/
 function crearSeccion(nom, items) {
+    const listaSec = document.querySelector('.social-post-list.clase-tarea');
     console.log("---------------------------------------");
     console.log(`1. INICIO - crearSeccion: ${nom}`, items);
     let log = `crearSeccion: Iniciando creación de sección: ${nom}. `;
