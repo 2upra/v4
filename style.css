@@ -9376,3 +9376,9 @@ button.tiempoTareas {
     height: 15px;
     width: 15px;
 }
+
+li.POST-tarea.seleccionado {
+    background: #0b0b0b;
+    filter: unset;
+    border-radius: unset;
+}

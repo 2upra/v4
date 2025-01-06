@@ -177,52 +177,66 @@
     
     window.reiniciarContenido = async function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
         let log = `reiniciarContenido: Iniciando reinicio de contenido. limpiar=${limpiar}, arriba=${arriba}, clase=${clase}, prioridad=${prioridad}, id=${id}.`;
-        let classClase = clase ? `clase-${clase}` : '';
-        const lista = document.querySelector(`.tab.active .social-post-list.${classClase}`);
-        let respuestaCompleta = null;
-    
-        if (!lista) {
-            log += ' No se encontró la lista.';
-            console.error(log);
-            return null; 
-        }
-    
-        // Eliminar elementos no-(clase) si clase no es null
+        
+        // Modificación: Si clase no está definido, se seleccionan todos los .social-post-list
+        let listas;
         if (clase) {
-            const elementosAEliminar = lista.querySelectorAll(`.LNVHED:not(.clase-${clase})`);
-            elementosAEliminar.forEach(elemento => {
-                elemento.remove();
-            });
-            log += ` Eliminados elementos que no coinciden con la clase ${clase}.`;
+            let classClase = `clase-${clase}`;
+            listas = document.querySelectorAll(`.tab.active .social-post-list.${classClase}`);
+        } else {
+            listas = document.querySelectorAll(`.tab.active .social-post-list`);
         }
-    
-        publicacionesCargadas.clear();
-        identificador = '';
-    
-        if (limpiar) {
-            lista.innerHTML = '';
-            log += ' Lista limpiada.';
-        }
-    
-        actualizarUIBusqueda('');
-        resetearCarga();
-    
-        try {
-            const resultadoCarga = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
-            respuestaCompleta = resultadoCarga;
-    
-            log += ' reiniciarContenido: Contenido cargado exitosamente.';
-    
-            if (typeof callback === 'function') {
-                log += ' Ejecutando callback.';
-                callback();
-            }
-        } catch (error) {
-            log += ` Error en cargarMasContenido: ${error}`;
+
+        let respuestaCompleta = null;
+
+        if (!listas || listas.length === 0) {
+            log += ' No se encontró la lista.';
             console.error(log);
             return null;
         }
-    
+        
+        // Iterar sobre cada lista encontrada
+        for (let lista of listas) {
+
+            // Eliminar elementos no-(clase) si clase no es null
+            if (clase) {
+                const elementosAEliminar = lista.querySelectorAll(`.LNVHED:not(.clase-${clase})`);
+                elementosAEliminar.forEach(elemento => {
+                    elemento.remove();
+                });
+                log += ` Eliminados elementos que no coinciden con la clase ${clase} en una de las listas.`;
+            }
+        
+            publicacionesCargadas.clear();
+            identificador = '';
+        
+            if (limpiar) {
+                lista.innerHTML = '';
+                log += ' Lista limpiada.';
+            }
+        
+            actualizarUIBusqueda('');
+            resetearCarga();
+
+            try {
+                const resultadoCarga = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
+                // Se actualiza respuestaCompleta con el último resultado
+                respuestaCompleta = resultadoCarga; 
+        
+                log += ' reiniciarContenido: Contenido cargado exitosamente en una de las listas.';
+        
+                if (typeof callback === 'function') {
+                    log += ' Ejecutando callback.';
+                    callback();
+                }
+            } catch (error) {
+                log += ` Error en cargarMasContenido: ${error}`;
+                console.error(log);
+                // Considera si quieres detener la ejecución aquí o continuar con las otras listas
+                return null; // Descomenta esto si quieres detener la ejecución en caso de error
+            }
+        }
+
         log += ' reiniciarContenido: Finalizado.';
         console.log(log);
         return respuestaCompleta;

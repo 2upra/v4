@@ -4,6 +4,7 @@ window.dividirTarea = async function () {
     const listaSec = document.querySelector('.social-post-list.clase-tarea');
     if (!listaSec) return;
     organizarSecciones();
+    crearSesionFront();
     hacerDivisoresEditables();
     window.addEventListener('reiniciar', organizarSecciones);
 };
@@ -34,7 +35,7 @@ function actualizarMapa() {
             }
         }
     });
-    console.log(log + `Mapa actualizado: ${JSON.stringify(mapa)}`);
+    //console.log(log + `Mapa actualizado: ${JSON.stringify(mapa)}`);
 }
 
 function alternarVisibilidadSeccion(divisor) {
@@ -56,7 +57,7 @@ function alternarVisibilidadSeccion(divisor) {
     const flecha = divisor.querySelector('span:last-child');
     flecha.innerHTML = visible ? (window.fechaabajo || '↓') : (window.fechaallado || '↑');
     localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
-    console.log(log);
+    //console.log(log);
 }
 
 function configurarInteraccionSeccion(divisor, nomCodificado, items) {
@@ -75,7 +76,6 @@ function configurarInteraccionSeccion(divisor, nomCodificado, items) {
 
         iconoAgregar.onclick = event => {
             event.stopPropagation();
-            crearSesionFront(divisor); // Se llama a la función aquí, pasando el divisor como parámetro
         };
     }
 
@@ -88,7 +88,7 @@ function configurarInteraccionSeccion(divisor, nomCodificado, items) {
 function crearSeccion(nom, items) {
     const listaSec = document.querySelector('.social-post-list.clase-tarea');
     let log = `crearSeccion: Creando sección: ${nom}. `;
-    const nomCodificado = encodeURIComponent(nom);
+    const nomCodificado = encodeURIComponent(nom); // Codificar el nombre de la sesión
     let divisor = document.querySelector(`[data-valor="${nomCodificado}"]`);
 
     if (items.length === 0) {
@@ -97,6 +97,7 @@ function crearSeccion(nom, items) {
             divisor.style.color = 'gray';
         }
         log += `Sección ${nom} vacía, se omite.`;
+        //console.log(log);
         return;
     }
 
@@ -109,9 +110,9 @@ function crearSeccion(nom, items) {
         divisor.style.display = 'flex';
         divisor.style.width = '100%';
         divisor.style.alignItems = 'center';
-        divisor.textContent = nom;
-        divisor.dataset.valor = nomCodificado;
-        divisor.classList.add('divisorTarea', nomCodificado);
+        divisor.textContent = nom; // Mostrar el nombre original
+        divisor.dataset.valor = nomCodificado; // Usar el nombre codificado en data-valor
+        divisor.classList.add('divisorTarea', nomCodificado); // Usar el nombre codificado aquí
 
         const flecha = document.createElement('span');
         flecha.style.marginLeft = '5px';
@@ -119,19 +120,19 @@ function crearSeccion(nom, items) {
         listaSec.appendChild(divisor);
     }
 
-    configurarInteraccionSeccion(divisor, nomCodificado, items);
+    configurarInteraccionSeccion(divisor, nomCodificado, items); // Usar el nombre codificado
 
     log += `Insertando ${items.length} tareas en la sección ${nom}. `;
     let anterior = divisor;
     items.forEach(item => {
-        item.setAttribute('data-seccion', nomCodificado);
+        item.setAttribute('data-seccion', nomCodificado); // Usar el nombre codificado
         if (item.parentNode) item.parentNode.removeChild(item);
         listaSec.insertBefore(item, anterior.nextSibling);
         anterior = item;
     });
-    console.log(log);
-}
 
+    //console.log(log);
+}
 function eliminarSeparadoresExistentes() {
     const listaSec = document.querySelector('.social-post-list.clase-tarea');
     const separadores = Array.from(listaSec.children).filter(item => item.tagName === 'P' && item.classList.contains('divisorTarea'));
@@ -141,7 +142,7 @@ function eliminarSeparadoresExistentes() {
 function organizarSecciones() {
     let log = 'organizarSecciones: Reorganizando tareas... ';
     actualizarMapa();
-    //eliminarSeparadoresExistentes();
+    eliminarSeparadoresExistentes();
     crearSeccion('General', mapa.general);
 
     const otrasSecciones = Object.keys(mapa).filter(seccion => seccion !== 'general' && seccion !== 'archivado');
@@ -154,7 +155,7 @@ function organizarSecciones() {
         log += `${otrasSecciones.map(s => `${s} (${mapa[s].length})`).join(', ')}, `;
     }
     log += `Archivado (${mapa.archivado.length}). `;
-    console.log(log);
+    //console.log(log);
     generarLogFinal();
 }
 
@@ -171,26 +172,16 @@ function generarLogFinal() {
         }
     });
     log = `generarLogFinal: Orden final: ${final.join(', ')}`;
-    console.log(log);
+    //console.log(log);
 }
 
 /*
-aqui cuando reinicio esto, pasa esto
 
-taskSesiones.js?ver=0.2.314:181  Uncaught (in promise) TypeError: Cannot read properties of null (reading 'addEventListener')
-    at crearSesionFront (taskSesiones.js?ver=0.2.314:181:15)
-    at window.dividirTarea (taskSesiones.js?ver=0.2.314:7:5)
-    at initTareas (task.js?ver=0.2.314:31:16)
-    at ajaxPage.js?ver=0.2.314:98:72
-    at Array.forEach (<anonymous>)
-    at initScripts (ajaxPage.js?ver=0.2.314:98:15)
-    at reinit (ajaxPage.js?ver=0.2.314:102:9)
 */
 
 function crearSesionFront() {
     const botonPlus = document.querySelector('.iconoPlus');
     const listaSecTareas = document.querySelector('.clase-tarea');
-    
 
     botonPlus.addEventListener('click', () => {
         const textoInicial = 'Nueva sesión';
@@ -216,7 +207,7 @@ function crearSesionFront() {
                 nuevaSesion.textContent = textoEditado;
             }
             nuevaSesion.dataset.valor = textoEditado;
-            console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
+            //console.log('Nombre de la sesión actualizado:', nuevaSesion.dataset.valor);
         });
     });
 }
@@ -252,14 +243,14 @@ function hacerDivisoresEditables() {
                         await enviarAjax('actualizarSesion', datos);
                         
                         valorOriginal = textoEditado;
-                        console.log('Sesión actualizada y tareas reasignadas');
+                        //console.log('Sesión actualizada y tareas reasignadas');
                     } catch (error) {
                         //console.error('Error al actualizar sesión:', error);
                         divisor.textContent = valorOriginal;
                         divisor.dataset.valor = valorOriginal;
                     }
                 } else {
-                    console.log('El nombre de la sesión no ha cambiado');
+                    //console.log('El nombre de la sesión no ha cambiado');
                 }
             });
         }

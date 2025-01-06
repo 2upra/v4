@@ -5,7 +5,6 @@ window.initMoverTarea = function () {
     }
 };
 
-//aqui hay un pequeño bug, cuando muevo una subtarea padre, esta se vuelve subtarea de la hija que esta abajo, las taraeas se vuelven subtareas si tienen un subtarea debajo pero eso no debería pasar si la tarea padre se mueve porque obviamente tendra una subtarea debajo que es su hija
 let listaMov = null;
 let arrastrandoElem = null;
 let ordenViejo = [];
@@ -15,6 +14,79 @@ const tolerancia = 10;
 let movRealizado = false;
 let subtareasArrastradas = [];
 let esSubtarea = false;
+let tareasSeleccionadas = [];
+
+function manejarSeleccionTarea(ev) {
+    let log = 'manejarSeleccionTarea: ';
+    const tarea = ev.target.closest('.draggable-element');
+    if (!tarea) {
+        log += 'No se encontró elemento de tarea.';
+        return;
+    }
+
+    const idTarea = tarea.getAttribute('id-post');
+
+    if (ev.ctrlKey) {
+        if (tareasSeleccionadas.includes(idTarea)) {
+            tareasSeleccionadas = tareasSeleccionadas.filter(id => id !== idTarea);
+            tarea.classList.remove('seleccionado');
+            log += `Tarea ${idTarea} deseleccionada.`;
+        } else {
+            tareasSeleccionadas.push(idTarea);
+            tarea.classList.add('seleccionado');
+            log += `Tarea ${idTarea} seleccionada.`;
+        }
+    }
+
+    console.log(log);
+}
+
+function deseleccionarTareas() {
+    let log = 'deseleccionarTareas: ';
+    tareasSeleccionadas.forEach(id => {
+        const tarea = document.querySelector(`.draggable-element[id-post="${id}"]`);
+        if (tarea) tarea.classList.remove('seleccionado');
+    });
+    tareasSeleccionadas = [];
+    log += 'Todas las tareas deseleccionadas.';
+    console.log(log);
+}
+
+function moverTarea() {
+    listaMov = document.querySelector('.clase-tarea');
+    if (!listaMov || listaMov.listenersAdded) return;
+
+    listaMov.listenersAdded = true;
+
+    const iniciarArrastre = ev => {
+        if (inicializarVars(ev)) {
+            listaMov.addEventListener('mousemove', manejarMov);
+            listaMov.addEventListener('mouseup', finalizarArrastre);
+        }
+    };
+
+    listaMov.addEventListener('mousedown', ev => {
+        if (ev.target.closest('.draggable-element')) {
+            if (!ev.ctrlKey) {
+                deseleccionarTareas();
+            }
+            iniciarArrastre(ev);
+        } else {
+            deseleccionarTareas();
+        }
+    });
+
+    listaMov.addEventListener('click', manejarSeleccionTarea);
+
+    listaMov.addEventListener('dragstart', ev => ev.preventDefault());
+
+    // Deseleccionar tareas al hacer clic fuera de la lista
+    document.addEventListener('click', ev => {
+        if (!listaMov.contains(ev.target)) {
+            deseleccionarTareas();
+        }
+    });
+}
 
 function inicializarVars(ev) {
     let log = '';
@@ -222,27 +294,6 @@ function finalizarArrastre() {
     subtareasArrastradas = [];
     esSubtarea = false;
 }
-
-function moverTarea() {
-    listaMov = document.querySelector('.clase-tarea');
-    if (!listaMov || listaMov.listenersAdded) return;
-
-    listaMov.listenersAdded = true;
-
-    const iniciarArrastre = ev => {
-        if (inicializarVars(ev)) {
-            listaMov.addEventListener('mousemove', manejarMov);
-            listaMov.addEventListener('mouseup', finalizarArrastre);
-        }
-    };
-
-    listaMov.addEventListener('mousedown', ev => {
-        if (ev.target.closest('.draggable-element')) iniciarArrastre(ev);
-    });
-
-    listaMov.addEventListener('dragstart', ev => ev.preventDefault());
-}
-
 
 function guardarOrdenTareas({ idTarea, nuevaPos, ordenNuevo, sesionArriba, dataArriba, subtarea, padre }) {
     let log = `guardarOrdenTareas: Inicia el proceso para tarea ${idTarea}.`;

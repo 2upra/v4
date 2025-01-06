@@ -12,7 +12,7 @@ function initTareas() {
     const tit = document.getElementById('tituloTarea');
 
     if (tit) {
-        /* selectorTipoTarea();
+        selectorTipoTarea();
         enviarTarea();
         editarTarea();
         completarTarea();
@@ -27,7 +27,7 @@ function initTareas() {
         subTarea();
         window.initNotas();
         window.initEnter();
-        window.initMoverTarea();*/
+        window.initMoverTarea();
         window.dividirTarea();
     }
 }
