@@ -558,12 +558,18 @@ function actualizarOrdenTareas() {
     }
 }
 
+//aqui hay que ajustar algo, hay un error, a veces las tareas padres se vuelven subtareas de sus propios hijos, hay que evitar eso, supongo que  es facil de evitar
 function manejarSubtarea($id, $idPadre) {
     $log = '';
     if ($idPadre) {
         $tareaPadre = get_post($idPadre);
         if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
             return 'Error: Tarea padre no encontrada.';
+        }
+
+        // Verificar si la tarea padre es una subtarea de la tarea actual
+        if (esPadreUnaSubtarea($idPadre, $id)) {
+            return 'Error: No se puede convertir la tarea en subtarea de una de sus propias subtareas.';
         }
 
         $subtareaExistente = get_post_meta($id, 'subtarea', true);
@@ -599,6 +605,17 @@ function manejarSubtarea($id, $idPadre) {
     }
 
     return $log;
+}
+
+function esPadreUnaSubtarea($idPadre, $id) {
+    $padreActual = $idPadre;
+    while ($padreActual) {
+        if ($padreActual == $id) {
+            return true; // La tarea padre es una subtarea (directa o indirecta) de la tarea actual
+        }
+        $padreActual = get_post_meta($padreActual, 'subtarea', true);
+    }
+    return false; // La tarea padre no es una subtarea de la tarea actual
 }
 
 function actualizarOrden($ordenTar, $ordenNue)

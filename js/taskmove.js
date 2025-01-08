@@ -1,55 +1,31 @@
-window.initMoverTarea = function () {
+window.initMoverTarea = () => {
     const tit = document.getElementById('tituloTarea');
-    if (tit) {
-        moverTarea();
-    }
+    if (tit) moverTarea();
 };
 
-let listaMov = null;
-let arrastrandoElem = null;
-let ordenViejo = [];
-let idTarea = null;
-let posInicialY = null;
-const tolerancia = 10;
-let movRealizado = false;
-let subtareasArrastradas = [];
-let esSubtarea = false;
-let tareasSeleccionadas = [];
-
 function manejarSeleccionTarea(ev) {
-    let log = 'manejarSeleccionTarea: ';
     const tarea = ev.target.closest('.draggable-element');
-    if (!tarea) {
-        log += 'No se encontró elemento de tarea.';
-        return;
-    }
+    if (!tarea) return;
 
-    const idTarea = tarea.getAttribute('id-post');
+    const id = tarea.getAttribute('id-post');
 
     if (ev.ctrlKey) {
-        if (tareasSeleccionadas.includes(idTarea)) {
-            tareasSeleccionadas = tareasSeleccionadas.filter(id => id !== idTarea);
+        if (tareasSeleccionadas.includes(id)) {
+            tareasSeleccionadas = tareasSeleccionadas.filter(selId => selId !== id);
             tarea.classList.remove('seleccionado');
-            log += `Tarea ${idTarea} deseleccionada.`;
         } else {
-            tareasSeleccionadas.push(idTarea);
+            tareasSeleccionadas.push(id);
             tarea.classList.add('seleccionado');
-            log += `Tarea ${idTarea} seleccionada.`;
         }
     }
-
-    console.log(log);
 }
 
 function deseleccionarTareas() {
-    let log = 'deseleccionarTareas: ';
     tareasSeleccionadas.forEach(id => {
         const tarea = document.querySelector(`.draggable-element[id-post="${id}"]`);
         if (tarea) tarea.classList.remove('seleccionado');
     });
     tareasSeleccionadas = [];
-    log += 'Todas las tareas deseleccionadas.';
-    console.log(log);
 }
 
 function moverTarea() {
@@ -67,9 +43,7 @@ function moverTarea() {
 
     listaMov.addEventListener('mousedown', ev => {
         if (ev.target.closest('.draggable-element')) {
-            if (!ev.ctrlKey) {
-                deseleccionarTareas();
-            }
+            if (!ev.ctrlKey) deseleccionarTareas();
             iniciarArrastre(ev);
         } else {
             deseleccionarTareas();
@@ -77,24 +51,26 @@ function moverTarea() {
     });
 
     listaMov.addEventListener('click', manejarSeleccionTarea);
-
     listaMov.addEventListener('dragstart', ev => ev.preventDefault());
-
-    // Deseleccionar tareas al hacer clic fuera de la lista
     document.addEventListener('click', ev => {
-        if (!listaMov.contains(ev.target)) {
-            deseleccionarTareas();
-        }
+        if (!listaMov.contains(ev.target)) deseleccionarTareas();
     });
 }
 
+let listaMov,
+    arrastrandoElem,
+    ordenViejo,
+    idTarea,
+    posInicialY,
+    movRealizado,
+    subtareasArrastradas,
+    esSubtarea,
+    tareasSeleccionadas = [];
+const tolerancia = 10;
+
 function inicializarVars(ev) {
-    let log = '';
     arrastrandoElem = ev.target.closest('.draggable-element');
-    if (!arrastrandoElem) {
-        log += '\n  No se encontró elemento arrastrable.';
-        return false;
-    }
+    if (!arrastrandoElem) return false;
 
     esSubtarea = arrastrandoElem.getAttribute('subtarea') === 'true';
     idTarea = arrastrandoElem.getAttribute('id-post');
@@ -106,8 +82,6 @@ function inicializarVars(ev) {
     arrastrandoElem.classList.add('dragging');
     subtareasArrastradas.forEach(subtarea => subtarea.classList.add('dragging'));
     document.body.classList.add('dragging-active');
-
-    log += `\n  Iniciando arrastre de tarea ${idTarea}. Es subtarea: ${esSubtarea}.`;
     return true;
 }
 
@@ -133,8 +107,7 @@ function manejarMov(ev) {
         const elemMedio = rectElem.top + rectElem.height / 2;
 
         if (mouseY < elemMedio) {
-            
-            if (!esSubtarea || (esSubtarea && elem.getAttribute('subtarea') === 'true' ) ) {
+            if (!esSubtarea || (esSubtarea && (elem.getAttribute('subtarea') !== 'true' || elem.getAttribute('padre') === arrastrandoElem.getAttribute('padre')))) {
                 listaMov.insertBefore(arrastrandoElem, elem);
                 if (!esSubtarea) {
                     let ultimoElem = arrastrandoElem;
@@ -150,7 +123,7 @@ function manejarMov(ev) {
     }
 
     if (!insertado && elemsVisibles.length > 0) {
-        if (!esSubtarea || (esSubtarea && elemsVisibles[elemsVisibles.length-1].getAttribute('subtarea') === 'true' ) ) {
+        if (!esSubtarea || (esSubtarea && (elemsVisibles[elemsVisibles.length - 1].getAttribute('subtarea') !== 'true' || elemsVisibles[elemsVisibles.length - 1].getAttribute('padre') === arrastrandoElem.getAttribute('padre')))) {
             listaMov.appendChild(arrastrandoElem);
             if (!esSubtarea) {
                 let ultimoElem = arrastrandoElem;
@@ -164,7 +137,6 @@ function manejarMov(ev) {
 }
 
 function obtenerSesionYData() {
-    let log = '';
     let sesionArriba = null;
     let dataArriba = null;
     let anterior = arrastrandoElem.previousElementSibling;
@@ -178,69 +150,53 @@ function obtenerSesionYData() {
             dataArriba = dataArriba || anterior.getAttribute('data-valor');
         }
 
-        if (sesionArriba !== null && dataArriba !== null) {
-            log += `\n  Sesión y data encontrados: ${sesionArriba}, ${dataArriba}`;
-            break;
-        }
-
+        if (sesionArriba !== null && dataArriba !== null) break;
         anterior = anterior.previousElementSibling;
     }
 
-    if (sesionArriba === null || dataArriba === null) {
-        log += `\n  No se encontraron sesión o data arriba.`;
-    }
-
-    return {sesionArriba, dataArriba, log};
+    return {sesionArriba, dataArriba};
 }
 
 function esSubtareaNueva() {
     let esSubtareaNueva = false;
-    let anterior = arrastrandoElem.previousElementSibling;
-    
-    if (anterior) {
-        const anteriorEsSubtarea = anterior.getAttribute('subtarea') === 'true';
-        const anteriorEsPadre = anterior.getAttribute('id-post') === arrastrandoElem.getAttribute('padre');
-        const anteriorEsPadreDeActual = anterior.getAttribute('id-post') === arrastrandoElem.getAttribute('id-post');
-        
-        esSubtareaNueva = (anteriorEsSubtarea || anteriorEsPadre) && !anteriorEsPadreDeActual;
+    let siguiente = arrastrandoElem.nextElementSibling;
+
+    if (siguiente) {
+        const siguienteEsSubtarea = siguiente.getAttribute('subtarea') === 'true';
+        const siguienteEsPadre = siguiente.getAttribute('id-post') === arrastrandoElem.getAttribute('padre');
+        const siguienteEsPadreDeActual = siguiente.getAttribute('id-post') === arrastrandoElem.getAttribute('id-post');
+        const actualEsSubtareaDeSiguiente = arrastrandoElem.getAttribute('padre') === siguiente.getAttribute('id-post');
+        esSubtareaNueva = (siguienteEsSubtarea || siguienteEsPadre) && !siguienteEsPadreDeActual && !actualEsSubtareaDeSiguiente;
     }
 
     return esSubtareaNueva;
 }
 
 function cambioASubtarea() {
-    let log = '';
     const nuevaEsSubtarea = esSubtareaNueva();
     const cambioSubtarea = nuevaEsSubtarea !== esSubtarea;
-    
+
     if (cambioSubtarea) {
-        log += `\n  La tarea ${idTarea} cambió su estado de subtarea a ${nuevaEsSubtarea}.`;
         window.reiniciarPost(idTarea, 'tarea');
     }
 
-    return {nuevaEsSubtarea, log};
+    return {nuevaEsSubtarea};
 }
 
 function finalizarArrastre() {
     if (!arrastrandoElem) return;
-    let log = '';
 
     const ordenNuevo = Array.from(listaMov.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
     const nuevaPos = ordenNuevo.indexOf(idTarea);
-    const res = obtenerSesionYData();
-    const sesionArriba = res.sesionArriba
-    const dataArriba = res.dataArriba;
-    log += res.log;
+    const {sesionArriba, dataArriba} = obtenerSesionYData();
 
     if (movRealizado) {
-        const res = cambioASubtarea();
-        const nuevaEsSubtarea = res.nuevaEsSubtarea;
-        log += res.log;
+        const {nuevaEsSubtarea} = cambioASubtarea();
         let idsActualizadas = [];
         let padre = '';
-        
+
         if (nuevaEsSubtarea) {
-            const tareaPadre = arrastrandoElem.previousElementSibling;
+            const tareaPadre = arrastrandoElem.nextElementSibling;
             padre = tareaPadre ? tareaPadre.getAttribute('id-post') : '';
 
             if (padre) {
@@ -251,17 +207,14 @@ function finalizarArrastre() {
             }
 
             idsActualizadas = [idTarea];
-            log += `\n  La tarea ${idTarea} se convirtió en una subtarea con padre ${padre}.`;
             arrastrandoElem.setAttribute('data-seccion', dataArriba);
             arrastrandoElem.setAttribute('sesion', sesionArriba);
         } else {
             padre = '';
-            
             arrastrandoElem.removeAttribute('padre');
             arrastrandoElem.setAttribute('subtarea', 'false');
-            
+
             idsActualizadas = [idTarea, ...subtareasArrastradas.map(subtarea => subtarea.getAttribute('id-post'))];
-            log += `\n  La tarea ${idTarea} y sus subtareas se movieron a la posición ${nuevaPos} dentro de la misma sección.`;
             arrastrandoElem.setAttribute('data-seccion', dataArriba);
             subtareasArrastradas.forEach(subtarea => subtarea.setAttribute('data-seccion', dataArriba));
             arrastrandoElem.setAttribute('sesion', sesionArriba);
@@ -269,14 +222,13 @@ function finalizarArrastre() {
         }
 
         guardarOrdenTareas({
-            idTarea: idTarea,
-            nuevaPos: nuevaPos,
+            idTarea,
+            nuevaPos,
             ordenNuevo,
             sesionArriba,
             dataArriba,
             subtarea: nuevaEsSubtarea,
-            padre: padre,
-            log: log
+            padre
         });
     }
 
@@ -295,8 +247,7 @@ function finalizarArrastre() {
     esSubtarea = false;
 }
 
-function guardarOrdenTareas({ idTarea, nuevaPos, ordenNuevo, sesionArriba, dataArriba, subtarea, padre }) {
-    let log = `guardarOrdenTareas: Inicia el proceso para tarea ${idTarea}.`;
+function guardarOrdenTareas({idTarea, nuevaPos, ordenNuevo, sesionArriba, dataArriba, subtarea, padre}) {
     let data = {
         tareaMovida: idTarea,
         nuevaPos,
@@ -306,28 +257,19 @@ function guardarOrdenTareas({ idTarea, nuevaPos, ordenNuevo, sesionArriba, dataA
         subtarea,
         padre: subtarea ? padre : null
     };
-
     enviarAjax('actualizarOrdenTareas', data)
         .then(res => {
             if (res && res.success) {
-                log += `\n  Orden de tarea actualizado correctamente.`;
                 if (subtarea) {
-                    log += `\n  La tarea ${idTarea} se convirtió en una subtarea con padre ${padre}.`;
-                    // Reiniciar solo si es una subtarea
                     window.reiniciarPost(idTarea, 'tarea');
                 } else {
-
-                    log += `\n  La tarea ${idTarea} dejó de ser una subtarea.`;
                     window.reiniciarPost(idTarea, 'tarea');
                 }
-                console.log(log);
             } else {
-                log += `\n  Error al actualizar el orden: ${res ? res.data : 'Respuesta vacía o success: false'}`;
-                console.error(log);
+                console.error('Hubo un error en la respuesta del servidor:', res);
             }
         })
         .catch(err => {
-            log += `\n  Error en la petición AJAX: ${err}`;
-            console.error(log);
+            console.error('Error en la petición AJAX:', err);
         });
 }
