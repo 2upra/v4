@@ -88,7 +88,7 @@ add_action('wp_head', function () use ($schema) {
 <head>
     <meta charset="<? bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="index, follow">
     <? wp_head(); ?>
 </head>
 
