@@ -166,9 +166,9 @@ function obtenerIdsPostsRecientes() {
 function obtenerMetadatosPosts($postsIds) {
     global $wpdb;
     $tiempoInicio = microtime(true);
-
+    
     $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
-    $metaKeys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan'];
+    $metaKeys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan', 'nombreOriginal'];
     $metaKeysPlaceholders = implode(',', array_fill(0, count($metaKeys), '%s'));
 
     $sqlMeta = "

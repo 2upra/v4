@@ -101,6 +101,7 @@ function getDecayFactor($days, $useDecay = false)
     return $decaimientoF[$days];
 }
 
+//en datos ahora viene el valor nombreOriginal, lo puedes incluir aca para que lo tenga en cuenta, viene dentro de datos
 function calcularPuntosIdentifier($postId, $identifier, $datos)
 {
     $resumen = [
@@ -117,22 +118,21 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
             'total' => 0
         ]
     ];
+    $log = '';
 
     // Normalizar identificadores
-    if (is_array($identifier)) {
-        $identifiers = array_unique(array_map('strtolower', $identifier));
-    } else {
-        $identifiers = array_unique(preg_split('/\s+/', strtolower($identifier), -1, PREG_SPLIT_NO_EMPTY));
-    }
+    $identifiers = is_array($identifier)
+        ? array_unique(array_map('strtolower', $identifier))
+        : array_unique(preg_split('/\s+/', strtolower($identifier), -1, PREG_SPLIT_NO_EMPTY));
     $resumen['identifiers'] = $identifiers;
-    $totalIdentifiers = count($identifiers);
+    $totalIds = count($identifiers);
 
-    if ($totalIdentifiers === 0) {
+    if ($totalIds === 0) {
         return 0;
     }
 
     // Obtener contenido y datos
-    $post_content = !empty($datos['post_content'][$postId])
+    $postContent = !empty($datos['post_content'][$postId])
         ? strtolower($datos['post_content'][$postId])
         : '';
 
@@ -140,22 +140,38 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
         ? json_decode($datos['datosAlgoritmo'][$postId]->meta_value, true)
         : [];
 
+    $nombreOriginal = !empty($datos['nombreOriginal'][$postId])
+        ? strtolower($datos['nombreOriginal'][$postId])
+        : '';
+
     // Inicializar arrays para tracking de coincidencias
     $contentMatches = [];
     $dataMatches = [];
 
-    // Calcular coincidencias en contenido
-    foreach ($identifiers as $id_word) {
-        if (strpos($post_content, $id_word) !== false) {
+    // Calcular coincidencias en contenido y nombre original
+    foreach ($identifiers as $id) {
+        if (strpos($postContent, $id) !== false) {
             $resumen['matches']['content']++;
-            $contentMatches[] = $id_word;
+            $contentMatches[] = $id;
+        } elseif (strpos($nombreOriginal, $id) !== false) {
+            $resumen['matches']['content']++;
+            $contentMatches[] = $id;
         } else {
             // Comparación difusa si no hay coincidencia exacta
-            foreach (explode(" ", $post_content) as $word) {
-                similar_text($id_word, $word, $percent);
-                if ($percent > 75) { // Umbral de similitud
+            foreach (explode(" ", $postContent) as $word) {
+                similar_text($id, $word, $percent);
+                if ($percent > 75) {
                     $resumen['matches']['content']++;
-                    $contentMatches[] = $id_word;
+                    $contentMatches[] = $id;
+                    break;
+                }
+            }
+            // Comparación difusa en el nombre original
+            foreach (explode(" ", $nombreOriginal) as $word) {
+                similar_text($id, $word, $percent);
+                if ($percent > 75) {
+                    $resumen['matches']['content']++;
+                    $contentMatches[] = $id;
                     break;
                 }
             }
@@ -164,32 +180,32 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
 
     // Procesar datosAlgoritmo
     $postWords = [];
-    foreach ($datosAlgoritmo as $value) {
-        if (is_array($value)) {
+    foreach ($datosAlgoritmo as $val) {
+        if (is_array($val)) {
             foreach (['es', 'en'] as $lang) {
-                if (isset($value[$lang]) && is_array($value[$lang])) {
-                    foreach ($value[$lang] as $item) {
+                if (isset($val[$lang]) && is_array($val[$lang])) {
+                    foreach ($val[$lang] as $item) {
                         $postWords[strtolower($item)] = true;
                     }
                 }
             }
-        } elseif (!empty($value)) {
-            $postWords[strtolower($value)] = true;
+        } elseif (!empty($val)) {
+            $postWords[strtolower($val)] = true;
         }
     }
 
     // Calcular coincidencias en datos
-    foreach ($identifiers as $id_word) {
-        if (isset($postWords[$id_word])) {
+    foreach ($identifiers as $id) {
+        if (isset($postWords[$id])) {
             $resumen['matches']['data']++;
-            $dataMatches[] = $id_word;
+            $dataMatches[] = $id;
         } else {
             // Comparación difusa en caso de no coincidencia exacta
             foreach (array_keys($postWords) as $word) {
-                similar_text($id_word, $word, $percent);
-                if ($percent > 75) { // Umbral de similitud
+                similar_text($id, $word, $percent);
+                if ($percent > 75) {
                     $resumen['matches']['data']++;
-                    $dataMatches[] = $id_word;
+                    $dataMatches[] = $id;
                     break;
                 }
             }
@@ -197,24 +213,27 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
     }
 
     // Calcular puntos
-    $puntosBasePorCoincidenciaContenido = 1000;
-    $puntosBasePorCoincidenciaDatos = 250;
-    $bonusCompleto = 2000;
+    $puntosBaseContenido = 1000;
+    $puntosBaseDatos = 250;
+    $bonus = 2000;
 
-    $resumen['puntos']['contenido'] = $resumen['matches']['content'] * $puntosBasePorCoincidenciaContenido;
-    $resumen['puntos']['datos'] = $resumen['matches']['data'] * $puntosBasePorCoincidenciaDatos;
+    $resumen['puntos']['contenido'] = $resumen['matches']['content'] * $puntosBaseContenido;
+    $resumen['puntos']['datos'] = $resumen['matches']['data'] * $puntosBaseDatos;
 
     // Aplicar bonus
-    if ($resumen['matches']['content'] === $totalIdentifiers) {
-        $resumen['puntos']['bonus'] = $bonusCompleto;
-    } elseif ($resumen['matches']['data'] === $totalIdentifiers) {
-        $resumen['puntos']['bonus'] = $bonusCompleto * 0.5;
+    if ($resumen['matches']['content'] === $totalIds) {
+        $resumen['puntos']['bonus'] = $bonus;
+    } elseif ($resumen['matches']['data'] === $totalIds) {
+        $resumen['puntos']['bonus'] = $bonus * 0.5;
     }
 
     $resumen['puntos']['total'] = $resumen['puntos']['contenido'] +
         $resumen['puntos']['datos'] +
         $resumen['puntos']['bonus'];
 
+    $log .= "calcularPuntosIdentifier: \n Post ID: $postId, \n Identifiers: " . implode(", ", $identifiers) . ", \n Coincidencias en contenido: " . $resumen['matches']['content'] . ", \n Coincidencias en datos: " . $resumen['matches']['data'] . ", \n Puntos de contenido: " . $resumen['puntos']['contenido'] . ", \n Puntos de datos: " . $resumen['puntos']['datos'] . ", \n Bonus: " . $resumen['puntos']['bonus'] . ", \n Puntos totales: " . $resumen['puntos']['total'];
+
+    guardarLog($log);
     return $resumen['puntos']['total'];
 }
 

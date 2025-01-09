@@ -1,4 +1,5 @@
 <?
+
 function guardarCache($cacheKey, $data, $exp) {
     $cacheDir = WP_CONTENT_DIR . '/cache/feed/';
     if (!file_exists($cacheDir)) {

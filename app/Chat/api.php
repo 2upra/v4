@@ -64,7 +64,7 @@ function verificarToken($request)
     $previous_rounded_time = $rounded_time - 1;
     $previous_expected_token = hash_hmac('sha256', $user_id . $previous_rounded_time, $secret_key);
 
-    // Verificar si el token recibido coincide con el token esperado o el del día anterior
+    // Verificar si el token recibido coincide con el token esperado o el del día anterio
     if (hash_equals($expected_token, $token) || hash_equals($previous_expected_token, $token)) {
         return new WP_REST_Response([
             'valid' => true,
@@ -78,12 +78,6 @@ function verificarToken($request)
         ], 401);
     }
 }
-
-/*
-evita esto aca, no quiero ver esos logs
-[04-Jan-2025 01:05:18 UTC] PHP Warning:  Undefined array key "GALLEKEY" in C:\Users\1u\Local Sites\2upra\app\public\wp-content\themes\v4\app\Chat\api.php on line 88
-[04-Jan-2025 01:05:18 UTC] PHP Deprecated:  hash_hmac(): Passing null to parameter #3 ($key) of type string is deprecated in C:\Users\1u\Local Sites\2upra\app\public\wp-content\themes\v4\app\Chat\api.php on line 90
-*/
 
 function generarToken()
 {
