@@ -611,7 +611,7 @@ function aplicarFiltrosUsuario($queryArgs, $usuarioActual)
     return $queryArgs;
 }
 
-
+//aqui en el prefiltrado, agrega para que tome en cuenta nombreOriginal (es una meta de lo post que a veces existe)
 function prefiltrarIdentifier($identifier, $queryArgs)
 {
     global $wpdb;
@@ -691,8 +691,14 @@ function prefiltrarIdentifier($identifier, $queryArgs)
                             AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
                             AND {$wpdb->postmeta}.meta_value LIKE %s
                         )
+                        OR EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta}
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                            AND {$wpdb->postmeta}.meta_key = 'nombreOriginal'
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
                     )
-                ", $like_term, $like_term, $like_term);
+                ", $like_term, $like_term, $like_term, $like_term);
             }
             $search_conditions[] = '(' . implode(' OR ', $term_conditions) . ')';
         }
@@ -712,8 +718,14 @@ function prefiltrarIdentifier($identifier, $queryArgs)
                             AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
                             AND {$wpdb->postmeta}.meta_value LIKE %s
                         )
+                        AND NOT EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta}
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                            AND {$wpdb->postmeta}.meta_key = 'nombreOriginal'
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
                     )
-                ", $like_term, $like_term, $like_term);
+                ", $like_term, $like_term, $like_term, $like_term);
             }
             $search_conditions[] = '(' . implode(' AND ', $term_conditions) . ')';
         }
