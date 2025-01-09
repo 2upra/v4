@@ -94,3 +94,14 @@ function mimesPermitidos($mimes)
     return $mimes;
 }
 add_filter('upload_mimes', 'mimesPermitidos');
+
+function mantener_sesion_activa() {
+    if ( is_user_logged_in() ) {
+      setcookie(TEST_COOKIE, 'wordpress_test_cookie', time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
+      setcookie(AUTH_COOKIE, $_COOKIE[AUTH_COOKIE], time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
+      setcookie(SECURE_AUTH_COOKIE, $_COOKIE[SECURE_AUTH_COOKIE], time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
+      setcookie(LOGGED_IN_COOKIE, $_COOKIE[LOGGED_IN_COOKIE], time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
+    }
+  }
+  
+  add_action('init', 'mantener_sesion_activa');
