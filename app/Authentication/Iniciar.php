@@ -308,7 +308,7 @@ function handle_google_callback()
     } else {
         $log .= ", \n  No se recibió el código de autorización.";
     }
-    guardarLog($log);
+    //guardarLog($log);
 }
 add_action('init', 'handle_google_callback');
 
