@@ -9382,3 +9382,54 @@ li.POST-tarea.seleccionado {
     filter: unset;
     border-radius: unset;
 }
+
+.asleyPorf img {
+    max-width: 100px;
+    max-height: 100px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 5px;
+    position: absolute;
+    /* margin-left: 15px; */
+    top: -34px;
+}
+
+.asleyPorf h2 {
+    /* text-align: start; */
+    line-height: 80px;
+    font-size: 72px;
+    position: relative;
+}
+
+.asleyPorf .SOKDEOD {
+    display: flex;
+    gap: 0px;
+    align-items: center;
+    padding: 30px;
+    /* margin: 0; */
+}
+
+span#asley {
+    margin-left: 110px;
+}
+
+.asleyPorf {
+    display: flex;
+    flex-direction: column;
+}
+
+.asleyPoftContent {
+    padding: 0px !important;
+}
+
+.asleyPorf .LXCJWW {
+    display: flex;
+    justify-content: center;
+}
+
+.asleyPorf .LXCJWW button {
+    margin-top: 20px;
+    border-radius: 100px;
+    FONT-WEIGHT: 400;
+    padding: 8px 20px;
+}

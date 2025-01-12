@@ -14,7 +14,7 @@ function asleyTab()
     <div class="tabs">
         <div class="tab-content">
 
-            <div class="tab S4K7I3" id="Proyecto">
+            <div class="tab S4K7I3 asleyPorf" id="Proyecto">
                 <? echo portafolio(); ?>
             </div>
 
@@ -34,28 +34,17 @@ function portafolio()
 
 
     <div class="SOKDEOD" id="inicioDiv">
-        <h2>Esta si es la mejor biblioteca de samples del planeta</h2>
-        <div class="buscadordiv">
-            <input class="borde" type="text" placeholder="Encuentra cualquier sonido" id="identifier">
-            <button class="buttonBI borde"> <? echo $GLOBALS['iconFlecha']; ?>Buscar</button>
-        </div>
-        <div>
-            <button><a href="https://2upra.com/wp-content/uploads/2024/12/2upra24122024a.apk"></a></button>
-            <button><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe"></a></button>
-        </div>
-    </div>
-
-    <div class="resultadosBusquedaInicio" id="resultadosBusquedaInicio">
-
-        <div class="BPLBDE nologin">
-            <div class="FOFDV5 nologin">
-                <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Inicio', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
-            </div>
+        <h2>soy <img src="<? echo get_template_directory_uri(); ?>/assets/img/asleywandorius1.jpg" alt=""><span id="asley">Asley </span> developer </h2>
+        <h2></h2>
+        <h2 id="flst">Full Stack</h2>
+        <div class="LXCJWW">
+            <button class="borde">Descargar CV</button>
+            <button class="borde">Contactar</button>
         </div>
 
     </div>
 
-    <div class=" BKXAFN">
+    <div class="BKXAFN">
         <div style="display: none">
             <div class="JMIOCI">
                 <h1>Libertad música para almas libres</h1>

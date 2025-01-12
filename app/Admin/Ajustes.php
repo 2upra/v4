@@ -7,14 +7,16 @@
 add_filter('wp_mail', fn($args) => []);
 
 // Desactivar barra de admin para administradores
-function desactivar_barra_admin_para_admin() {
+function desactivar_barra_admin_para_admin()
+{
     if (current_user_can('administrator')) {
         add_filter('show_admin_bar', '__return_false');
     }
 }
 add_action('after_setup_theme', 'desactivar_barra_admin_para_admin');
 // Ocultar elementos de la barra de admin
-function ocultar_elementos_barra_admin() {
+function ocultar_elementos_barra_admin()
+{
     echo '<style type="text/css">
         #wp-admin-bar-wp-logo, #wp-admin-bar-customize, #wp-admin-bar-updates, 
         #wp-admin-bar-comments, #wp-admin-bar-new-content, #wp-admin-bar-wpseo-menu, 
@@ -24,7 +26,8 @@ function ocultar_elementos_barra_admin() {
 add_action('admin_head', 'ocultar_elementos_barra_admin');
 add_action('wp_head', 'ocultar_elementos_barra_admin');
 
-function fix_really_simple_ssl_textdomain_late() {
+function fix_really_simple_ssl_textdomain_late()
+{
     // Solo carga el dominio de texto si el plugin está activo
     if (function_exists('_load_textdomain_just_in_time')) {
         load_plugin_textdomain('really-simple-ssl', false, dirname(plugin_basename(__FILE__)) . '/languages/');
@@ -33,7 +36,8 @@ function fix_really_simple_ssl_textdomain_late() {
 add_action('plugins_loaded', 'fix_really_simple_ssl_textdomain_late');
 
 // Personalizar estilos de la barra de admin (admin y front)
-function personalizar_estilos_wp_admin_bar() {
+function personalizar_estilos_wp_admin_bar()
+{
     echo '<style type="text/css">
         #wpadminbar {
             direction: ltr; color: #ffffff !important; font-size: 11px !important;
@@ -95,13 +99,37 @@ function mimesPermitidos($mimes)
 }
 add_filter('upload_mimes', 'mimesPermitidos');
 
-function mantener_sesion_activa() {
-    if ( is_user_logged_in() ) {
-      setcookie(TEST_COOKIE, 'wordpress_test_cookie', time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
-      setcookie(AUTH_COOKIE, $_COOKIE[AUTH_COOKIE], time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
-      setcookie(SECURE_AUTH_COOKIE, $_COOKIE[SECURE_AUTH_COOKIE], time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
-      setcookie(LOGGED_IN_COOKIE, $_COOKIE[LOGGED_IN_COOKIE], time() + 31536000, SITECOOKIEPATH, COOKIE_DOMAIN);
+/*
+esto no estan funcionando, la sesion igual se cierra despues de cierto tiempo
+*/
+
+function mantener_sesion_activa()
+{
+    if (is_user_logged_in()) {
+        setcookie(TEST_COOKIE, 'wordpress_test_cookie', time() + 1421150815, SITECOOKIEPATH, COOKIE_DOMAIN);
+
+        if (isset($_COOKIE[AUTH_COOKIE])) {
+            setcookie(AUTH_COOKIE, $_COOKIE[AUTH_COOKIE], time() + 1421150815, SITECOOKIEPATH, COOKIE_DOMAIN);
+        }
+
+        if (isset($_COOKIE[SECURE_AUTH_COOKIE])) {
+            setcookie(SECURE_AUTH_COOKIE, $_COOKIE[SECURE_AUTH_COOKIE], time() + 1421150815, SITECOOKIEPATH, COOKIE_DOMAIN);
+        }
+
+        if (isset($_COOKIE[LOGGED_IN_COOKIE])) {
+            setcookie(LOGGED_IN_COOKIE, $_COOKIE[LOGGED_IN_COOKIE], time() + 1421150815, SITECOOKIEPATH, COOKIE_DOMAIN);
+        }
     }
-  }
-  
-  add_action('init', 'mantener_sesion_activa');
+}
+
+add_action('init', 'mantener_sesion_activa');
+
+
+
+ 
+
+function tiempo_expiracion_cookies($date) {
+   return 1421150815; 
+
+}
+add_filter('auth_cookie_expiration', 'tiempo_expiracion_cookies');
