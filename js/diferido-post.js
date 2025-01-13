@@ -558,11 +558,10 @@
     }
 
     function resetearCarga() {
-        log('Ejecutando resetearCarga');
         paginaActual = 1;
         publicacionesCargadas.clear();
-        log('Carga reactivada en resetearCarga');
         window.scrollTo(0, 0);
+        window.reiniciarContenido();
     }
 
     function manejadorEventoBusqueda(e) {
@@ -610,7 +609,7 @@
         }
         console.log(log);
     }
-    
+
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
