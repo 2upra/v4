@@ -561,7 +561,6 @@
         paginaActual = 1;
         publicacionesCargadas.clear();
         window.scrollTo(0, 0);
-        window.reiniciarContenido();
     }
 
     function manejadorEventoBusqueda(e) {
@@ -609,7 +608,7 @@
         }
         console.log(log);
     }
-
+    
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
