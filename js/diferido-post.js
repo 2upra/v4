@@ -439,44 +439,48 @@
     function manejadorEventoBusqueda(e) {
         let log = '';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
-
-        // Verificar si el evento proviene de un botón
         const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
-
-        // Ejecutar la lógica solo si es Enter o un botón
+    
         if (esEnter || esBoton) {
             if (esEnter) {
-                e.preventDefault(); // Prevenir comportamiento predeterminado del Enter (si necesario)
+                e.preventDefault();
                 log += 'Se presionó Enter en el campo de búsqueda.\n';
             } else {
                 log += 'Se hizo clic en el botón de búsqueda.\n';
             }
-
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-            if (!listaPublicaciones) {
-                listaPublicaciones.innerHTML = '';
-                log += 'No se encontró .social-post-list para añadir contenido.\n';
-                console.log(log);
-                return;
-            }
-
-            // Obtener el identificador del input de búsqueda
+    
+            // Limpiar todos los .social-post-list
+            const listasPublicaciones = document.querySelectorAll('.social-post-list');
+            let listasLimpiadas = 0;
+            listasPublicaciones.forEach(lista => {
+                lista.innerHTML = '';
+                listasLimpiadas++;
+            });
+            log += `Se limpiaron ${listasLimpiadas} listas de publicaciones.\n`;
+    
             const inputBusqueda = document.getElementById('identifier');
             identificador = inputBusqueda.value.trim();
             log += `Valor del campo de búsqueda: ${identificador}.\n`;
-
+    
             if (identificador === '') {
                 log += 'El campo de búsqueda está vacío.\n';
                 console.log(log);
                 return;
             }
-
+    
             actualizarUIBusqueda(identificador);
             log += 'Búsqueda activada.\n';
             resetearCarga();
             log += 'Se reseteó la carga.\n';
-            cargarMasContenido(listaPublicaciones);
-            log += 'Se llamó a cargarMasContenido.\n';
+    
+            // Seleccionar la lista de publicaciones activa después de limpiar
+            const listaPublicacionesActiva = document.querySelector('.tab.active .social-post-list');
+            if (listaPublicacionesActiva) {
+                cargarMasContenido(listaPublicacionesActiva);
+                log += 'Se llamó a cargarMasContenido en la lista activa.\n';
+            } else {
+                log += 'No se encontró .social-post-list activo para añadir contenido.\n';
+            }
         } else {
             log += `Evento no manejado: ${e.type}.\n`;
         }
@@ -611,7 +615,7 @@
         return publicacionesValidas;
     }
 
-    // Parte 3: Insertar y manejar contenido en el DOM
+
 
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
