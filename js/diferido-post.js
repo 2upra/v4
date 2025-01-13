@@ -329,6 +329,8 @@
             log += `Texto de la respuesta: ${textoRespuesta.substring(0, 200)}... (truncado).\n`;
             respuestaCompleta = textoRespuesta;
             await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba, id);
+            reiniciarFuncionesYEventos();
+            reiniciarEventosPostTag();
         } catch (error) {
             log += `Error en la petición AJAX: ${error}.\n`;
         } finally {
@@ -379,9 +381,6 @@
 
             if (postExistente && publiValidas.length > 0) {
                 postExistente.outerHTML = publiValidas[0];
-                log += `Publicación ${id} reemplazada. Reinicializando funciones y eventos. `;
-                reiniciarFuncionesYEventos();
-                reiniciarEventosPostTag();
             } else {
                 log += `No se puede reemplazar la publicación ${id}. `;
                 if (!postExistente) log += `Publicación no existe en el DOM. `;
@@ -408,9 +407,7 @@
                 }
             }
 
-            log += `Reinicializando funciones y eventos para ${publiValidas.length} nuevas publicaciones. `;
-            reiniciarFuncionesYEventos();
-            reiniciarEventosPostTag();
+
         } else {
             log += `No hay publicaciones válidas. Deteniendo carga. `;
             detenerCarga();
