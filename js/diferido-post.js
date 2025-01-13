@@ -242,10 +242,17 @@
 
     /*
     aca sucede esto
+
+    Se presionó Enter en el campo de búsqueda.
+    Valor del campo de búsqueda: kick.
+    Búsqueda activada.
+    Se reseteó la carga.
+    Se llamó a cargarMasContenido.
     Error en la petición AJAX: TypeError: Cannot read properties of null (reading 'addEventListener').
     La función ha finalizado.
-    */
 
+    y no se hace la busqueda supngo que por eso
+    */
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
         let log = '';
         let respuestaCompleta = null;
@@ -253,7 +260,7 @@
         if (estaCargando) {
             log += 'La función ya está en ejecución.\n';
             console.log(log);
-            return null; // Devolvemos null directamente
+            return null;
         }
 
         let {filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {};
@@ -285,7 +292,7 @@
             log += 'No se encontró listaPublicaciones después de varios intentos.\n';
             estaCargando = false;
             console.log(log);
-            return null; // Devolvemos null directamente
+            return null;
         }
 
         const idUsuario = window.idUsuarioActual;
@@ -320,16 +327,17 @@
 
             const textoRespuesta = await respuesta.text();
             log += `Texto de la respuesta: ${textoRespuesta.substring(0, 200)}... (truncado).\n`;
-            respuestaCompleta = textoRespuesta; // Guardamos el string directamente
+            respuestaCompleta = textoRespuesta;
             await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba, id);
         } catch (error) {
             log += `Error en la petición AJAX: ${error}.\n`;
         } finally {
             estaCargando = false;
             log += 'La función ha finalizado.\n';
+            console.log(log);
         }
-        console.log(log);
-        return respuestaCompleta; // Devolvemos el string directamente
+
+        return respuestaCompleta;
     }
 
     async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false, id = null) {
@@ -398,17 +406,80 @@
                     }
                     elim.remove();
                 }
+
+                log += `Reinicializando funciones y eventos. `;
+                reiniciarFuncionesYEventos();
+                reiniciarEventosPostTag();
+            } else {
+                log += `No hay publicaciones válidas. Deteniendo carga. `;
+                detenerCarga();
             }
 
-            log += `Reinicializando funciones y eventos. `;
-            reiniciarFuncionesYEventos();
-            reiniciarEventosPostTag();
-        } else {
-            log += `No hay publicaciones válidas. Deteniendo carga. `;
-            detenerCarga();
+            console.log('manejarContenido:', log);
+        }
+    }
+
+    function configurarEventoBusqueda() {
+        const inputBusqueda = document.getElementById('identifier');
+        const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
+
+        if (inputBusqueda) {
+            inputBusqueda.removeEventListener('keydown', manejadorEventoBusqueda);
+            inputBusqueda.addEventListener('keydown', manejadorEventoBusqueda);
         }
 
-        console.log('manejarContenido:', log);
+        if (botonesBusqueda.length > 0) {
+            botonesBusqueda.forEach(boton => {
+                boton.removeEventListener('click', manejadorEventoBusqueda);
+                boton.addEventListener('click', manejadorEventoBusqueda);
+            });
+        }
+    }
+
+    function manejadorEventoBusqueda(e) {
+        let log = '';
+        const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
+
+        // Verificar si el evento proviene de un botón
+        const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
+
+        // Ejecutar la lógica solo si es Enter o un botón
+        if (esEnter || esBoton) {
+            if (esEnter) {
+                e.preventDefault(); // Prevenir comportamiento predeterminado del Enter (si necesario)
+                log += 'Se presionó Enter en el campo de búsqueda.\n';
+            } else {
+                log += 'Se hizo clic en el botón de búsqueda.\n';
+            }
+
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+            if (!listaPublicaciones) {
+                log += 'No se encontró .social-post-list para añadir contenido.\n';
+                console.log(log);
+                return;
+            }
+
+            // Obtener el identificador del input de búsqueda
+            const inputBusqueda = document.getElementById('identifier');
+            identificador = inputBusqueda.value.trim();
+            log += `Valor del campo de búsqueda: ${identificador}.\n`;
+
+            if (identificador === '') {
+                log += 'El campo de búsqueda está vacío.\n';
+                console.log(log);
+                return;
+            }
+
+            actualizarUIBusqueda(identificador);
+            log += 'Búsqueda activada.\n';
+            resetearCarga();
+            log += 'Se reseteó la carga.\n';
+            cargarMasContenido(listaPublicaciones);
+            log += 'Se llamó a cargarMasContenido.\n';
+        } else {
+            log += `Evento no manejado: ${e.type}.\n`;
+        }
+        console.log(log);
     }
 
     function reiniciarFuncionesYEventos() {
@@ -578,78 +649,6 @@
         paginaActual = 1;
         publicacionesCargadas.clear();
         window.scrollTo(0, 0);
-    }
-
-    function manejadorEventoBusqueda(e) {
-        let log = '';
-        const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
-
-        // Verificar si el evento proviene de un botón
-        const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
-
-        // Ejecutar la lógica solo si es Enter o un botón
-        if (esEnter || esBoton) {
-            if (esEnter) {
-                e.preventDefault(); // Prevenir comportamiento predeterminado del Enter (si necesario)
-                log += 'Se presionó Enter en el campo de búsqueda.\n';
-            } else {
-                log += 'Se hizo clic en el botón de búsqueda.\n';
-            }
-
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-            if (!listaPublicaciones) {
-                log += 'No se encontró .social-post-list para añadir contenido.\n';
-                console.log(log);
-                return;
-            }
-
-            // Obtener el identificador del input de búsqueda
-            const inputBusqueda = document.getElementById('identifier');
-            identificador = inputBusqueda.value.trim();
-            log += `Valor del campo de búsqueda: ${identificador}.\n`;
-
-            if (identificador === '') {
-                log += 'El campo de búsqueda está vacío.\n';
-                console.log(log);
-                return;
-            }
-
-            actualizarUIBusqueda(identificador);
-            log += 'Búsqueda activada.\n';
-            resetearCarga();
-            log += 'Se reseteó la carga.\n';
-            cargarMasContenido(listaPublicaciones);
-            log += 'Se llamó a cargarMasContenido.\n';
-        } else {
-            log += `Evento no manejado: ${e.type}.\n`;
-        }
-        console.log(log);
-    }
-
-    function configurarEventoBusqueda() {
-        const inputBusqueda = document.getElementById('identifier');
-        const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
-
-        if (inputBusqueda) {
-            // Usar keydown en lugar de keypress
-            inputBusqueda.removeEventListener('keydown', manejadorEventoBusqueda);
-            inputBusqueda.addEventListener('keydown', manejadorEventoBusqueda);
-
-            log('Evento de búsqueda configurado para el input #identifier');
-        } else {
-            log('No se encontró el elemento input de búsqueda');
-        }
-
-        // Eventos para los botones
-        if (botonesBusqueda.length > 0) {
-            botonesBusqueda.forEach(boton => {
-                boton.removeEventListener('click', manejadorEventoBusqueda);
-                boton.addEventListener('click', manejadorEventoBusqueda);
-            });
-            log('Evento de búsqueda configurado para los botones .buttonBI y .buttonBuscar');
-        } else {
-            log('No se encontraron botones de búsqueda');
-        }
     }
 
     window.detenerCarga = function () {
