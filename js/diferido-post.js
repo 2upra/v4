@@ -454,6 +454,7 @@
 
             const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (!listaPublicaciones) {
+                listaPublicaciones.innerHTML = '';
                 log += 'No se encontró .social-post-list para añadir contenido.\n';
                 console.log(log);
                 return;
