@@ -406,19 +406,18 @@
                     }
                     elim.remove();
                 }
-
-                log += `Reinicializando funciones y eventos. `;
-                reiniciarFuncionesYEventos();
-                reiniciarEventosPostTag();
-            } else {
-                log += `No hay publicaciones válidas. Deteniendo carga. `;
-                detenerCarga();
             }
 
-            console.log('manejarContenido:', log);
+            log += `Reinicializando funciones y eventos para ${publiValidas.length} nuevas publicaciones. `;
+            reiniciarFuncionesYEventos();
+            reiniciarEventosPostTag();
+        } else {
+            log += `No hay publicaciones válidas. Deteniendo carga. `;
+            detenerCarga();
         }
-    }
 
+        console.log('manejarContenido:', log);
+    }
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
@@ -440,7 +439,7 @@
         let log = '';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
         const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
-    
+
         if (esEnter || esBoton) {
             if (esEnter) {
                 e.preventDefault();
@@ -448,7 +447,7 @@
             } else {
                 log += 'Se hizo clic en el botón de búsqueda.\n';
             }
-    
+
             // Limpiar todos los .social-post-list
             const listasPublicaciones = document.querySelectorAll('.social-post-list');
             let listasLimpiadas = 0;
@@ -457,22 +456,22 @@
                 listasLimpiadas++;
             });
             log += `Se limpiaron ${listasLimpiadas} listas de publicaciones.\n`;
-    
+
             const inputBusqueda = document.getElementById('identifier');
             identificador = inputBusqueda.value.trim();
             log += `Valor del campo de búsqueda: ${identificador}.\n`;
-    
+
             if (identificador === '') {
                 log += 'El campo de búsqueda está vacío.\n';
                 console.log(log);
                 return;
             }
-    
+
             actualizarUIBusqueda(identificador);
             log += 'Búsqueda activada.\n';
             resetearCarga();
             log += 'Se reseteó la carga.\n';
-    
+
             // Seleccionar la lista de publicaciones activa después de limpiar
             const listaPublicacionesActiva = document.querySelector('.tab.active .social-post-list');
             if (listaPublicacionesActiva) {
@@ -614,8 +613,6 @@
         ////console.log('procesarPublicaciones: ', log);
         return publicacionesValidas;
     }
-
-
 
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
