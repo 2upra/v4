@@ -134,8 +134,9 @@ function tiempo_expiracion_cookies($date) {
 }
 add_filter('auth_cookie_expiration', 'tiempo_expiracion_cookies');
 
+
 function agregarReglaReescritura() {
-    add_rewrite_rule('^sample/([0-9]+)?$', 'index.php?sampleid=$matches[1]', 'top');
+    add_rewrite_rule('^sample/([0-9]+)?$', 'index.php?sampleid=$matches[1]&post_type=social_post', 'top');
 }
 add_action('init', 'agregarReglaReescritura', 10, 0);
 
@@ -153,3 +154,11 @@ function modificarConsultaPrincipal($consulta) {
     }
 }
 add_action('pre_get_posts', 'modificarConsultaPrincipal');
+
+function forzarTipoPost($vars) {
+    if (isset($vars['sampleid'])) {
+        $vars['post_type'] = 'social_post';
+    }
+    return $vars;
+}
+add_filter('request', 'forzarTipoPost');
