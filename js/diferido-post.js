@@ -160,7 +160,6 @@
         }
     });
 
-
     window.reiniciarPost = async function (id, clase) {
         let log = `reiniciarPost: Iniciando reinicio del post con ID ${id} y clase ${clase}.`;
         try {
@@ -174,10 +173,10 @@
             return null;
         }
     };
-    
+
     window.reiniciarContenido = async function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
         let log = `reiniciarContenido: Iniciando reinicio de contenido. limpiar=${limpiar}, arriba=${arriba}, clase=${clase}, prioridad=${prioridad}, id=${id}.`;
-        
+
         // Modificación: Si clase no está definido, se seleccionan todos los .social-post-list
         let listas;
         if (clase) {
@@ -194,10 +193,9 @@
             console.error(log);
             return null;
         }
-        
+
         // Iterar sobre cada lista encontrada
         for (let lista of listas) {
-
             // Eliminar elementos no-(clase) si clase no es null
             if (clase) {
                 const elementosAEliminar = lista.querySelectorAll(`.LNVHED:not(.clase-${clase})`);
@@ -206,25 +204,25 @@
                 });
                 log += ` Eliminados elementos que no coinciden con la clase ${clase} en una de las listas.`;
             }
-        
+
             publicacionesCargadas.clear();
             identificador = '';
-        
+
             if (limpiar) {
                 lista.innerHTML = '';
                 log += ' Lista limpiada.';
             }
-        
+
             actualizarUIBusqueda('');
             resetearCarga();
 
             try {
                 const resultadoCarga = await cargarMasContenido(lista, null, null, null, arriba, prioridad, id);
                 // Se actualiza respuestaCompleta con el último resultado
-                respuestaCompleta = resultadoCarga; 
-        
+                respuestaCompleta = resultadoCarga;
+
                 log += ' reiniciarContenido: Contenido cargado exitosamente en una de las listas.';
-        
+
                 if (typeof callback === 'function') {
                     log += ' Ejecutando callback.';
                     callback();
@@ -241,50 +239,52 @@
         //console.log(log);
         return respuestaCompleta;
     };
-    
+
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
         let log = '';
         let respuestaCompleta = null;
-    
+
         if (estaCargando) {
             log += 'La función ya está en ejecución.\n';
+            console.log(log);
             return null; // Devolvemos null directamente
         }
-    
-        let { filtro = '', tabId = '', posttype = '' } = listaPublicaciones ? listaPublicaciones.dataset : {};
+
+        let {filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {};
         log += `Datos iniciales: filtro=${filtro}, tabId=${tabId}, posttype=${posttype}\n`;
         establecerIdUsuarioDesdeInput();
         estaCargando = true;
-    
+
         if (listaPublicaciones) {
             insertarMarcadorCarga(listaPublicaciones, filtro);
         }
-    
+
         if (prioridad && filtro === 'tarea') {
             filtro = 'tareaPrioridad';
             log += 'Se cambió el filtro a tareaPrioridad.\n';
         }
-    
+
         const maxIntentos = 5;
         let intentos = 0;
-    
+
         while (!listaPublicaciones && intentos < maxIntentos) {
             intentos++;
             log += `No se encontró listaPublicaciones, intento: ${intentos}.\n`;
             await new Promise(resolve => setTimeout(resolve, 1000));
             listaPublicaciones = document.querySelector(`.tab.active .social-post-list.clase-${posttype}`);
-            ({ filtro = '', tabId = '', posttype = '' } = listaPublicaciones ? listaPublicaciones.dataset : {});
+            ({filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {});
         }
-    
+
         if (!listaPublicaciones) {
             log += 'No se encontró listaPublicaciones después de varios intentos.\n';
             estaCargando = false;
+            console.log(log);
             return null; // Devolvemos null directamente
         }
-    
+
         const idUsuario = window.idUsuarioActual;
         log += `ID de usuario actual: ${idUsuario}.\n`;
-    
+
         try {
             const data = new URLSearchParams({
                 action: 'cargar_mas_publicaciones',
@@ -300,18 +300,18 @@
                 id: id || ''
             });
             log += `Datos enviados en la petición: ${data.toString()}.\n`;
-    
+
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: data
             });
             log += `Respuesta recibida: ${respuesta.status} ${respuesta.statusText}.\n`;
-    
+
             if (!respuesta.ok) {
                 throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
-    
+
             const textoRespuesta = await respuesta.text();
             log += `Texto de la respuesta: ${textoRespuesta.substring(0, 200)}... (truncado).\n`;
             respuestaCompleta = textoRespuesta; // Guardamos el string directamente
@@ -322,7 +322,7 @@
             estaCargando = false;
             log += 'La función ha finalizado.\n';
         }
-    
+        console.log(log);
         return respuestaCompleta; // Devolvemos el string directamente
     }
 
@@ -566,37 +566,51 @@
     }
 
     function manejadorEventoBusqueda(e) {
+        let log = '';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
-
+    
         // Verificar si el evento proviene de un botón
         const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
-
+    
         // Ejecutar la lógica solo si es Enter o un botón
         if (esEnter || esBoton) {
-            if (esEnter) e.preventDefault(); // Prevenir comportamiento predeterminado del Enter (si necesario)
-
+            if (esEnter) {
+                e.preventDefault(); // Prevenir comportamiento predeterminado del Enter (si necesario)
+                log += 'Se presionó Enter en el campo de búsqueda.\n';
+            } else {
+                log += 'Se hizo clic en el botón de búsqueda.\n';
+            }
+    
             const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (!listaPublicaciones) {
-                log('No se encontró .social-post-list para añadir contenido');
+                log += 'No se encontró .social-post-list para añadir contenido.\n';
+                console.log(log);
                 return;
             }
-
+    
             // Obtener el identificador del input de búsqueda
             const inputBusqueda = document.getElementById('identifier');
             identificador = inputBusqueda.value.trim();
-
+            log += `Valor del campo de búsqueda: ${identificador}.\n`;
+    
             if (identificador === '') {
-                log('El campo de búsqueda está vacío');
+                log += 'El campo de búsqueda está vacío.\n';
+                console.log(log);
                 return;
             }
-
+    
             actualizarUIBusqueda(identificador);
-            log('Búsqueda activada, valor de identificador:', identificador);
+            log += 'Búsqueda activada.\n';
             resetearCarga();
+            log += 'Se reseteó la carga.\n';
             cargarMasContenido(listaPublicaciones);
+            log += 'Se llamó a cargarMasContenido.\n';
+        } else {
+            log += `Evento no manejado: ${e.type}.\n`;
         }
+        console.log(log);
     }
-
+    
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
