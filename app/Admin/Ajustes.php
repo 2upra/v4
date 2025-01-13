@@ -136,29 +136,25 @@ add_filter('auth_cookie_expiration', 'tiempo_expiracion_cookies');
 
 
 function agregarReglaReescritura() {
-    add_rewrite_rule('^sample/([0-9]+)?$', 'index.php?sampleid=$matches[1]&post_type=social_post', 'top');
+    add_rewrite_rule('^sample/([0-9]+)/?$', 'index.php?p=$matches[1]&post_type=social_post', 'top');
 }
 add_action('init', 'agregarReglaReescritura', 10, 0);
 
-function agregarEtiquetaReescritura() {
-    add_rewrite_tag('%sampleid%', '([0-9]+)');
-}
-add_action('init', 'agregarEtiquetaReescritura', 10, 0);
-
 function modificarConsultaPrincipal($consulta) {
-    if ($consulta->is_main_query() && !is_admin() && is_numeric($consulta->get('sampleid'))) {
-        $consulta->set('post_type', 'social_post');
-        $consulta->set('p', $consulta->get('sampleid'));
-        $consulta->set('name', ''); 
-        $consulta->set('sampleid', '');
+    if (!is_admin() && $consulta->is_main_query() && $consulta->get('p') && $consulta->get('post_type') === 'social_post') {
+        $consulta->set('name', '');
     }
 }
 add_action('pre_get_posts', 'modificarConsultaPrincipal');
 
-function forzarTipoPost($vars) {
-    if (isset($vars['sampleid'])) {
-        $vars['post_type'] = 'social_post';
+function forzarPlantillaSocialPost($template) {
+    global $wp_query;
+    if (isset($wp_query->query_vars['post_type']) && $wp_query->query_vars['post_type'] === 'social_post' && isset($wp_query->query_vars['p'])) {
+        $plantilla = locate_template('single-social_post.php');
+        if ($plantilla) {
+            return $plantilla;
+        }
     }
-    return $vars;
+    return $template;
 }
-add_filter('request', 'forzarTipoPost');
+add_filter('template_include', 'forzarPlantillaSocialPost');
