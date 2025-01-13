@@ -240,6 +240,12 @@
         return respuestaCompleta;
     };
 
+    /*
+    aca sucede esto
+    Error en la petición AJAX: TypeError: Cannot read properties of null (reading 'addEventListener').
+    La función ha finalizado.
+    */
+
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
         let log = '';
         let respuestaCompleta = null;
@@ -327,9 +333,12 @@
     }
 
     async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false, id = null) {
+        let log = `Iniciando procesarRespuesta. arriba: ${arriba}, id: ${id}\n`;
         const doc = validarRespuesta(respuesta);
         if (!doc) {
+            log += 'Respuesta no válida o error en la validación.\n';
             eliminarMarcadorCarga(listaPublicaciones);
+            console.log(log);
             return;
         }
 
@@ -339,9 +348,17 @@
             force = true;
         }
 
+        log += `Forzar actualización: ${force}\n`;
+
         const publicacionesValidas = procesarPublicaciones(doc, force);
+        log += `Publicaciones válidas encontradas: ${publicacionesValidas.length}\n`;
+
         manejarContenido(publicacionesValidas, listaPublicaciones, arriba, id);
+        log += 'Función manejarContenido completada.\n';
+
         eliminarMarcadorCarga(listaPublicaciones);
+        log += 'Marcador de carga eliminado.\n';
+        console.log(log);
     }
 
     function manejarContenido(publiValidas, listaPubli, arriba = false, id = null) {
@@ -391,7 +408,7 @@
             detenerCarga();
         }
 
-        //console.log('manejarContenido:', log);
+        console.log('manejarContenido:', log);
     }
 
     function reiniciarFuncionesYEventos() {
@@ -566,10 +583,10 @@
     function manejadorEventoBusqueda(e) {
         let log = '';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
-    
+
         // Verificar si el evento proviene de un botón
         const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
-    
+
         // Ejecutar la lógica solo si es Enter o un botón
         if (esEnter || esBoton) {
             if (esEnter) {
@@ -578,25 +595,25 @@
             } else {
                 log += 'Se hizo clic en el botón de búsqueda.\n';
             }
-    
+
             const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (!listaPublicaciones) {
                 log += 'No se encontró .social-post-list para añadir contenido.\n';
                 console.log(log);
                 return;
             }
-    
+
             // Obtener el identificador del input de búsqueda
             const inputBusqueda = document.getElementById('identifier');
             identificador = inputBusqueda.value.trim();
             log += `Valor del campo de búsqueda: ${identificador}.\n`;
-    
+
             if (identificador === '') {
                 log += 'El campo de búsqueda está vacío.\n';
                 console.log(log);
                 return;
             }
-    
+
             actualizarUIBusqueda(identificador);
             log += 'Búsqueda activada.\n';
             resetearCarga();
@@ -608,7 +625,7 @@
         }
         console.log(log);
     }
-    
+
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
