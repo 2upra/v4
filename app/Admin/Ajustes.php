@@ -100,7 +100,7 @@ function mimesPermitidos($mimes)
 add_filter('upload_mimes', 'mimesPermitidos');
 
 /*
-esto no estan funcionando, la sesion igual se cierra despues de cierto tiempo
+nada de esto esta funcionando para mentener la sesion abierta infinitamente
 */
 
 function mantener_sesion_activa()
@@ -124,15 +124,24 @@ function mantener_sesion_activa()
 
 add_action('init', 'mantener_sesion_activa');
 
-
-
- 
-
-function tiempo_expiracion_cookies($date) {
-   return 1421150815; 
-
+function mantenerSesion() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado.');
+    }
+    $log = "Sesión mantenida activa para el usuario " . get_current_user_id();
+    guardarLog($log);
+    wp_send_json_success();
 }
-add_filter('auth_cookie_expiration', 'tiempo_expiracion_cookies');
+
+add_action('wp_ajax_mantener_sesion_viva', 'mantenerSesion');
+
+function tiempo_expiracion_cookies($expira, $userId, $recordar) {
+    // 315360000 segundos = 10 años.
+    $log = "Tiempo de expiración de la cookie para el usuario $userId: 315360000 segundos";
+    guardarLog($log);
+    return 315360000; 
+}
+add_filter('auth_cookie_expiration', 'tiempo_expiracion_cookies', 99, 3);
 
 
 function agregarReglaReescritura() {

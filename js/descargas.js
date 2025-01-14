@@ -52,3 +52,20 @@ async function procesarDescarga(postId, usuarioId, Coleccion = false, costo = 1,
 
     return false;
 }
+
+function mantenerSesionViva() {
+    setInterval(async () => {
+        try {
+            const rta = await enviarAjax('mantener_sesion_viva');
+            if (rta.success) {
+                console.log("Sesión mantenida viva.");
+            } else {
+                console.error("Error al mantener la sesión viva.", rta.data);
+            }
+        } catch (error) {
+            console.error("Error al mantener la sesión viva.", error);
+        }
+    }, 600000); // 600000 milisegundos = 10 minutos
+}
+
+document.addEventListener('DOMContentLoaded', mantenerSesionViva);
