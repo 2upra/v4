@@ -9433,3 +9433,20 @@ span#asley {
     FONT-WEIGHT: 400;
     padding: 8px 20px;
 }
+
+.bloque.svg-container {
+    padding: 15px;
+}
+
+.bloque.svg-container h3 {
+    font-family: "Gothic №60";
+    text-align: left;
+    margin-right: auto;
+    font-size: 24px;
+}
+
+.bloque.svg-container p {
+    font-size: 12px;
+    line-height: 18px;
+    text-align: left;
+}
