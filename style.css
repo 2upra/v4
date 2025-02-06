@@ -5944,13 +5944,15 @@ span.userNameChat {
 }
 
 .BKXAFN {
-	display: flex;
-	min-height: calc(var(--vh, 1vh)* 100);
-	justify-content: center;
-	align-content: center;
-	align-items: center;
-	flex-direction: column;
-	gap: 15px;
+    display: flex;
+    min-height: calc(var(--vh, 1vh)* 100);
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 1250px;
+    margin: auto;
 }
 
 .JMIOCI {
@@ -9383,16 +9385,6 @@ li.POST-tarea.seleccionado {
     border-radius: unset;
 }
 
-.asleyPorf img {
-    max-width: 100px;
-    max-height: 100px;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    border-radius: 5px;
-    position: absolute;
-    /* margin-left: 15px; */
-    top: -34px;
-}
 
 .asleyPorf h2 {
     /* text-align: start; */
@@ -9407,6 +9399,7 @@ li.POST-tarea.seleccionado {
     align-items: center;
     padding: 30px;
     /* margin: 0; */
+	min-height: calc((var(--vh, 1vh)* 90) - 50px);
 }
 
 span#asley {
@@ -9435,18 +9428,98 @@ span#asley {
 }
 
 .bloque.svg-container {
-    padding: 15px;
+    padding: 25px;
 }
 
 .bloque.svg-container h3 {
     font-family: "Gothic №60";
     text-align: left;
     margin-right: auto;
-    font-size: 24px;
+    font-size: 42px;
+    line-height: 48px;
+    max-width: 100px;
 }
 
 .bloque.svg-container p {
-    font-size: 12px;
+    font-size: 13.5px;
     line-height: 18px;
     text-align: left;
+}
+
+.diva2 .lazy-svg {
+    display: flex;
+}
+
+.diva2.bloque.svg-container {
+    padding-right: 30px;
+}
+
+.diva1.bloque.svg-container, .diva2.bloque.svg-container {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.diva3.bloque.svg-container {
+    padding: 0px;
+}
+
+.asleyPorf .ADEEDE {
+    grid-template-rows: repeat(1, 1fr);
+}
+
+.divb1 svg#Capa_2 {
+    max-height: 350px;
+}
+
+.divb2.bloque.svg-container {
+    padding: 0px;
+}
+
+.divb4.bloque.svg-container {
+    padding: 0px;
+}
+
+svg#uuid-449080f8-3bb2-4ddb-8e34-3df71153472c {
+    max-height: 350px;
+}
+
+svg#uuid-99a6293f-0f12-4fb9-95fb-39116e490ba6 {
+    max-height: 200px;
+}
+
+.BKXAFN h3 {
+    font-family: "Gothic №60";
+    text-align: left;
+    margin-right: auto;
+    font-size: 42px;
+    line-height: 48px;
+    max-width: 100px;
+}
+
+span.pestActivo {
+    opacity: 1;
+    filter: brightness(1.5);
+}
+.botonesProyectos span {
+    border: var(--borde);
+    padding: 4px 15px;
+    border-radius: 100px;
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.botonesProyectos {
+    margin-right: auto;
+    display: flex;
+    gap: 10px;
+}
+
+.infoProyecto1 {
+    display: flex;
+    gap: 200px;
+    padding: 40px 0px;
+}
+
+.infoProyecto h3 {
+    font-size: 80px;
 }

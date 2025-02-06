@@ -248,8 +248,8 @@ function renderChat()
                 <span class="estadoConexion">Desconectado</span>
             </div>
             <div class="botoneschat">
-                <button class="minizarChat" id="minizarChat"><?php echo $GLOBALS['minus']; ?></button>
-                <button class="cerrarChat" id="cerrarChat"><?php echo $GLOBALS['cancelicon']; ?></button>
+                <button class="minizarChat" id="minizarChat"><? echo $GLOBALS['minus']; ?></button>
+                <button class="cerrarChat" id="cerrarChat"><? echo $GLOBALS['cancelicon']; ?></button>
             </div>
         </div>
         <ul class="listaMensajes"></ul>
@@ -274,11 +274,11 @@ function renderChat()
 
         <div class="chatEnvio individualSend">
             <textarea class="mensajeContenido" rows="1"></textarea>
-            <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
-            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+            <button class="enviarMensaje"><? echo $GLOBALS['enviarMensaje']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
-    <?php
+    <?
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }

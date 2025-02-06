@@ -83,7 +83,7 @@ function renderListaChats($conversaciones, $usuarioId)
 ?>
         <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
             <ul class="mensajes">
-                <?php
+                <?
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
@@ -105,7 +105,7 @@ function renderListaChats($conversaciones, $usuarioId)
                         $leido = isset($conversacion->ultimoMensaje->leido) ? (int)$conversacion->ultimoMensaje->leido : 0;
                     }
                 ?>
-                    <li class="mensaje <?php echo $leido ? 'leido' : 'no-leido'; ?>"
+                    <li class="mensaje <? echo $leido ? 'leido' : 'no-leido'; ?>"
                         data-receptor="<?= esc_attr($receptor); ?>"
                         data-conversacion="<?= esc_attr($conversacion->id); ?>"
                         data-leido="<?= esc_attr($leido); ?>">
@@ -123,16 +123,16 @@ function renderListaChats($conversaciones, $usuarioId)
                         <div class="tiempoMensaje" data-fecha="<?= esc_attr($fechaOriginal); ?>">
                             <span></span>
                         </div>
-                        <?php if ($leido): ?>
+                        <? if ($leido): ?>
                             <div class="iconoLeido">
                                 ✓
                             </div>
-                        <?php endif; ?>
+                        <? endif; ?>
                     </li>
-                <?php endforeach; ?>
+                <? endforeach; ?>
             </ul>
         </div>
-    <?php
+    <?
     } else {
     ?>
         <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
@@ -141,7 +141,7 @@ function renderListaChats($conversaciones, $usuarioId)
         <?
         ?>
 
-<?php
+<?
     }
 
     $htmlGenerado = ob_get_clean();

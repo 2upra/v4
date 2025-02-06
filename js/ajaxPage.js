@@ -92,6 +92,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'inicializarBuscadores',
         'stripecomprabeat',
         'initTareas',
+        'iniciarPestanasPf'
     ];
 
     function initScripts() {
@@ -220,7 +221,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             }
         });
 
-        // **NUEVO CÓDIGO PARA MANEJAR CLICS EN NOTIFICACIONES**
         document.body.addEventListener('click', function (e) {
             const notificacionItem = e.target.closest('.notificacion-item');
             if (notificacionItem) {
@@ -244,4 +244,6 @@ function scrollToSection(sectionId) {
         element.scrollIntoView({behavior: 'smooth'}); // Puedes usar 'auto' para scroll instantáneo
     }
 }
+
+//
 
