@@ -262,7 +262,7 @@ function portafolio()
                 </div>
 
                 <div class="divb4 bloque svg-container">
-                    <img src="<?php echo get_template_directory_uri(); ?>/assets/img/0101.jpg" alt="">
+                    <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/2upraapp.svg"></div>
                 </div>
 
                 <div class="divb5 bloque svg-container" style="padding: 0;">
@@ -281,8 +281,35 @@ function portafolio()
                 </div>
             </div>
 
+            <!-- Galle -->
+
             <div class="ADEEDE itemPortafolio" id="gallePest">
-                test
+
+                <div class="divc1 bloque svg-container ">
+                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat.svg"></div>
+                </div>
+                <div class="divc2 bloque svg-container">
+                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat614.svg"></div>
+                </div>
+
+                <div class="divc3 bloque svg-container">
+                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat437.svg"></div>
+                </div>
+
+                <div class="divc4 bloque svg-container">
+                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat621.svg"></div>
+                </div>
+
+                <div class="divc5 bloque svg-container">
+                    <div class="lazy-svg h200h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logoGalle.svg"></div>
+                </div>
+                <div class="infoProyecto1">
+                    <h3>2upra</h3>
+                    <p>
+                        2upra is a social network focused on music production, featuring a sample catalog with intelligent algorithms, a collection system, and a user system. It also offers chat and social interaction features. The goal is to surpass Splice in functionality and features.
+                    </p>
+                </div>
+
             </div>
 
             <style>
@@ -309,8 +336,29 @@ function portafolio()
                 .divb6 {
                     grid-area: 3 / 3 / 4 / 4;
                 }
-                .infoProyecto1{
+
+                .infoProyecto1 {
                     grid-area: 4 / 1 / 5 / 4;
+                }
+
+                .divc1 {
+                    grid-area: 1 / 1 / 2 / 2;
+                }
+
+                .divc2 {
+                    grid-area: 1 / 2 / 2 / 3;
+                }
+
+                .divc3 {
+                    grid-area: 1 / 3 / 2 / 4;
+                }
+
+                .divc4 {
+                    grid-area: 2 / 1 / 3 / 3;
+                }
+
+                .divc5 {
+                    grid-area: 2 / 3 / 3 / 4;
                 }
             </style>
         </div>

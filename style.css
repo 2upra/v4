@@ -9520,6 +9520,16 @@ span.pestActivo {
     padding: 40px 0px;
 }
 
-.infoProyecto h3 {
+.infoProyecto1 h3 {
     font-size: 80px;
+}
+
+.h400h svg {
+	max-height: 400px;
+	padding: 20px;
+}
+
+.h200h svg {
+	max-height: 200px;
+	padding: 20px;
 }

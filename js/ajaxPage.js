@@ -226,9 +226,9 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             if (notificacionItem) {
                 const enlace = notificacionItem.querySelector('.notificacion-enlace');
                 if (enlace && enlace.href) {
-                    e.preventDefault(); // Prevenir la recarga de la página
+                    e.preventDefault();
                     const url = enlace.href;
-                    handleLoad(e, url, enlace); // Usar la función handleLoad existente
+                    handleLoad(e, url, enlace); 
                 }
             }
         });
