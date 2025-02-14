@@ -9450,6 +9450,11 @@ span#asley {
     display: flex;
 }
 
+.diva2 .lazy-svg:hover {
+	filter: brightness(3);
+	cursor: grab;
+}
+
 .diva2.bloque.svg-container {
     padding-right: 30px;
 }
@@ -9532,4 +9537,122 @@ span.pestActivo {
 .h200h svg {
 	max-height: 200px;
 	padding: 20px;
+}
+
+.diva3 img {
+    max-height: 410px;
+    object-fit: cover;
+    aspect-ratio: 1 / 1;
+    object-position: top;
+}
+
+button.boton-expandir-svg {
+    opacity: 0;
+    position: absolute;
+    height: 15px;
+    right: 0px;
+    bottom: 10px;
+}
+
+.svg-container.svg-expandido {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro opcional para resaltar el SVG */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000; /* Asegura que esté por encima de todo */
+  }
+  
+.svg-container.svg-expandido .lazy-svg {
+	width: 90vw; /* Ajusta el ancho máximo del SVG expandido */
+	height: auto; /* Mantiene la proporción del SVG */
+	max-height: 90vh; /* Ajusta la altura máxima del SVG expandido */
+}
+  
+.svg-container:hover .boton-expandir-svg {
+	opacity: 1;
+}
+
+.svg-expandido .lazy-svg {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+}
+
+.svg-expandido svg {
+    max-height: 90% !important;
+}
+
+.diva1 p {
+    width: 100%;
+}
+
+.logosSvg div {
+    height: 34px;
+    width: fit-content;
+}
+.logosSvg {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.infoAsley {
+    margin-right: auto;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-direction: row;
+}
+
+.diva4 .infoAsley {
+    height: 30px;
+}
+
+.diva5.bloque.svg-container.noExpandir {
+    justify-content: start;
+}
+
+.detailsAsley {
+    width: fit-content;
+}
+
+.diva6 .infoAsley {
+    display: flex;
+    flex-direction: column;
+}
+
+.diva6 .infoAsley h3 {
+    height: 20px;
+    line-height: 30px;
+}
+
+.diva6 .detailsAsley {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.diva6 .detailsAsley span {
+    padding: 3px 15px;
+    border: var(--borde);
+    border-radius: 50px;
+}
+
+.diva4.bloque.svg-container.noExpandir {
+    justify-content: start;
+}
+
+.diva6.bloque.svg-container.noExpandir {
+    aspect-ratio: 1 / 1;
+    overflow: auto;
+    height: 100%;
+    justify-content: unset;
 }
