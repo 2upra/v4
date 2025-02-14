@@ -9409,6 +9409,7 @@ span#asley {
 .asleyPorf {
     display: flex;
     flex-direction: column;
+    gap: 20px;
 }
 
 .asleyPoftContent {
@@ -9655,4 +9656,17 @@ button.boton-expandir-svg {
     overflow: auto;
     height: 100%;
     justify-content: unset;
+}
+
+
+button.prevBtn {
+    padding-right: 5px;
+}
+button.nextBtn {
+    padding-left: 5px;
+}
+button.nextBtn, button.prevBtn {
+    padding: 0px 0px;
+    font-size: 13px;
+    opacity: 0.5;
 }

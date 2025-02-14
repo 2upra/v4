@@ -97,67 +97,142 @@ function portafolio()
             });
         }
 
-        //cuando llega al final de un itemPortafolio, debería mostrar la siguiente pestañana pero no lo hace
+        //solo un pequeño detalle, esto funciona muy bien, pero cuando regreso al anterior, el div flotante con los botones no vuelve aparecer
         function iniciarPestanasPf() {
-            const botonesPestana = document.querySelectorAll('.botonesProyectos span[pest]');
-            const itemsPortafolio = document.querySelectorAll('.itemPortafolio');
-            let pestanaActiva = null;
+            const btnsPest = document.querySelectorAll('.botonesProyectos span[pest]');
+            const itemsPf = document.querySelectorAll('.itemPortafolio');
+            let pestAct = null;
 
-            function mostrarPestana(pestanaNombre) {
-                itemsPortafolio.forEach(item => {
-                    item.style.display = 'none';
-                });
-                const itemActivo = document.getElementById(pestanaNombre);
-                if (itemActivo) {
-                    itemActivo.style.display = 'grid';
-                    pestanaActiva = itemActivo;
+            function mostrarPest(pestNom) {
+                itemsPf.forEach(item => item.style.display = 'none');
+                const itemAct = document.getElementById(pestNom);
+                if (itemAct) {
+                    itemAct.style.display = 'grid';
+                    pestAct = itemAct;
                 }
             }
 
-            function activarPestanaBoton(pestanaNombre) {
-                botonesPestana.forEach(b => b.classList.remove('pestActivo'));
-                const botonActivo = Array.from(botonesPestana).find(boton => boton.getAttribute('pest') === pestanaNombre);
-                if (botonActivo) {
-                    botonActivo.classList.add('pestActivo');
-                }
+            function activarBtnPest(pestNom) {
+                btnsPest.forEach(b => b.classList.remove('pestActivo'));
+                const btnAct = Array.from(btnsPest).find(b => b.getAttribute('pest') === pestNom);
+                if (btnAct) btnAct.classList.add('pestActivo');
             }
 
-            if (botonesPestana.length > 0) {
-                botonesPestana[0].classList.add('pestActivo');
-                mostrarPestana(botonesPestana[0].getAttribute('pest'));
+            if (btnsPest.length > 0) {
+                btnsPest[0].classList.add('pestActivo');
+                mostrarPest(btnsPest[0].getAttribute('pest'));
             }
 
-            botonesPestana.forEach(boton => {
-                boton.addEventListener('click', function() {
-                    activarPestanaBoton(this.getAttribute('pest'));
-                    mostrarPestana(this.getAttribute('pest'));
+            btnsPest.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const pest = this.getAttribute('pest');
+                    activarBtnPest(pest);
+                    mostrarPest(pest);
+                    const itemAct = document.getElementById(pest);
+                    actualizarNavFlot(itemAct);
+                    navFlot.style.display = 'flex';
                 });
             });
 
-            const observador = new IntersectionObserver((entradas, observador) => {
+            const obs = new IntersectionObserver((entradas) => {
                 entradas.forEach(entrada => {
-                    if (entrada.isIntersecting) {
-                        if (entrada.intersectionRatio > 0) { // Item is at least partially visible
-                            const itemVisible = entrada.target;
-                            const itemRect = itemVisible.getBoundingClientRect();
-
-                            // Check if the top of the item is at or above the top of the viewport
-                            if (itemRect.top <= window.innerHeight && itemRect.bottom > 0) {
-                                const pestanaNombre = itemVisible.id;
-                                activarPestanaBoton(pestanaNombre);
-                                // No need to change display here, tabs handle display, and scroll handles continuation
-                            }
+                    if (entrada.isIntersecting && entrada.intersectionRatio > 0) {
+                        const itemVis = entrada.target;
+                        const itemRect = itemVis.getBoundingClientRect();
+                        if (itemRect.top <= window.innerHeight && itemRect.bottom > 0) {
+                            const pestNom = itemVis.id;
+                            activarBtnPest(pestNom);
+                            actualizarNavFlot(itemVis);
+                            navFlot.style.display = 'flex';
+                        } else {
+                            navFlot.style.display = 'none';
                         }
+                    } else {
+                        navFlot.style.display = 'none';
                     }
                 });
             }, {
-                threshold: 0, // Trigger even when a small part is visible
-                rootMargin: '0px 0px -99% 0px' // Trigger when the top edge enters the viewport
+                threshold: 0,
+                rootMargin: '0px 0px -99% 0px'
             });
 
-            itemsPortafolio.forEach(item => {
-                observador.observe(item);
-            });
+            itemsPf.forEach(item => obs.observe(item));
+
+            const navFlot = document.createElement('div');
+            navFlot.className = 'floatingNav';
+            navFlot.style.position = 'fixed';
+            navFlot.style.bottom = '20px';
+            navFlot.style.left = '50%';
+            navFlot.style.transform = 'translateX(-50%)';
+            navFlot.style.background = 'rgba(0,0,0,0.7)';
+            navFlot.style.color = '#fff';
+            navFlot.style.padding = '5px 20px';
+            navFlot.style.borderRadius = '100px';
+            navFlot.style.display = 'none';
+            navFlot.style.zIndex = '1000';
+            navFlot.style.alignItems = 'center';
+            navFlot.style.gap = '10px';
+
+            const btnAnt = document.createElement('button');
+            btnAnt.className = 'prevBtn';
+            btnAnt.style.cursor = 'pointer';
+
+            const lblAct = document.createElement('span');
+            lblAct.className = 'currentProject';
+
+            const btnSig = document.createElement('button');
+            btnSig.className = 'nextBtn';
+            btnSig.style.cursor = 'pointer';
+
+            navFlot.appendChild(btnAnt);
+            navFlot.appendChild(lblAct);
+            navFlot.appendChild(btnSig);
+            document.body.appendChild(navFlot);
+
+            function actualizarNavFlot(itemAct) {
+                const itemsArr = Array.from(itemsPf);
+                const indexAct = itemsArr.indexOf(itemAct);
+
+                const btnAct = Array.from(btnsPest).find(b => b.getAttribute('pest') === itemAct.id);
+                const nomAct = btnAct ? btnAct.textContent : itemAct.id;
+                lblAct.textContent = nomAct;
+
+                btnAnt.style.display = 'none'; // Ocultar por defecto
+                if (indexAct > 0) {
+                    const itemAnt = itemsArr[indexAct - 1];
+                    const btnAntItem = Array.from(btnsPest).find(b => b.getAttribute('pest') === itemAnt.id);
+                    if (btnAntItem) { // Verificar si existe el botón anterior
+                        const nomAnt = btnAntItem.textContent;
+                        btnAnt.textContent = nomAnt;
+                        btnAnt.style.display = 'inline-block'; // Mostrar solo si hay un proyecto anterior
+                        btnAnt.onclick = function() {
+                            activarBtnPest(itemAnt.id);
+                            mostrarPest(itemAnt.id);
+                            itemAnt.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        };
+                    }
+                }
+
+                btnSig.style.display = 'none'; // Ocultar por defecto
+                if (indexAct < itemsArr.length - 1) {
+                    const itemSig = itemsArr[indexAct + 1];
+                    const btnSigItem = Array.from(btnsPest).find(b => b.getAttribute('pest') === itemSig.id);
+                    if (btnSigItem) { // Verificar si existe el botón siguiente
+                        const nomSig = btnSigItem.textContent;
+                        btnSig.textContent = nomSig;
+                        btnSig.style.display = 'inline-block'; // Mostrar solo si hay un proyecto siguiente
+                        btnSig.onclick = function() {
+                            activarBtnPest(itemSig.id);
+                            mostrarPest(itemSig.id);
+                            itemSig.scrollIntoView({
+                                behavior: 'smooth'
+                            });
+                        };
+                    }
+                }
+            }
         }
         window.reiniciarLazySvg = reiniciarLazySvg;
 
@@ -341,7 +416,7 @@ function portafolio()
                 </div>
 
                 <div class="diva4 bloque svg-container noExpandir">
-
+                    <h3>ABOUT</h3>
                     <div class="infoAsley">
                         <h3 style="font-size: 11px; width: 90px; opacity: 0.6;">Name</h3>
                         <p>Asley Navarro</p>
@@ -519,6 +594,8 @@ function portafolio()
         <div class="botonesProyectos">
             <span pest="2upraPest">2upra</span>
             <span pest="gallePest">Galle</span>
+            <span pest="proyecto3">proyecto3</span>
+            <span pest="proyecto4">proyecto4</span>
         </div>
         <div class="OSFED tabProjects">
             <div class="ADEEDE itemPortafolio" id="2upraPest">
@@ -527,15 +604,15 @@ function portafolio()
                     <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/inicio2upra.svg"></div>
                 </div>
 
-                <div class="divb2 bloque svg-container noExpandir">
+                <div class="divb2 bloque svg-container" style="padding: 20px;">
 
                     <?
-                    $svg_file_path = get_template_directory() . '/assets/svgs/phone/phone_1.svg';
+                    $svg_file_path = get_template_directory() . '/assets/svgs/phone/phonew.svg';
                     $svg_content = file_get_contents($svg_file_path);
                     $image_base_url = get_template_directory_uri() . '/assets/svgs/phone/';
 
-                    for ($i = 11; $i <= 125; $i++) {
-                        $image_filename = 'phone_' . $i . '.png';
+                    for ($i = 1; $i <= 23; $i++) {
+                        $image_filename = 'phonew' . $i . '.png';
                         $original_string = 'xlink:href="' . $image_filename . '"';
                         $replacement_string = 'xlink:href="' . $image_base_url . $image_filename . '"';
                         $svg_content = str_replace($original_string, $replacement_string, $svg_content);
@@ -610,7 +687,7 @@ function portafolio()
                     <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat621.svg"></div>
                 </div>
 
-                <div class="divc5 bloque svg-container">
+                <div class="divc5 bloque svg-container noExpandir">
                     <div class="lazy-svg h200h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logoGalle.svg"></div>
                 </div>
                 <div class="infoProyecto1">
