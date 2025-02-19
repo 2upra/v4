@@ -92,7 +92,8 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'inicializarBuscadores',
         'stripecomprabeat',
         'initTareas',
-        'iniciarPestanasPf'
+        'iniciarPestanasPf',
+        'confBtns'
     ];
 
     function initScripts() {
@@ -228,7 +229,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                 if (enlace && enlace.href) {
                     e.preventDefault();
                     const url = enlace.href;
-                    handleLoad(e, url, enlace); 
+                    handleLoad(e, url, enlace);
                 }
             }
         });
@@ -245,5 +246,17 @@ function scrollToSection(sectionId) {
     }
 }
 
-//
+function confBtns() {
+    const btns = document.querySelectorAll('.PDASG button');
 
+    btns.forEach(btn => {
+        const url = btn.dataset.url;
+        if (url) {
+            btn.addEventListener('click', () => {
+                window.open(url, '_blank');
+            });
+        }
+    });
+}
+
+//
