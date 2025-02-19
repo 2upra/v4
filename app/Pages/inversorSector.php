@@ -22,14 +22,15 @@ function inversorSector()
 ?>
 
     <div class="UIKMYM">
-        <div class="WZEFLA">
-            <p>¡Hola <? echo esc_html($user_name); ?>! 👋</p>
-        </div>
+        <? if (is_user_logged_in()) : ?>
+            <div class="WZEFLA">
+                <p>¡Hola <? echo esc_html($user_name); ?>! 👋</p>
+            </div>
 
-        <div class="OIEODG">
-            <p>¡Ayúdanos a seguir construyendo herramientas libres y accesibles para artistas y productores musicales! Juntos, podemos potenciar la creatividad y hacer que la música llegue más lejos. Este proyecto tiene un futuro brillante, ¡y tú puedes ser parte de él! 🚀</p>
-        </div>
-
+            <div class="OIEODG">
+                <p>¡Ayúdanos a seguir construyendo herramientas libres y accesibles para artistas y productores musicales! Juntos, podemos potenciar la creatividad y hacer que la música llegue más lejos. Este proyecto tiene un futuro brillante, ¡y tú puedes ser parte de él! 🚀</p>
+            </div>
+        <? endif; ?>
 
         <div class="JUJRQG">
             <a href="https://github.com/1ndoryu" class="no-ajax">
@@ -79,27 +80,35 @@ function inversorSector()
 
                     <div class="RLSDSAE">
                         <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
-                        <h3></h3>
-                        <button>Desde 80$</button>
+                        <h3>Diseño de páginas web minimalistas y profesionales</h3>
+                        <div class="PDASG">
+                            <button>Desde 80$</button>
+                            <p>150$</p>
+                        </div>
+
                     </div>
 
                     <div class="RLSDSAE">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
-                        <h3></h3>
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/d1.jpg" alt="d1">
+                        <h3>Diseño de identidad visual y logotipos minimalistas</h3>
                         <button>Desde 5$</button>
+                        <p>30$</p>
                     </div>
 
                     <div class="RLSDSAE">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
-                        <h3></h3>
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/pd1.jpg" alt="pd1">
+                        <h3>Pintura digital de personajes o escenarios</h3>
                         <button>Desde 5$</button>
+                        <p>30$</p>
                     </div>
 
                     <div class="RLSDSAE">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
-                        <h3></h3>
-                        <button>Desde 5$</button>
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/f1.jpg" alt="f1">
+                        <h3>Diseño de flyers, portadas, estilo personalizado</h3>
+                        <button>Desde 10$</button>
+                        <p>50$</p>
                     </div>
+
                 </div>
             </div>
         </div>
