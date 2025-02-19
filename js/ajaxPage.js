@@ -94,7 +94,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'initTareas',
         'iniciarPestanasPf',
         'redir',
-        'animarIcono',
+        'animarIcono'
     ];
 
     function initScripts() {
