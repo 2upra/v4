@@ -1,6 +1,5 @@
 //GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
-
     if (!enviarAjax.llamadas) {
         enviarAjax.llamadas = {};
     }
@@ -937,4 +936,63 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+function parpSvg(selector, textoAyuda) {
+    const elem = document.querySelector(selector);
+    if (!elem) {
+        return;
+    }
 
+    const contAyuda = document.createElement('div');
+    contAyuda.style.display = 'none';
+    contAyuda.textContent = textoAyuda;
+    elem.parentNode.insertBefore(contAyuda, elem.nextSibling);
+
+    let intervalo = null;
+
+    function iniciarParpadeo() {
+        let visible = true;
+        intervalo = setInterval(() => {
+            elem.style.fill = visible ? 'red' : 'currentcolor';
+            visible = !visible;
+        }, 500);
+    }
+
+    function mostrarAyuda() {
+        contAyuda.style.display = 'block';
+    }
+
+    function detenerParp() {
+        clearInterval(intervalo);
+        elem.style.fill = 'currentcolor';
+        elem.removeEventListener('click', clicEnSvg);
+        mostrarAyuda();
+    }
+
+    function clicEnSvg() {
+        detenerParp();
+    }
+
+    elem.addEventListener('click', clicEnSvg);
+
+    function iniciar() {
+        const ahora = new Date();
+        const horaActual = ahora.getHours();
+        const minutosActuales = ahora.getMinutes();
+        const segundosActuales = ahora.getSeconds();
+
+        const proxEjec = new Date(ahora);
+        proxEjec.setHours(Math.ceil(horaActual / 8) * 8, 0, 0, 0);
+        if (proxEjec <= ahora) {
+            proxEjec.setDate(proxEjec.getDate() + 1);
+        }
+
+        const tiempoRest = proxEjec.getTime() - ahora.getTime();
+
+        setTimeout(() => {
+            iniciarParpadeo();
+            setInterval(iniciarParpadeo, 8 * 60 * 60 * 1000);
+        }, tiempoRest);
+    }
+
+    iniciar();
+}
