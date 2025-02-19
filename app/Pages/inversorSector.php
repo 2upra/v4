@@ -91,22 +91,28 @@ function inversorSector()
                     <div class="RLSDSAE">
                         <img src="<?php echo get_template_directory_uri(); ?>/assets/img/d1.jpg" alt="d1">
                         <h3>Diseño de identidad visual y logotipos minimalistas</h3>
-                        <button>Desde 5$</button>
-                        <p>30$</p>
+                        <div class="PDASG">
+                            <button>Desde 5$</button>
+                            <p>30$</p>
+                        </div>
                     </div>
 
                     <div class="RLSDSAE">
                         <img src="<?php echo get_template_directory_uri(); ?>/assets/img/pd1.jpg" alt="pd1">
                         <h3>Pintura digital de personajes o escenarios, estilo de pintura/anime</h3>
-                        <button>Desde 5$</button>
-                        <p>30$</p>
+                        <div class="PDASG">
+                            <button>Desde 5$</button>
+                            <p>30$</p>
+                        </div>
                     </div>
 
                     <div class="RLSDSAE">
                         <img src="<?php echo get_template_directory_uri(); ?>/assets/img/f1.jpg" alt="f1">
                         <h3>Diseño de flyers, portadas, estilo personalizado</h3>
-                        <button>Desde 10$</button>
-                        <p>50$</p>
+                        <div class="PDASG">
+                            <button>Desde 10$</button>
+                            <p>50$</p>
+                        </div>
                     </div>
 
                 </div>
