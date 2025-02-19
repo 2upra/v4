@@ -20,15 +20,16 @@ function inversorSector()
 
     ob_start();
 ?>
-    <div class="UIKMYM">
 
+    <div class="UIKMYM">
         <div class="WZEFLA">
-            <p>Hola <? echo esc_html($user_name); ?></p>
+            <p>¡Hola <? echo esc_html($user_name); ?>! 👋</p>
         </div>
 
         <div class="OIEODG">
-            <p>Gracias por participar, estamos trabajando en mejorar la experiencia de entorno.</p>
+            <p>¡Ayúdanos a seguir construyendo herramientas libres y accesibles para artistas y productores musicales! Juntos, podemos potenciar la creatividad y hacer que la música llegue más lejos. Este proyecto tiene un futuro brillante, ¡y tú puedes ser parte de él! 🚀</p>
         </div>
+
 
         <div class="JUJRQG">
             <a href="https://github.com/1ndoryu" class="no-ajax">
@@ -50,8 +51,8 @@ function inversorSector()
 
         <div class="TTVMWQ">
             <div class="XXDD IUNRBL">
-                <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
-
+                <h3 class="XXD1"><strong>Conviértete en patrocinador</strong> </h3>
+                <h3 class="XXD1 XXGE3D">Tu apoyo puede darte participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y hasta acciones mensuales del proyecto. ¡Es una oportunidad increíble!</h3>
                 <div class="DZYSQD DZYSQF">
                     <? echo botonSponsor(); ?>
                     <? echo botonComprarAcciones(); ?>
@@ -59,12 +60,47 @@ function inversorSector()
 
             </div>
             <div class="XXDD IUNRBL">
-                <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
+                <h3 class="XXD1"><strong>Únete como desarrollador</strong></h3>
+                <h3 class="XXD1 XXGE3D">Tu talento será recompensado. Podrás obtener reconocimiento, acciones del proyecto o incluso unirte al equipo principal y disfrutar de las ganancias futuras. ¡Anímate a crear con nosotros!</h3>
                 <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
                     <div class="DZYSQD DZYSQF">
-                        <button class="DZYBQD unirteproyecto<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>"><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
+                        <button class="DZYBQD unirteproyecto<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>"><? echo $GLOBALS['randomIcono']; ?>¡Sumarme al proyecto!</button>
                     </div>
                 </a>
+            </div>
+        </div>
+
+        <div class="TTVMWQ SERVICSED">
+            <div class="XXDD IUNRBL">
+                <h3 class="XXD1"><strong>Servicios Profesionales</strong> </h3>
+                <h3 class="XXD1 XXGE3D">Contribuye al proyecto con nuestros servicios. El equipo de 2upra te brinda soluciones expertas y confiables, con resultados en tiempo récord. Cada servicio contratado impulsa directamente el crecimiento y desarrollo continuo de nuestras herramientas.</h3>
+
+                <div class="SGEDIGME">
+
+                    <div class="RLSDSAE">
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
+                        <h3></h3>
+                        <button>Desde 80$</button>
+                    </div>
+
+                    <div class="RLSDSAE">
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
+                        <h3></h3>
+                        <button>Desde 5$</button>
+                    </div>
+
+                    <div class="RLSDSAE">
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
+                        <h3></h3>
+                        <button>Desde 5$</button>
+                    </div>
+
+                    <div class="RLSDSAE">
+                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
+                        <h3></h3>
+                        <button>Desde 5$</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -77,7 +113,7 @@ function inversorSector()
                 </div>
 
                 <div class="MDOKUH">
-                    <p class="ZTHAWI">Meta</p>
+                    <p class="ZTHAWI">¡Vamos por!</p>
                     <p class="BFUUUL">5000$</p>
                 </div>
 
@@ -91,7 +127,7 @@ function inversorSector()
 
                 <div class="XFBZWO">
                     <div class="flex justify-between items-center">
-                        <p class="ZTHAWI">Tu valor actual</p>
+                        <p class="ZTHAWI">¡Tu valor actual!</p>
                     </div>
                     <p class="BFUUUL">$<? echo number_format($valD, 2, '.', '.'); ?></p>
                     <div class="GraficoCapital">
@@ -119,12 +155,12 @@ function inversorSector()
 
         </div>
         <div class="articulosPost">
-            <h3>Avances e información</h3>
+            <h3>Noticias y avances 📰</h3>
             <? echo publicaciones(['filtro' => 'nada', 'post_type' => 'post', 'tab_id' => 'Proyecto', 'posts' => 12]); ?>
         </div>
 
         <div class="WLOZDD">
-            <p>Muchas gracias</p>
+            <p>¡Mil gracias por tu apoyo! 🙌</p>
             <? echo calcularAccionPorUsuario(); ?>
         </div>
 
