@@ -252,7 +252,7 @@ function redir() {
         el.addEventListener('click', () => {
             const url = el.dataset.url;
             if (url) {
-                window.location.href = url;
+                window.open(url, '_blank'); // Usa window.open para nueva pestaña
             }
         });
     });
