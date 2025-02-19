@@ -93,7 +93,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'stripecomprabeat',
         'initTareas',
         'iniciarPestanasPf',
-        'confBtns'
+        'redir'
     ];
 
     function initScripts() {
@@ -246,16 +246,15 @@ function scrollToSection(sectionId) {
     }
 }
 
-function confBtns() {
-    const btns = document.querySelectorAll('.PDASG button');
-
-    btns.forEach(btn => {
-        const url = btn.dataset.url;
-        if (url) {
-            btn.addEventListener('click', () => {
-                window.open(url, '_blank');
-            });
-        }
+function redir() {
+    const elems = document.querySelectorAll('.RLSDSAE');
+    elems.forEach(el => {
+        el.addEventListener('click', () => {
+            const url = el.dataset.url;
+            if (url) {
+                window.location.href = url;
+            }
+        });
     });
 }
 
