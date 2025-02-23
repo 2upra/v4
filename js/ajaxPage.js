@@ -94,7 +94,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'initTareas',
         'iniciarPestanasPf',
         'redir',
-        'animarIcono'
     ];
 
     function initScripts() {
@@ -262,47 +261,3 @@ function redir() {
 
 //
 
-function animarIcono() {
-    const duracion = 500;
-    const intervalo = 8 * 60 * 60 * 1000;
-    const it = document.querySelector('.menu-item.iconoInver');
-    if (!it) return;
-    const txtAyuda = it.querySelector('.textoAyuda');
-    if (!txtAyuda) return;
-
-    function mostrar() {
-        txtAyuda.style.display = 'block';
-    }
-
-    function efecto(elem) {
-        let vis = true;
-        const intv = setInterval(() => {
-            elem.style.transition = `fill ${duracion / 1000}s`;
-            elem.style.fill = vis ? 'red' : 'initial';
-            vis = !vis;
-            //si damos click se elimina el elemento, hay que limpiar el intervalo
-            if (!elem.parentElement.querySelector('svg')) {
-                clearInterval(intv);
-            }
-        }, duracion);
-        return intv;
-    }
-
-    function iniciar() {
-        const svg = it.querySelector('svg');
-        if (!svg) return;
-        let intervAnim = efecto(svg);
-
-        it.addEventListener(
-            'click',
-            () => {
-                clearInterval(intervAnim);
-                svg.style.fill = 'initial'; // Restaurar el color original
-                mostrar();
-            },
-            {once: true}
-        ); // Importante:  El evento se ejecuta solo *una* vez.
-    }
-
-    setTimeout(iniciar, intervalo); // Iniciar despues del intervalo
-}
