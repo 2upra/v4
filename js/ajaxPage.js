@@ -264,17 +264,19 @@ function redir() {
 
 function inicIcAy() {
     const it = document.querySelector('.menu-item.iconoInver');
-    if (!it) return;
+    if (!it) {
+        console.log("inicIcAy: No se encontró el elemento '.menu-item.iconoInver'.");
+        return;
+    }
 
-    const svg = it.querySelector('svg');
+    const lnk = it.querySelector('a');
     const txtAy = it.querySelector('.textoAyuda');
-    const clrRj = 'fill:#d43333;';
     const tmpIcAy = 'tmpIcAy';
-    const tmpMax = 24 * 60 * 60 * 1000;
-    const tmpInc = [8, 12, 24];
+    const tmpMax = 86400000; // 24 horas
+    const tmpInc = [8, 12, 24]; // Intervalos en horas
 
-    // Si no hay un timestamp guardado, se asigna la hora actual
     if (!localStorage.getItem(tmpIcAy)) {
+        console.log('inicIcAy: Primera vez.  Estableciendo timestamp inicial.');
         localStorage.setItem(tmpIcAy, Date.now());
     }
 
@@ -282,49 +284,75 @@ function inicIcAy() {
         let tmpUlt = parseInt(localStorage.getItem(tmpIcAy));
         let difTmp = Date.now() - tmpUlt;
         let indTmp = 0;
-        let tmpSigTime = tmpInc[indTmp] * 60 * 60 * 1000;
+        let tmpSigTime = tmpInc[indTmp] * 3600000; // Primer intervalo (8 horas en ms)
 
+        // Encuentra el intervalo correcto (8, 12 o 24 horas)
         while (difTmp > tmpSigTime && indTmp < tmpInc.length - 1) {
             indTmp++;
-            tmpSigTime = tmpInc[indTmp] * 60 * 60 * 1000;
+            tmpSigTime = tmpInc[indTmp] * 3600000;
         }
+
+        // Si ha pasado más de tmpMax (24 horas), reinicia el ciclo
         if (difTmp > tmpMax) {
-            return 0;
+            console.log('inicIcAy: Han pasado más de 24 horas. Reiniciando timestamp.');
+            localStorage.setItem(tmpIcAy, Date.now()); // Reinicia el timestamp
+            return 0; // Ejecuta ponRj inmediatamente
         }
-        return tmpSigTime - difTmp;
+
+        // Calcula el tiempo restante hasta el próximo intervalo
+        let tiempoRestante = Math.max(0, tmpSigTime - difTmp);
+        // Información sobre el estado actual y el tiempo restante.
+        if (difTmp < tmpInc[0] * 3600000) {
+            console.log(`inicIcAy: Se dio clic en las últimas 8 horas.  Tiempo restante hasta la próxima alerta: ${tiempoRestante / 3600000} horas.`);
+        } else if (difTmp < tmpInc[1] * 3600000) {
+            console.log(`inicIcAy: Han pasado más de 8 horas pero menos de 12. Tiempo restante hasta la próxima alerta: ${tiempoRestante / 3600000} horas.`);
+        } else {
+            console.log(`inicIcAy: Han pasado más de 12 horas. Tiempo restante hasta la próxima alerta (en 24 horas): ${tiempoRestante / 3600000} horas.`);
+        }
+
+        return tiempoRestante;
     }
 
     function ponRj() {
-        svg.style.cssText = clrRj;
-        txtAy.textContent = '2upra necesita tu ayuda';
-        txtAy.style.display = 'block';
-    }
-
-    function qtRj() {
-        svg.style.cssText = '';
-        txtAy.style.display = 'none';
-        localStorage.setItem(tmpIcAy, Date.now());
-        let tiempoRestante = tmpSig();
-        if (tiempoRestante > 0) {
-            setTimeout(ponRj, tiempoRestante);
-        } else {
-            ponRj();
+        console.log('ponRj: Mostrando la alerta (icono rojo).');
+        it.classList.add('rojoSVG');
+        if (txtAy) {
+            txtAy.textContent = '2upra necesita tu ayuda';
+            txtAy.style.display = 'block';
         }
     }
 
-    let tmpRest = tmpSig();
-
-    if (tmpRest === 0) {
-        ponRj();
-    } else {
-        setTimeout(ponRj, tmpRest);
+    function qtRj(e) {
+        if (e) e.preventDefault();
+        console.log('qtRj: Se hizo clic en el icono.  Ocultando la alerta.');
+        it.classList.remove('rojoSVG');
+        if (txtAy) txtAy.style.display = 'none';
+        localStorage.setItem(tmpIcAy, Date.now()); // Guarda el timestamp del clic
+        // Después de quitar el rojo, recalcula el próximo tiempo.
+        let tmpRest = tmpSig();
+        console.log(`qtRj: Próxima alerta programada en ${tmpRest / 3600000} horas`);
+        if (tmpRest > 0) {
+            setTimeout(ponRj, tmpRest);
+        } else {
+            ponRj(); // Podría ocurrir si difTmp > tmpMax
+        }
     }
 
-    // Al hacer click en el elemento, se oculta el mensaje y se reinicia el contador
-    it.addEventListener('click', qtRj);
+    //  Lógica principal para decidir si mostrar el rojo o programarlo
+    let tmpRest = tmpSig();
+    if (tmpRest === 0) {
+        console.log('inicIcAy: Mostrando la alerta inmediatamente (primera vez, reinicio o tiempo expirado).');
+        ponRj(); // Ejecuta inmediatamente si ha pasado el tiempo o si es la primera vez
+    } else {
+        console.log(`inicIcAy: Alerta programada para dentro de ${tmpRest / 3600000} horas.`);
+        setTimeout(ponRj, tmpRest); // Programa la ejecución para el futuro
+    }
 
-    // Además, al pasar el mouse sobre el texto, se oculta
-    txtAy.addEventListener('mouseenter', () => {
-        txtAy.style.display = 'none';
-    });
+    if (lnk) lnk.addEventListener('click', qtRj);
+
+    if (txtAy) {
+        txtAy.addEventListener('mouseenter', () => {
+            txtAy.style.display = 'none';
+        });
+    }
 }
