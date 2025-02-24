@@ -290,13 +290,20 @@ function inicIcAy() {
 
     function ponRj() {
         svg.style.cssText = clrRj;
+        txtAy.textContent = '2upra necesita tu ayuda';
+        txtAy.style.display = 'block'; // Asegurarse de que sea visible
     }
 
     function qtRj() {
         svg.style.cssText = '';
-        txtAy.textContent = 'Ayuda';
+        txtAy.style.display = 'none';
         localStorage.setItem(tmpIcAy, Date.now());
-        setTimeout(ponRj, tmpSig());
+        let tiempoRestante = tmpSig();
+        if (tiempoRestante > 0) {
+            setTimeout(ponRj, tiempoRestante);
+        } else {
+            ponRj();
+        }
     }
 
     let tmpRest = tmpSig();
