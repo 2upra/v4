@@ -184,11 +184,11 @@ if (!defined('ABSPATH')) {
                         <? endif; ?>
 
 
-
+                        esto es un icono, un svg, o sea dentro del a hay un svg que se imprime, necesito que se svg en particular se ponga en rojo cada 8 horas, automaticamente, y deje de estar en rojo cuando el usuario da click, y en ese momento, debe aparecer el textoAyuda, eso es todo, necesito que sea con un script, supongo que la informacion del han pasado 8 horas desde el ultimo click se puede guardar en el navegador, tambien, que la primera vez debe ser 8 horas, despues la segunda vez 12 horas, la tercera vez 24 horas, y asi, maximo 24 horas
                         <div class="menu-item iconoInver">
                             <a href="<?php echo home_url('/inversion'); ?>">
                                 <?php echo $GLOBALS['iconoInver']; ?>
-                                <div class="textoAyuda" style="display: none; position: absolute; background-color: #f8f8f8; border: 1px solid #ddd; padding: 10px;  border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-size: 0.9em; color: #333;">
+                                <div class="textoAyuda">
                                     2upra necesita tu ayuda
                                 </div>
                             </a>

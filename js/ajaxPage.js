@@ -94,6 +94,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'initTareas',
         'iniciarPestanasPf',
         'redir',
+        'inicIcAy'
     ];
 
     function initScripts() {
@@ -261,3 +262,49 @@ function redir() {
 
 //
 
+function inicIcAy() {
+    const it = document.querySelector('.menu-item.iconoInver');
+    const svg = it.querySelector('svg');
+    const txtAy = it.querySelector('.textoAyuda');
+    const clrRj = 'fill:red;';
+    const tmpIcAy = 'tmpIcAy';
+    const tmpMax = 24 * 60 * 60 * 1000;
+    const tmpInc = [8, 12, 24];
+
+    function tmpSig() {
+        let tmpUlt = localStorage.getItem(tmpIcAy) || Date.now();
+        tmpUlt = parseInt(tmpUlt);
+        let difTmp = Date.now() - tmpUlt;
+        let indTmp = 0;
+        let tmpSig = tmpInc[indTmp] * 60 * 60 * 1000;
+
+        while (difTmp > tmpSig && indTmp < tmpInc.length - 1) {
+            indTmp++;
+            tmpSig = tmpInc[indTmp] * 60 * 60 * 1000;
+        }
+        if (difTmp > tmpMax) {
+            return 0;
+        }
+        return tmpSig - difTmp;
+    }
+
+    function ponRj() {
+        svg.style.cssText = clrRj;
+    }
+
+    function qtRj() {
+        svg.style.cssText = '';
+        txtAy.textContent = 'Ayuda';
+        localStorage.setItem(tmpIcAy, Date.now());
+        setTimeout(ponRj, tmpSig());
+    }
+
+    let tmpRest = tmpSig();
+
+    if (tmpRest === 0) {
+        ponRj();
+    } else {
+        setTimeout(ponRj, tmpRest);
+    }
+    it.addEventListener('click', qtRj);
+}
