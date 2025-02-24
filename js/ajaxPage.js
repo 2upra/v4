@@ -276,7 +276,7 @@ function inicIcAy() {
     const tmpInc = [8, 12, 24]; // Intervalos en horas
 
     if (!localStorage.getItem(tmpIcAy)) {
-        console.log('inicIcAy: Primera vez.  Estableciendo timestamp inicial.');
+        console.log('inicIcAy: Primera vez. Estableciendo timestamp inicial.');
         localStorage.setItem(tmpIcAy, Date.now());
     }
 
@@ -301,13 +301,17 @@ function inicIcAy() {
 
         // Calcula el tiempo restante hasta el próximo intervalo
         let tiempoRestante = Math.max(0, tmpSigTime - difTmp);
+
         // Información sobre el estado actual y el tiempo restante.
         if (difTmp < tmpInc[0] * 3600000) {
-            console.log(`inicIcAy: Se dio clic en las últimas 8 horas.  Tiempo restante hasta la próxima alerta: ${tiempoRestante / 3600000} horas.`);
+            console.log(`inicIcAy: Se dio clic en las últimas 8 horas. Tiempo restante hasta la próxima alerta: ${tiempoRestante / 3600000} horas.`);
+            if (txtAy) txtAy.style.display = 'none'; // Oculta textoAyuda
         } else if (difTmp < tmpInc[1] * 3600000) {
             console.log(`inicIcAy: Han pasado más de 8 horas pero menos de 12. Tiempo restante hasta la próxima alerta: ${tiempoRestante / 3600000} horas.`);
+            if (txtAy) txtAy.style.display = 'none'; // Oculta textoAyuda
         } else {
             console.log(`inicIcAy: Han pasado más de 12 horas. Tiempo restante hasta la próxima alerta (en 24 horas): ${tiempoRestante / 3600000} horas.`);
+            //No ocultamos en este caso, porque si mostraríamos.
         }
 
         return tiempoRestante;
@@ -324,7 +328,7 @@ function inicIcAy() {
 
     function qtRj(e) {
         if (e) e.preventDefault();
-        console.log('qtRj: Se hizo clic en el icono.  Ocultando la alerta.');
+        console.log('qtRj: Se hizo clic en el icono. Ocultando la alerta.');
         it.classList.remove('rojoSVG');
         if (txtAy) txtAy.style.display = 'none';
         localStorage.setItem(tmpIcAy, Date.now()); // Guarda el timestamp del clic
@@ -338,7 +342,7 @@ function inicIcAy() {
         }
     }
 
-    //  Lógica principal para decidir si mostrar el rojo o programarlo
+    // Lógica principal para decidir si mostrar el rojo o programarlo
     let tmpRest = tmpSig();
     if (tmpRest === 0) {
         console.log('inicIcAy: Mostrando la alerta inmediatamente (primera vez, reinicio o tiempo expirado).');
