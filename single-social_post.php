@@ -90,7 +90,7 @@ if ( ! empty( $datos_decoded ) ) {
 		$schema['genre'] = esc_html( implode( ", ", $datos_decoded['genero_posible'][ $active_lang ] ) );
 	}
 	if ( isset( $datos_decoded['tags_posibles'][ $active_lang ] ) ) {
-		// Limitar a 2 tags para el SEO
+		// Limitar a 5 tags para el SEO
 		$tags_array       = array_slice( $datos_decoded['tags_posibles'][ $active_lang ], 0, 5 );
 		$schema['keywords'] = esc_html( implode( ", ", $tags_array ) );
 	}
