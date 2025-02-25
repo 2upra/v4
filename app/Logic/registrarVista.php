@@ -1,6 +1,7 @@
 <?php
 
-function guardarVista() {
+function guardarVista()
+{
     if (isset($_POST['id_post'])) {
         $idPost = intval($_POST['id_post']);
         $userId = get_current_user_id();
@@ -18,8 +19,6 @@ function guardarVista() {
             }
 
             $fechaActual = time();
-
-            $vistasUsuario = limpiarVistasAntiguas($vistasUsuario, 7);
 
             if (isset($vistasUsuario[$idPost])) {
                 $vistasUsuario[$idPost]['count']++;
@@ -60,13 +59,13 @@ function guardarVista() {
     wp_die();
 }
 
-function obtenerVistasPosts($userId) {
+function obtenerVistasPosts($userId)
+{
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
 
     if (empty($vistas_posts)) {
         return [];
     }
-    $vistas_posts = limpiarVistasAntiguas($vistas_posts, 7);
 
     return $vistas_posts;
 }
@@ -74,7 +73,8 @@ function obtenerVistasPosts($userId) {
 add_action('wp_ajax_guardar_vistas', 'guardarVista');
 add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVista');
 
-function limpiarVistasAntiguas($vistas, $dias) {
+function limpiarVistasAntiguas($vistas, $dias)
+{
     $fechaLimite = time() - (86400 * $dias);
 
     foreach ($vistas as $postId => $infoVista) {
