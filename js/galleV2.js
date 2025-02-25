@@ -513,16 +513,14 @@ function galle() {
     }
 
     function clickMensaje() {
-        const chatIcono = document.getElementById('chatIcono');
+        const mensajes = document.querySelectorAll('.mensaje');
+        if (mensajes.length > 0) {
+            mensajes.forEach(item => manejarClickEnConversacion(item));
+        }
 
-        if (chatIcono) {
-            chatIcono.addEventListener('click', evento => {
-                const elementoClickeado = evento.target;
-
-                if (elementoClickeado.closest('.mensaje, .mensajeBoton')) {
-                    manejarClickEnConversacion(elementoClickeado.closest('.mensaje, .mensajeBoton'));
-                }
-            });
+        const botonesMensaje = document.querySelectorAll('.mensajeBoton');
+        if (botonesMensaje.length > 0) {
+            botonesMensaje.forEach(item => manejarClickEnConversacion(item));
         }
     }
 
