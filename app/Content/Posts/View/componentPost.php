@@ -317,46 +317,44 @@ function ejecutarScriptPermisos()
 }
 
 //MOSTRAR INFORMACIÓN DEL AUTOR
-function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $block, $colab)
+
+function infoPost($autId, $autAv, $autNom, $postF, $postId, $block, $colab)
 {
-    // Obtener los metadatos del post
     $postAut = get_post_meta($postId, 'postAut', true);
-    $ultimoEdit = get_post_meta($postId, 'ultimoEdit', true);
-    $verificado = get_post_meta($postId, 'Verificado', true);
-    $recortado = get_post_meta($postId, 'recortado', true);
-    // Verificar si el autor es el usuario actual
-    $usuarioActual = (int)get_current_user_id();
-    $autorId = (int)$autorId;
-    $is_current_user = ($usuarioActual === $autorId);
+    $ultEd = get_post_meta($postId, 'ultimoEdit', true);
+    $verif = get_post_meta($postId, 'Verificado', true);
+    $rec = get_post_meta($postId, 'recortado', true);
+    $usrAct = (int)get_current_user_id();
+    $autId = (int)$autId;
+    $esUsrAct = ($usrAct === $autId);
+
     ob_start();
 ?>
-    <div class="SOVHBY <? echo ($is_current_user ? 'miContenido' : ''); ?>">
+    <div class="SOVHBY <? echo ($esUsrAct ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
-            <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"> </a>
-            <img src="<? echo esc_url($author_avatar); ?>">
-            <? echo botonseguir($autorId); ?>
+            <a href="<? echo esc_url(get_author_posts_url($autId)); ?>"> </a>
+            <img src="<? echo esc_url($autAv); ?>">
+            <? echo botonseguir($autId); ?>
         </div>
         <div class="ZVJVZA">
             <div class="JHVSFW">
-                <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>" class="profile-link">
-                    <? echo esc_html($author_name); ?>
-                    <?php 
-                    // Verificar si el usuario es PRO, administrador o tiene la meta 'Verificado'
-                    if (get_user_meta($autorId, 'pro', true) || user_can($autorId, 'administrator') || get_user_meta($autorId, 'Verificado', true)) : ?>
+                <a href="<? echo esc_url(home_url('/perfil/' .  get_the_author_meta('user_nicename', $autId))); ?>" class="profile-link">
+                    <? echo esc_html($autNom); ?>
+                    <? if (get_user_meta($autId, 'pro', true) || user_can($autId, 'administrator') || get_user_meta($autId, 'Verificado', true)) : ?>
                         <? echo $GLOBALS['verificado']; ?>
-                    <?php endif; ?>
+                    <? endif; ?>
                 </a>
             </div>
             <div class="HQLXWD">
                 <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
-                    <? echo esc_html($post_date); ?>
+                    <? echo esc_html($postF); ?>
                 </a>
             </div>
         </div>
     </div>
 
     <div class="verificacionPost">
-        <? if ($verificado == '1') : ?>
+        <? if ($verif == '1') : ?>
             <? echo $GLOBALS['check']; ?>
         <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
             <? echo $GLOBALS['robot']; ?>
@@ -364,7 +362,7 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
     </div>
 
     <div class="OFVWLS">
-        <? if ($recortado) : ?>
+        <? if ($rec) : ?>
             <div><? echo "Preview"; ?></div>
         <? endif; ?>
         <? if ($block) : ?>
@@ -377,11 +375,12 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
     <div class="spin"></div>
 
     <div class="YBZGPB">
-        <? echo opcionesPost($postId, $autorId); ?>
+        <? echo opcionesPost($postId, $autId); ?>
     </div>
 <?
     return ob_get_clean();
 }
+
 
 //BOTON PARA SUSCRIBIRSE
 function botonSuscribir($autorId, $author_name, $subscription_price_id = 'price_1OqGjlCdHJpmDkrryMzL0BCK')
