@@ -81,6 +81,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'reiniciarCargaDiferida',
         'registrarVistas',
         'colec',
+        'clickMensajeBoton',
         'cambiarFiltroTiempo',
         'filtrosPost',
         'contadorDeSamples',

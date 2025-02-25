@@ -43,6 +43,7 @@ function galle() {
         manageControllerTab();
         abrirColab();
         actualizarTiemposRelativos();
+        clickMensajeBoton();
     }
 
     function abrirColab() {
@@ -517,7 +518,9 @@ function galle() {
         if (mensajes.length > 0) {
             mensajes.forEach(item => manejarClickEnConversacion(item));
         }
+    }
 
+    function clickMensajeBoton() {
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
         if (botonesMensaje.length > 0) {
             botonesMensaje.forEach(item => manejarClickEnConversacion(item));
