@@ -1,102 +1,112 @@
 function stripecompra() {
-    var botonComprar = document.getElementById('botonComprar');
-    var cantidadCompra = document.getElementById('cantidadCompra');
-    var cantidadReal = document.getElementById('cantidadReal');
-    var mensajeCantidad = document.querySelector('.ETXLXB'); // Elemento <p> que muestra el mensaje
+    const btnComprar = document.getElementById('botonComprar');
+    const cantCompra = document.getElementById('cantidadCompra');
+    const cantReal = document.getElementById('cantidadReal');
+    const msjCant = document.querySelector('.ETXLXB');
 
-    // Función para formatear la cantidad con el símbolo de dólar
-    function formatearCantidad(input) {
-        var value = input.value.replace(/[^0-9]/g, '');
-        input.value = value ? `$${value}` : '';
+    function log(msg) {
+        console.log(`stripecompra: ${msg}`);
     }
 
-    // Configurar evento de entrada para el campo de cantidad
-    if (cantidadCompra) {
-        cantidadCompra.addEventListener('input', function () {
-            formatearCantidad(cantidadCompra);
-            if (cantidadReal) {
-                cantidadReal.value = cantidadCompra.value.replace(/[^0-9]/g, '');
+    function formatearCant(input) {
+        const valor = input.value.replace(/[^0-9]/g, '');
+        input.value = valor ? `$${valor}` : '';
+    }
+
+    if (cantCompra) {
+        cantCompra.addEventListener('input', () => {
+            formatearCant(cantCompra);
+            if (cantReal) {
+                cantReal.value = cantCompra.value.replace(/[^0-9]/g, '');
             }
         });
     }
 
-    // Función para hacer que el borde titile rápidamente
     function titilarBorde(input) {
-        let parpadeos = 6; // Número de parpadeos
-        let velocidadParpadeo = 200; // Tiempo de cada parpadeo en milisegundos (200ms = 0.2 segundos)
+        const parpadeos = 6;
+        const velParpadeo = 200;
 
-        // Función para alternar el color del borde
         function alternarBorde(count) {
             if (count > 0) {
                 input.style.border = input.style.border === '2px solid white' ? '2px solid transparent' : '2px solid white';
-                setTimeout(function () {
-                    alternarBorde(count - 1); // Llamar de nuevo hasta que se agoten los parpadeos
-                }, velocidadParpadeo);
+                setTimeout(() => {
+                    alternarBorde(count - 1);
+                }, velParpadeo);
             } else {
-                input.style.border = ''; // Restablecer el borde original al finalizar los parpadeos
+                input.style.border = '';
             }
         }
 
-        alternarBorde(parpadeos); // Iniciar el proceso de parpadeo
+        alternarBorde(parpadeos);
     }
 
-    // Mostrar el mensaje y hacer titilar el borde si la cantidad es inválida
-    function manejarErrorCantidad() {
-        if (mensajeCantidad) {
-            mensajeCantidad.style.display = 'block'; // Forzar visibilidad del mensaje
+    function manejarErrorCant() {
+        if (msjCant) {
+            msjCant.style.display = 'block';
         }
-        if (cantidadCompra) {
-            titilarBorde(cantidadCompra); // Hacer titilar el borde del campo
+        if (cantCompra) {
+            titilarBorde(cantCompra);
         }
+        log('Cantidad inválida.'); // Log del error
     }
 
-    // Configurar evento de clic para el botón de comprar
-    if (botonComprar) {
-        botonComprar.addEventListener('click', function (e) {
+    if (btnComprar) {
+        btnComprar.addEventListener('click', e => {
             e.preventDefault();
 
-            var userId = document.getElementById('userID') ? document.getElementById('userID').value : null;
-            var cantidad = cantidadReal ? cantidadReal.value : null;
+            const usrId = document.getElementById('userID') ? document.getElementById('userID').value : null;
+            const cant = cantReal ? cantReal.value : null;
 
-            // Validar cantidad y userId
-            if (!cantidad || isNaN(cantidad) || cantidad <= 0) {
-                manejarErrorCantidad(); // Mostrar error si la cantidad es inválida
+            if (!cant || isNaN(cant) || cant <= 0) {
+                manejarErrorCant();
                 return;
             }
-            if (!userId) {
+            if (!usrId) {
                 alert('No se pudo obtener el ID de usuario, por favor verifica iniciar sesión o cambiar de navegador.');
+                log('userID es null.'); // Log del error.
                 return;
             }
 
-            // Realizar la solicitud fetch si la validación es exitosa
+            log(`Iniciando fetch. userId: ${usrId}, cantidad: ${cant}`); // Log antes del fetch
+
             fetch('/wp-json/avada/v1/crear_sesion_acciones', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    userId: userId,
-                    cantidadCompra: cantidad
+                    userId: usrId,
+                    cantidadCompra: cant
                 })
             })
-                .then(function (response) {
+                .then(response => {
+                    log(`Respuesta inicial recibida. Status: ${response.status}`); // Log de la respuesta inicial
+                    if (!response.ok) {
+                        // Importante, verifica si la respuesta es OK.
+                        log(`Respuesta NO OK. Status: ${response.status}`);
+                        throw new Error(`HTTP error! status: ${response.status}`); // Lanza error para ser capturado en el .catch
+                    }
                     return response.json();
                 })
-                .then(function (sessionData) {
+                .then(sessionData => {
+                    log(`Respuesta JSON parseada: ${JSON.stringify(sessionData)}`); // Log del JSON parseado.
+
                     if (sessionData.id) {
-                        // Redirigir al checkout de Stripe
-                        var stripe = Stripe('pk_live_51M9uLoCdHJpmDkrr3ZHrVnDdA7pCZ676l1k8dKpNLSiOKG8pvKYYlCI8RaHtNqYERwpZ4qwOhdrPnLW6NgsQyX8H0019HdwAY9');
-                        stripe.redirectToCheckout({sessionId: sessionData.id}).catch(function (error) {
+                        const stripe = Stripe('pk_live_51M9uLoCdHJpmDkrr3ZHrVnDdA7pCZ676l1k8dKpNLSiOKG8pvKYYlCI8RaHtNqYERwpZ4qwOhdrPnLW6NgsQyX8H0019HdwAY9');
+                        stripe.redirectToCheckout({sessionId: sessionData.id}).catch(error => {
                             console.error('Error en redirectToCheckout:', error);
+                            log(`Error en redirectToCheckout: ${error}`); // Log específico para redirectToCheckout.
                             alert('Hubo un problema al redirigir al checkout de Stripe.');
                         });
                     } else {
                         console.error('Respuesta completa:', sessionData);
+                        log(`Respuesta de sesión sin ID: ${JSON.stringify(sessionData)}`);
                         alert('Hubo un problema al procesar la compra. Por favor, inténtalo de nuevo.');
                     }
                 })
-                .catch(function (error) {
+                .catch(error => {
                     console.error('Error:', error);
+                    log(`Error en fetch: ${error}`); // Log del error en el fetch.
                     alert('Hubo un error al conectar con el sistema de compras. Por favor, verifica tu conexión y vuelve a intentarlo.');
                 });
         });
