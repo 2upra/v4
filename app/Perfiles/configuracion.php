@@ -2,249 +2,205 @@
 
 function config()
 {
-    $u = wp_get_current_user();
-    $uid = $u->ID;
-    $desc = get_user_meta($uid, 'profile_description', true);
-    $link = get_user_meta($uid, 'user_link', true);
-    $tipo = get_user_meta($uid, 'tipoUsuario', true);
+    $current_user = wp_get_current_user();
+    $user_id = $current_user->ID;
+    $user_name = $current_user->display_name;
+    $descripcion = get_user_meta($user_id, 'profile_description', true);
+    $linkUser = get_user_meta($user_id, 'user_link', true);
+    $tipoUsuario = get_user_meta($user_id, 'tipoUsuario', true); // Obtenemos el tipo de usuario del meta
 
     ob_start();
 ?>
+
     <div class="LEDDCN modal" id="modalConfig" style="display: none;">
         <p class="ONDNYU">Configuración de Perfil</p>
+
         <form class="PVSHOT">
+
+            <!-- Cambiar foto de perfil -->
             <div class="PTORKC">
                 <div class="previewAreaArchivos" id="previewAreaImagenPerfil">Arrastra tu foto de perfil
                     <label></label>
                 </div>
                 <input type="file" id="profilePicture" accept="image/*" style="display:none;">
             </div>
+
+            <!-- Cambiar nombre de usuario -->
             <div class="PTORKC">
-                <label for="nombreUsuario">Nombre de Usuario:</label>
-                <input type="text" id="nombreUsuario" name="nombreUsuario" value="<?= esc_attr($u->user_login) ?>">
+                <label for="username">Nombre de Usuario:</label>
+                <input type="text" id="username" name="username" value="<?php echo esc_attr($user_name); ?>">
             </div>
-            <div class="PTORKC">
-                <label for="username">Nombre:</label>
-                <input type="text" id="username" name="username" value="<?= esc_attr($u->display_name) ?>">
-            </div>
+
+            <!-- Cambiar descripción -->
             <div class="PTORKC">
                 <label for="description">Descripción:</label>
-                <textarea id="description" name="description" rows="2"><?= esc_attr($desc) ?></textarea>
+                <textarea id="description" name="description" rows="2"><?php echo esc_attr($descripcion); ?></textarea>
             </div>
+
+            <!-- Agregar un enlace -->
             <div class="PTORKC">
                 <label for="link">Enlace:</label>
-                <input type="url" id="link" name="link" placeholder="Ingresa un enlace (opcional)" value="<?= esc_attr($link) ?>">
+                <input type="url" id="link" name="link" placeholder="Ingresa un enlace (opcional)" value="<?php echo esc_attr($linkUser); ?>">
             </div>
+
+            <!-- Tipo de usuario -->
             <div class="PTORKC ADGOR3">
                 <label for="typeUser">Tipo de usuario:</label>
                 <div class="DRHMDE">
                     <label class="custom-checkbox">
-                        <input type="checkbox" id="fanTipoCheck" name="fanTipoCheck" value="1" <?= $tipo === 'Fan' ? 'checked' : '' ?>>
+                        <input type="checkbox" id="fanTipoCheck" name="fanTipoCheck" value="1" <?php echo $tipoUsuario === 'Fan' ? 'checked' : ''; ?>>
                         <span class="checkmark"></span>
                         Fan
                     </label>
                     <label class="custom-checkbox">
-                        <input type="checkbox" id="artistaTipoCheck" name="artistaTipoCheck" value="1" <?= $tipo === 'Artista' ? 'checked' : '' ?>>
+                        <input type="checkbox" id="artistaTipoCheck" name="artistaTipoCheck" value="1" <?php echo $tipoUsuario === 'Artista' ? 'checked' : ''; ?>>
                         <span class="checkmark"></span>
                         Artista
                     </label>
                 </div>
             </div>
+
         </form>
         <button class="guardarConfig">Guardar cambios</button>
     </div>
-<?
+<?php
     return ob_get_clean();
 }
 
-function cambiarImgPerfil()
+function cambiar_imagen_perfil()
 {
-    $uid = get_current_user_id();
+    $user_id = get_current_user_id();
 
-    if (isset($_FILES['file']) && $uid > 0) {
+    if (isset($_FILES['file']) && $user_id > 0) {
         $file = $_FILES['file'];
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error(['error' => 'Error en la subida del archivo.']);
+            wp_send_json_error(array('error' => 'Error en la subida del archivo.'));
             return;
         }
-        $prevAttId = get_user_meta($uid, 'imagen_perfil_id', true);
-        $uInfo = get_userdata($uid);
-        $uname = $uInfo->user_login;
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $newFilename = $uname . '_' . time() . '.' . $ext;
-
-        add_filter('wp_handle_upload_prefilter', function ($file) use ($newFilename) {
-            $file['name'] = $newFilename;
+        $previous_attachment_id = get_user_meta($user_id, 'imagen_perfil_id', true);
+        $user_info = get_userdata($user_id);
+        $username = $user_info->user_login;
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $new_filename = $username . '_' . time() . '.' . $extension;
+        add_filter('wp_handle_upload_prefilter', function ($file) use ($new_filename) {
+            $file['name'] = $new_filename;
             return $file;
         });
-
-        $upload = wp_handle_upload($file, ['test_form' => false]);
+        $upload = wp_handle_upload($file, array('test_form' => false));
 
         if ($upload && !isset($upload['error'])) {
-            $att = [
+            $attachment = array(
                 'post_mime_type' => $upload['type'],
-                'post_title' => sanitize_file_name($newFilename),
+                'post_title' => sanitize_file_name($new_filename),
                 'post_content' => '',
                 'post_status' => 'inherit'
-            ];
-            $attId = wp_insert_attachment($att, $upload['file']);
+            );
+            $attachment_id = wp_insert_attachment($attachment, $upload['file']);
             require_once(ABSPATH . 'wp-admin/includes/image.php');
-            $attData = wp_generate_attachment_metadata($attId, $upload['file']);
-            wp_update_attachment_metadata($attId, $attData);
-            update_user_meta($uid, 'imagen_perfil_id', $attId);
-            $urlImgPerfil = wp_get_attachment_url($attId);
+            $attachment_data = wp_generate_attachment_metadata($attachment_id, $upload['file']);
+            wp_update_attachment_metadata($attachment_id, $attachment_data);
+            update_user_meta($user_id, 'imagen_perfil_id', $attachment_id);
+            $url_imagen_perfil = wp_get_attachment_url($attachment_id);
 
-            if ($prevAttId) {
-                wp_delete_attachment($prevAttId, true);
+            // Eliminar el adjunto anterior si existe
+            if ($previous_attachment_id) {
+                wp_delete_attachment($previous_attachment_id, true);
             }
 
-            wp_send_json_success(['url_imagen_perfil' => esc_url($urlImgPerfil)]);
+            wp_send_json_success(array('url_imagen_perfil' => esc_url($url_imagen_perfil)));
         } else {
-            wp_send_json_error(['error' => $upload['error']]);
+            wp_send_json_error(array('error' => $upload['error']));
         }
     } else {
-        wp_send_json_error(['error' => 'No se pudo subir la imagen.']);
+        wp_send_json_error(array('error' => 'No se pudo subir la imagen.'));
     }
 }
-add_action('wp_ajax_cambiar_imagen_perfil', 'cambiarImgPerfil');
-
-
-function cambiarNombreUsuario() {
-    $logMsg = "cambiarNombreUsuario: ";
-
-    if (!is_user_logged_in()) {
-        error_log($logMsg . "No logueado");
-        wp_send_json_error('No autorizado.');
-        return;
-    }
-
-    $idUsuario = get_current_user_id();
-    $nuevoNombre = sanitize_text_field($_POST['new_username']);
-
-    if (empty($nuevoNombre)) {
-        error_log($logMsg . "Nombre vacío");
-        wp_send_json_error('Nombre vacío.');
-        return;
-    }
-
-    if (strlen($nuevoNombre) < 3) {
-        error_log($logMsg . "Nombre corto");
-        wp_send_json_error('El nombre debe tener al menos 3 caracteres.');
-        return;
-    }
-
-    if (strlen($nuevoNombre) > 20) {
-        error_log($logMsg . "Nombre largo");
-        wp_send_json_error('El nombre no puede superar los 20 caracteres.');
-        return;
-    }
-
-    if (preg_match('/[^a-z0-9._-]/i', $nuevoNombre)) {
-        error_log($logMsg . "Caracteres inválidos");
-        wp_send_json_error('Caracteres inválidos. Usa letras, números, ., _ o -.');
-        return;
-    }
-
-    if (username_exists($nuevoNombre)) {
-        error_log($logMsg . "Nombre en uso");
-        wp_send_json_error('Nombre ya en uso.');
-        return;
-    }
-
-    global $wpdb;
-
-    $resultado = $wpdb->update(
-        $wpdb->users,
-        array(
-            'user_login' => $nuevoNombre,
-            'user_nicename' => $nuevoNombre // Actualización de user_nicename
-        ),
-        array('ID' => $idUsuario)
-    );
-    error_log($logMsg . "Resultado update " . ($resultado !== false ? "Exito" : "Error"));
-
-
-    if (false === $resultado) {
-        error_log($logMsg . "Error al actualizar nombre");
-        wp_send_json_error('Error al actualizar nombre.');
-        return;
-    }
-
-    wp_send_json_success('Nombre cambiado.');
-}
-
-add_action('wp_ajax_cambiar_username', 'cambiarNombreUsuario');
-
-
-function cambiarNombre()
+add_action('wp_ajax_cambiar_imagen_perfil', 'cambiar_imagen_perfil');
+function cambiar_nombre()
 {
     if (!is_user_logged_in()) {
-        wp_send_json_error('No autorizado.');
-        return;
+        wp_send_json_error('No estás autorizado para realizar esta acción.');
+        exit;
     }
-    $uid = get_current_user_id();
-    $newName = sanitize_text_field($_POST['new_username']);
+    $user_id = get_current_user_id();
+    $new_username = sanitize_text_field($_POST['new_username']);
 
-    if (empty($newName)) {
-        wp_send_json_error('Nombre vacío.');
-        return;
+    if (empty($new_username)) {
+        wp_send_json_error('El nuevo nombre de usuario no puede estar vacío.');
+        exit;
     }
-
-    $result =  wp_update_user(['ID' => $uid, 'display_name' => $newName]);
-
-    if (is_wp_error($result)) {
-        wp_send_json_error('Error al actualizar.');
-        return;
+    if (username_exists($new_username)) {
+        wp_send_json_error('El nombre de usuario ya está en uso.');
+        exit;
     }
-    wp_send_json_success('Nombre cambiado.');
+    wp_update_user([
+        'ID' => $user_id,
+        'display_name' => $new_username,
+    ]);
+    if (is_wp_error($user_id)) {
+        wp_send_json_error('Error al actualizar el nombre de usuario.');
+        exit;
+    }
+    wp_send_json_success('El nombre de usuario ha sido cambiado exitosamente.');
 }
-add_action('wp_ajax_cambiar_nombre', 'cambiarNombre');
+add_action('wp_ajax_cambiar_nombre', 'cambiar_nombre');
 
-function cambiarDesc()
+function cambiar_descripcion()
 {
     if (!is_user_logged_in()) {
-        wp_send_json_error('No autorizado.');
-        return;
+        wp_send_json_error('No estás autorizado para realizar esta acción.');
+        exit;
     }
 
-    $uid = get_current_user_id();
-    $newDesc = sanitize_text_field($_POST['new_description']);
+    $user_id = get_current_user_id();
+    $new_description = sanitize_text_field($_POST['new_description']);
 
-    if (strlen($newDesc) > 300) {
-        $newDesc = substr($newDesc, 0, 300);
+    if (empty($new_description)) {
+        wp_send_json_error('La descripción no puede estar vacía.');
+        exit;
     }
 
-    $updated = update_user_meta($uid, 'profile_description', $newDesc);
+    if (strlen($new_description) > 300) {
+        $new_description = substr($new_description, 0, 300);
+    }
+
+    $updated = update_user_meta($user_id, 'profile_description', $new_description);
 
     if (!$updated) {
-        wp_send_json_error('Error al actualizar.');
-        return;
+        wp_send_json_error('Error al actualizar la descripción.');
+        exit;
     }
-    wp_send_json_success('Descripción actualizada.');
-}
-add_action('wp_ajax_cambiar_descripcion', 'cambiarDesc');
 
-function cambiarEnlace()
+    wp_send_json_success('La descripción ha sido actualizada exitosamente.');
+}
+add_action('wp_ajax_cambiar_descripcion', 'cambiar_descripcion');
+function cambiar_enlace()
 {
     if (!is_user_logged_in()) {
-        wp_send_json_error('No autorizado.');
-        return;
+        wp_send_json_error('No estás autorizado para realizar esta acción.');
+        exit;
     }
 
-    $uid = get_current_user_id();
-    $newLink = esc_url_raw($_POST['new_link']);
+    $user_id = get_current_user_id();
+    $new_link = esc_url_raw($_POST['new_link']);
 
-    if (strlen($newLink) > 100) {
-        wp_send_json_error('Enlace muy largo.');
-        return;
+    if (empty($new_link)) {
+        wp_send_json_error('El enlace no puede estar vacío.');
+        exit;
     }
 
-    $updated = update_user_meta($uid, 'user_link', $newLink);
+    if (strlen($new_link) > 100) {
+        wp_send_json_error('El enlace no puede tener más de 200 caracteres.');
+        exit;
+    }
+
+    $updated = update_user_meta($user_id, 'user_link', $new_link);
 
     if (!$updated) {
-        wp_send_json_error('Error al actualizar.');
-        return;
+        wp_send_json_error('Error al actualizar el enlace.');
+        exit;
     }
-    wp_send_json_success('Enlace actualizado.');
+
+    wp_send_json_success('El enlace ha sido actualizado exitosamente.');
 }
-add_action('wp_ajax_cambiar_enlace', 'cambiarEnlace');
+add_action('wp_ajax_cambiar_enlace', 'cambiar_enlace');
