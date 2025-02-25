@@ -90,50 +90,60 @@ function SubidaImagenPerfil() {
     });
 }
 
-function cambiarUsername() {
-    const input = document.getElementById('nombreUsuario');
-    if (!input) return;
+function cambiarNombreUsuario() {
+    const inp = document.getElementById('nombreUsuario');
+    if (!inp) return;
 
-    let orig = input.value;
-    const max = 20;
+    let original = inp.value;
+    const maxCaracteres = 20;
+    const boton = document.querySelector('.guardarConfig');
+    if (!boton) return;
 
-    const btn = document.querySelector('.guardarConfig');
-    if (!btn) return;
+    boton.addEventListener('click', async () => {
+        const nuevoValor = inp.value.trim();
 
-    btn.addEventListener('click', async () => {
-        const nuevo = input.value.trim();
-        if (nuevo === orig || !nuevo || nuevo.length > max) {
-          if(nuevo.length > max){
-            alert(`El nombre de usuario no puede tener más de ${max} caracteres.`);
-          }
+        if (nuevoValor === original || !nuevoValor) {
             return;
         }
 
-        const conf = await new Promise(resolve => resolve(confirm(`¿Cambiar usuario a "${nuevo}"?`)));
+        if (nuevoValor.length < 3) {
+            alert('El nombre debe tener al menos 3 caracteres.');
+            return;
+        }
 
-        if (conf) {
-            const res = await enviarAjax('cambiar_username', { new_username: nuevo });
-            if (res.success) {
-                alert('Nombre de usuario actualizado.');
-                input.value = nuevo;
-                orig = nuevo;
+        if (nuevoValor.length > maxCaracteres) {
+            alert(`El nombre no puede superar ${maxCaracteres} caracteres.`);
+            return;
+        }
+
+        if (/[^a-z0-9._-]/i.test(nuevoValor)) {
+            alert('Caracteres inválidos. Usa letras, números, ., _ o -.');
+            return;
+        }
+
+        const confirmar = await new Promise(resolve => resolve(confirm(`¿Cambiar usuario a "${nuevoValor}"?`)));
+
+        if (confirmar) {
+            const respuesta = await enviarAjax('cambiar_username', {new_username: nuevoValor});
+            if (respuesta.success) {
+                alert('Nombre actualizado.');
+                inp.value = nuevoValor;
+                original = nuevoValor;
             } else {
-                alert('Error: ' + res.message);
+                alert('Error: ' + (respuesta.message || 'Error desconocido'));
             }
         }
     });
 }
 
-
 function IniciadoresConfigPerfil() {
-    SubidaImagenPerfil();  
-    selectorFanArtistaTipo(); 
+    SubidaImagenPerfil();
+    selectorFanArtistaTipo();
     cambiarNombre();
     cambiarUsername();
     cambiarDescripcion();
     cambiarEnlace();
     copiarEnlacePerfil();
-    
 }
 
 /*
@@ -202,7 +212,7 @@ function cambiarNombre() {
                 return; // No se necesitan cambios
             }
             if (!newUsername) {
-                alert("Por favor, ingresa un nombre de usuario.");
+                alert('Por favor, ingresa un nombre de usuario.');
                 return;
             }
             if (newUsername.length > maxCharacters) {
@@ -215,11 +225,11 @@ function cambiarNombre() {
 
             if (confirmed) {
                 try {
-                    const response = await enviarAjax('cambiar_nombre', { new_username: newUsername });
+                    const response = await enviarAjax('cambiar_nombre', {new_username: newUsername});
                     if (response.success) {
                         alert('Nombre de usuario actualizado con éxito.');
                         usernameInput.value = newUsername;
-                        originalUsername = newUsername
+                        originalUsername = newUsername;
                     } else {
                         alert('Error: ' + response.message);
                     }
@@ -261,7 +271,7 @@ function cambiarDescripcion() {
 
             if (confirmed) {
                 try {
-                    const response = await enviarAjax('cambiar_descripcion', { new_description: nuevaDescripcion });
+                    const response = await enviarAjax('cambiar_descripcion', {new_description: nuevaDescripcion});
                     if (response.success) {
                         alert('Descripción actualizada con éxito.');
                         descripcionInput.value = nuevaDescripcion;
@@ -311,7 +321,7 @@ function cambiarEnlace() {
 
             if (confirmed) {
                 try {
-                    const response = await enviarAjax('cambiar_enlace', { new_link: newLink });
+                    const response = await enviarAjax('cambiar_enlace', {new_link: newLink});
                     if (response.success) {
                         alert('Enlace actualizado con éxito.');
                         linkInput.value = newLink;
@@ -356,22 +366,22 @@ function selectorFanArtistaTipo() {
         fetch(ajaxUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({
                 action: 'guardarTipoUsuario',
-                tipoUsuario: tipoUsuario,
-            }),
+                tipoUsuario: tipoUsuario
+            })
         })
-            .then((response) => response.json())
-            .then((data) => {
+            .then(response => response.json())
+            .then(data => {
                 if (data.success) {
                     location.reload(); // Recarga la página
                 } else {
                     console.error('Error al guardar tipo de usuario:', data.data);
                 }
             })
-            .catch((error) => {
+            .catch(error => {
                 console.error('Error en la solicitud AJAX:', error);
             });
     }
@@ -424,12 +434,13 @@ function copiarEnlacePerfil() {
     const botonesCompartir = document.querySelectorAll('.compartirPerfil');
 
     botonesCompartir.forEach(boton => {
-        boton.addEventListener('click', function() {
+        boton.addEventListener('click', function () {
             const username = this.getAttribute('data-username');
             const enlacePerfil = `https://2upra.com/perfil/${username}`;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(enlacePerfil)
+                navigator.clipboard
+                    .writeText(enlacePerfil)
                     .then(() => {
                         alert('Enlace del perfil copiado al portapapeles: ' + enlacePerfil);
                     })

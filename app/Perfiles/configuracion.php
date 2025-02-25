@@ -108,45 +108,71 @@ function cambiarImgPerfil()
 }
 add_action('wp_ajax_cambiar_imagen_perfil', 'cambiarImgPerfil');
 
-function cambiarUsername()
-{
-    $logMsg = "cambiarUsername: ";
+
+
+function cambiarNombreUsuario() {
+    $logMsg = "cambiarNombreUsuario: ";
+
     if (!is_user_logged_in()) {
-        error_log($logMsg . "Usuario no logueado");
+        error_log($logMsg . "No logueado");
         wp_send_json_error('No autorizado.');
-        exit;
-    }
-    $uid = get_current_user_id();
-    $newUsername = sanitize_text_field($_POST['new_username']);
-    error_log($logMsg . "Nuevo Username: " . $newUsername);
-
-    if (empty($newUsername)) {
-        error_log($logMsg . "Username vacío");
-        wp_send_json_error('Username vacío.');
-        exit;
-    }
-    if (username_exists($newUsername)) {
-        error_log($logMsg . "Username ya existe");
-        wp_send_json_error('Username ya en uso.');
-        exit;
+        return;
     }
 
-    $result = wp_update_user([
-        'ID' => $uid,
-        'user_login' => $newUsername
-    ]);
-    error_log($logMsg . "wp_update_user Result: " . print_r($result, true));
+    $idUsuario = get_current_user_id();
+    $nuevoNombre = sanitize_text_field($_POST['new_username']);
 
-
-    if (is_wp_error($result)) {
-        error_log($logMsg . "Error al actualizar: " . $result->get_error_message());
-        wp_send_json_error('Error al actualizar.');
-        exit;
+    if (empty($nuevoNombre)) {
+        error_log($logMsg . "Nombre vacío");
+        wp_send_json_error('Nombre vacío.');
+        return;
+    }
+    
+    if (strlen($nuevoNombre) < 3 ) {
+        error_log($logMsg . "Nombre corto");
+        wp_send_json_error('El nombre debe tener al menos 3 caracteres.');
+        return;
     }
 
-    wp_send_json_success('Username cambiado.');
+    if (strlen($nuevoNombre) > 20 ) {
+        error_log($logMsg . "Nombre largo");
+        wp_send_json_error('El nombre no puede superar los 20 caracteres.');
+        return;
+    }
+
+    if (preg_match('/[^a-z0-9._-]/i', $nuevoNombre)) {
+        error_log($logMsg . "Caracteres inválidos");
+        wp_send_json_error('Caracteres inválidos. Usa letras, números, ., _ o -.');
+        return;
+    }
+
+
+    if (username_exists($nuevoNombre)) {
+        error_log($logMsg . "Nombre en uso");
+        wp_send_json_error('Nombre ya en uso.');
+        return;
+    }
+
+    global $wpdb;
+
+    $resultado = $wpdb->update(
+        $wpdb->users,
+        array('user_login' => $nuevoNombre),
+        array('ID' => $idUsuario)
+    );
+    error_log($logMsg . "Resultado update " . $resultado ? "Exito " : "Error");
+
+
+    if (false === $resultado) {
+        error_log($logMsg . "Error al actualizar nombre");
+        wp_send_json_error('Error al actualizar nombre.');
+        return;
+    }
+
+    wp_send_json_success('Nombre cambiado.');
 }
-add_action('wp_ajax_cambiar_username', 'cambiarUsername');
+
+add_action('wp_ajax_cambiar_username', 'cambiarNombreUsuario');
 
 function cambiarNombre()
 {
