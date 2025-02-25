@@ -418,6 +418,7 @@
         }
     }
 
+
     function manejadorEventoBusqueda(e) {
         let log = 'manejadorEventoBusqueda: ';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
@@ -432,8 +433,43 @@
         if (esEnter) e.preventDefault();
         log += esEnter ? 'Enter presionado. ' : 'Click en botón. ';
 
-        actualizarUIBusqueda(identificador);
-        resetearCarga();
+        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
+        const divMomento = document.querySelector('div.divmomento.artista'); // Busca el div
+
+        if (listaMomento) {
+            listaMomento.remove();
+            log += 'Lista momento eliminada. ';
+        }
+
+        if (divMomento) {
+            divMomento.remove();
+            log += 'Div momento eliminado. ';
+        }
+
+        const listas = document.querySelectorAll('.social-post-list');
+        if (!listaMomento) {
+            let listasLimpias = 0;
+            listas.forEach(l => {
+                l.innerHTML = '';
+                listasLimpias++;
+            });
+            log += `Listas limpias: ${listasLimpias}. `;
+        }
+
+        const input = document.getElementById('identifier');
+        identificador = input.value.trim();
+
+        if (identificador === '') {
+            log += 'Campo vacío.';
+            console.log(log);
+            return;
+        }
+
+        if (!listaMomento) {
+            actualizarUIBusqueda(identificador);
+            resetearCarga();
+            log += 'Búsqueda y carga reseteada. ';
+        }
 
         const listaActiva = document.querySelector('.tab.active .social-post-list');
         if (listaActiva && !listaMomento) {
@@ -595,9 +631,37 @@
             if (valorTag) {
                 const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
                 if (!listaPublicaciones) {
-                    log('No se encontró .social-post-list para añadir contenido');
                     return;
                 }
+
+                const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
+                const divMomento = document.querySelector('div.divmomento.artista'); // Busca el div
+        
+                if (listaMomento) {
+                    listaMomento.remove();
+                }
+        
+                if (divMomento) {
+                    divMomento.remove();
+                }
+        
+                const listas = document.querySelectorAll('.social-post-list');
+                if (!listaMomento) {
+                    let listasLimpias = 0;
+                    listas.forEach(l => {
+                        l.innerHTML = '';
+                        listasLimpias++;
+                    });
+                }
+        
+                const input = document.getElementById('identifier');
+                identificador = input.value.trim();
+        
+                if (identificador === '') {
+                    console.log(log);
+                    return;
+                }
+
                 identificador = valorTag;
                 actualizarUIBusqueda(valorTag);
                 log('Nuevo identificador establecido:', identificador);
@@ -610,36 +674,6 @@
     function resetearCarga() {
         paginaActual = 1;
         publicacionesCargadas.clear();
-
-        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
-        const divMomento = document.querySelector('div.divmomento.artista'); // Busca el div
-
-        if (listaMomento) {
-            listaMomento.remove();
-        }
-
-        if (divMomento) {
-            divMomento.remove();
-        }
-
-        const listas = document.querySelectorAll('.social-post-list');
-        if (!listaMomento) {
-            let listasLimpias = 0;
-            listas.forEach(l => {
-                l.innerHTML = '';
-                listasLimpias++;
-            });
-        }
-
-        const input = document.getElementById('identifier');
-        identificador = input.value.trim();
-
-        if (identificador === '') {
-            log += 'Campo vacío.';
-            console.log(log);
-            return;
-        }
-
         window.scrollTo(0, 0);
     }
 
@@ -677,7 +711,22 @@
     }
 
     function obtenerBusquedaDeURL() {
-        const params = new URLSearchParams(window.location.search);
+        let urlCompleta = window.location.href;
+        let posicionHash = urlCompleta.indexOf('#');
+        let queryString = '';
+
+        if (posicionHash !== -1) {
+            queryString = urlCompleta.substring(urlCompleta.indexOf('?'), posicionHash);
+        } else {
+            queryString = urlCompleta.substring(urlCompleta.indexOf('?'));
+        }
+
+        if (!queryString) {
+            //Verificamos que exista algo en el query
+            return '';
+        }
+
+        const params = new URLSearchParams(queryString);
         return params.get('busqueda') || '';
     }
 
