@@ -438,6 +438,13 @@
         if (esEnter) e.preventDefault();
         log += esEnter ? 'Enter presionado. ' : 'Click en botón. ';
 
+        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
+
+        if (listaMomento) {
+            listaMomento.remove();
+            log += 'Lista momento eliminada. ';
+        }
+
         const listas = document.querySelectorAll('.social-post-list');
         let listasLimpias = 0;
         listas.forEach(l => {
@@ -452,15 +459,6 @@
         if (identificador === '') {
             log += 'Campo vacío.';
             console.log(log);
-            return;
-        }
-
-        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
-
-        if (listaMomento) {
-            log += 'Lista momento existe, no se hara la busqueda. ';
-            console.log(log);
-            //No se hace nada si la lista existe!
             return;
         }
 
