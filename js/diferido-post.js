@@ -240,19 +240,6 @@
         return respuestaCompleta;
     };
 
-    /*
-    aca sucede esto
-
-    Se presionó Enter en el campo de búsqueda.
-    Valor del campo de búsqueda: kick.
-    Búsqueda activada.
-    Se reseteó la carga.
-    Se llamó a cargarMasContenido.
-    Error en la petición AJAX: TypeError: Cannot read properties of null (reading 'addEventListener').
-    La función ha finalizado.
-
-    y no se hace la busqueda supngo que por eso
-    */
     async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
         let log = '';
         let respuestaCompleta = null;
@@ -406,8 +393,6 @@
                     elim.remove();
                 }
             }
-
-
         } else {
             log += `No hay publicaciones válidas. Deteniendo carga. `;
             detenerCarga();
@@ -432,54 +417,65 @@
         }
     }
 
+    /*
+    Esto es el evento de busqueda, necesito que cuando se haga una busqueda, en caso de que exista
+
+    <ul class="social-post-list clase-momento" data-filtro="momento" data-posttype="social_post" data-tab-id="Samples">
+
+    */
+
     function manejadorEventoBusqueda(e) {
-        let log = '';
+        let log = 'manejadorEventoBusqueda: ';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
         const esBoton = e.type === 'click' && (e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar'));
 
-        if (esEnter || esBoton) {
-            if (esEnter) {
-                e.preventDefault();
-                log += 'Se presionó Enter en el campo de búsqueda.\n';
-            } else {
-                log += 'Se hizo clic en el botón de búsqueda.\n';
-            }
-
-            // Limpiar todos los .social-post-list
-            const listasPublicaciones = document.querySelectorAll('.social-post-list');
-            let listasLimpiadas = 0;
-            listasPublicaciones.forEach(lista => {
-                lista.innerHTML = '';
-                listasLimpiadas++;
-            });
-            log += `Se limpiaron ${listasLimpiadas} listas de publicaciones.\n`;
-
-            const inputBusqueda = document.getElementById('identifier');
-            identificador = inputBusqueda.value.trim();
-            log += `Valor del campo de búsqueda: ${identificador}.\n`;
-
-            if (identificador === '') {
-                log += 'El campo de búsqueda está vacío.\n';
-                console.log(log);
-                return;
-            }
-
-            actualizarUIBusqueda(identificador);
-            log += 'Búsqueda activada.\n';
-            resetearCarga();
-            log += 'Se reseteó la carga.\n';
-
-            // Seleccionar la lista de publicaciones activa después de limpiar
-            const listaPublicacionesActiva = document.querySelector('.tab.active .social-post-list');
-            if (listaPublicacionesActiva) {
-                cargarMasContenido(listaPublicacionesActiva);
-                log += 'Se llamó a cargarMasContenido en la lista activa.\n';
-            } else {
-                log += 'No se encontró .social-post-list activo para añadir contenido.\n';
-            }
-        } else {
-            log += `Evento no manejado: ${e.type}.\n`;
+        if (!esEnter && !esBoton) {
+            log += `Evento no manejado: ${e.type}`;
+            console.log(log);
+            return;
         }
+
+        if (esEnter) e.preventDefault();
+        log += esEnter ? 'Enter presionado. ' : 'Click en botón. ';
+
+        const listas = document.querySelectorAll('.social-post-list');
+        let listasLimpias = 0;
+        listas.forEach(l => {
+            l.innerHTML = '';
+            listasLimpias++;
+        });
+        log += `Listas limpias: ${listasLimpias}. `;
+
+        const input = document.getElementById('identifier');
+        identificador = input.value.trim();
+
+        if (identificador === '') {
+            log += 'Campo vacío.';
+            console.log(log);
+            return;
+        }
+
+        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
+
+        if (listaMomento) {
+            log += 'Lista momento existe, no se hara la busqueda. ';
+            console.log(log);
+            //No se hace nada si la lista existe!
+            return;
+        }
+
+        actualizarUIBusqueda(identificador);
+        resetearCarga();
+        log += 'Búsqueda y carga reseteada. ';
+
+        const listaActiva = document.querySelector('.tab.active .social-post-list');
+        if (listaActiva) {
+            cargarMasContenido(listaActiva);
+            log += 'cargarMasContenido llamada.';
+        } else {
+            log += 'No lista activa.';
+        }
+
         console.log(log);
     }
 
