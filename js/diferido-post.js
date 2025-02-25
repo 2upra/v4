@@ -400,6 +400,7 @@
 
         console.log('manejarContenido:', log);
     }
+
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
@@ -417,13 +418,6 @@
         }
     }
 
-    /*
-    Esto es el evento de busqueda, necesito que cuando se haga una busqueda, en caso de que exista
-
-    <ul class="social-post-list clase-momento" data-filtro="momento" data-posttype="social_post" data-tab-id="Samples">
-
-    */
-
     function manejadorEventoBusqueda(e) {
         let log = 'manejadorEventoBusqueda: ';
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
@@ -439,14 +433,19 @@
         log += esEnter ? 'Enter presionado. ' : 'Click en botón. ';
 
         const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
+        const divMomento = document.querySelector('div.divmomento.artista'); // Busca el div
 
         if (listaMomento) {
-            listaMomento.remove(); // Elimina el elemento del DOM
+            listaMomento.remove();
             log += 'Lista momento eliminada. ';
         }
 
+        if (divMomento) {
+            divMomento.remove(); // Elimina el div si existe
+            log += 'Div momento eliminado. ';
+        }
+
         const listas = document.querySelectorAll('.social-post-list');
-        // No limpiar otras listas si listaMomento existía
         if (!listaMomento) {
             let listasLimpias = 0;
             listas.forEach(l => {
@@ -479,7 +478,7 @@
             log += 'No lista activa o lista momento existia.';
         }
 
-        console.log(log);
+        //console.log(log);
     }
 
     function reiniciarFuncionesYEventos() {
