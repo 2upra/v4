@@ -20,25 +20,30 @@ function obtenerTagsFrecuentes(): array {
         INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
         WHERE pm.meta_key = 'datosAlgoritmo'
         AND p.post_type = 'social_post'
-        AND p.post_date >= %s
-        LIMIT 20000",
+        AND p.post_date >= %s",
         $fechaLimite
     );
 
-    $resultados = $wpdb->get_col($consulta);
+    $resultados = $wpdb->get_results($consulta, ARRAY_A);
     $conteoTags = [];
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio', 'artista_posible'];
+    
+    if (empty($resultados)) {
+        error_log('obtenerTagsFrecuentes: No se encontraron resultados en la consulta a la base de datos.');
+        return [];
+    }
 
-    foreach ($resultados as $valorMeta) {
+    foreach ($resultados as $resultado) {
+        $valorMeta = $resultado['meta_value'];
         $datosMeta = json_decode($valorMeta, true);
-
+    
         if (!is_array($datosMeta)) {
-            error_log('obtenerTagsFrecuentes: Valor meta no es un array JSON válido.');
+            error_log('obtenerTagsFrecuentes: Valor meta no es un array JSON válido. Valor: ' . $valorMeta);
             continue;
         }
-
+    
         foreach ($campos as $campo) {
-            if (!empty($datosMeta[$campo]['en']) && is_array($datosMeta[$campo]['en'])) {
+            if (isset($datosMeta[$campo]) && is_array($datosMeta[$campo]) && isset($datosMeta[$campo]['en']) && is_array($datosMeta[$campo]['en'])) {
                 foreach ($datosMeta[$campo]['en'] as $tag) {
                     if (is_string($tag)) {
                         $tagNormalizado = strtolower(trim($tag));
