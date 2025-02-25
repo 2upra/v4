@@ -10,14 +10,14 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similarTo = null,
 
     if (empty($datos)) {
         $log .= "calcularFeedPersonalizado: Datos vacíos, finalizando. \n";
-        guardarLog($log);
+        //guardarLog($log);
         return [];
     }
 
     $usuario = obtenerUsuario($userId);
     if (empty($usuario)) {
         $log .= "calcularFeedPersonalizado: Usuario no encontrado, finalizando. \n";
-        guardarLog($log);
+        //guardarLog($log);
         return [];
     }
 
@@ -31,14 +31,14 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similarTo = null,
 
     if (empty($puntos)) {
         $log .= "calcularFeedPersonalizado: No hay puntos calculados, finalizando. \n";
-        guardarLog($log);
+        //guardarLog($log);
         return [];
     }
 
     $puntos = ordenarYLimitarPuntos($puntos);
     $log .= "ordenarYLimitarPuntos: Duración: " . (microtime(true) - $tiempoInicio) . " segundos \n";
     $log .= "calcularFeedPersonalizado: Fin, Duración total: " . (microtime(true) - $tiempoInicio) . " segundos \n";
-    guardarLog($log);
+    //guardarLog($log);
     return $puntos;
 }
 
@@ -56,7 +56,7 @@ function obtenerVistas($userId)
     $tiempoInicio = microtime(true);
     $vistas = obtenerYProcesarVistasPosts($userId);
     $duracion = microtime(true) - $tiempoInicio;
-    guardarLog("obtenerYProcesarVistasPosts: Duración: $duracion segundos");
+    //guardarLog("obtenerYProcesarVistasPosts: Duración: $duracion segundos");
     return $vistas;
 }
 
@@ -78,7 +78,7 @@ function calcularDecaimiento($datos)
         }
     }
     $duracion = microtime(true) - $tiempoInicio;
-    guardarLog("calcularDecaimiento: Duración: $duracion segundos");
+    //guardarLog("calcularDecaimiento: Duración: $duracion segundos");
     return $decaimiento;
 }
 
@@ -98,7 +98,7 @@ function calcularPuntos($datos, $esAdmin, $vistas, $identifier, $similarTo, $use
         $tipoUsuario
     );
     $duracion = microtime(true) - $tiempoInicio;
-    guardarLog("calcularPuntosPostBatch: Duración: $duracion segundos");
+    //guardarLog("calcularPuntosPostBatch: Duración: $duracion segundos");
     return $puntos;
 }
 
@@ -110,7 +110,7 @@ function ordenarYLimitarPuntos($puntos)
         $puntos = array_slice($puntos, 0, POSTINLIMIT, true);
     }
     $duracion = microtime(true) - $tiempoInicio;
-    guardarLog("ordenarYLimitarPuntos: Duración: $duracion segundos");
+    //guardarLog("ordenarYLimitarPuntos: Duración: $duracion segundos");
     return $puntos;
 }
 
@@ -160,6 +160,6 @@ function calcularPuntosPostBatch(
 
     $duracion = microtime(true) - $tiempoInicio;
     $log .= "calcularPuntosPostBatch: Fin, Duración: $duracion segundos \n";
-    guardarLog($log);
+    //guardarLog($log);
     return $puntos;
 }

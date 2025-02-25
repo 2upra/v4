@@ -423,7 +423,7 @@ function ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $s
         }
     }
 
-    error_log("[ordenamiento] aplicando ordenamiento");
+    //error_log("[ordenamiento] aplicando ordenamiento");
 
     try {
         global $wpdb;

@@ -1,18 +1,6 @@
 <?
 
 function obtenerTagsFrecuentes(): array {
-    // $claveCache = 'tagsFrecuentes12';  // Desactivado temporalmente
-    // $tiempoCache = 43200;            // Desactivado temporalmente
-
-    // $tagsFrecuentes = obtenerCache($claveCache); // Desactivado temporalmente
-    // if ($tagsFrecuentes !== false) {
-    //     error_log('obtenerTagsFrecuentes: Obtenidos desde cache.');
-    //     // Log para inspeccionar la caché (se activará más adelante)
-    //     // error_log('obtenerTagsFrecuentes: Contenido de la caché: ' . print_r($tagsFrecuentes, true));
-    //     $tagsArray = array_keys($tagsFrecuentes);
-    //     shuffle($tagsArray);
-    //     return array_slice($tagsArray, 0, 32);
-    // }
     error_log('obtenerTagsFrecuentes: Calculando (caché desactivada).');
 
     global $wpdb;
@@ -40,10 +28,13 @@ function obtenerTagsFrecuentes(): array {
         error_log('obtenerTagsFrecuentes: No resultados para la consulta.');
         return [];
     }
+     error_log('obtenerTagsFrecuentes: Resultados consulta: ' . count($resultados));
+
 
     $conteoTags = [];
 
     foreach ($resultados as $resultado) {
+        error_log('obtenerTagsFrecuentes: Resultado: ' . print_r($resultado, true)); // Log del resultado COMPLETO
         $valorMeta = $resultado['meta_value'];
         $datosMeta = json_decode($valorMeta, true);
 
@@ -51,9 +42,14 @@ function obtenerTagsFrecuentes(): array {
             error_log('obtenerTagsFrecuentes: Error al decodificar JSON: ' . $valorMeta);
             continue;
         }
-          foreach ($campos as $campo) {
+        error_log('obtenerTagsFrecuentes: datosMeta: ' . print_r($datosMeta, true));
+
+        foreach ($campos as $campo) {
+           error_log('obtenerTagsFrecuentes: Campo actual: ' . $campo);
             if (isset($datosMeta[$campo]) && is_array($datosMeta[$campo]) && isset($datosMeta[$campo]['en']) && is_array($datosMeta[$campo]['en'])) {
+                error_log('obtenerTagsFrecuentes: Entrando al if del campo: ' . $campo);
                 foreach ($datosMeta[$campo]['en'] as $tag) {
+                    error_log('obtenerTagsFrecuentes: Tag encontrado: ' . $tag);
                     if (is_string($tag)) {
                         $tagNormalizado = strtolower(trim($tag));
                         if (!empty($tagNormalizado)) {
@@ -61,9 +57,13 @@ function obtenerTagsFrecuentes(): array {
                         }
                     }
                 }
+            } else {
+                error_log('obtenerTagsFrecuentes: No se cumple la condición del if para el campo: ' . $campo);
             }
         }
     }
+
+    error_log('obtenerTagsFrecuentes: Conteo de tags: ' . print_r($conteoTags, true)); // Log del conteo de tags
 
     arsort($conteoTags);
     $top70 = array_slice($conteoTags, 0, 70, true);
@@ -75,10 +75,9 @@ function obtenerTagsFrecuentes(): array {
     $claves = array_keys($top70);
     shuffle($claves);
     $clavesSel = array_slice($claves, 0, 32);
-    // guardarCache($claveCache, $top70, $tiempoCache); // Desactivado temporalmente
+
 
     error_log('obtenerTagsFrecuentes: Tags calculados: ' . count($clavesSel));
-     // Inspeccionar los tags calculados (útil para depurar)
     error_log('obtenerTagsFrecuentes: Tags: ' . print_r($clavesSel,true));
     return $clavesSel;
 }
@@ -100,4 +99,3 @@ function tagsPosts() {
     echo '</div>';
 }
 
-?>
