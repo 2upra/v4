@@ -140,7 +140,7 @@ function IniciadoresConfigPerfil() {
     SubidaImagenPerfil();
     selectorFanArtistaTipo();
     cambiarNombre();
-    cambiarUsername();
+    cambiarNombreUsuario();
     cambiarDescripcion();
     cambiarEnlace();
     copiarEnlacePerfil();
