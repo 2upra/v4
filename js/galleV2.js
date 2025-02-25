@@ -513,13 +513,13 @@ function galle() {
     }
 
     function clickMensaje() {
-        const contenedor = document.querySelector('chatIcono'); 
+        const chatIcono = document.getElementById('chatIcono');
 
-        if (contenedor) {
-            contenedor.addEventListener('click', evento => {
+        if (chatIcono) {
+            chatIcono.addEventListener('click', evento => {
                 const elementoClickeado = evento.target;
 
-                if (elementoClickeado.closest('.mensaje') || elementoClickeado.closest('.mensajeBoton')) {
+                if (elementoClickeado.closest('.mensaje, .mensajeBoton')) {
                     manejarClickEnConversacion(elementoClickeado.closest('.mensaje, .mensajeBoton'));
                 }
             });
