@@ -1,44 +1,42 @@
-<? 
-
+<?
 function manejarColeccion($args, $paged)
 {
-    // Crear una clave de caché única basada en la colección y la paginación
-    $cache_key = 'coleccion_' . $args['colec'] . '_paged_' . $paged;
+    $cacheKeyIds = 'coleccion_ids_' . $args['colec']; // Clave para los IDs
+    $cacheTimeIds = 86400;  // Tiempo de vida largo para los IDs (1 día)
+    $cacheKeyQuery = 'coleccion_query_' . $args['colec'] . '_paged_' . $paged; //Clave para la query
+    $cacheTimeQuery = 300;  //Tiempo de vida corto para la query
 
-    // Intentar obtener datos desde la caché
-    $cached_data = obtenerCache($cache_key);
-    if ($cached_data !== false) {
-        guardarLog("Cargando colección desde la caché para colección {$args['colec']}");
-        return $cached_data;
+    $ids = obtenerCache($cacheKeyIds);
+
+    if ($ids === false) {
+        guardarLog("manejarColeccion: Cargando IDs desde DB: {$args['colec']}");
+        $samplesMeta = get_post_meta($args['colec'], 'samples', true);
+        if (!is_array($samplesMeta)) {
+            $samplesMeta = maybe_unserialize($samplesMeta);
+        }
+
+        if (is_array($samplesMeta)) {
+            $ids = array_values($samplesMeta);
+            guardarCache($cacheKeyIds, $ids, $cacheTimeIds); // Guardar los IDs
+        } else {
+            return false;
+        }
     }
 
-    guardarLog("Cargando posts de la colección desde la base de datos para colección {$args['colec']}");
-    $samples_meta = get_post_meta($args['colec'], 'samples', true);
-    if (!is_array($samples_meta)) {
-        $samples_meta = maybe_unserialize($samples_meta);
-    }
 
-    if (is_array($samples_meta)) {
-        $query_args = [
-            'post_type' => $args['post_type'],
-            'post__in' => array_values($samples_meta),
-            'orderby' => 'post__in',
-            'posts_per_page' => 12,
-            'paged' => $paged,
-        ];
+    shuffle($ids); // *Barajar* los IDs en PHP
 
-        // Guardamos la clave de la caché en una lista asociada a la colección, para facilitar su eliminación
-        $cache_master_key = 'cache_colec_' . $args['colec'];
-        $cache_keys = obtenerCache($cache_master_key) ?: [];
-        $cache_keys[] = $cache_key;
-        guardarCache($cache_master_key, $cache_keys, 86400); // Guardar lista de claves de caché
+    //Limitar ids a mostrar por pagina
+    $offset = ($paged - 1) * 12;
+    $limitedIds = array_slice($ids, $offset, 12);
 
-        // Guardar los resultados en la caché con una expiración de 1 día
-        guardarCache($cache_key, $query_args, 86400);
-
-        return $query_args;
-    } else {
-        //error_log("[manejarColeccion] El meta 'samples' no es un array válido.");
-        return false;
-    }
+    $queryArgs = [
+        'post_type'      => 'post',  // Asumiendo que siempre es 'post'.  Si no, usa $args['post_type']
+        'post__in'       => $limitedIds,
+        'orderby'        => 'post__in', // Importante: Mantener el orden de $limitedIds
+        'posts_per_page' => 12,
+        'paged'          => $paged,
+        'ignore_sticky_posts' => true, // Añadido para evitar problemas con sticky posts
+    ];
+    return $queryArgs;
 }
