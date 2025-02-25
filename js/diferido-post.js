@@ -677,22 +677,7 @@
     }
 
     function obtenerBusquedaDeURL() {
-        let urlCompleta = window.location.href;
-        let posicionHash = urlCompleta.indexOf('#');
-        let queryString = '';
-
-        if (posicionHash !== -1) {
-            queryString = urlCompleta.substring(urlCompleta.indexOf('?'), posicionHash);
-        } else {
-            queryString = urlCompleta.substring(urlCompleta.indexOf('?'));
-        }
-
-        if (!queryString) {
-            //Verificamos que exista algo en el query
-            return '';
-        }
-
-        const params = new URLSearchParams(queryString);
+        const params = new URLSearchParams(window.location.search);
         return params.get('busqueda') || '';
     }
 
