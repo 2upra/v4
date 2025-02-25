@@ -1,17 +1,19 @@
 <?
 
 function obtenerTagsFrecuentes(): array {
-    $claveCache = 'tagsFrecuentes12';
-    $tiempoCache = 43200;
+    // $claveCache = 'tagsFrecuentes12';  // Desactivado temporalmente
+    // $tiempoCache = 43200;            // Desactivado temporalmente
 
-    $tagsFrecuentes = obtenerCache($claveCache);
-    if ($tagsFrecuentes !== false) {
-        error_log('obtenerTagsFrecuentes: Obtenidos desde cache.');
-        $tagsArray = array_keys($tagsFrecuentes);
-        shuffle($tagsArray);
-        return array_slice($tagsArray, 0, 32);
-    }
-    error_log('obtenerTagsFrecuentes: No en cache, calculando.');
+    // $tagsFrecuentes = obtenerCache($claveCache); // Desactivado temporalmente
+    // if ($tagsFrecuentes !== false) {
+    //     error_log('obtenerTagsFrecuentes: Obtenidos desde cache.');
+    //     // Log para inspeccionar la caché (se activará más adelante)
+    //     // error_log('obtenerTagsFrecuentes: Contenido de la caché: ' . print_r($tagsFrecuentes, true));
+    //     $tagsArray = array_keys($tagsFrecuentes);
+    //     shuffle($tagsArray);
+    //     return array_slice($tagsArray, 0, 32);
+    // }
+    error_log('obtenerTagsFrecuentes: Calculando (caché desactivada).');
 
     global $wpdb;
     $fechaLimite = date('Y-m-d', strtotime('-1 month'));
@@ -49,8 +51,7 @@ function obtenerTagsFrecuentes(): array {
             error_log('obtenerTagsFrecuentes: Error al decodificar JSON: ' . $valorMeta);
             continue;
         }
-
-        foreach ($campos as $campo) {
+          foreach ($campos as $campo) {
             if (isset($datosMeta[$campo]) && is_array($datosMeta[$campo]) && isset($datosMeta[$campo]['en']) && is_array($datosMeta[$campo]['en'])) {
                 foreach ($datosMeta[$campo]['en'] as $tag) {
                     if (is_string($tag)) {
@@ -74,9 +75,11 @@ function obtenerTagsFrecuentes(): array {
     $claves = array_keys($top70);
     shuffle($claves);
     $clavesSel = array_slice($claves, 0, 32);
-    guardarCache($claveCache, $top70, $tiempoCache);
+    // guardarCache($claveCache, $top70, $tiempoCache); // Desactivado temporalmente
 
-    error_log('obtenerTagsFrecuentes: Tags calculados y guardados en cache: ' . count($clavesSel));
+    error_log('obtenerTagsFrecuentes: Tags calculados: ' . count($clavesSel));
+     // Inspeccionar los tags calculados (útil para depurar)
+    error_log('obtenerTagsFrecuentes: Tags: ' . print_r($clavesSel,true));
     return $clavesSel;
 }
 
