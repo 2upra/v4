@@ -1,87 +1,19 @@
-<?php
+<?
 
-/**
- * Obtiene y muestra tags frecuentes basados en metadatos de posts.
- */
-function mostrarTagsFrecuentes()
-{
-    $tags = obtenerTagsFrecuentes();
-
-    if (!empty($tags)) {
-        echo '<div class="tags-frecuentes">';
-        foreach ($tags as $tag) {
-            echo '<span class="postTag">' . esc_html(ucwords($tag)) . '</span> ';
-        }
-        echo '</div>';
-    } else {
-        error_log(__FUNCTION__ . ': No se encontraron tags disponibles.');
-        echo '<div class="tags-frecuentes">No tags available.</div>';
-    }
-}
-
-/**
- *  Función principal para obtener los tags frecuentes.
- *  @return array Array de tags frecuentes.
- */
-function obtenerTagsFrecuentes()
-{
+function obtenerTagsFrecuentes(): array {
     $claveCache = 'tagsFrecuentes12';
+    $tagsFrecuentes = obtenerCache($claveCache);
     $tiempoCache = 43200;
 
-    $tags = obtenerTagsCache($claveCache);
-
-    if ($tags !== false) {
-        $tags = mezclarYCortarTags($tags, 32);
-        return $tags;
+    if ($tagsFrecuentes !== false) {
+        $tagsArray = array_keys($tagsFrecuentes);
+        shuffle($tagsArray);
+        return array_slice($tagsArray, 0, 32);
     }
 
-    $tags = consultarYProcesarTags();
-
-    if (empty($tags)) {
-        error_log(__FUNCTION__ . ': No se pudieron obtener tags de la base de datos.');
-        return [];
-    }
-
-    $tagsTop = obtenerTopTags($tags, 70);
-    guardarCache($claveCache, $tagsTop, $tiempoCache);
-
-    $tagsFinal = mezclarYCortarTags($tagsTop, 32);
-    return $tagsFinal;
-}
-
-/**
- *  Intenta obtener los tags del cache.
- *  @param string $claveCache Clave para el cache.
- *  @return mixed Array de tags si existe en el cache, false si no.
- */
-function obtenerTagsCache(string $claveCache)
-{
-    $tags = obtenerCache($claveCache);
-    return $tags;
-}
-
-/**
- *  Mezcla un array de tags y retorna una porción.
- *  @param array $tags Array de tags.
- *  @param int $cantidad Cantidad de tags a retornar.
- *  @return array Array mezclado y cortado.
- */
-function mezclarYCortarTags(array $tags, int $cantidad)
-{
-    $arrTags = array_keys($tags);
-    shuffle($arrTags);
-    return array_slice($arrTags, 0, $cantidad);
-}
-
-/**
- *  Realiza la consulta a la base de datos y procesa los resultados para obtener los tags.
- *  @return array Array asociativo con el conteo de cada tag.
- */
-function consultarYProcesarTags()
-{
     global $wpdb;
-
     $fechaLimite = date('Y-m-d', strtotime('-1 month'));
+
     $consulta = $wpdb->prepare(
         "SELECT pm.meta_value 
         FROM {$wpdb->postmeta} pm
@@ -94,22 +26,6 @@ function consultarYProcesarTags()
     );
 
     $resultados = $wpdb->get_col($consulta);
-
-    if (empty($resultados)) {
-        error_log(__FUNCTION__ . ': No se encontraron resultados en la consulta a la base de datos.');
-        return [];
-    }
-
-    return contarTags($resultados);
-}
-
-/**
- *  Cuenta la frecuencia de cada tag en los resultados.
- *  @param array $resultados Array de resultados de la consulta a la base de datos.
- *  @return array Array asociativo con el conteo de cada tag.
- */
-function contarTags(array $resultados)
-{
     $conteoTags = [];
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio', 'artista_posible'];
 
@@ -117,7 +33,7 @@ function contarTags(array $resultados)
         $datosMeta = json_decode($valorMeta, true);
 
         if (!is_array($datosMeta)) {
-            error_log(__FUNCTION__ . ': No se pudo decodificar el JSON: ' . $valorMeta);
+            error_log('obtenerTagsFrecuentes: Valor meta no es un array JSON válido.');
             continue;
         }
 
@@ -135,21 +51,30 @@ function contarTags(array $resultados)
         }
     }
 
-    return $conteoTags;
-}
+    arsort($conteoTags);
+    $top70Tags = array_slice($conteoTags, 0, 70, true);
+    $claves = array_keys($top70Tags);
+    shuffle($claves);
+    $clavesSeleccionadas = array_slice($claves, 0, 32);
+    guardarCache($claveCache, $top70Tags, $tiempoCache);
 
-/**
- *  Obtiene los tags más frecuentes.
- *  @param array $conteoTags Array asociativo con el conteo de cada tag.
- *  @param int $cantidad Cantidad de tags a retornar.
- *  @return array Array asociativo con los tags más frecuentes.
- */
-function obtenerTopTags(array $conteoTags, int $cantidad)
-{
-    if (empty($conteoTags)) {
-        return [];
+    if (empty($clavesSeleccionadas)) {
+         error_log('obtenerTagsFrecuentes: No se encontraron tags frecuentes.');
     }
 
-    arsort($conteoTags);
-    return array_slice($conteoTags, 0, $cantidad, true);
+    return $clavesSeleccionadas;
+}
+
+function tagsPosts() {
+    $tagsFrecuentes = obtenerTagsFrecuentes();
+
+    if (!empty($tagsFrecuentes)) {
+        echo '<div class="tags-frecuentes">';
+        foreach ($tagsFrecuentes as $tag) {
+            echo '<span class="postTag">' . esc_html(ucwords($tag)) . '</span> ';
+        }
+        echo '</div>';
+    } else {
+        echo '<div class="tags-frecuentes">No tags available.</div>';
+    }
 }
