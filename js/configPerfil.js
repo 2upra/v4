@@ -90,10 +90,46 @@ function SubidaImagenPerfil() {
     });
 }
 
+function cambiarUsername() {
+    const input = document.getElementById('nombreUsuario');
+    if (!input) return;
+
+    let orig = input.value;
+    const max = 20;
+
+    const btn = document.querySelector('.guardarConfig');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        const nuevo = input.value.trim();
+        if (nuevo === orig || !nuevo || nuevo.length > max) {
+          if(nuevo.length > max){
+            alert(`El nombre de usuario no puede tener más de ${max} caracteres.`);
+          }
+            return;
+        }
+
+        const conf = await new Promise(resolve => resolve(confirm(`¿Cambiar usuario a "${nuevo}"?`)));
+
+        if (conf) {
+            const res = await enviarAjax('cambiar_username', { new_username: nuevo });
+            if (res.success) {
+                alert('Nombre de usuario actualizado.');
+                input.value = nuevo;
+                orig = nuevo;
+            } else {
+                alert('Error: ' + res.message);
+            }
+        }
+    });
+}
+
+
 function IniciadoresConfigPerfil() {
     SubidaImagenPerfil();  
     selectorFanArtistaTipo(); 
     cambiarNombre();
+    cambiarUsername();
     cambiarDescripcion();
     cambiarEnlace();
     copiarEnlacePerfil();
