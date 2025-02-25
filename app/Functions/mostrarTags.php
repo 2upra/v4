@@ -14,7 +14,7 @@ function mostrarTagsFrecuentes()
         }
         echo '</div>';
     } else {
-        error_log('No se encontraron tags disponibles en mostrarTagsFrecuentes().');
+        error_log(__FUNCTION__ . ': No se encontraron tags disponibles.');
         echo '<div class="tags-frecuentes">No tags available.</div>';
     }
 }
@@ -38,7 +38,7 @@ function obtenerTagsFrecuentes()
     $tags = consultarYProcesarTags();
 
     if (empty($tags)) {
-        error_log('No se pudieron obtener tags de la base de datos en obtenerTagsFrecuentes().');
+        error_log(__FUNCTION__ . ': No se pudieron obtener tags de la base de datos.');
         return [];
     }
 
@@ -96,7 +96,7 @@ function consultarYProcesarTags()
     $resultados = $wpdb->get_col($consulta);
 
     if (empty($resultados)) {
-        error_log('No se encontraron resultados en la consulta a la base de datos en consultarYProcesarTags().');
+        error_log(__FUNCTION__ . ': No se encontraron resultados en la consulta a la base de datos.');
         return [];
     }
 
@@ -117,7 +117,7 @@ function contarTags(array $resultados)
         $datosMeta = json_decode($valorMeta, true);
 
         if (!is_array($datosMeta)) {
-            error_log('No se pudo decodificar el JSON: ' . $valorMeta . ' en contarTags().');
+            error_log(__FUNCTION__ . ': No se pudo decodificar el JSON: ' . $valorMeta);
             continue;
         }
 
