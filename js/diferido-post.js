@@ -441,17 +441,20 @@
         const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
 
         if (listaMomento) {
-            listaMomento.remove();
+            listaMomento.remove(); // Elimina el elemento del DOM
             log += 'Lista momento eliminada. ';
         }
 
         const listas = document.querySelectorAll('.social-post-list');
-        let listasLimpias = 0;
-        listas.forEach(l => {
-            l.innerHTML = '';
-            listasLimpias++;
-        });
-        log += `Listas limpias: ${listasLimpias}. `;
+        // No limpiar otras listas si listaMomento existía
+        if (!listaMomento) {
+            let listasLimpias = 0;
+            listas.forEach(l => {
+                l.innerHTML = '';
+                listasLimpias++;
+            });
+            log += `Listas limpias: ${listasLimpias}. `;
+        }
 
         const input = document.getElementById('identifier');
         identificador = input.value.trim();
@@ -462,16 +465,18 @@
             return;
         }
 
-        actualizarUIBusqueda(identificador);
-        resetearCarga();
-        log += 'Búsqueda y carga reseteada. ';
+        if (!listaMomento) {
+            actualizarUIBusqueda(identificador);
+            resetearCarga();
+            log += 'Búsqueda y carga reseteada. ';
+        }
 
         const listaActiva = document.querySelector('.tab.active .social-post-list');
-        if (listaActiva) {
+        if (listaActiva && !listaMomento) {
             cargarMasContenido(listaActiva);
             log += 'cargarMasContenido llamada.';
         } else {
-            log += 'No lista activa.';
+            log += 'No lista activa o lista momento existia.';
         }
 
         console.log(log);
