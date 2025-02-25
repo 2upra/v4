@@ -478,53 +478,69 @@ function galle() {
         }
     }
 
-    async function manejarClickEnConversacion(item) {
-        item.addEventListener('click', async () => {
-            let conversacion = item.getAttribute('data-conversacion');
-            receptor = item.getAttribute('data-receptor');
-            let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
-            let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
+    function manejarClickEnConversacion(item) {
+        // Obtiene los atributos del elemento clicado
+        let conversacion = item.getAttribute('data-conversacion');
+        let receptor = item.getAttribute('data-receptor');
+        // Intenta obtener la imagen y el nombre de usuario del elemento clicado
+        let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
+        let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
-            if (!imagenPerfil || !nombreUsuario) {
-                try {
-                    const data = await enviarAjax('infoUsuario', {receptor});
-                    if (data?.success) {
-                        imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
-                    } else {
-                        //console.error('Error del servidor:', data.message);
-                        alert(data.message || 'Error al obtener la información del usuario.');
-                        return;
-                    }
-                } catch (error) {
-                    //console.error('Error de conexión:', error);
-                    alert('Error al intentar obtener la información del usuario.');
+        //Si no se encuenta una imagen de perfil, no te detengas, prosigue
+        if (!imagenPerfil || !nombreUsuario) {
+            //console.log("imagen o nombre no existen aun en el DOM")
+            obtenerInformacion();
+        } else {
+            //console.log("imagen o nombre SI existen  en el DOM")
+            abrirConversacionCompleta(); // Llama a la función para abrir la conversación
+        }
+
+        async function obtenerInformacion() {
+            try {
+                const data = await enviarAjax('infoUsuario', {receptor});
+                if (data?.success) {
+                    imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                    nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
+                } else {
+                    console.error('Error del servidor:', data.message);
+                    alert(data.message || 'Error al obtener la información del usuario.');
                     return;
                 }
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                alert('Error al intentar obtener la información del usuario.');
+                return;
             }
+            abrirConversacionCompleta(); // Llama a la función para abrir la conversación
+        }
 
-            // Abrir la conversación
+        function abrirConversacionCompleta() {
             abrirConversacion({
                 conversacion: conversacion || null,
                 receptor,
                 imagenPerfil,
                 nombreUsuario
             });
+        }
+    }
+    function clickMensajeBoton() {
+        // Delegación de eventos:  Escucha clics en el 'document'
+        document.addEventListener('click', function (event) {
+            // Comprueba si el elemento clicado (o un ancestro) coincide con el selector
+            const botonMensaje = event.target.closest('.mensajeBoton');
+            if (botonMensaje) {
+                manejarClickEnConversacion(botonMensaje); // Pasa el elemento encontrado
+            }
         });
     }
 
     function clickMensaje() {
-        const mensajes = document.querySelectorAll('.mensaje');
-        if (mensajes.length > 0) {
-            mensajes.forEach(item => manejarClickEnConversacion(item));
-        }
-    }
-
-    function clickMensajeBoton() {
-        const botonesMensaje = document.querySelectorAll('.mensajeBoton');
-        if (botonesMensaje.length > 0) {
-            botonesMensaje.forEach(item => manejarClickEnConversacion(item));
-        }
+        document.addEventListener('click', function (event) {
+            const mensaje = event.target.closest('.mensaje');
+            if (mensaje) {
+                manejarClickEnConversacion(mensaje);
+            }
+        });
     }
 
     /*
