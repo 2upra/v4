@@ -109,7 +109,6 @@ function cambiarImgPerfil()
 add_action('wp_ajax_cambiar_imagen_perfil', 'cambiarImgPerfil');
 
 
-
 function cambiarNombreUsuario() {
     $logMsg = "cambiarNombreUsuario: ";
 
@@ -127,14 +126,14 @@ function cambiarNombreUsuario() {
         wp_send_json_error('Nombre vacío.');
         return;
     }
-    
-    if (strlen($nuevoNombre) < 3 ) {
+
+    if (strlen($nuevoNombre) < 3) {
         error_log($logMsg . "Nombre corto");
         wp_send_json_error('El nombre debe tener al menos 3 caracteres.');
         return;
     }
 
-    if (strlen($nuevoNombre) > 20 ) {
+    if (strlen($nuevoNombre) > 20) {
         error_log($logMsg . "Nombre largo");
         wp_send_json_error('El nombre no puede superar los 20 caracteres.');
         return;
@@ -146,7 +145,6 @@ function cambiarNombreUsuario() {
         return;
     }
 
-
     if (username_exists($nuevoNombre)) {
         error_log($logMsg . "Nombre en uso");
         wp_send_json_error('Nombre ya en uso.');
@@ -157,10 +155,13 @@ function cambiarNombreUsuario() {
 
     $resultado = $wpdb->update(
         $wpdb->users,
-        array('user_login' => $nuevoNombre),
+        array(
+            'user_login' => $nuevoNombre,
+            'user_nicename' => $nuevoNombre // Actualización de user_nicename
+        ),
         array('ID' => $idUsuario)
     );
-    error_log($logMsg . "Resultado update " . $resultado ? "Exito " : "Error");
+    error_log($logMsg . "Resultado update " . ($resultado !== false ? "Exito" : "Error"));
 
 
     if (false === $resultado) {
@@ -173,6 +174,7 @@ function cambiarNombreUsuario() {
 }
 
 add_action('wp_ajax_cambiar_username', 'cambiarNombreUsuario');
+
 
 function cambiarNombre()
 {
