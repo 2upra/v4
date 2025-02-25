@@ -13,13 +13,13 @@ function guardarCache($cacheKey, $data, $exp) {
     $sData = serialize($alm);
     $cData = gzcompress($sData);
     if (file_put_contents($ruta, $cData)) {
-      guardarLog("guardarCache: Cache creada $cacheKey");
+      //guardarLog("guardarCache: Cache creada $cacheKey");
     }
 }
 
 function obtenerCache($cacheKey) {
     $ruta = WP_CONTENT_DIR . '/cache/feed/' . $cacheKey . '.cache';
-    guardarLog("obtenerCache: Buscando $cacheKey");
+    //guardarLog("obtenerCache: Buscando $cacheKey");
     if (file_exists($ruta)) {
         $cData = file_get_contents($ruta);
         $sData = gzuncompress($cData);
@@ -29,7 +29,7 @@ function obtenerCache($cacheKey) {
         }
         $data = unserialize($sData);
         if ($data['exp'] > time()) {
-            guardarLog("obtenerCache: Cache encontrada $cacheKey");
+            //guardarLog("obtenerCache: Cache encontrada $cacheKey");
             return $data['data'];
         } else {
             unlink($ruta);
@@ -42,7 +42,7 @@ function borrarCache($cacheKey) {
     $ruta = WP_CONTENT_DIR . '/cache/feed/' . $cacheKey . '.cache';
     if (file_exists($ruta)) {
         if (unlink($ruta)) {
-            guardarLog("borrarCache: Cache eliminada $cacheKey");
+            //guardarLog("borrarCache: Cache eliminada $cacheKey");
         }
     }
 }
@@ -57,7 +57,7 @@ function borrarCacheIdeasUsuario($userId)
         }
         borrarCache($cacheMasterKey);
     }
-    guardarLog("borrarCacheIdeasUsuario: Eliminando cache de usuario $userId");
+    //guardarLog("borrarCacheIdeasUsuario: Eliminando cache de usuario $userId");
 }
 
 function borrarCacheColeccion($colecId)
@@ -72,5 +72,5 @@ function borrarCacheColeccion($colecId)
         borrarCache($cacheMasterKey);
         borrarCacheIdeasUsuario($userId);
     }
-    guardarLog("borrarCacheColeccion: Eliminando cache de coleccion $colecId");
+    //guardarLog("borrarCacheColeccion: Eliminando cache de coleccion $colecId");
 }

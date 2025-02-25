@@ -27,7 +27,7 @@ function generarDescripcionIAConURI($audio_uri, $prompt) {
 
         // Hacer la solicitud POST usando CURL
         $apiKey = $_ENV['API_KEY'];
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -155,7 +155,7 @@ function generarDescripcionIA($archivo_path, $prompt) {
 
         // Hacer la solicitud POST usando CURL
         $apiKey = $_ENV['API_KEY'];
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -231,7 +231,7 @@ function generarDescripcionIAPro($archivo_path, $prompt) {
 
         // Hacer la solicitud POST usando CURL
         $apiKey = $_ENV['API_KEY'];
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey";
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
