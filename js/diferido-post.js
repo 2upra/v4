@@ -432,43 +432,8 @@
         if (esEnter) e.preventDefault();
         log += esEnter ? 'Enter presionado. ' : 'Click en botón. ';
 
-        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
-        const divMomento = document.querySelector('div.divmomento.artista'); // Busca el div
-
-        if (listaMomento) {
-            listaMomento.remove();
-            log += 'Lista momento eliminada. ';
-        }
-
-        if (divMomento) {
-            divMomento.remove(); // Elimina el div si existe
-            log += 'Div momento eliminado. ';
-        }
-
-        const listas = document.querySelectorAll('.social-post-list');
-        if (!listaMomento) {
-            let listasLimpias = 0;
-            listas.forEach(l => {
-                l.innerHTML = '';
-                listasLimpias++;
-            });
-            log += `Listas limpias: ${listasLimpias}. `;
-        }
-
-        const input = document.getElementById('identifier');
-        identificador = input.value.trim();
-
-        if (identificador === '') {
-            log += 'Campo vacío.';
-            console.log(log);
-            return;
-        }
-
-        if (!listaMomento) {
-            actualizarUIBusqueda(identificador);
-            resetearCarga();
-            log += 'Búsqueda y carga reseteada. ';
-        }
+        actualizarUIBusqueda(identificador);
+        resetearCarga();
 
         const listaActiva = document.querySelector('.tab.active .social-post-list');
         if (listaActiva && !listaMomento) {
@@ -645,6 +610,36 @@
     function resetearCarga() {
         paginaActual = 1;
         publicacionesCargadas.clear();
+
+        const listaMomento = document.querySelector('ul.social-post-list.clase-momento[data-filtro="momento"][data-posttype="social_post"][data-tab-id="Samples"]');
+        const divMomento = document.querySelector('div.divmomento.artista'); // Busca el div
+
+        if (listaMomento) {
+            listaMomento.remove();
+        }
+
+        if (divMomento) {
+            divMomento.remove();
+        }
+
+        const listas = document.querySelectorAll('.social-post-list');
+        if (!listaMomento) {
+            let listasLimpias = 0;
+            listas.forEach(l => {
+                l.innerHTML = '';
+                listasLimpias++;
+            });
+        }
+
+        const input = document.getElementById('identifier');
+        identificador = input.value.trim();
+
+        if (identificador === '') {
+            log += 'Campo vacío.';
+            console.log(log);
+            return;
+        }
+
         window.scrollTo(0, 0);
     }
 
@@ -669,6 +664,7 @@
     window.addEventListener('resize', ajustarAlturaMaxima);
     */
     /////////////////////////////////
+
     // Actualizar URL con el parámetro de búsqueda
     function actualizarURL(busqueda) {
         const nuevaURL = new URL(window.location);
@@ -681,7 +677,22 @@
     }
 
     function obtenerBusquedaDeURL() {
-        const params = new URLSearchParams(window.location.search);
+        let urlCompleta = window.location.href;
+        let posicionHash = urlCompleta.indexOf('#');
+        let queryString = '';
+
+        if (posicionHash !== -1) {
+            queryString = urlCompleta.substring(urlCompleta.indexOf('?'), posicionHash);
+        } else {
+            queryString = urlCompleta.substring(urlCompleta.indexOf('?'));
+        }
+
+        if (!queryString) {
+            //Verificamos que exista algo en el query
+            return '';
+        }
+
+        const params = new URLSearchParams(queryString);
         return params.get('busqueda') || '';
     }
 
