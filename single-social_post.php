@@ -142,8 +142,10 @@ add_action('wp_head', function () use ($schema) {
         <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
                     <article <?php post_class(); ?>>
-                        <h1 style="font-size: 0px;"><?php echo esc_html($post_title); ?></h1>
-                        <h2 style="font-size: 0px;"><?php echo esc_html($seo_title); ?></h2>
+                        <div>
+                            <h1 style="font-size: 14px;"><?php echo esc_html($post_title); ?></h1>
+                            <h2 style="font-size: 12px;FONT-WEIGHT: 400;;"><?php echo esc_html($seo_title); ?></h2>
+                        </div>
                         <div class="single">
                             <div class="fullH">
                                 <?php echo htmlPost($filtro); ?>
