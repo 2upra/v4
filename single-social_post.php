@@ -142,7 +142,14 @@ add_action('wp_head', function () use ($schema) {
         <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
                     <article <?php post_class(); ?>>
-                        <div>
+                        <div style="
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            padding-top: 20px;
+                            background: #000000;
+                            margin-bottom: -20px;">
                             <h1 style="font-size: 14px;"><?php echo esc_html($post_title); ?></h1>
                             <h2 style="font-size: 12px;FONT-WEIGHT: 400;;"><?php echo esc_html($seo_title); ?></h2>
                         </div>
