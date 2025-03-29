@@ -25,10 +25,7 @@ setcookie("page_title", $titulo, time() + 3600, "/");
 setcookie("page_description", $descripcion, time() + 3600, "/");
 ?>
 
-<head>
-    <meta name="robots" content="index, follow">
-    <? wp_head(); ?>
-</head>
+<? headGeneric(); ?>
 
 <?
 get_header();
