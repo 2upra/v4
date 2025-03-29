@@ -4,10 +4,7 @@ Template Name: feedSample
 */
 ?>
 
-<head>
-    <meta name="robots" content="index, follow">
-    <? wp_head(); ?>
-</head>
+<? headGeneric(); ?>
 
 <?
 get_header();
