@@ -3,20 +3,6 @@
 Template Name: Biblioteca
 */
 
-// Función para obtener el idioma preferido del navegador
-function obtenerIdiomaDelNavegador() {
-    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-        return 'en';
-    }
-    $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-    foreach ($accepted_languages as $language) {
-        $lang = substr($language, 0, 2);
-        if (in_array($lang, ['es', 'en'])) {
-            return $lang;
-        }
-    }
-    return 'en';
-}
 
 // Detectar idioma y definir título y descripción
 $idioma = obtenerIdiomaDelNavegador();
