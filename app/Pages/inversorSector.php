@@ -79,7 +79,7 @@ function inversorSector()
                 <div class="SGEDIGME">
 
                     <div class="RLSDSAE" data-url="https://es.fiverr.com/andoryu_art/design-a-modern-and-minimalist-brand-identity">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
+                        <img src="<? echo get_template_directory_uri(); ?>/assets/img/p1.jpg" alt="p1">
                         <h3>Diseño de páginas web minimalistas y profesionales</h3>
                         <div class="PDASG">
                             <button>Desde 80$</button>
@@ -88,7 +88,7 @@ function inversorSector()
                     </div>
 
                     <div class="RLSDSAE" data-url="https://es.fiverr.com/andoryu_art/make-amazing-studio-style-anime-character">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/d1.jpg" alt="d1">
+                        <img src="<? echo get_template_directory_uri(); ?>/assets/img/d1.jpg" alt="d1">
                         <h3>Diseño de identidad visual y logotipos minimalistas</h3>
                         <div class="PDASG">
                             <button>Desde 5$</button>
@@ -97,7 +97,7 @@ function inversorSector()
                     </div>
 
                     <div class="RLSDSAE" data-url="https://es.fiverr.com/andoryu_art/create-a-minimalist-and-modern-wordpress-website">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/pd1.jpg" alt="pd1">
+                        <img src="<? echo get_template_directory_uri(); ?>/assets/img/pd1.jpg" alt="pd1">
                         <h3>Pintura digital de personajes o escenarios, estilo de pintura/anime</h3>
                         <div class="PDASG">
                             <button>Desde 5$</button>
@@ -106,7 +106,7 @@ function inversorSector()
                     </div>
                     
                     <div class="RLSDSAE">
-                        <img src="<?php echo get_template_directory_uri(); ?>/assets/img/f1.jpg" alt="f1">
+                        <img src="<? echo get_template_directory_uri(); ?>/assets/img/f1.jpg" alt="f1">
                         <h3>Diseño de flyers, portadas, estilo personalizado</h3>
                         <div class="PDASG">
                             <button>Desde 10$</button>

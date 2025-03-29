@@ -167,7 +167,7 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
         id-post="<? echo $tareaId; ?>"
         autor="<? echo esc_attr($autorId); ?>"
         draggable="true" <? echo $estilo; ?>
-        sesion="<?php echo esc_attr(empty($sesion) ? ($estado === 'archivado' ? 'archivado' : 'general') : $sesion); ?>"
+        sesion="<? echo esc_attr(empty($sesion) ? ($estado === 'archivado' ? 'archivado' : 'general') : $sesion); ?>"
         estado="<? echo esc_attr($estado) ?>"
         impnum="<? echo esc_attr($impnum) ?>"
         importancia="<? echo esc_attr($imp) ?>"

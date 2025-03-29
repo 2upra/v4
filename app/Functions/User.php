@@ -1,4 +1,4 @@
-<?php
+<?
 
 function imagenPerfil($user_id)
 {

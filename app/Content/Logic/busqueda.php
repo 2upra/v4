@@ -146,15 +146,15 @@ function generar_html_resultados($resultados)
         $num_resultados += count($grupo);
         foreach ($grupo as $resultado) {
 ?>
-            <a href="<?php echo esc_url($resultado['url']); ?>">
+            <a href="<? echo esc_url($resultado['url']); ?>">
                 <div class="resultado-item">
-                    <?php if (!empty($resultado['imagen'])): ?>
-                        <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
-                    <?php endif; ?>
+                    <? if (!empty($resultado['imagen'])): ?>
+                        <img class="resultado-imagen" src="<? echo esc_url($resultado['imagen']); ?>" alt="<? echo esc_attr($resultado['titulo']); ?>">
+                    <? endif; ?>
                     <div class="resultado-info">
-                        <h3><?php echo esc_html($resultado['titulo']); ?></h3>
+                        <h3><? echo esc_html($resultado['titulo']); ?></h3>
                         <p>
-                            <?php
+                            <?
                             if ($resultado['tipo'] === 'social post') {
                                 echo 'Post';
                             } else {
@@ -165,14 +165,14 @@ function generar_html_resultados($resultados)
                     </div>
                 </div>
             </a>
-        <?php
+        <?
         }
     }
 
     if ($num_resultados === 0) {
         ?>
         <div class="resultado-item">No se encontraron resultados.</div>
-    <?php
+    <?
     }
 
     return ob_get_clean();

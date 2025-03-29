@@ -46,7 +46,7 @@ function iniciar_sesion()
 
 
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
-                        <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
+                        <? echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
 
                     <script>
@@ -154,14 +154,14 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
                     <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
                 </div>
-                <?php echo $mensaje; ?>
+                <? echo $mensaje; ?>
             </div>
         </form>
         <div class="RFZJUH">
-            <div class="HPUYVS" id="fondograno"><?php echo $GLOBALS['iconologo1']; ?></div>
+            <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 

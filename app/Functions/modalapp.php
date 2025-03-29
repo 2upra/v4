@@ -1,4 +1,4 @@
-<?php
+<?
 
 function modalApp()
 {
@@ -37,7 +37,7 @@ function modalApp()
 
     if ($show_modal) :
 ?>
-        <?php echo estiloAppModal(); ?>
+        <? echo estiloAppModal(); ?>
         <div class="modal mensajeApp" style="display: none;">
             <div class="imagenApp">
                 <div class="contenidoAppModal ">
@@ -131,7 +131,7 @@ function modalApp()
                 });
             }
         </script>
-    <?php
+    <?
     endif;
     return ob_get_clean();
 }
@@ -149,7 +149,7 @@ function estiloAppModal()
         }
 
         .modal.mensajeApp .imagenApp {
-            background-image: url("<?php echo get_template_directory_uri(); ?>/assets/img/dfasdfasdfe.jpg");
+            background-image: url("<? echo get_template_directory_uri(); ?>/assets/img/dfasdfasdfe.jpg");
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;

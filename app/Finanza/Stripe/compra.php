@@ -19,7 +19,7 @@ function botonCompra($postId)
             data-post_id="<?= esc_attr($postId) ?>"
             data-user_id="<?= esc_attr($userId) ?>"
             data-nonce="<?= wp_create_nonce('compraNonce') ?>">
-            <?php echo $GLOBALS['dolar']; ?>
+            <? echo $GLOBALS['dolar']; ?>
         </button>
         <span class="precioCount"><? echo esc_html($precio); ?></span>
     </div>

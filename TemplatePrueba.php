@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 Template Name: Inicio Prueba
 */
@@ -9,7 +9,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 <head>
     <meta name="robots" content="noindex, nofollow">
-    <?php wp_head(); ?>
+    <? wp_head(); ?>
 </head>
 
 <style>
@@ -30,8 +30,8 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 </style>
 
 <div id="main">
-    <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
-        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
+    <div id="content" class="<? echo esc_attr($nologin_class); ?>">
+        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
 
         <div id="menuData" style="display:none;" pestanaActual="">
             <div data-tab="Comentario"> </div>
@@ -43,7 +43,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
                 <div class="tab INICIO S4K7I3" id="Comentario">
                     <div class="bloque">
-                        <?php
+                        <?
                         if (function_exists('conectar_bd_sin_lazy_static')) {
                             $resultado = conectar_bd_sin_lazy_static();
                             guardarLog("conectar_bd: " . $resultado);
@@ -58,4 +58,4 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         </div>
     </div>
 
-    <?php get_footer(); ?>
+    <? get_footer(); ?>

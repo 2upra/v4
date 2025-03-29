@@ -1,4 +1,4 @@
-<?php
+<?
 
 function mostrarModalActualizacionApp()
 {
@@ -93,7 +93,7 @@ function mostrarModalActualizacionApp()
                 }
             });
         </script>
-    <?php
+    <?
     endif;
 }
 
@@ -133,7 +133,7 @@ function generarEstilosModalActualizacion()
             justify-content: center;
         }
     </style>
-<?php
+<?
     return ob_get_clean();
 }
 ?>

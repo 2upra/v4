@@ -1,5 +1,5 @@
 
-<?php
+<?
 //single-colecciones.php
 if (! defined('ABSPATH')) {
     exit;
@@ -48,52 +48,52 @@ add_action('wp_head', function () use ($schema) {
 }, 2); // Se ejecuta después de la meta descripción
 ?>
 <!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html <? language_attributes(); ?>>
 
 <head>
-    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta charset="<? bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <?php wp_head(); ?>
+    <? wp_head(); ?>
 </head>
 
-<body <?php body_class(); ?>>
+<body <? body_class(); ?>>
 
-    <?php get_header(); ?>
+    <? get_header(); ?>
 
     <main id="main">
-        <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
+        <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <div id="menuData" style="display:none;" pestanaActual="">
                 <div data-tab="Coleccion"></div>
                 <div data-tab="Ideas"></div>
             </div>
 
-            <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
-                    <article <?php post_class(); ?>>
+            <? if (have_posts()) : while (have_posts()) : the_post(); ?>
+                    <article <? post_class(); ?>>
                         <div class="tabs">
                             <div class="tab-content">
 
-                                <div class="tab active" id="Coleccion" colec="<?php echo $postId ?>">
+                                <div class="tab active" id="Coleccion" colec="<? echo $postId ?>">
                                     <div class="SINGLECOLECSGER">
-                                        <?php echo singleColec($postId) ?>
+                                        <? echo singleColec($postId) ?>
                                     </div>
                                 </div>
 
-                                <div class="tab" id="Ideas" colec="<?php echo $postId ?>" idea="true">
+                                <div class="tab" id="Ideas" colec="<? echo $postId ?>" idea="true">
                                     <div>
-                                        <?php echo masIdeasColeb($postId) ?>
+                                        <? echo masIdeasColeb($postId) ?>
                                     </div>
                                 </div>
 
                             </div>
                         </div>
                     </article>
-            <?php endwhile;
+            <? endwhile;
             endif; ?>
         </div>
     </main>
 
-    <?php get_footer(); ?>
+    <? get_footer(); ?>
 
 </body>
 

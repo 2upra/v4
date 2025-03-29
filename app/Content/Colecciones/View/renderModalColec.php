@@ -137,27 +137,27 @@ function obtenerListaColec()
 
     ob_start();
 ?>
-    <?php
+    <?
     if ($user_collections->have_posts()) {
         while ($user_collections->have_posts()) {
             $user_collections->the_post();
             $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
     ?>
-            <li class="coleccion borde" data-post_id="<?php echo get_the_ID(); ?>">
-                <img src="<?php echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
-                <span><?php the_title(); ?></span>
-                <button class="borrarColec" data-post_id="<?php echo get_the_ID(); ?>">
-                    <?php echo $GLOBALS['iconPapelera']; ?>
+            <li class="coleccion borde" data-post_id="<? echo get_the_ID(); ?>">
+                <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
+                <span><? the_title(); ?></span>
+                <button class="borrarColec" data-post_id="<? echo get_the_ID(); ?>">
+                    <? echo $GLOBALS['iconPapelera']; ?>
                 </button>
             </li>
-    <?php
+    <?
         }
         wp_reset_postdata();
     } else {
         echo "<li>No se encontraron colecciones.</li>";
     }
     ?>
-<?php
+<?
     $html = ob_get_clean();
     error_log("HTML generado: " . substr($html, 0, 500));
 

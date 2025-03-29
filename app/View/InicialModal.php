@@ -25,16 +25,16 @@ function modalTipoUsuario()
         </div>
         <style>
             #fanDiv::before {
-                background-image: url('<?php echo $fanDiv; ?>');
+                background-image: url('<? echo $fanDiv; ?>');
             }
 
             #artistaDiv::before {
-                background-image: url('<?php echo $artistaBg; ?>');
+                background-image: url('<? echo $artistaBg; ?>');
             }
         </style>
         <button class="botonsecundario" style="display: none;">Siguiente</button>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 

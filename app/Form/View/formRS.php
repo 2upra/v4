@@ -85,32 +85,32 @@ function formRs()
                 <label class="custom-checkbox tooltip-element" data-tooltip="Permite las descargas en la publicación">
                     <input type="checkbox" id="descargacheck" name="descargacheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['descargaicono']; ?>
+                    <? echo $GLOBALS['descargaicono']; ?>
                 </label>
                 <label class="custom-checkbox tooltip-element" data-tooltip="Exclusividad: solo los usuarios suscritos verán el contenido de la publicación">
                     <input type="checkbox" id="exclusivocheck" name="exclusivocheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['estrella']; ?>
+                    <? echo $GLOBALS['estrella']; ?>
                 </label>
                 <label class="custom-checkbox tooltip-element" data-tooltip="Permite recibir solicitudes de colaboración">
                     <input type="checkbox" id="colabcheck" name="colabcheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['iconocolab']; ?>
+                    <? echo $GLOBALS['iconocolab']; ?>
                 </label>
                 <label class="custom-checkbox tooltip-element" data-tooltip="Publicar en formato stream y lanzar a tiendas musicales">
                     <input type="checkbox" id="musiccheck" name="musiccheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['iconomusic']; ?>
+                    <? echo $GLOBALS['iconomusic']; ?>
                 </label>
                 <label class="custom-checkbox tooltip-element" data-tooltip="Vender el contenido, beat o sample en la tienda de 2upra">
                     <input type="checkbox" id="tiendacheck" name="tiendacheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['dolar']; ?>
+                    <? echo $GLOBALS['dolar']; ?>
                 </label>
                 <label class="custom-checkbox tooltip-element" data-tooltip="Publicación Efimera">
                     <input type="checkbox" id="momentocheck" name="momentocheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['momentoIcon']; ?>
+                    <? echo $GLOBALS['momentoIcon']; ?>
                 </label>
             </div>
         </div>

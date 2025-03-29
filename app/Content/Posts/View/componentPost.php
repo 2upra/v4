@@ -210,7 +210,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
             <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause']; ?></div>
         </div>
     </div>
-<?php
+<?
 
     $output = ob_get_clean();
 
@@ -440,9 +440,9 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
     ob_start();
 ?>
     <div class="post-background <?= $blurred_class ?>"
-        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
+        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? echo esc_url($optimized_thumbnail_url); ?>);">
     </div>
-<?php
+<?
     $output = ob_get_clean();
     return $output;
 }
@@ -474,14 +474,14 @@ function wave($audio_url, $audio_id_lite, $postId)
     }
 ?>
     <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>" data-post-id="<? echo esc_attr($postId); ?>">
-        <?php
+        <?
         // Mostrar los botones solo si hay más de un audio
         if ($audio_count > 1) : ?>
             <div class="botonesWave">
-                <button class="prevWave" data-post-id="<?php echo esc_attr($postId); ?>">Anterior</button>
-                <button class="nextWave" data-post-id="<?php echo esc_attr($postId); ?>">Siguiente</button>
+                <button class="prevWave" data-post-id="<? echo esc_attr($postId); ?>">Anterior</button>
+                <button class="nextWave" data-post-id="<? echo esc_attr($postId); ?>">Siguiente</button>
             </div>
-        <?php endif; ?>
+        <? endif; ?>
         <?
         // Generar el HTML para cada audio
         $index = 0;

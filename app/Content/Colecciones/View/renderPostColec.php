@@ -82,7 +82,7 @@ function htmlColec($filtro)
             </div>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
 
-            <?php
+            <?
             $colecciones_meta = get_post_meta($postId, 'colecciones', true);
             $rola_meta_bottom = get_post_meta($postId, 'rola', true);
 

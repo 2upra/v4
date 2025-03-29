@@ -137,7 +137,7 @@ function botonseguir($author_id)
         <button class="mismo-usuario" disabled>
             <? echo $GLOBALS['iconomisusuario']; ?>
         </button>
-        <?php
+        <?
         return ob_get_clean();
     }
 
@@ -154,7 +154,7 @@ function botonseguir($author_id)
         data-seguido-id="<? echo esc_attr($author_id); ?>">
         <? echo $icono_boton; ?>
     </button>
-    <?php
+    <?
     return ob_get_clean();
 }
 */

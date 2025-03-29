@@ -93,7 +93,7 @@ function renderFiltroSampleList() {
         </div>
 
     </div>
-    <?php
+    <?
     // Capturar y devolver el HTML generado
     return ob_get_clean();
 }

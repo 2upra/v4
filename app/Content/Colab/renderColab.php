@@ -36,7 +36,7 @@ function htmlColab($filtro)
                 <div class="UICMCG">
                     <? echo tituloColab($var); ?>
                     <? echo participantesColab($var) ?>
-                    <button class="cerrarColab" id-post="<? echo get_the_ID(); ?>"><?php echo $GLOBALS['cancelicon']; ?></button>
+                    <button class="cerrarColab" id-post="<? echo get_the_ID(); ?>"><? echo $GLOBALS['cancelicon']; ?></button>
                     <? // echo opcionesColabActivo($var); ?>
                 </div>
                 <div class="MXPLYN">
@@ -99,7 +99,7 @@ function chatColab($var)
     }
     $participantes_escaped = htmlspecialchars($participantes_json, ENT_QUOTES, 'UTF-8');
 ?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes="<?php echo $participantes_escaped; ?>" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+    <div class="borde bloqueChatColab" id="chatcolab-<? echo esc_attr($post_id); ?>" data-post-id="<? echo esc_attr($post_id); ?>" data-participantes="<? echo $participantes_escaped; ?>" data-conversacion-id="<? echo esc_attr($conversacion_id); ?>">
         <ul class="listaMensajes"></ul>
         <div class="previewsForm NGEESM previewsChat" style="position: relative;">
             <div class="previewAreaArchivos previewChatImagen" id="previewChatImagen" style="display: none;">

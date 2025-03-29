@@ -12,7 +12,7 @@ function formTarea()
 
         <div class="selectorIcono sImportancia" id="sImportancia">
             <span class="icono">
-                <?php echo $GLOBALS['importancia']; ?>baja
+                <? echo $GLOBALS['importancia']; ?>baja
             </span>
         </div>
 
@@ -26,7 +26,7 @@ function formTarea()
         </div>
 
         <div class="selectorIcono sTipo" id="sTipo">
-            <span class="icono"><?php echo $GLOBALS['tipoTarea']; ?>Una vez</span>
+            <span class="icono"><? echo $GLOBALS['tipoTarea']; ?>Una vez</span>
         </div>
 
         <div class="A1806241" id="sTipo-sTipo">
@@ -41,7 +41,7 @@ function formTarea()
 
     <? echo formTareaEstilo(); ?>
 
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -97,7 +97,7 @@ function formTareaEstilo()
             padding: 100px;
         }
     </style>
-<?php
+<?
     return ob_get_clean();
 }
 

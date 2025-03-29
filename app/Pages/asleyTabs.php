@@ -395,24 +395,24 @@ function portafolio()
                     <h3>Favorite tools</h3>
 
                     <div class="logosSvg">
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/1.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/2.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/3.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/4.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/5.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/6.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/7.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/8.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/9a.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/10.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/11.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/12.svg"></div>
-                        <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logos/13.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/1.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/2.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/3.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/4.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/5.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/6.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/7.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/8.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/9a.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/10.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/11.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/12.svg"></div>
+                        <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logos/13.svg"></div>
                     </div>
                 </div>
 
                 <div class="diva3 bloque svg-container noExpandir">
-                    <img src="<?php echo get_template_directory_uri(); ?>/assets/img/0505.jpg" alt="asley wandorius">
+                    <img src="<? echo get_template_directory_uri(); ?>/assets/img/0505.jpg" alt="asley wandorius">
                 </div>
 
                 <div class="diva4 bloque svg-container noExpandir">
@@ -601,7 +601,7 @@ function portafolio()
             <div class="ADEEDE itemPortafolio" id="2upraPest">
 
                 <div class="divb1 bloque svg-container">
-                    <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/inicio2upra.svg"></div>
+                    <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/inicio2upra.svg"></div>
                 </div>
 
                 <div class="divb2 bloque svg-container" style="padding: 20px;">
@@ -619,7 +619,7 @@ function portafolio()
                     }
 
                     ?>
-                    <div class="lazy-svg"><?php echo $svg_content; ?></div>
+                    <div class="lazy-svg"><? echo $svg_content; ?></div>
 
                 </div>
 
@@ -637,19 +637,19 @@ function portafolio()
                     }
 
                     ?>
-                    <div class="lazy-svg"><?php echo $svg_content1; ?></div>
+                    <div class="lazy-svg"><? echo $svg_content1; ?></div>
                 </div>
 
                 <div class="divb4 bloque svg-container noExpandir">
-                    <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/2upraapp.svg"></div>
+                    <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/2upraapp.svg"></div>
                 </div>
 
                 <div class="divb5 bloque svg-container" style="padding: 0;">
-                    <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/main1.svg"></div>
+                    <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/main1.svg"></div>
                 </div>
 
                 <div class="divb6 bloque svg-container noExpandir">
-                    <div class="lazy-svg" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logo2upra.svg"></div>
+                    <div class="lazy-svg" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logo2upra.svg"></div>
                 </div>
 
                 <div class="infoProyecto1">
@@ -673,22 +673,22 @@ function portafolio()
                     
                     
                     -->
-                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat.svg"></div>
+                    <div class="lazy-svg h400h" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/chat.svg"></div>
                 </div>
                 <div class="divc2 bloque svg-container">
-                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat614.svg"></div>
+                    <div class="lazy-svg h400h" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/chat614.svg"></div>
                 </div>
 
                 <div class="divc3 bloque svg-container">
-                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat437.svg"></div>
+                    <div class="lazy-svg h400h" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/chat437.svg"></div>
                 </div>
 
                 <div class="divc4 bloque svg-container">
-                    <div class="lazy-svg h400h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/chat621.svg"></div>
+                    <div class="lazy-svg h400h" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/chat621.svg"></div>
                 </div>
 
                 <div class="divc5 bloque svg-container noExpandir">
-                    <div class="lazy-svg h200h" data-src="<?php echo get_template_directory_uri(); ?>/assets/svgs/logoGalle.svg"></div>
+                    <div class="lazy-svg h200h" data-src="<? echo get_template_directory_uri(); ?>/assets/svgs/logoGalle.svg"></div>
                 </div>
                 <div class="infoProyecto1">
                     <h3>Galle</h3>

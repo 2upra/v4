@@ -298,9 +298,9 @@ function botonColeccion($postId)
 
     ob_start();
 ?>
-    <div class="ZAQIBB botonColeccion<?php echo esc_attr($extraClass); ?>">
-        <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<?php echo esc_attr($postId); ?>" data-nonce="<?php echo wp_create_nonce('colec_nonce'); ?>">
-            <?php echo isset($GLOBALS['iconoGuardar']) ? $GLOBALS['iconoGuardar'] : ''; // Verifica si $GLOBALS['iconoGuardar'] está definida 
+    <div class="ZAQIBB botonColeccion<? echo esc_attr($extraClass); ?>">
+        <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<? echo esc_attr($postId); ?>" data-nonce="<? echo wp_create_nonce('colec_nonce'); ?>">
+            <? echo isset($GLOBALS['iconoGuardar']) ? $GLOBALS['iconoGuardar'] : ''; // Verifica si $GLOBALS['iconoGuardar'] está definida 
             ?>
         </button>
     </div>

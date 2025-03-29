@@ -1,4 +1,4 @@
-<?php
+<?
 if (! defined('ABSPATH')) {
     exit;
 }
@@ -127,21 +127,21 @@ add_action('wp_head', function () use ($schema) {
 }, 2);
 ?>
 <!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html <? language_attributes(); ?>>
 
 <head>
-    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta charset="<? bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <?php wp_head(); ?>
+    <? wp_head(); ?>
 </head>
 
-<body <?php body_class(); ?>>
-    <?php get_header(); ?>
+<body <? body_class(); ?>>
+    <? get_header(); ?>
     <main id="main">
-        <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
-            <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
-                    <article <?php post_class(); ?>>
+        <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
+            <? if (have_posts()) : while (have_posts()) : the_post(); ?>
+                    <article <? post_class(); ?>>
                         <div style="
                             display: flex;
                             flex-direction: column;
@@ -150,16 +150,16 @@ add_action('wp_head', function () use ($schema) {
                             padding-top: 20px;
                             background: #000000;
                             margin-bottom: -20px;">
-                            <h1 style="font-size: 14px;"><?php echo esc_html($post_title); ?></h1>
-                            <h2 style="font-size: 12px;FONT-WEIGHT: 400;;"><?php echo esc_html($seo_title); ?></h2>
+                            <h1 style="font-size: 14px;"><? echo esc_html($post_title); ?></h1>
+                            <h2 style="font-size: 12px;FONT-WEIGHT: 400;;"><? echo esc_html($seo_title); ?></h2>
                         </div>
                         <div class="single">
                             <div class="fullH">
-                                <?php echo htmlPost($filtro); ?>
+                                <? echo htmlPost($filtro); ?>
                             </div>
                             <div class="publicaciones-similares" nosnippet>
                                 <h3 style="display: none;">Publicaciones Similares</h3>
-                                <?php
+                                <?
                                 echo publicaciones([
                                     'filtro'     => 'nada',
                                     'posts'      => 10,
@@ -169,11 +169,11 @@ add_action('wp_head', function () use ($schema) {
                             </div>
                         </div>
                     </article>
-            <?php endwhile;
+            <? endwhile;
             endif; ?>
         </div>
     </main>
-    <?php get_footer(); ?>
+    <? get_footer(); ?>
 </body>
 
 </html>

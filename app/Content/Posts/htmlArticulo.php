@@ -56,7 +56,7 @@ function htmlArticulo($filtro)
     </a>
 
     <li class="comentariosPost"></li>
-<?php
+<?
     return ob_get_clean();
 }
 add_theme_support('post-thumbnails');

@@ -1,4 +1,4 @@
-<?php
+<?
 
 
 function manejarIdea($args, $paged)

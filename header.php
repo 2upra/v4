@@ -52,20 +52,20 @@ if (!defined('ABSPATH')) {
 */
 ?>
 <!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html <? language_attributes(); ?>>
 
-<body <?php body_class(); ?>>
+<body <? body_class(); ?>>
 
     <header id="header">
-        <?php
+        <?
         if (LOCAL) {
         ?>
-            <link rel="stylesheet" href="<?php echo get_stylesheet_uri(); ?>"> <?php
+            <link rel="stylesheet" href="<? echo get_stylesheet_uri(); ?>"> <?
                                                                             } else {
                                                                             }
                                                                                 ?>
         <style>
-            <?php
+            <?
 
             if (LOCAL) {
                 $font_path_gothic = get_template_directory_uri() . '/assets/Fonts/Gothic60-Regular.otf';
@@ -80,7 +80,7 @@ if (!defined('ABSPATH')) {
             }
             ?>@font-face {
                 font-family: 'Gothic №60';
-                src: url('<?php echo $font_path_gothic; ?>') format('opentype');
+                src: url('<? echo $font_path_gothic; ?>') format('opentype');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
@@ -88,7 +88,7 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('<?php echo $font_path_source_sans_3_regular; ?>') format('woff2');
+                src: url('<? echo $font_path_source_sans_3_regular; ?>') format('woff2');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
@@ -96,7 +96,7 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('<?php echo $font_path_source_sans_3_semibold; ?>') format('woff2');
+                src: url('<? echo $font_path_source_sans_3_semibold; ?>') format('woff2');
                 font-weight: 500;
                 font-style: normal;
                 font-display: swap;
@@ -104,7 +104,7 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('<?php echo $font_path_source_sans_3_bold; ?>') format('woff2');
+                src: url('<? echo $font_path_source_sans_3_bold; ?>') format('woff2');
                 font-weight: 700;
                 font-style: normal;
                 font-display: swap;
@@ -128,14 +128,14 @@ if (!defined('ABSPATH')) {
                     <div class="centermenu">
 
                         <div class="menu-item botoniniciomenu">
-                            <a href="<?php echo home_url('/'); ?>">
+                            <a href="<? echo home_url('/'); ?>">
                                 <? echo $GLOBALS['iconoinicio'];
                                 ?>
                             </a>
                         </div>
                         <!--
                         <div class="xaxa1 menu-item">
-                            <a href="<?php echo home_url('/sello'); ?>">
+                            <a href="<? echo home_url('/sello'); ?>">
                                 <? // echo $GLOBALS['icononube']; 
                                 ?>
                             </a>
@@ -143,41 +143,41 @@ if (!defined('ABSPATH')) {
                         -->
 
                         <div class="menu-item">
-                            <a href="<?php echo home_url('/mu'); ?>">
+                            <a href="<? echo home_url('/mu'); ?>">
                                 <? echo $GLOBALS['iconomusic']; ?>
                             </a>
                         </div>
 
                         <div class="menu-item iconocolab" style="display: none;">
-                            <a href="<?php echo home_url('/colabs'); ?>">
+                            <a href="<? echo home_url('/colabs'); ?>">
                                 <? echo $GLOBALS['iconocolab']; ?>
                             </a>
                         </div>
                         <? if ($usuarioTipo === 'Fan'):  ?>
                             <div class="menu-item iconoFeedSample">
-                                <a href="<?php echo home_url('/feedSample'); ?>">
+                                <a href="<? echo home_url('/feedSample'); ?>">
                                     <? echo $GLOBALS['iconRandom']; ?>
                                 </a>
                             </div>
                             <div class="menu-item iconoBiblioteca">
-                                <a href="<?php echo home_url('/biblioteca'); ?>">
+                                <a href="<? echo home_url('/biblioteca'); ?>">
                                     <? echo $GLOBALS['biblioteca']; ?>
                                 </a>
                             </div>
                         <? endif; ?>
                         <? if ($usuarioTipo === 'Artista'):  ?>
                             <div class="menu-item iconoFeedSocial">
-                                <a href="<?php echo home_url('/feedSocial'); ?>">
+                                <a href="<? echo home_url('/feedSocial'); ?>">
                                     <? echo $GLOBALS['iconSocial']; ?>
                                 </a>
                             </div>
                             <div class="menu-item iconoColec">
-                                <a href="<?php echo home_url('/packs'); ?>">
+                                <a href="<? echo home_url('/packs'); ?>">
                                     <? echo $GLOBALS['iconoColec']; ?>
                                 </a>
                             </div>
                             <div class="menu-item iconoBiblioteca iconoBibliotecaArt">
-                                <a href="<?php echo home_url('/biblioteca'); ?>">
+                                <a href="<? echo home_url('/biblioteca'); ?>">
                                     <? echo $GLOBALS['biblioteca']; ?>
                                 </a>
                             </div>
@@ -185,8 +185,8 @@ if (!defined('ABSPATH')) {
 
 
                         <div class="menu-item iconoInver">
-                            <a href="<?php echo home_url('/inversion'); ?>">
-                                <?php echo $GLOBALS['iconoInver']; ?>
+                            <a href="<? echo home_url('/inversion'); ?>">
+                                <? echo $GLOBALS['iconoInver']; ?>
                                 <div class="textoAyuda">
                                     2upra necesita tu ayuda
                                 </div>
@@ -194,7 +194,7 @@ if (!defined('ABSPATH')) {
                         </div>
 
                         <div class="menu-item iconoTareas">
-                            <a href="<?php echo home_url('/tareas'); ?>">
+                            <a href="<? echo home_url('/tareas'); ?>">
                                 <? echo $GLOBALS['objetivo']; ?>
                             </a>
                         </div>
@@ -240,19 +240,19 @@ if (!defined('ABSPATH')) {
                     </ul>
 
                     <div class="endmenu MENUDGE">
-                        <?php if (! wp_is_mobile()) : ?>
+                        <? if (! wp_is_mobile()) : ?>
                             <div class="search-container " id="filtros">
                                 <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda">
                                 <button id="clearSearch" class="clear-search" style="display: none;">
-                                    <?php echo $GLOBALS['flechaAtras']; ?>
+                                    <? echo $GLOBALS['flechaAtras']; ?>
                                 </button>
                                 <button id="estrellitasTooltip" class="tooltip-element" data-tooltip="Para excluir palabras de tu búsqueda, usa el signo menos (-) antes del término o encierra frases con ello. Ejemplo: 'Hip hop drum -break drum-' no mostrará resultados que contengan 'break brum'.">
-                                    <?php echo $GLOBALS['iconoestrellitas']; ?>
+                                    <? echo $GLOBALS['iconoestrellitas']; ?>
                                 </button>
                                 <div class="resultadosBusqueda modal" id="resultadoBusqueda" style="display: none;">
                                 </div>
                             </div>
-                        <?php endif; ?>
+                        <? endif; ?>
 
                         <div class="menuArribaLogin">
 
@@ -267,7 +267,7 @@ if (!defined('ABSPATH')) {
                             </div>
 
                             <div class="iconobusqueda" id="iconobusqueda" style="display: none;">
-                                <a href="<?php echo home_url('/busqueda'); ?>">
+                                <a href="<? echo home_url('/busqueda'); ?>">
                                     <? echo $GLOBALS['iconobusqueda'];
                                     ?>
                                 </a>
@@ -306,7 +306,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
                             <a>
-                                <img src="<?php echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
 
@@ -410,12 +410,12 @@ if (!defined('ABSPATH')) {
 
                 <div class="A1806241" id="fotoperfilsub-fotoperfilsub">
                     <div class="A1806242">
-                        <button><a href="<?php echo home_url('/perfil/'); ?>">Perfil</a></button>
+                        <button><a href="<? echo home_url('/perfil/'); ?>">Perfil</a></button>
                         <button class="reporte">Reportar un error</button>
                         <button class="no-ajax"><a href="https://2upra.com/wp-content/uploads/2024/12/2upra24122024a.apk">App Android</a></button>
                         <button class="no-ajax"><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">Sync Windows</a></button>
 
-                        <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
+                        <button class="no-ajax"><a class="no-ajax" href="<? echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
 
@@ -436,11 +436,11 @@ if (!defined('ABSPATH')) {
                 <!-- submenu al dar foto de perfil movil -->
                 <div class="A1806241" id="submenuperfil-default">
                     <div class="A1806242">
-                        <button><a href="<?php echo home_url('/perfil/'); ?>">Mi perfil</a></button>
+                        <button><a href="<? echo home_url('/perfil/'); ?>">Mi perfil</a></button>
                         <button class="botonConfig">Editar perfil</button>
                         <button class="reporte">Reportar un error</button>
-                        <button><a href="<?php echo home_url('/colabs/'); ?>">Mis colabs</a></button>
-                        <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
+                        <button><a href="<? echo home_url('/colabs/'); ?>">Mis colabs</a></button>
+                        <button class="no-ajax"><a class="no-ajax" href="<? echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
 

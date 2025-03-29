@@ -28,19 +28,19 @@ function config()
             <!-- Cambiar nombre de usuario -->
             <div class="PTORKC">
                 <label for="username">Nombre de Usuario:</label>
-                <input type="text" id="username" name="username" value="<?php echo esc_attr($user_name); ?>">
+                <input type="text" id="username" name="username" value="<? echo esc_attr($user_name); ?>">
             </div>
 
             <!-- Cambiar descripción -->
             <div class="PTORKC">
                 <label for="description">Descripción:</label>
-                <textarea id="description" name="description" rows="2"><?php echo esc_attr($descripcion); ?></textarea>
+                <textarea id="description" name="description" rows="2"><? echo esc_attr($descripcion); ?></textarea>
             </div>
 
             <!-- Agregar un enlace -->
             <div class="PTORKC">
                 <label for="link">Enlace:</label>
-                <input type="url" id="link" name="link" placeholder="Ingresa un enlace (opcional)" value="<?php echo esc_attr($linkUser); ?>">
+                <input type="url" id="link" name="link" placeholder="Ingresa un enlace (opcional)" value="<? echo esc_attr($linkUser); ?>">
             </div>
 
             <!-- Tipo de usuario -->
@@ -48,12 +48,12 @@ function config()
                 <label for="typeUser">Tipo de usuario:</label>
                 <div class="DRHMDE">
                     <label class="custom-checkbox">
-                        <input type="checkbox" id="fanTipoCheck" name="fanTipoCheck" value="1" <?php echo $tipoUsuario === 'Fan' ? 'checked' : ''; ?>>
+                        <input type="checkbox" id="fanTipoCheck" name="fanTipoCheck" value="1" <? echo $tipoUsuario === 'Fan' ? 'checked' : ''; ?>>
                         <span class="checkmark"></span>
                         Fan
                     </label>
                     <label class="custom-checkbox">
-                        <input type="checkbox" id="artistaTipoCheck" name="artistaTipoCheck" value="1" <?php echo $tipoUsuario === 'Artista' ? 'checked' : ''; ?>>
+                        <input type="checkbox" id="artistaTipoCheck" name="artistaTipoCheck" value="1" <? echo $tipoUsuario === 'Artista' ? 'checked' : ''; ?>>
                         <span class="checkmark"></span>
                         Artista
                     </label>
@@ -63,7 +63,7 @@ function config()
         </form>
         <button class="guardarConfig">Guardar cambios</button>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 

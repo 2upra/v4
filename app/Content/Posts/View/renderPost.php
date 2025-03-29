@@ -56,17 +56,17 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
     $rola_meta = get_post_meta($post_id, 'rola', true);
 ?>
     <div class="LISTSAMPLE">
-        <?php if ($rola_meta === '1') : ?>
+        <? if ($rola_meta === '1') : ?>
             <div class="KLYJBY">
-                <?php echo audioPost($post_id); ?>
+                <? echo audioPost($post_id); ?>
             </div>
-            <?php echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+            <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
             <div class="INFOLISTSAMPLE">
                 <div class="CONTENTLISTSAMPLE">
-                    <a id-post="<?php echo $post_id; ?>">
+                    <a id-post="<? echo $post_id; ?>">
                         <div class="LRKHLC">
                             <div class="XOKALG">
-                                <?php
+                                <?
                                 $nombre_rola_html = '';
                                 $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
                                 if (empty($nombre_rola)) {
@@ -80,10 +80,10 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                             </div>
                         </div>
                     </a>
-                    <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
+                    <div class="CPQBAU"><? echo get_the_author_meta('display_name', $author_id); ?></div>
                 </div>
                 <div class="MOREINFOLIST">
-                    <?php
+                    <?
                     $audio_duration = get_post_meta($post_id, 'audio_duration_1', true);
                     $nombre_lanzamiento = get_post_meta($post_id, 'nombreLanzamiento', true);
 
@@ -98,10 +98,10 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                     ?>
                 </div>
                 <div class="CPQBEN" style="display: none;">
-                    <?php echo like($post_id); ?>
-                    <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
+                    <? echo like($post_id); ?>
+                    <div class="CPQBAU"><? echo get_the_author_meta('display_name', $author_id); ?></div>
                     <div class="CPQBCO">
-                        <?php
+                        <?
                         $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
                         if (empty($nombre_rola)) {
                             $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
@@ -114,16 +114,16 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                 </div>
             </div>
 
-            <?php echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
-            <?php echo opcionesPost($post_id, $author_id); ?>
-        <?php else : ?>
-            <?php // Original structure when rola is not 1 
+            <? echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
+            <? echo opcionesPost($post_id, $author_id); ?>
+        <? else : ?>
+            <? // Original structure when rola is not 1 
             ?>
-            <?php echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+            <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
             <div class="INFOLISTSAMPLE">
                 <div class="CONTENTLISTSAMPLE">
-                    <a id-post="<?php echo $post_id; ?>">
-                        <?php
+                    <a id-post="<? echo $post_id; ?>">
+                        <?
                         $content = get_post_field('post_content', $post_id);
                         $content = wp_trim_words($content, 20, '...');
                         echo wp_kses_post($content);
@@ -131,10 +131,10 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                     </a>
                 </div>
                 <div class="CPQBEN" style="display: none;">
-                    <?php echo like($post_id); ?>
-                    <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
+                    <? echo like($post_id); ?>
+                    <div class="CPQBAU"><? echo get_the_author_meta('display_name', $author_id); ?></div>
                     <div class="CPQBCO">
-                        <?php
+                        <?
                         $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
                         if (empty($nombre_rola)) {
                             $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
@@ -146,39 +146,39 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                     </div>
                 </div>
                 <div class="TAGSLISTSAMPLE">
-                    <div class="tags-container" id="tags-<?php echo $post_id; ?>"></div>
-                    <p id-post-algoritmo="<?php echo $post_id; ?>" style="display:none;">
-                        <?php echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                    <div class="tags-container" id="tags-<? echo $post_id; ?>"></div>
+                    <p id-post-algoritmo="<? echo $post_id; ?>" style="display:none;">
+                        <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
                     </p>
                 </div>
             </div>
             <div class="INFOTYPELIST">
                 <div class="verificacionPost">
-                    <?php if ($verificado == '1') : ?>
-                        <?php echo $GLOBALS['check']; ?>
-                    <?php elseif ($postAut == '1' && current_user_can('administrator')) : ?>
-                        <div class="verificarPost" data-post-id="<?php echo $post_id; ?>" style="cursor: pointer;">
-                            <?php echo $GLOBALS['robot']; ?>
+                    <? if ($verificado == '1') : ?>
+                        <? echo $GLOBALS['check']; ?>
+                    <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+                        <div class="verificarPost" data-post-id="<? echo $post_id; ?>" style="cursor: pointer;">
+                            <? echo $GLOBALS['robot']; ?>
                         </div>
-                    <?php endif; ?>
+                    <? endif; ?>
                 </div>
             </div>
             <div class="ZQHOQY LISTWAVESAMPLE">
-                <div id="waveform-<?php echo $post_id; ?>"
+                <div id="waveform-<? echo $post_id; ?>"
                     class="waveform-container without-image"
-                    postIDWave="<?php echo $post_id; ?>"
-                    data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-                    data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-                    <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+                    postIDWave="<? echo $post_id; ?>"
+                    data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+                    data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+                    <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
                     <div class="waveform-message"></div>
                     <div class="waveform-loading" style="display: none;">Cargando...</div>
                 </div>
             </div>
-            <?php echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
-            <?php echo opcionesPost($post_id, $author_id); ?>
-        <?php endif; ?>
+            <? echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
+            <? echo opcionesPost($post_id, $author_id); ?>
+        <? endif; ?>
     </div>
-<?php
+<?
 }
 
 
@@ -196,9 +196,9 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $permalink = get_permalink($post_id);
 
 ?>
-    <?php if (!empty($momento) || !empty($esColeccion)) : ?>
-        <a href="<?php echo esc_url($permalink); ?>">
-        <?php endif; ?>
+    <? if (!empty($momento) || !empty($esColeccion)) : ?>
+        <a href="<? echo esc_url($permalink); ?>">
+        <? endif; ?>
         <div class="post-content">
             <div class="MFQOYC">
                 <? echo like($post_id); ?>
@@ -208,9 +208,9 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                 <? echo audioPost($post_id); ?>
             </div>
 
-            <?php if (!empty($momento) || !empty($esColeccion)) : ?>
+            <? if (!empty($momento) || !empty($esColeccion)) : ?>
                 <div class="contentMoment">
-                    <?php
+                    <?
                     $content = get_the_content();
                     if (!empty($content)) {
                         echo $content;
@@ -219,10 +219,10 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                     }
                     ?>
                 </div>
-            <?php else : ?>
+            <? else : ?>
                 <div class="LRKHLC">
                     <div class="XOKALG">
-                        <?php
+                        <?
                         $rola_meta = get_post_meta($post_id, 'rola', true);
                         $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
 
@@ -243,11 +243,11 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                         ?>
                     </div>
                 </div>
-            <?php endif; ?>
+            <? endif; ?>
             <div class="CPQBEN" style="display: none;">
                 <div class="CPQBAU"><? echo $author_name; ?></div>
                 <div class="CPQBCO">
-                    <?php
+                    <?
                     $rola_meta = get_post_meta($post_id, 'rola', true);
 
                     if ($rola_meta === '1') {
@@ -266,9 +266,9 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                 <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
             </div>
         </div>
-        <?php if (!empty($momento) || !empty($esColeccion)) : ?>
+        <? if (!empty($momento) || !empty($esColeccion)) : ?>
         </a>
-    <?php endif; ?>
+    <? endif; ?>
 <?
 }
 
@@ -288,7 +288,7 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
                         <div class="CPQBAU"><? echo $author_name; ?></div>
                         <div class="CPQBCO">
 
-                            <?php
+                            <?
                             $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
                             $rola_meta = get_post_meta($post_id, 'rola', true);
 
@@ -305,9 +305,9 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
                                 the_content();
                                 if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
                                     <div class="post-thumbnail">
-                                        <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                                        <? echo get_the_post_thumbnail($post_id, 'full'); ?>
                                     </div>
-                            <?php endif;
+                            <? endif;
                             }
                             ?>
 
@@ -405,7 +405,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                 <div class="OASDEF">
 
                     <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
-                        <?php
+                        <?
                         $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
                         $rola_meta = get_post_meta($post_id, 'rola', true);
 
@@ -422,9 +422,9 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                             the_content();
                             if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
                                 <div class="post-thumbnail">
-                                    <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                                    <? echo get_the_post_thumbnail($post_id, 'full'); ?>
                                 </div>
-                        <?php endif;
+                        <? endif;
                         }
                         ?>
                     </div>
