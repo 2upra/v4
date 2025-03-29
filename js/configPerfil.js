@@ -100,52 +100,6 @@ function IniciadoresConfigPerfil() {
     
 }
 
-/*
-//GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR ) no toques esta funcion ni nada, usalo para simplificar
-async function enviarAjax(action, data = {}) {
-    try {
-        const body = new URLSearchParams({
-            action: action,
-            ...data
-        });
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-        }
-        let responseData;
-        const responseText = await response.text();
-        try {
-            responseData = JSON.parse(responseText);
-        } catch (jsonError) {
-            console.error('No se pudo interpretar la respuesta como JSON:', {
-                error: jsonError,
-                responseText: responseText,
-                action: action,
-                requestData: data
-            });
-            responseData = responseText;
-        }
-        return responseData;
-    } catch (error) {
-        console.error('Error en la solicitud AJAX:', {
-            error: error,
-            action: action,
-            requestData: data,
-            ajaxUrl: ajaxUrl
-        });
-        return {success: false, message: error.message};
-    }
-}
-
-el siguiente codigo ya no deben de depender de que si se da enter, debe depender de un boton con la clase guardarConfig, si se da click a ese boton, se guarda las configuraciones que hayan combiado, dame el codigo completo. 
-*/
-
 function cambiarNombre() {
     const usernameInput = document.getElementById('username');
     if (!usernameInput) {
@@ -154,10 +108,7 @@ function cambiarNombre() {
 
     const originalUsername = usernameInput.value;
     const maxCharacters = 20;
-
-    // No se requiere el evento 'keydown' para Enter, ya que el botón se encargará de guardar los cambios.
-
-    // Agregamos un evento 'click' al botón con la clase 'guardarConfig'
+    
     const guardarConfigButton = document.querySelector('.guardarConfig');
     if (guardarConfigButton) {
         guardarConfigButton.addEventListener('click', async function () {
