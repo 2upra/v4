@@ -312,7 +312,7 @@ function logAudio($log)
     }
 }
 
-function rendimientolog($log)
+function rendimientoLog($log)
 {
     if (RENDIMIENTO_ENABLED) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/rendimiento.log');
