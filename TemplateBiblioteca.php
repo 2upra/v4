@@ -6,8 +6,6 @@ Template Name: Biblioteca
 <? echo establecerTituloDescripcionBiblioteca(); ?>
 <? headGeneric(); ?>
 
-<? headGeneric(); ?>
-
 <?
 get_header();
 $user_id = get_current_user_id();
