@@ -6,12 +6,7 @@ Template Name: Inicio
 
 ?>
 
-<head>
-    <meta name="robots" content="index, follow">
-    <? wp_head(); ?>
-</head>
-
-
+<? headGeneric(); ?>
 
 <div id="main">
     <div id="content" class="<? echo esc_attr($nologin_class); ?>">
