@@ -4,8 +4,8 @@ Template Name: T&Q
 */
 
 
-get_header();
 headGeneric();
+get_header();
 $user_id = get_current_user_id();
 $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
