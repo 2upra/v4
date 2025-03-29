@@ -3,13 +3,9 @@
 Template Name: T&Q
 */
 
-<head>
-    <meta name="robots" content="index, follow">
-    <? wp_head(); ?>
-</head>
-
 
 get_header();
+headGeneric();
 $user_id = get_current_user_id();
 $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
