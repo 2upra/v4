@@ -424,7 +424,6 @@ function scriptsOrdenados()
         'descargas'         => '2.0.1',
         'pestanas'          => '1.1.10',
         'tagify'            => '2.0.1',
-        'wavesDos'          => '1.0.1',
         'configPerfil'      => '1.0.14',
         'diferido-post'     => '4.0.0',
         'registro'          => '1.0.12',
