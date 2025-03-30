@@ -3,21 +3,6 @@
 Template Name: Perfil
 */
 
-// Función para obtener el idioma preferido del navegador
-function obtenerIdiomaDelNavegador() {
-    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-        return 'en';
-    }
-    $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-    foreach ($accepted_languages as $language) {
-        $lang = substr($language, 0, 2);
-        if (in_array($lang, ['es', 'en'])) {
-            return $lang;
-        }
-    }
-    return 'en';
-}
-
 // Obtener el idioma del navegador
 $idioma = obtenerIdiomaDelNavegador();
 
@@ -31,17 +16,19 @@ if ($user_id) {
     $titulo = $idioma === 'es' ? "Perfil de usuario | 2upra" : "User Profile | 2upra";
 }
 
-// Configurar descripción según el idioma
+// Configurar descripcion segun el idioma
 if ($idioma === 'es') {
-    $descripcion = "Únete a una red de creadores donde puedes conectar con artistas, colaborar en proyectos, y encontrar una amplia variedad de samples y plugins VST gratuitos para potenciar tus producciones musicales.";
+    $descripcion = "Unete a una red de creadores donde puedes conectar con artistas, colaborar en proyectos, y encontrar una amplia variedad de samples y plugins VST gratuitos para potenciar tus producciones musicales.";
 } else {
     $descripcion = "Join a network of creators where you can connect with artists, collaborate on projects, and access a wide range of free samples and VST plugins to enhance your music productions.";
 }
 
-// Añadir el título y la descripción al <head>
+// Anadir el titulo y la descripcion al <head>
 add_action('wp_head', function () use ($titulo, $descripcion) {
-    echo '<title>' . esc_html($titulo) . '</title>' . "\n";
-    echo '<meta name="description" content="' . esc_attr($descripcion) . '">' . "\n";
+    echo '<title>' . esc_html($titulo) . '</title>' . "
+";
+    echo '<meta name="description" content="' . esc_attr($descripcion) . '">' . "
+";
 }, 1);
 ?>
 
