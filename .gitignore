@@ -19,7 +19,7 @@ dist/
 build/
 
 # Archivos temporales
-*.log
+
 tmp/
 *.tmp
 *.txt
