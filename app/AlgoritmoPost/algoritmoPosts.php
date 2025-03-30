@@ -5,26 +5,33 @@ function calcularPuntosIntereses($postId, $datos)
 {
     $pIntereses = 0;
 
-    // Verificar si existen los índices necesarios
+    // Verificar si existen los indices necesarios, si es un objeto y tiene la propiedad meta_value
     if (
         !isset($datos['datosAlgoritmo'][$postId]) ||
+        !is_object($datos['datosAlgoritmo'][$postId]) || // Anadido is_object()
         !isset($datos['datosAlgoritmo'][$postId]->meta_value)
     ) {
+        // Si alguna comprobacion falla, retornar los puntos actuales (0)
         return $pIntereses;
     }
 
-    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$postId]->meta_value, true);
+    // Ahora es seguro acceder a meta_value
+    $metaValue = $datos['datosAlgoritmo'][$postId]->meta_value;
+    $datosAlgoritmo = json_decode($metaValue, true);
 
     // Verificar si el json_decode fue exitoso
     if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+        // Si la decodificacion falla o no es un array, retornar puntos actuales
         return $pIntereses;
     }
 
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
     $esOneShot = false;
-    $metaValue = $datos['datosAlgoritmo'][$postId]->meta_value;
+    // $metaValue ya fue asignada y usada para json_decode, la reasignacion original era redundante
+    // $metaValue = $datos['datosAlgoritmo'][$postId]->meta_value; // Linea original eliminada implicitamente al usar $metaValue de arriba
 
-    if (!empty($metaValue)) {
+    // Usar la variable $metaValue ya existente
+    if (!empty($metaValue) && is_string($metaValue)) { // Asegurar que es string para stripos
         foreach ($oneshot as $palabra) {
             if (stripos($metaValue, $palabra) !== false) {
                 $esOneShot = true;
@@ -33,18 +40,23 @@ function calcularPuntosIntereses($postId, $datos)
         }
     }
 
+    // Iterar sobre los datos decodificados
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
                         if (isset($datos['interesesUsuario'][$item])) {
+                            // Asumiendo que $datos['interesesUsuario'][$item] es un objeto con propiedad intensity
+                            // Idealmente, anadir aqui tambien is_object() y isset()->intensity
                             $pIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
                         }
                     }
                 }
             }
         } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
+            // Asumiendo que $datos['interesesUsuario'][$value] es un objeto con propiedad intensity
+             // Idealmente, anadir aqui tambien is_object() y isset()->intensity
             $pIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
         }
     }
@@ -157,7 +169,7 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
             $resumen['matches']['content']++;
             $contentMatches[] = $id;
         } else {
-            // Comparación difusa si no hay coincidencia exacta
+            // Comparacion difusa si no hay coincidencia exacta
             foreach (explode(" ", $postContent) as $word) {
                 similar_text($id, $word, $percent);
                 if ($percent > 75) {
@@ -166,7 +178,7 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
                     break;
                 }
             }
-            // Comparación difusa en el nombre original
+            // Comparacion difusa en el nombre original
             foreach (explode(" ", $nombreOriginal) as $word) {
                 similar_text($id, $word, $percent);
                 if ($percent > 75) {
@@ -200,7 +212,7 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
             $resumen['matches']['data']++;
             $dataMatches[] = $id;
         } else {
-            // Comparación difusa en caso de no coincidencia exacta
+            // Comparacion difusa en caso de no coincidencia exacta
             foreach (array_keys($postWords) as $word) {
                 similar_text($id, $word, $percent);
                 if ($percent > 75) {
@@ -231,7 +243,15 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
         $resumen['puntos']['datos'] +
         $resumen['puntos']['bonus'];
 
-    $log .= "calcularPuntosIdentifier: \n Post ID: $postId, \n Identifiers: " . implode(", ", $identifiers) . ", \n Coincidencias en contenido: " . $resumen['matches']['content'] . ", \n Coincidencias en datos: " . $resumen['matches']['data'] . ", \n Puntos de contenido: " . $resumen['puntos']['contenido'] . ", \n Puntos de datos: " . $resumen['puntos']['datos'] . ", \n Bonus: " . $resumen['puntos']['bonus'] . ", \n Puntos totales: " . $resumen['puntos']['total'];
+    $log .= "calcularPuntosIdentifier: 
+ Post ID: $postId, 
+ Identifiers: " . implode(", ", $identifiers) . ", 
+ Coincidencias en contenido: " . $resumen['matches']['content'] . ", 
+ Coincidencias en datos: " . $resumen['matches']['data'] . ", 
+ Puntos de contenido: " . $resumen['puntos']['contenido'] . ", 
+ Puntos de datos: " . $resumen['puntos']['datos'] . ", 
+ Bonus: " . $resumen['puntos']['bonus'] . ", 
+ Puntos totales: " . $resumen['puntos']['total'];
 
     //guardarLog($log);
     return $resumen['puntos']['total'];
@@ -296,17 +316,17 @@ function procesarMetaValue($meta_value)
 }
 /*
 \[
-p_{\text{final}}''(p_i) = 
+p_{	ext{final}}''(p_i) = 
 \Bigg[
 \Big(
 w_u \cdot \delta_u + 
-w_I \cdot \text{calcId}(p_i, I, d) + 
-w_S \cdot \text{calcSim}(p_i, S, d) + 
+w_I \cdot 	ext{calcId}(p_i, I, d) + 
+w_S \cdot 	ext{calcSim}(p_i, S, d) + 
 w_L \cdot (30 + l(p_i)) + 
 w_m \cdot (\delta_v + \delta_a)
 \Big) \cdot f_t(d_i) \cdot (1 - r_v)^{v(p_i)}
 \Big]
-\cdot (1 + \frac{r}{100}) + r_e
+\cdot (1 + rac{r}{100}) + r_e
 \]
 */
 
