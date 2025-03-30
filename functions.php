@@ -506,6 +506,11 @@ function scriptsOrdenados()
         wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
         wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
         //$error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
+
+        // Localizar el nonce para task.js
+        wp_localize_script('task', 'task_vars', array(
+            'borrar_tarea_nonce' => wp_create_nonce('borrar_tarea_nonce')
+        ));
     }
 
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);

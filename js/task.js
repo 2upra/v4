@@ -55,7 +55,8 @@ function enviarTarea() {
     tit.removeEventListener('paste', pegarTareaHandler);
     tit.addEventListener('paste', pegarTareaHandler);
     tit.addEventListener('input', () => {
-        tit.value = tit.value.replace(/[\r\n\v]+/g, '');
+        tit.value = tit.value.replace(/[
+]+/g, '');
     });
 }
 
@@ -64,7 +65,8 @@ function pegarTareaHandler(ev) {
     ev.preventDefault();
     const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
     const lineas = textoPegado
-        .split('\n')
+        .split('
+')
         .map(linea => linea.trim())
         .filter(linea => linea);
     const maxTareas = 30;
@@ -73,7 +75,7 @@ function pegarTareaHandler(ev) {
     const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
 
     if (lineasProcesadas.some(linea => linea.length > 140)) {
-        alert('Ningún título puede superar los 140 caracteres.');
+        alert('Ningun titulo puede superar los 140 caracteres.');
         return;
     }
 
@@ -107,7 +109,8 @@ function pegarTareaHandler(ev) {
                                 listaTareas.insertAdjacentHTML('afterbegin', tareaNueva);
                             }
                         } else {
-                            log += `\n No se pudo agregar la tarea con ID ${rta.data.tareaId} a la lista.`;
+                            log += `
+ No se pudo agregar la tarea con ID ${rta.data.tareaId} a la lista.`;
                         }
                     }
                 }
@@ -117,7 +120,8 @@ function pegarTareaHandler(ev) {
             } else {
                 respuestas.forEach((rta, index) => {
                     if (!rta.success) {
-                        log += `\n Error al crear la tarea "${lineasProcesadas[index]}". Detalles: ${rta.data || 'Sin detalles'}`;
+                        log += `
+ Error al crear la tarea "${lineasProcesadas[index]}". Detalles: ${rta.data || 'Sin detalles'}`;
                     }
                 });
             }
@@ -141,7 +145,7 @@ function enviarTareaHandler(ev) {
             if (tit.value.trim().length === 0) return;
 
             if (tit.value.length > 140) {
-                alert('El título no puede superar los 140 caracteres.');
+                alert('El titulo no puede superar los 140 caracteres.');
                 return;
             }
 
@@ -173,7 +177,7 @@ function enviarTareaHandler(ev) {
                             initTareas();
                             window.guardarOrden();
                         } else {
-                            console.error('enviarTareaHandler: No se recibió respuesta o no se encontró la lista de tareas.');
+                            console.error('enviarTareaHandler: No se recibio respuesta o no se encontro la lista de tareas.');
                             console.error(`enviarTareaHandler: tareaNueva=${tareaNueva}, listaTareas=${listaTareas}`);
                         }
                     } else {
@@ -242,7 +246,7 @@ function editarTarea() {
 
 function manejarEditarTarea(ev) {
     ev.preventDefault();
-    const tarea = this; // 'this' se refiere al elemento que disparó el evento
+    const tarea = this; // 'this' se refiere al elemento que disparo el evento
     const id = tarea.dataset.tarea;
     let valorAnt = tarea.textContent.trim();
     tarea.contentEditable = true;
@@ -254,13 +258,13 @@ function manejarEditarTarea(ev) {
 
     const salirEdicion = () => {
         if (tarea.textContent.trim().length > 180) {
-            alert('El título no puede superar los 180 caracteres.');
+            alert('El titulo no puede superar los 180 caracteres.');
             tarea.textContent = valorAnt;
         } else if (tarea.textContent.trim() !== '' && tarea.textContent.trim() !== valorAnt) {
             guardarEdicion(tarea, id, valorAnt);
         }
         tarea.contentEditable = false;
-        // Remover los event listeners después de usarlos
+        // Remover los event listeners despues de usarlos
         tarea.removeEventListener('blur', salirEdicion);
         tarea.removeEventListener('paste', manejarPegado);
     };
@@ -272,7 +276,7 @@ function manejarEditarTarea(ev) {
         document.execCommand('insertText', false, nuevoTexto);
     };
 
-    // Usar una función con nombre para poder removerla después
+    // Usar una funcion con nombre para poder removerla despues
     tarea.addEventListener('blur', salirEdicion);
     tarea.addEventListener('paste', manejarPegado);
 }
@@ -436,9 +440,11 @@ function prioridadTarea() {
             if (tablaTareas.length > 0) {
                 //console.table(tablaTareas);
             }
-            log += `Se ordenaron ${tareasOrdenadas.length} tareas en la sección "${seccion}". \n`;
+            log += `Se ordenaron ${tareasOrdenadas.length} tareas en la seccion "${seccion}". 
+`;
         }
-        log += `Se ejecuto prioridadTareas. \n`;
+        log += `Se ejecuto prioridadTareas. 
+`;
 
         //console.log(log);
         try {
@@ -566,7 +572,7 @@ function cambiarFrecuencia() {
                 <p data-frecuencia="7">semanal</p>
                 <p data-frecuencia="30">mensual</p>
                 <div class="frecuenciaPersonalizada">
-                    <input type="number" id="diasPersonalizados" min="2" max="365" placeholder="Cada X días">
+                    <input type="number" id="diasPersonalizados" min="2" max="365" placeholder="Cada X dias">
                     <button id="btnPersonalizar">${window.enviarMensaje}</button>
                 </div>
             `;
@@ -689,7 +695,7 @@ async function borrarTareasCompletadas() {
     let limpiar = true;
 
     async function handleClick() {
-        const confirmado = await confirm('¿Estás seguro de que quieres borrar todas las tareas completadas?');
+        const confirmado = await confirm('Â¿Estas seguro de que quieres borrar todas las tareas completadas?');
 
         if (confirmado) {
             const data = {
@@ -833,18 +839,21 @@ function borrarTareaVacia() {
 
                     tareaCompleta.remove();
 
-                    let log = 'Se borró la tarea con ID: ' + id;
+                    let log = 'Se borro la tarea con ID: ' + id;
 
                     const data = {
-                        id: id
+                        id: id,
+                        nonce: task_vars.borrar_tarea_nonce // AÃ±adir nonce
                     };
                     enviarAjax('borrarTarea', data)
                         .then(resp => {
-                            log += ', \n  Respuesta recibida: ' + resp;
+                            log += ', 
+  Respuesta recibida: ' + resp;
                             console.log(log);
                         })
                         .catch(error => {
-                            log += ', \n  Error: ' + error;
+                            log += ', 
+  Error: ' + error;
                             console.error(log);
                         });
                 } else {
