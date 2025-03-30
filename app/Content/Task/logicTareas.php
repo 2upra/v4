@@ -418,7 +418,7 @@ function archivarTarea()
         update_post_meta($id, 'estado', 'pendiente');
         update_post_meta($id, 'sesion', 'General');
         $log .= "Se cambio el estado de la tarea $id a pendiente y la sesion a General.";
-         // Eliminar la relacion de subtarea si la tarea estaba archivada y se desarchiva
+        // Eliminar la relacion de subtarea si la tarea estaba archivada y se desarchiva
         wp_update_post(array(
             'ID' => $id,
             'post_parent' => 0
@@ -547,7 +547,8 @@ function cambiarFrecuencia()
 add_action('wp_ajax_cambiarFrecuencia', 'cambiarFrecuencia');
 
 
-function actualizarOrdenTareas() {
+function actualizarOrdenTareas()
+{
     $usu = get_current_user_id();
     $tareaMov = isset($_POST['tareaMovida']) ? intval($_POST['tareaMovida']) : null;
     $ordenNue = isset($_POST['ordenNuevo']) ? explode(',', $_POST['ordenNuevo']) : [];
@@ -599,7 +600,8 @@ function actualizarOrdenTareas() {
 }
 
 //aqui hay que ajustar algo, hay un error, a veces las tareas padres se vuelven subtareas de sus propios hijos, hay que evitar eso, supongo que  es facil de evitar
-function manejarSubtarea($id, $idPadre) {
+function manejarSubtarea($id, $idPadre)
+{
     $log = '';
     if ($idPadre) {
         $tareaPadre = get_post($idPadre);
@@ -647,7 +649,8 @@ function manejarSubtarea($id, $idPadre) {
     return $log;
 }
 
-function esPadreUnaSubtarea($idPadre, $id) {
+function esPadreUnaSubtarea($idPadre, $id)
+{
     $padreActual = $idPadre;
     while ($padreActual) {
         if ($padreActual == $id) {
@@ -710,7 +713,7 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
         ));
         $tieneSubtareas = !empty($hijas);
     }
-    
+
     // Si la sesion es "General", no se cambie el estado
     if (strtolower($sesionParaActualizar) !== 'general') {
         if (strtolower($sesionParaActualizar) === 'archivado' && $estadoAct !== 'archivado') {
