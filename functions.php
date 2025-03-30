@@ -672,7 +672,7 @@ add_action('wp_head', 'loadingBar');
 
 // Funcion para obtener el idioma preferido del navegador
 function obtenerIdiomaDelNavegador() {
-    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
         return 'en';
     }
     $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
