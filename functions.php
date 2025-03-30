@@ -43,14 +43,14 @@ define('POSTINLIMIT', 640);
 /*
 function debug_page_load_time() {
     $time = number_format((microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"]) * 1000, 2);
-    error_log("Página cargada en: {$time}ms");
+    error_log("Pagina cargada en: {$time}ms");
 }
 add_action('shutdown', 'debug_page_load_time');
 */
 
 function paginasIniciales1()
 {
-    // Verificar si las páginas ya fueron creadas
+    // Verificar si las paginas ya fueron creadas
     if (get_option('paginasIniciales1') == '1') return;
 
 
@@ -63,7 +63,7 @@ function paginasIniciales1()
     $paginas = array(
         'Inicio' => array(
             'plantilla' => 'TemplateInicio.php',
-            'contenido' => 'Este es el contenido de la página de inicio.'
+            'contenido' => 'Este es el contenido de la pagina de inicio.'
         ),
         'Colab' => array(
             'plantilla' => 'TemplateColab.php',
@@ -115,8 +115,8 @@ function paginasIniciales1()
         )
     );
 
-    // Recorrer el array y crear las páginas
-    $inicio_id = 0; // Variable para guardar el ID de la página de inicio
+    // Recorrer el array y crear las paginas
+    $inicio_id = 0; // Variable para guardar el ID de la pagina de inicio
     foreach ($paginas as $titulo => $datos) {
         // Usar WP_Query en lugar de get_page_by_title
         $pagina_query = new WP_Query(array(
@@ -136,7 +136,7 @@ function paginasIniciales1()
 
             $nueva_pagina_id = wp_insert_post($nueva_pagina);
 
-            // Si la página creada es la de inicio, guardar su ID
+            // Si la pagina creada es la de inicio, guardar su ID
             if ($titulo == 'Inicio') {
                 $inicio_id = $nueva_pagina_id;
             }
@@ -146,13 +146,13 @@ function paginasIniciales1()
         wp_reset_postdata();
     }
 
-    // Definir la página de inicio
+    // Definir la pagina de inicio
     if ($inicio_id > 0) {
         update_option('show_on_front', 'page');
         update_option('page_on_front', $inicio_id);
     }
 
-    // Marcar que las páginas ya fueron creadas
+    // Marcar que las paginas ya fueron creadas
     update_option('paginasIniciales1', '1');
 }
 
@@ -199,7 +199,7 @@ function headGeneric()
     <!-- Etiquetas de Twitter Cards -->
     <meta property="og:title" content="<? echo get_the_title(); ?>" />
     <meta name="twitter:title" content="Social Media para artistas">
-    <meta name="twitter:description" content="Descripción de tu página que aparecerá al compartir.">
+    <meta name="twitter:description" content="Descripcion de tu pagina que aparecera al compartir.">
     <meta name="twitter:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all">
     <meta name="twitter:site" content="@wandorius" />
 
@@ -223,7 +223,7 @@ function encolar_sw_js()
 {
     wp_enqueue_script(
         'sw-js',
-        home_url('/sw.js'), // Ruta absoluta desde la raíz del dominio
+        home_url('/sw.js'), // Ruta absoluta desde la raiz del dominio
         array(),
         '1.0.2',
         true
@@ -243,7 +243,7 @@ function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
         error_log($mensaje);
     }
 
-    // Si se especificó un archivo y no estamos en local, intentamos escribir en el
+    // Si se especifico un archivo y no estamos en local, intentamos escribir en el
     if (!empty($archivo) && (!defined('LOCAL') || !LOCAL)) {
         try {
             if (!is_writable(dirname($archivo))) {
@@ -262,7 +262,7 @@ function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
                 if (flock($fp, LOCK_EX)) {
                     fwrite($fp, $log . PHP_EOL);
 
-                    // Limitar el tamaño del archivo, pero solo si se especificó un archivo
+                    // Limitar el tamano del archivo, pero solo si se especifico un archivo
                     if (rand(1, 10000) === 1) {
                         $lineas = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
                         if (count($lineas) > $maxlineas) {
@@ -280,7 +280,7 @@ function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
                 error_log("escribirLog: No se pudo abrir el archivo: $archivo");
             }
         } catch (Exception $e) {
-            error_log("escribirLog: Excepción capturada: " . $e->getMessage());
+            error_log("escribirLog: Excepcion capturada: " . $e->getMessage());
             return false;
         }
     }
@@ -424,13 +424,11 @@ function scriptsOrdenados()
         'descargas'         => '2.0.1',
         'pestanas'          => '1.1.10',
         'tagify'            => '2.0.1',
-        'wavesDos'          => '1.0.1',
         'configPerfil'      => '1.0.14',
         'diferido-post'     => '4.0.0',
         'registro'          => '1.0.12',
         'colab'             => '1.0.2',
         'grained'           => '1.0.3',
-        'subida'            => '1.1.21',
         'RS'                => '1.0.1',
         'tagsPosts'         => '1.0.1',
         'hashs'             => '1.0.1',
@@ -461,9 +459,9 @@ function scriptsOrdenados()
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
-    // Registro de la configuración inicial
-    //$error_log[] = "Modo de desarrollo activado: " . ($dev_mode ? 'Sí' : 'No');
-    //$error_log[] = "Versión global de scripts: " . $global_version;
+    // Registro de la configuracion inicial
+    //$error_log[] = "Modo de desarrollo activado: " . ($dev_mode ? 'Si' : 'No');
+    //$error_log[] = "Version global de scripts: " . $global_version;
 
     foreach ($script_handles as $handle => $data) {
         $version = $global_version;
@@ -490,7 +488,7 @@ function scriptsOrdenados()
         }
 
         wp_enqueue_script($handle, $script_url, $deps, $version, true);
-        //$error_log[] = "Script " . $handle . " encolado correctamente con versión: " . $version;
+        //$error_log[] = "Script " . $handle . " encolado correctamente con version: " . $version;
     }
 
 
@@ -508,6 +506,11 @@ function scriptsOrdenados()
         wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
         wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
         //$error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
+
+        // Localizar el nonce para task.js
+        wp_localize_script('task', 'task_vars', array(
+            'borrar_tarea_nonce' => wp_create_nonce('borrar_tarea_nonce')
+        ));
     }
 
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
@@ -516,9 +519,9 @@ function scriptsOrdenados()
 
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
-    //$error_log[] = "Script en línea para genericAjax añadido con wpAdminUrl.";
+    //$error_log[] = "Script en linea para genericAjax anadido con wpAdminUrl.";
 
-    // Localización de scripts adicionales
+    // Localizacion de scripts adicionales
     $ajax_url = admin_url('admin-ajax.php');
     $script_localizations = [
         'subida'                => ['my_ajax_object', ['ajax_url' => $ajax_url]],
@@ -531,12 +534,15 @@ function scriptsOrdenados()
 
     foreach ($script_localizations as $handle => $data) {
         wp_localize_script($handle, $data[0], $data[1]);
-        //$error_log[] = "Script " . $handle . " localizado con éxito.";
+        //$error_log[] = "Script " . $handle . " localizado con exito.";
     }
 
     // Registro de errores
     if (!empty($error_log)) {
-        $log_message = "Detalles de scriptsOrdenados:\n" . implode("\n", $error_log) . "\n";
+        $log_message = "Detalles de scriptsOrdenados:
+" . implode("
+", $error_log) . "
+";
         //error_log($log_message);
     }
 }
@@ -608,7 +614,7 @@ function limpiarLogs()
     }
 }
 
-// Programar la ejecución de la función
+// Programar la ejecucion de la funcion
 if (!wp_next_scheduled('clean_log_files_hook')) {
     wp_schedule_event(time(), 'hourly', 'clean_log_files_hook');
 }
@@ -668,6 +674,21 @@ function loadingBar()
 }
 
 add_action('wp_head', 'loadingBar');
+
+// Funcion para obtener el idioma preferido del navegador
+function obtenerIdiomaDelNavegador() {
+    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        return 'en';
+    }
+    $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+    foreach ($accepted_languages as $language) {
+        $lang = substr($language, 0, 2);
+        if (in_array($lang, ['es', 'en'])) {
+            return $lang;
+        }
+    }
+    return 'en';
+}
 
 //CALCULAR ALTURA CORRECTA CON SCRIPT
 function innerHeight()

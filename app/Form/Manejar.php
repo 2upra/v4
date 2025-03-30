@@ -1,12 +1,12 @@
 <?
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
-    $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
-    $tags = sanitize_text_field($_POST['tags'] ?? '');
+    $contenido = isset($_POST['textoNormal']) ? sanitize_textarea_field($_POST['textoNormal']) : '';
+    $tags = isset($_POST['tags']) ? sanitize_text_field($_POST['tags']) : '';
 
     if (empty($contenido)) {
-        error_log('Error en crearPost: El contenido no puede estar vacío.');
-        return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
+        error_log('Error en crearPost: El contenido no puede estar vacio.');
+        return new WP_Error('empty_content', 'El contenido no puede estar vacio.');
     }
 
     $titulo = wp_trim_words($contenido, 15, '...');
@@ -46,22 +46,22 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         $notificaciones_unicas = []; // Array para evitar duplicados
 
         foreach ($seguidores as $seguidor_id) {
-            // Validar que el seguidor_id sea un ID de usuario válido
+            // Validar que el seguidor_id sea un ID de usuario valido
             if (get_user_by('id', $seguidor_id) === false) {
-                error_log("Error en crearPost: Seguidor ID {$seguidor_id} no es un usuario válido.");
+                error_log("Error en crearPost: Seguidor ID {$seguidor_id} no es un usuario valido.");
                 continue;
             }
 
-            // Crear una clave única para la notificación
+            // Crear una clave unica para la notificacion
             $clave_notificacion = "{$seguidor_id}_{$postId}";
 
             // Evitar notificaciones duplicadas
             if (!isset($notificaciones_unicas[$clave_notificacion])) {
                 $notificaciones[] = [
                     'seguidor_id' => $seguidor_id,
-                    'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
+                    'mensaje' => "{$autor_nombre} ha publicado: "{$contenido_corto}"",
                     'post_id' => $postId,
-                    'titulo' => 'Nueva publicación',
+                    'titulo' => 'Nueva publicacion',
                     'url'  => $post_url, // Agregar la URL del post
                     'autor_id' => $autor // Agregar el ID del autor
                 ];
@@ -71,12 +71,12 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 
         update_option('notificaciones_pendientes', $notificaciones);
 
-        // Asegurar que el cron esté programado
+        // Asegurar que el cron este programado
         if (!wp_next_scheduled('wp_enqueue_notifications')) {
             wp_schedule_event(time(), 'minute', 'wp_enqueue_notifications');
         }
     } else {
-        error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es válida.");
+        error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es valida.");
     }
     */
     return $postId;
@@ -157,14 +157,14 @@ function registrarPrecios($postId)
         if (isset($_POST[$precio_key])) {
             $precio = sanitize_text_field($_POST[$precio_key]);
 
-            // Validar que el valor sea numérico
+            // Validar que el valor sea numerico
             if (is_numeric($precio)) {
 
                 if (update_post_meta($postId, $precio_key, $precio) === false) {
                     error_log("Error en registrarPrecios: Fallo al actualizar el meta $precio_key para el post ID $postId.");
                 }
             } else {
-                error_log("Error en registrarPrecios: El valor para $precio_key no es numérico. Post ID: $postId, valor ingresado: $precio");
+                error_log("Error en registrarPrecios: El valor para $precio_key no es numerico. Post ID: $postId, valor ingresado: $precio");
             }
         }
     }
@@ -244,7 +244,7 @@ function procesarURLs($postId)
                         call_user_func($funcionCallback, $postId, $campo);
                     }
                 } else {
-                    error_log("Error en procesarURLs: URL inválida en el campo: {$campo} para postId: {$postId}");
+                    error_log("Error en procesarURLs: URL invalida en el campo: {$campo} para postId: {$postId}");
                 }
             }
         }
@@ -280,14 +280,14 @@ function procesarArchivo($postId, $campo, $renombrar = false)
 function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 {
     if (!preg_match('/(\d+)$/', $campo, $matches)) {
-        error_log("Error en renombrarArchivoAdjunto: No se pudo extraer el índice del campo {$campo}.");
+        error_log("Error en renombrarArchivoAdjunto: No se pudo extraer el indice del campo {$campo}.");
         return;
     }
     $indice = intval($matches[1]);
     $idHashCampo = "idHash_audioId{$indice}";
     $idHash = get_post_meta($postId, $idHashCampo, true);
     if (empty($idHash)) {
-        error_log("Error en renombrarArchivoAdjunto: No se encontró el meta {$idHashCampo} para postId {$postId}.");
+        error_log("Error en renombrarArchivoAdjunto: No se encontro el meta {$idHashCampo} para postId {$postId}.");
         return;
     }
     $audioIdCampo = 'audioId' . $indice;
@@ -403,7 +403,8 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     //guardarLog("Ejecutando comando para eliminar metadatos del archivo original: {$comando_strip_metadata}");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
-        //guardarLog("Error al eliminar metadatos del archivo original: " . implode("\n", $output_strip));
+        //guardarLog("Error al eliminar metadatos del archivo original: " . implode("
+", $output_strip));
     } else {
         //guardarLog("Metadatos del archivo original eliminados correctamente.");
     }
@@ -415,9 +416,9 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $author_username = $author_info->user_login;
         //guardarLog("Nombre de usuario del autor obtenido: {$author_username}");
     } else {
-        // Fallback en caso de no obtener la información del usuario
+        // Fallback en caso de no obtener la informacion del usuario
         $author_username = "Desconocido";
-        //guardarLog("No se pudo obtener el nombre de usuario del autor. Se usará 'Desconocido'.");
+        //guardarLog("No se pudo obtener el nombre de usuario del autor. Se usara 'Desconocido'.");
     }
 
     $page_name = "2upra.com";
@@ -428,7 +429,8 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     //guardarLog("Ejecutando comando para crear audio ligero con metadatos: {$comando_lite}");
     exec($comando_lite, $output_lite, $return_var_lite);
     if ($return_var_lite !== 0) {
-        //guardarLog("Error al procesar audio ligero: " . implode("\n", $output_lite));
+        //guardarLog("Error al procesar audio ligero: " . implode("
+", $output_lite));
     } else {
         //guardarLog("Audio ligero creado exitosamente con metadatos.");
     }
@@ -459,43 +461,44 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
     update_post_meta($post_id, $meta_key, $attach_id_lite);
 
-    // Extraer y guardar la duración del audio
+    // Extraer y guardar la duracion del audio
     $duration_command = "/usr/bin/ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " . escapeshellarg($nuevo_archivo_path_lite);
-    //guardarLog("Ejecutando comando para duración del audio: {$duration_command}");
+    //guardarLog("Ejecutando comando para duracion del audio: {$duration_command}");
     $duration_in_seconds = shell_exec($duration_command);
     //guardarLog("Salida de ffprobe: '{$duration_in_seconds}'");
 
-    // Limpiar y validar la duración del audio
+    // Limpiar y validar la duracion del audio
     $duration_in_seconds = trim($duration_in_seconds);
     if (is_numeric($duration_in_seconds)) {
         $duration_in_seconds = (float)$duration_in_seconds;
         $duration_formatted = floor($duration_in_seconds / 60) . ':' . str_pad(floor($duration_in_seconds % 60), 2, '0', STR_PAD_LEFT);
         update_post_meta($post_id, "audio_duration_{$index}", $duration_formatted);
-        //guardarLog("Duración del audio (formateada): {$duration_formatted}");
+        //guardarLog("Duracion del audio (formateada): {$duration_formatted}");
     } else {
-        //guardarLog("Duración del audio no válida para el archivo {$nuevo_archivo_path_lite}");
+        //guardarLog("Duracion del audio no valida para el archivo {$nuevo_archivo_path_lite}");
     }
 
     //guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
 
-    // Llamar a analizarYGuardarMetasAudio solo si el índice es 1
+    // Llamar a analizarYGuardarMetasAudio solo si el indice es 1
     if ($index === 1) {
         analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
-        //guardarLog("Se ha llamado a analizarYGuardarMetasAudio para el índice 1.");
+        //guardarLog("Se ha llamado a analizarYGuardarMetasAudio para el indice 1.");
     } else {
-        //guardarLog("No se llamó a analizarYGuardarMetasAudio ya que el índice no es 1.");
+        //guardarLog("No se llamo a analizarYGuardarMetasAudio ya que el indice no es 1.");
     }
 }
 
 #Paso 5.6
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
-    $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py \"{$nuevo_archivo_path_lite}\"");
+    $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py "{$nuevo_archivo_path_lite}"");
     iaLog("Ejecutando comando de Python: {$python_command}");
     exec($python_command, $output, $return_var);
 
     if ($return_var !== 0) {
-        iaLog("Error al ejecutar el script de Python. Código de retorno: {$return_var}. Salida: " . implode("\n", $output));
+        iaLog("Error al ejecutar el script de Python. Codigo de retorno: {$return_var}. Salida: " . implode("
+", $output));
         return;
     }
 
@@ -513,10 +516,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
             update_post_meta($post_id, "audio_scale{$suffix}", $resultados['scale'] ?? '');
             update_post_meta($post_id, "audio_strength{$suffix}", $resultados['strength'] ?? '');
         } else {
-            iaLog("El archivo de resultados JSON no contiene datos válidos.");
+            iaLog("El archivo de resultados JSON no contiene datos validos.");
         }
     } else {
-        iaLog("No se encontró el archivo de resultados en {$resultados_path}");
+        iaLog("No se encontro el archivo de resultados en {$resultados_path}");
     }
 
     $post_content = get_post_field('post_content', $post_id);
@@ -525,27 +528,30 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
         return;
     }
 
-    // Construir la parte del prompt que contiene la información del archivo y las carpetas solo si no están vacías
+    // Construir la parte del prompt que contiene la informacion del archivo y las carpetas solo si no estan vacias
     $informacion_archivo = '';
     if ($nombre_archivo) {
-        $informacion_archivo .= "Archivo: '{$nombre_archivo}'\n";
+        $informacion_archivo .= "Archivo: '{$nombre_archivo}'
+";
     }
     if ($carpeta) {
-        $informacion_archivo .= "Carpeta: '{$carpeta}'\n";
+        $informacion_archivo .= "Carpeta: '{$carpeta}'
+";
     }
     if ($carpeta_abuela) {
-        $informacion_archivo .= "Carpeta abuela: '{$carpeta_abuela}'\n";
+        $informacion_archivo .= "Carpeta abuela: '{$carpeta_abuela}'
+";
     }
 
     $tags_usuario = get_post_meta($post_id, 'tagsUsuario', true);
     $tags_usuario_texto = $tags_usuario ? (is_array($tags_usuario) ? implode(', ', $tags_usuario) : $tags_usuario) : '';
 
     // Formar el prompt final con los valores ya filtrados
-    $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
-        . "Ten en cuenta la descripcion, puede ser relevante. descripción:\"{$post_content}\". {$tags_usuario_texto}"
+    $prompt = "El usuario ya subio este audio, pero acaba de editar la descripcion o lo acaba de publicar ahora mismo. "
+        . "Ten en cuenta la descripcion, puede ser relevante. descripcion:"{$post_content}". {$tags_usuario_texto}"
         . "{$informacion_archivo}"
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: El 'nombre_corto' es un nuevo nombre para el archivo, y la 'descripción corta' es para entender rápidamente qué es el audio, por favor, que sea corta pero sin perder detalles importantes. Con los artistas posible siempre piensa en uno o varios que tengan la vibra de la descripción que la gente pueda relacionar con el audio. No uses palabras como 'Repetitive', 'Energetic', 'Powerful' en la descripcion corta. Te incluyo la estructura JSON con datos de ejemplo, que son irrelevantes en este caso: "
-        . '{"descripcion_ia":{"es":"(aquí iría una descripción tuya del audio muy detallada)", "en":"(aquí en inglés)"},'
+        . "Por favor, determina una descripcion del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: El 'nombre_corto' es un nuevo nombre para el archivo, y la 'descripcion corta' es para entender rapidamente que es el audio, por favor, que sea corta pero sin perder detalles importantes. Con los artistas posible siempre piensa en uno o varios que tengan la vibra de la descripcion que la gente pueda relacionar con el audio. No uses palabras como 'Repetitive', 'Energetic', 'Powerful' en la descripcion corta. Te incluyo la estructura JSON con datos de ejemplo, que son irrelevantes en este caso: "
+        . '{"descripcion_ia":{"es":"(aqui iria una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"instrumentos_principal":{"es":["Piano"], "en":["Piano"]},'
         . '"nombre_corto":{"es":["(maximo 3 palabras)"], "en":["Kick Vitagen"]},'
         . '"descripcion_corta":{"es":["(entre 4 a 6 palabras)"], "en":["(en ingles)"]},'
@@ -555,23 +561,24 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
         . '"tipo_audio":{"es":["determina si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"tags_posibles":{"es":["Naturaleza", "phonk", "memphis", "oscuro"], "en":["Nature"]},'
         . '"sugerencia_busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . "Te dejo una guía interesante de tags que puedes usar, por favor, usa solo los que realmente describan el audio: "
+        . "Te dejo una guia interesante de tags que puedes usar, por favor, usa solo los que realmente describan el audio: "
         . "Tipo y Formato: Acoustic, Chord, Down Sweep/Fall, Dry, Harmony, Loop, Melody, Mixed, Monophonic, One Shot, Polyphonic, Processed, Progression, Riser/Sweep, Short, Wet. "
         . "Timbre y Tono: Bassy, Boomy, Breathy, Bright, Buzzy, Clean, Coarse/Harsh, Cold, Dark, Delicate, Detuned, Dissonant, Distorted, Exotic, Fat, Full, Glitchy, Granular, Gloomy, Hard, High, Hollow, Low, Metallic, Muffled, Muted, Narrow, Noisy, Round, Sharp, Shimmering, Sizzling, Smooth, Soft, Piercing, Thin, Tinny, Warm, Wide, Wooden. "
-        . "Género: Ambient, Breaks, Chillout, Chiptune, Cinematic, Classical, Acid House, Deep House, Disco, Drum & Bass, Dubstep, Ethnic/World, Electro House, Electro, Electro Swing, Folk/Country, Funk/Soul, Jazz, Jungle, House, Hip Hop, Latin/Afro Cuban, Minimal House, Nu Disco, R&B, Reggae/Dub, Reggaeton, Rock, Pop, Progressive House, Synthwave, Tech House, Techno, Trance, Trap, Vocals, Phonk, Memphis. "
-        . "Estilo y Técnica: Arpeggiated, Decaying, Echoing, Long Release, Legato, Glissando/Glide, Pad, Percussive, Pitch Bend, Plucked, Pulsating, Punchy, Randomized, Slow Attack, Sweep/Filter Mod, Staccato/Stabs, Stuttered/Gated, Straight, Sustained, Syncopated, Uptempo, Wobble, Vibrato. "
-        . "Calidad y Tecnología: Analog, Compressed, Digital, Dynamic, Loud, Range, Female, Funky, Jazzy, Lo Fi, Male, Quiet, Vintage, Vinyl. "
-        . "Estado de Ánimo: Aggressive, Angry, Bouncy, Calming, Carefree, Cheerful, Climactic, Cool, Dramatic, Elegant, Epic, Excited, Energetic, Fun, Futuristic, Gentle, Groovy, Happy, Haunting, Hypnotic, Industrial, Manic, Melancholic, Mellow, Mystical, Nervous, Passionate, Peaceful, Playful, Powerful, Rebellious, Reflective, Relaxing, Romantic, Rowdy, Sad, Sentimental, Sexy, Soothing, Sophisticated, Spacey, Suspenseful, Uplifting, Urgent, Weird."
-        . " Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión. Aunque te pido en español y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en español son muy frecuentes, por ejemplo, kick, snare, cowbell, etc. Ignora '/home/asley01/MEGA/Waw/Kits' no es relevante, el resto de la ruta si.";
+        . "Genero: Ambient, Breaks, Chillout, Chiptune, Cinematic, Classical, Acid House, Deep House, Disco, Drum & Bass, Dubstep, Ethnic/World, Electro House, Electro, Electro Swing, Folk/Country, Funk/Soul, Jazz, Jungle, House, Hip Hop, Latin/Afro Cuban, Minimal House, Nu Disco, R&B, Reggae/Dub, Reggaeton, Rock, Pop, Progressive House, Synthwave, Tech House, Techno, Trance, Trap, Vocals, Phonk, Memphis. "
+        . "Estilo y Tecnica: Arpeggiated, Decaying, Echoing, Long Release, Legato, Glissando/Glide, Pad, Percussive, Pitch Bend, Plucked, Pulsating, Punchy, Randomized, Slow Attack, Sweep/Filter Mod, Staccato/Stabs, Stuttered/Gated, Straight, Sustained, Syncopated, Uptempo, Wobble, Vibrato. "
+        . "Calidad y Tecnologia: Analog, Compressed, Digital, Dynamic, Loud, Range, Female, Funky, Jazzy, Lo Fi, Male, Quiet, Vintage, Vinyl. "
+        . "Estado de Animo: Aggressive, Angry, Bouncy, Calming, Carefree, Cheerful, Climactic, Cool, Dramatic, Elegant, Epic, Excited, Energetic, Fun, Futuristic, Gentle, Groovy, Happy, Haunting, Hypnotic, Industrial, Manic, Melancholic, Mellow, Mystical, Nervous, Passionate, Peaceful, Playful, Powerful, Rebellious, Reflective, Relaxing, Romantic, Rowdy, Sad, Sentimental, Sexy, Soothing, Sophisticated, Spacey, Suspenseful, Uplifting, Urgent, Weird."
+        . " Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de busqueda relevantes. Se muy detallado sin perder precision. Aunque te pido en espaÃ±ol y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en espaÃ±ol son muy frecuentes, por ejemplo, kick, snare, cowbell, etc. Ignora '/home/asley01/MEGA/Waw/Kits' no es relevante, el resto de la ruta si.";
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
     if ($descripcion) {
         // Procesar el JSON eliminando caracteres innecesarios
-        $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
+        $descripcion_procesada = json_decode(trim($descripcion, "```json 
+"), true);
 
         if ($descripcion_procesada) {
-            // Corregir la estructura de 'descripcion_ia' solo si está mal estructurada
+            // Corregir la estructura de 'descripcion_ia' solo si esta mal estructurada
             if (isset($descripcion_procesada['descripcion_ia']['descripcion_ia'])) {
                 $descripcion_procesada['descripcion_ia'] = [
                     'es' => $descripcion_procesada['descripcion_ia']['descripcion_ia']['es'] ?? '',
@@ -579,10 +586,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
                 ];
             }
 
-            // Definir el sufijo para los datos, según el índice
+            // Definir el sufijo para los datos, segun el indice
             $suffix = ($index == 1) ? '' : "_{$index}";
 
-            // Asegurarse de que la clave 'descripcion_ia' esté bien estructurada
+            // Asegurarse de que la clave 'descripcion_ia' este bien estructurada
             if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
                 // Crear los nuevos datos con la estructura correcta
                 $nuevos_datos = [
@@ -622,19 +629,19 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
 
                 // Guardar los datos procesados en los metadatos del post
                 update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
-                iaLog("Descripción del audio guardada para el post ID: {$post_id}");
+                iaLog("Descripcion del audio guardada para el post ID: {$post_id}");
             } else {
-                iaLog("Error: 'descripcion_ia' no está presente o tiene una estructura incorrecta en el JSON procesado.");
+                iaLog("Error: 'descripcion_ia' no esta presente o tiene una estructura incorrecta en el JSON procesado.");
             }
         } else {
-            iaLog("Error al procesar el JSON de la descripción generada por IA.");
+            iaLog("Error al procesar el JSON de la descripcion generada por IA.");
         }
     }
 
     // Obtener los datos del algoritmo
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
 
-    // Si no existen, inicializarlos como un array vacío
+    // Si no existen, inicializarlos como un array vacio
     if (!$datos_algoritmo) {
         $datos_algoritmo = [];
     } else {
