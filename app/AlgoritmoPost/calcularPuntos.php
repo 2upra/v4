@@ -1,4 +1,4 @@
-<? 
+<?php 
 
 function calcularPuntosParaPost(
     $postId,
@@ -52,8 +52,15 @@ function calcularPuntosParaPost(
 
     // Access meta data
     $meta_data = $datos['meta_data'];
-    $metaVerificado = isset($meta_data[$postId]['Verificado']) && ($meta_data[$postId]['Verificado'] === '1');
-    $metaPostAut = isset($meta_data[$postId]['postAut']) && ($meta_data[$postId]['postAut'] === '1');
+    $metaVerificado = false;
+    $metaPostAut = false;
+
+    if (isset($meta_data[$postId]['Verificado'])) {
+        $metaVerificado = ($meta_data[$postId]['Verificado'] === '1');
+    }
+    if (isset($meta_data[$postId]['postAut'])) {
+        $metaPostAut = ($meta_data[$postId]['postAut'] === '1');
+    }
 
     $meta_roles = $datos['meta_roles'];
 
@@ -88,13 +95,13 @@ function calcularPuntosParaPost(
 
     // Apply reduction based on views
     if (isset($vistasPosts[$postId])) {
-        // Si el ID del post actual existe en el array $vistasPosts, se obtiene el número de vistas.
+        // Si el ID del post actual existe en el array $vistasPosts, se obtiene el numero de vistas.
         $v = $vistasPosts[$postId]['count'];
 
-        // Se calcula la reducción de puntos en función del número de vistas.
+        // Se calcula la reduccion de puntos en funcion del numero de vistas.
         $rPuntos = $v * 10;
 
-        // Se resta la reducción de puntos al puntaje final.
+        // Se resta la reduccion de puntos al puntaje final.
         $pFinal -= $rPuntos;
     }
 
