@@ -3,17 +3,17 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-// Ejemplo de como veo el titulo y descripcion en el SEO:
+// Ejemplo de cómo veo el título y descripción en el SEO:
 //
-// Titulo actual:
+// Título actual:
 // "Memphis rap vocal sample | sample free"
 //
-// Descripcion actual:
+// Descripción actual:
 // "memphis rap sample, hip hop vocal sample, rap beat download samples, beats and drum kits free"
 //
-// Se espera que la descripcion quede asi:
+// Se espera que la descripción quede así:
 // "Memphis rap sample, hip hop vocal sample, rap beat - Download samples, beats and drum kits free"
-// Es decir: la descripcion debe iniciar en mayusculas y, si supera 160 caracteres, terminar en "..."
+// Es decir: la descripción debe iniciar en mayúsculas y, si supera 160 caracteres, terminar en "..."
 
 
 $active_lang     = obtenerIdiomaDelNavegador();
@@ -26,16 +26,16 @@ $datos_algoritmo_respaldo = get_post_meta($current_post_id, 'datosAlgoritmo_resp
 $datosAlgoritmo = empty($datos_algoritmo_pri) ? $datos_algoritmo_respaldo : $datos_algoritmo_pri;
 $datos_decoded  = is_string($datosAlgoritmo) ? json_decode($datosAlgoritmo, true) : $datosAlgoritmo;
 
-// Generar el titulo SEO
+// Generar el título SEO
 $post_title = get_the_title();
 $tipo_audio = isset($datos_decoded['tipo_audio'][$active_lang][0]) ? $datos_decoded['tipo_audio'][$active_lang][0] : '';
 
-// Para evitar duplicar "Sample": si el titulo ya lo tiene, no se anade al tipo de audio
+// Para evitar duplicar "Sample": si el título ya lo tiene, no se añade al tipo de audio
 if (stripos($post_title, 'sample') === false && stripos($tipo_audio, 'sample') === false) {
     $tipo_audio .= ' Sample';
 }
 
-// Anadir el sufijo (en este ejemplo se usa "free" para ambos idiomas)
+// Añadir el sufijo (en este ejemplo se usa "free" para ambos idiomas)
 $seo_suffix = 'free';
 if (stripos($tipo_audio, $seo_suffix) === false) {
     $tipo_audio .= ' ' . $seo_suffix;
@@ -43,11 +43,10 @@ if (stripos($tipo_audio, $seo_suffix) === false) {
 
 $seo_title = $post_title . ' | ' . $tipo_audio;
 add_action('wp_head', function () use ($seo_title) {
-    echo '<title>' . esc_html($seo_title) . '</title>' . "
-";
+    echo '<title>' . esc_html($seo_title) . '</title>' . "\n";
 }, 1);
 
-// Construir la parte base de la descripcion (usando sugerencias o descripcion corta)
+// Construir la parte base de la descripción (usando sugerencias o descripción corta)
 $base_desc = '';
 if (isset($datos_decoded['sugerencia_busqueda'][$active_lang]) && ! empty($datos_decoded['sugerencia_busqueda'][$active_lang])) {
     $base_desc = implode(', ', $datos_decoded['sugerencia_busqueda'][$active_lang]);
@@ -55,11 +54,11 @@ if (isset($datos_decoded['sugerencia_busqueda'][$active_lang]) && ! empty($datos
     $base_desc = implode(', ', $datos_decoded['descripcion_corta'][$active_lang]);
 }
 
-// Definir el sufijo fijo para la descripcion
+// Definir el sufijo fijo para la descripción
 $desc_suffix = 'Download samples, beats and drum kits free';
 
-// Armar la descripcion final:
-// - Se asegura que la parte base inicie en mayuscula
+// Armar la descripción final:
+// - Se asegura que la parte base inicie en mayúscula
 // - Se agrega el separador " - " antes del sufijo
 $final_desc = ucfirst(trim($base_desc));
 if (! empty($final_desc)) {
@@ -68,18 +67,17 @@ if (! empty($final_desc)) {
     $final_desc = $desc_suffix;
 }
 
-// Si la descripcion excede los 160 caracteres, se trunca y se anade "..."
+// Si la descripción excede los 160 caracteres, se trunca y se añade "..."
 if (mb_strlen($final_desc) > 160) {
     $final_desc = mb_substr($final_desc, 0, 160 - 3) . '...';
 }
 
 $meta_description = esc_attr(trim($final_desc));
 
-// Anadir la meta descripcion en el <head>
+// Añadir la meta descripción en el <head>
 add_action('wp_head', function () use ($meta_description) {
     if (! empty($meta_description)) {
-        echo '<meta name="description" content="' . $meta_description . '">' . "
-";
+        echo '<meta name="description" content="' . $meta_description . '">' . "\n";
     }
 }, 1);
 
@@ -107,10 +105,9 @@ if (! empty($datos_decoded)) {
     }
 }
 
-// Anadir el esquema JSON-LD al <head>
+// Añadir el esquema JSON-LD al <head>
 add_action('wp_head', function () use ($schema) {
-    echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "
-";
+    echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "\n";
 }, 2);
 ?>
 <!DOCTYPE html>
