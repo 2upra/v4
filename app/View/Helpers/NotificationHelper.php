@@ -1,6 +1,6 @@
 <?php
 
-namespace App\View\Helpers;
+
 
 use WP_Query;
 
