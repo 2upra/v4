@@ -1,4 +1,4 @@
-<?
+<?php
 require_once ABSPATH . 'wp-admin/includes/media.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -190,20 +190,20 @@ function headGeneric()
     <meta name="theme-color" content="#ffffff">
 
     <!-- Etiquetas Open Graph para Facebook y otras plataformas -->
-    <meta property="og:title" content="<? echo get_the_title(); ?>" />
+    <meta property="og:title" content="<?php echo get_the_title(); ?>" />
     <meta property="og:description" content="Social Media para artistas" />
     <meta property="og:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all" />
     <meta property="og:url" content="https://2upra.com" />
     <meta property="og:type" content="website" />
 
     <!-- Etiquetas de Twitter Cards -->
-    <meta property="og:title" content="<? echo get_the_title(); ?>" />
+    <meta property="og:title" content="<?php echo get_the_title(); ?>" />
     <meta name="twitter:title" content="Social Media para artistas">
     <meta name="twitter:description" content="Descripcion de tu pagina que aparecera al compartir.">
     <meta name="twitter:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all">
     <meta name="twitter:site" content="@wandorius" />
 
-<?
+<?php
 }
 add_action('wp_head', 'headGeneric');
 
@@ -516,7 +516,11 @@ function scriptsOrdenados()
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
     //$error_log[] = "Script ajaxPage localizado.";
 
-
+    // Localizar datos para genericAjax.js, incluyendo el nonce para guardarReporte
+    wp_localize_script('genericAjax', 'genericAjaxData', [
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'guardarReporteNonce' => wp_create_nonce('guardar_reporte_nonce')
+    ]);
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
     //$error_log[] = "Script en linea para genericAjax anadido con wpAdminUrl.";
