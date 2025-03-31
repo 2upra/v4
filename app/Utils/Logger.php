@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Utils;
-
 //esto funciona cuando es local, tiene que sar el rror log de wp pro defecto spara todos los archivos 
 function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
 {

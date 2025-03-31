@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Setup;
-
 /**
  * Configuración inicial del tema.
  * Crea páginas esenciales si no existen en entornos locales.

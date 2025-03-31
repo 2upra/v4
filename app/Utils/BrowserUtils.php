@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Utils;
-
 /**
  * Obtiene el idioma preferido del navegador del usuario.
  *
