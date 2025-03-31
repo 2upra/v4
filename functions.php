@@ -260,26 +260,12 @@ function custom_site_icon($meta_tags)
 add_filter('site_icon_meta_tags', 'custom_site_icon');
 
 /**
- * Obtiene el idioma preferido del navegador del usuario.
- * @return string Código de idioma ('es', 'en', etc.) o 'en' por defecto.
- */
-function obtenerIdiomaDelNavegador() {
-    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-        $lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-        // Solo soportamos 'es' y 'en' por ahora
-        if (in_array($lang, ['es', 'en'])) { 
-            return $lang;
-        }
-    }
-    return 'en'; // Idioma por defecto
-}
-
-/**
  * Configura los metadatos de la página (título, descripción) y las cookies
  * basándose en el idioma detectado del navegador.
  */
 function configurarMetadatosPaginaIdioma() {
-    $idioma = obtenerIdiomaDelNavegador();
+    // Utiliza la función namespaced de BrowserUtils
+    $idioma = \App\Utils\obtenerIdiomaDelNavegador();
 
     if ($idioma === 'es') {
         $titulo = "Social Media para Artistas | Samples y VST Gratis";
