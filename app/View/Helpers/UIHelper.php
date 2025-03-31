@@ -1,7 +1,5 @@
 <?php
 
-namespace App\View\Helpers;
-
 if (!class_exists('UIHelper')) {
     class UIHelper {
         /**

@@ -265,7 +265,7 @@ add_filter('site_icon_meta_tags', 'custom_site_icon');
  */
 function configurarMetadatosPaginaIdioma() {
     // Utiliza la función namespaced de BrowserUtils
-    $idioma = \App\Utils\obtenerIdiomaDelNavegador();
+    $idioma = obtenerIdiomaDelNavegador();
 
     if ($idioma === 'es') {
         $titulo = "Social Media para Artistas | Samples y VST Gratis";

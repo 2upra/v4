@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Utils;
-
 /**
  * Obtiene el idioma preferido del navegador del usuario.
  *
@@ -59,4 +57,4 @@ EOD;
     wp_add_inline_script('script-base', $script_inline);
 }
 // La llamada add_action debe usar el namespace completo
-add_action('wp_enqueue_scripts', 'App\\Utils\\innerHeight');
+add_action('wp_enqueue_scripts', 'innerHeight');
