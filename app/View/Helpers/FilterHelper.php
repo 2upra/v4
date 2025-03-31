@@ -1,7 +1,5 @@
 <?php
 
-namespace App\View\Helpers;
-
 /**
  * Renderiza el HTML para la lista de filtros de samples.
  *
