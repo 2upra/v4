@@ -441,25 +441,3 @@ foreach ($directorios as $directorio) {
 }
 
 
-
-// CARGAR LA BARRA DE CARGA
-function loadingBar()
-{
-    echo '<style>
-        #loadingBar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 0%;
-            height: 4px;
-            background-color: white; /* Color de la barra */
-            transition: width 0.4s ease;
-            z-index: 999999999999999;
-        }
-    </style>';
-
-    echo '<div id="loadingBar"></div>';
-}
-
-add_action('wp_head', 'loadingBar');
-
