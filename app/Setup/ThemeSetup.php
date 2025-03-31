@@ -112,7 +112,6 @@ function paginasIniciales1()
     update_option('paginasIniciales1', '1');
 }
 
-add_action('init', __NAMESPACE__ . '\\paginasIniciales1');
 
 /**
  * Añade meta tags genéricos, favicons, etc., al <head> HTML.
@@ -164,4 +163,4 @@ function headGeneric()
 
 <?php
 }
-add_action('wp_head', __NAMESPACE__ . '\\headGeneric');
+add_action('wp_head', 'headGeneric');
