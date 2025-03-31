@@ -1,7 +1,10 @@
-<?
+<?php
 
 //que esto en vez de guardarlo en una tabla lo guarde en un post type reporte
 function guardarReporte() {
+    // 1. Verificar el nonce
+    check_ajax_referer('guardar_reporte_nonce', 'nonce');
+
     $idUser = get_current_user_id();
     $idContenido = intval($_POST['post_id']);
     $tipoContenido = sanitize_text_field($_POST['tipoContenido']);
@@ -11,9 +14,9 @@ function guardarReporte() {
     $user_name = get_userdata($idUser)->display_name;
     $post_title = "Reporte de " . $user_name;
     if ($tipoContenido === 'comentario') {
-        $comentario_title = get_the_title($idContenido);
-        $comentario_title_short = wp_trim_words($comentario_title, 10, '...');
-        $post_title .= " sobre el comentario: " . $comentario_title_short;
+        // Intentar obtener el título del comentario (puede requerir lógica adicional si no es un post)
+        // Por ahora, usamos el ID
+        $post_title .= " sobre el comentario ID: " . $idContenido;
     } else {
         $post_title .= " sobre la publicación ID: " . $idContenido;
     }
@@ -39,7 +42,6 @@ function guardarReporte() {
     wp_send_json_success('Reporte guardado con ID: ' . $reporte_id);
 }
 add_action('wp_ajax_guardarReporte', 'guardarReporte');
-
 
 
 

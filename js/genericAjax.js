@@ -136,13 +136,28 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                     const detalles = document.getElementById('mensajeError')?.value || '';
                     const descripcion = document.getElementById('mensajeEdit')?.value || '';
 
+                    // Prepare data for AJAX call
+                    const ajaxData = {
+                        post_id,
+                        tipoContenido,
+                        detalles,
+                        descripcion
+                    };
+
+                    // Add nonce specifically for guardarReporte action
+                    if (action === 'guardarReporte') {
+                        // Check if the localized data and nonce exist
+                        if (typeof genericAjaxData !== 'undefined' && genericAjaxData.guardarReporteNonce) {
+                            ajaxData.nonce = genericAjaxData.guardarReporteNonce;
+                        } else {
+                            console.error('Nonce for guardarReporte not found. Aborting.');
+                            alert('Error de seguridad. No se pudo verificar la solicitud.'); // Inform user
+                            return; // Stop execution if nonce is missing
+                        }
+                    }
+
                     try {
-                        const data = await enviarAjax(action, {
-                            post_id,
-                            tipoContenido,
-                            detalles,
-                            descripcion
-                        });
+                        const data = await enviarAjax(action, ajaxData); // Pass the prepared data object
 
                         if (data.success) {
                             successCallback(null, data, post_id);

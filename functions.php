@@ -1,4 +1,4 @@
-<?
+<?php
 require_once ABSPATH . 'wp-admin/includes/media.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -48,164 +48,7 @@ function debug_page_load_time() {
 add_action('shutdown', 'debug_page_load_time');
 */
 
-function paginasIniciales1()
-{
-    // Verificar si las paginas ya fueron creadas
-    if (get_option('paginasIniciales1') == '1') return;
 
-
-    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
-        update_option('paginasIniciales1', '1');
-        return;
-    }
-
-
-    $paginas = array(
-        'Inicio' => array(
-            'plantilla' => 'TemplateInicio.php',
-            'contenido' => 'Este es el contenido de la pagina de inicio.'
-        ),
-        'Colab' => array(
-            'plantilla' => 'TemplateColab.php',
-            'contenido' => ''
-        ),
-        'Dev' => array(
-            'plantilla' => 'TemplateDev.php',
-            'contenido' => ''
-        ),
-        'Colec' => array(
-            'plantilla' => 'TemplateColec.php',
-            'contenido' => ''
-        ),
-        'Feed' => array(
-            'plantilla' => 'TemplateFeed.php',
-            'contenido' => ''
-        ),
-        'FeedSample' => array(
-            'plantilla' => 'TemplateFeedSample.php',
-            'contenido' => ''
-        ),
-        'Inversor' => array(
-            'plantilla' => 'TemplateInversor.php',
-            'contenido' => ''
-        ),
-        'Music' => array(
-            'plantilla' => 'TemplateMusic.php',
-            'contenido' => ''
-        ),
-        'Prueba' => array(
-            'plantilla' => 'TemplatePrueba.php',
-            'contenido' => ''
-        ),
-        'Sample' => array(
-            'plantilla' => 'TemplateSample.php',
-            'contenido' => ''
-        ),
-        'Sello' => array(
-            'plantilla' => 'TemplateSello.php',
-            'contenido' => ''
-        ),
-        'T&Q' => array(
-            'plantilla' => 'TemplateT&Q.php',
-            'contenido' => ''
-        ),
-        'Biblioteca' => array(
-            'plantilla' => 'TemplateBiblioteca.php',
-            'contenido' => ''
-        )
-    );
-
-    // Recorrer el array y crear las paginas
-    $inicio_id = 0; // Variable para guardar el ID de la pagina de inicio
-    foreach ($paginas as $titulo => $datos) {
-        // Usar WP_Query en lugar de get_page_by_title
-        $pagina_query = new WP_Query(array(
-            'post_type' => 'page',
-            'title'     => $titulo,
-            'post_status' => 'any'
-        ));
-
-        if (!$pagina_query->have_posts()) {
-            $nueva_pagina = array(
-                'post_title'    => $titulo,
-                'post_content'  => $datos['contenido'],
-                'post_status'   => 'publish',
-                'post_type'     => 'page',
-                'page_template' => $datos['plantilla']
-            );
-
-            $nueva_pagina_id = wp_insert_post($nueva_pagina);
-
-            // Si la pagina creada es la de inicio, guardar su ID
-            if ($titulo == 'Inicio') {
-                $inicio_id = $nueva_pagina_id;
-            }
-        }
-
-        // Liberar memoria
-        wp_reset_postdata();
-    }
-
-    // Definir la pagina de inicio
-    if ($inicio_id > 0) {
-        update_option('show_on_front', 'page');
-        update_option('page_on_front', $inicio_id);
-    }
-
-    // Marcar que las paginas ya fueron creadas
-    update_option('paginasIniciales1', '1');
-}
-
-add_action('init', 'paginasIniciales1');
-
-
-function headGeneric()
-{
-    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
-        update_option('paginasIniciales1', '1');
-        return;
-    }
-?>
-
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="https://2upra.com/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" sizes="57x57" href="https://2upra.com/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="https://2upra.com/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="https://2upra.com/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="https://2upra.com/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="https://2upra.com/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="https://2upra.com/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="https://2upra.com/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://2upra.com/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://2upra.com/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="https://2upra.com/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/favicon-16x16.png">
-    <link rel="manifest" href="https://2upra.com/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="https://2upra.com/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
-
-    <!-- Etiquetas Open Graph para Facebook y otras plataformas -->
-    <meta property="og:title" content="<? echo get_the_title(); ?>" />
-    <meta property="og:description" content="Social Media para artistas" />
-    <meta property="og:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all" />
-    <meta property="og:url" content="https://2upra.com" />
-    <meta property="og:type" content="website" />
-
-    <!-- Etiquetas de Twitter Cards -->
-    <meta property="og:title" content="<? echo get_the_title(); ?>" />
-    <meta name="twitter:title" content="Social Media para artistas">
-    <meta name="twitter:description" content="Descripcion de tu pagina que aparecera al compartir.">
-    <meta name="twitter:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all">
-    <meta name="twitter:site" content="@wandorius" />
-
-<?
-}
-add_action('wp_head', 'headGeneric');
 
 function preload_fonts()
 {
@@ -231,147 +74,6 @@ function encolar_sw_js()
 }
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
 */
-
-//esto funciona cuando es local, tiene que sar el rror log de wp pro defecto spara todos los archivos 
-function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
-{
-
-    // Intentar usar el error_log de WordPress por defecto
-    if (is_object($mensaje) || is_array($mensaje)) {
-        error_log(print_r($mensaje, true));
-    } else {
-        error_log($mensaje);
-    }
-
-    // Si se especifico un archivo y no estamos en local, intentamos escribir en el
-    if (!empty($archivo) && (!defined('LOCAL') || !LOCAL)) {
-        try {
-            if (!is_writable(dirname($archivo))) {
-                error_log("escribirLog: No se puede escribir en el directorio: " . dirname($archivo));
-                return false;
-            }
-
-            if (is_object($mensaje) || is_array($mensaje)) {
-                $mensaje = print_r($mensaje, true);
-            }
-
-            $log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
-
-            $fp = fopen($archivo, 'a');
-            if ($fp) {
-                if (flock($fp, LOCK_EX)) {
-                    fwrite($fp, $log . PHP_EOL);
-
-                    // Limitar el tamano del archivo, pero solo si se especifico un archivo
-                    if (rand(1, 10000) === 1) {
-                        $lineas = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        if (count($lineas) > $maxlineas) {
-                            $lineas = array_slice($lineas, -$maxlineas);
-                            file_put_contents($archivo, implode(PHP_EOL, $lineas) . PHP_EOL);
-                        }
-                    }
-
-                    flock($fp, LOCK_UN);
-                } else {
-                    error_log("escribirLog: No se pudo obtener el bloqueo del archivo: $archivo");
-                }
-                fclose($fp);
-            } else {
-                error_log("escribirLog: No se pudo abrir el archivo: $archivo");
-            }
-        } catch (Exception $e) {
-            error_log("escribirLog: Excepcion capturada: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    return true;
-}
-// sudo touch /var/www/wordpress/wp-content/themes/streamLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/rendimiento.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/rendimiento.log
-// tail -f /var/www/wordpress/wp-content/themes/rendimiento.log
-function streamLog($log)
-{
-    if (STREAM_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/streamLog.log');
-    }
-}
-
-
-function seoLog($log)
-{
-    if (SEO_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/seoLog.log');
-    }
-}
-
-
-function logAudio($log)
-{
-    if (LOG_AUDIO_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log');
-    }
-}
-
-function rendimientoLog($log)
-{
-    if (RENDIMIENTO_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/rendimiento.log');
-    }
-}
-
-function chatLog($log)
-{
-    if (CHAT_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
-    }
-}
-
-function stripeError($log)
-{
-    if (STRIPE_ERROR_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
-    }
-}
-
-function autLog($log)
-{
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
-}
-
-function guardarLog($log)
-{
-    if (GUARDAR_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
-    }
-}
-
-function logAlgoritmo($log)
-{
-    if (LOG_ALGORITMO_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100);
-    }
-}
-
-function ajaxPostLog($log)
-{
-    if (AJAX_POST_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
-    }
-}
-
-function iaLog($log)
-{
-    if (IA_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
-    }
-}
-
-function postLog($log)
-{
-    if (POST_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
-    }
-}
 
 
 //wave
@@ -516,7 +218,11 @@ function scriptsOrdenados()
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
     //$error_log[] = "Script ajaxPage localizado.";
 
-
+    // Localizar datos para genericAjax.js, incluyendo el nonce para guardarReporte
+    wp_localize_script('genericAjax', 'genericAjaxData', [
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'guardarReporteNonce' => wp_create_nonce('guardar_reporte_nonce')
+    ]);
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
     //$error_log[] = "Script en linea para genericAjax anadido con wpAdminUrl.";
@@ -545,78 +251,6 @@ function scriptsOrdenados()
 }
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
 
-function limpiarLogs()
-{
-    $log_files = array(
-        ABSPATH . 'wp-content/themes/wanlog.txt',
-        ABSPATH . 'wp-content/themes/wanlogAjax.txt',
-        ABSPATH . 'wp-content/uploads/access_logs.txt',
-        ABSPATH . 'wp-content/themes/logsw.txt',
-        ABSPATH . 'wp-content/debug.log'
-    );
-
-    foreach ($log_files as $file) {
-        if (file_exists($file)) {
-            $file_size = filesize($file) / (1024 * 1024); // Size in MB
-
-            if ($file_size > 1) {
-                // Use SplFileObject for memory-efficient file handling
-                try {
-                    $temp_file = $file . '.temp';
-                    $fp_out = fopen($temp_file, 'w');
-
-                    if ($fp_out === false) {
-                        continue;
-                    }
-
-                    $file_obj = new SplFileObject($file, 'r');
-
-                    // Move file pointer to end
-                    $file_obj->seek(PHP_INT_MAX);
-                    $total_lines = $file_obj->key();
-
-                    // Calculate start position for last 2000 lines
-                    $start_line = max(0, $total_lines - 2000);
-
-                    // Reset pointer
-                    $file_obj->rewind();
-
-                    $current_line = 0;
-                    while (!$file_obj->eof()) {
-                        if ($current_line >= $start_line) {
-                            fwrite($fp_out, $file_obj->current());
-                        }
-                        $file_obj->next();
-                        $current_line++;
-                    }
-
-                    fclose($fp_out);
-
-                    // Replace original file with temp file
-                    if (file_exists($temp_file)) {
-                        unlink($file);
-                        rename($temp_file, $file);
-                    }
-                } catch (Exception $e) {
-                    // Log error or handle exception
-                    error_log("Error processing log file {$file}: " . $e->getMessage());
-
-                    // Clean up temp file if it exists
-                    if (isset($temp_file) && file_exists($temp_file)) {
-                        unlink($temp_file);
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Programar la ejecucion de la funcion
-if (!wp_next_scheduled('clean_log_files_hook')) {
-    wp_schedule_event(time(), 'hourly', 'clean_log_files_hook');
-}
-add_action('clean_log_files_hook', 'limpiarLogs');
-
 
 function custom_site_icon($meta_tags)
 {
@@ -624,6 +258,38 @@ function custom_site_icon($meta_tags)
     return $meta_tags;
 }
 add_filter('site_icon_meta_tags', 'custom_site_icon');
+
+/**
+ * Configura los metadatos de la página (título, descripción) y las cookies
+ * basándose en el idioma detectado del navegador.
+ */
+function configurarMetadatosPaginaIdioma() {
+    // Utiliza la función namespaced de BrowserUtils
+    $idioma = \App\Utils\obtenerIdiomaDelNavegador();
+
+    if ($idioma === 'es') {
+        $titulo = "Social Media para Artistas | Samples y VST Gratis";
+        $descripcion = "Unete a una red de creadores donde puedes conectar con artistas, colaborar en proyectos, y encontrar una amplia variedad de samples y plugins VST gratuitos para potenciar tus producciones musicales.";
+    } else {
+        $titulo = "Social Media for Artists | Free Samples & VSTs";
+        $descripcion = "Join a network of creators where you can connect with artists, collaborate on projects, and access a wide range of free samples and VST plugins to enhance your music productions.";
+    }
+
+    // Añadir el título y la descripción al <head>
+    add_action('wp_head', function () use ($titulo, $descripcion) {
+        echo '<title>' . esc_html($titulo) . '</title>' . "\n";
+        echo '<meta name="description" content="' . esc_attr($descripcion) . '">' . "\n";
+    }, 1); // Prioridad baja para que se ejecute temprano en wp_head
+
+    // Configurar cookies para el título y descripción (si aún son necesarias)
+    if (!headers_sent()) {
+        setcookie("page_title", $titulo, time() + 3600, "/");
+        setcookie("page_description", $descripcion, time() + 3600, "/");
+    } else {
+        // Opcional: Registrar un error si las cabeceras ya se enviaron
+        // error_log("Advertencia: No se pudieron establecer las cookies page_title/page_description porque las cabeceras ya se enviaron.");
+    }
+}
 
 function incluirArchivos($directorio)
 {
@@ -649,71 +315,4 @@ foreach ($directorios as $directorio) {
     incluirArchivos($directorio);
 }
 
-
-
-// CARGAR LA BARRA DE CARGA
-function loadingBar()
-{
-    echo '<style>
-        #loadingBar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 0%;
-            height: 4px;
-            background-color: white; /* Color de la barra */
-            transition: width 0.4s ease;
-            z-index: 999999999999999;
-        }
-    </style>';
-
-    echo '<div id="loadingBar"></div>';
-}
-
-add_action('wp_head', 'loadingBar');
-
-// Funcion para obtener el idioma preferido del navegador
-function obtenerIdiomaDelNavegador()
-{
-    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-        return 'en';
-    }
-    $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-    foreach ($accepted_languages as $language) {
-        $lang = substr($language, 0, 2);
-        if (in_array($lang, ['es', 'en'])) {
-            return $lang;
-        }
-    }
-    return 'en';
-}
-
-//CALCULAR ALTURA CORRECTA CON SCRIPT
-function innerHeight()
-{
-    wp_register_script('script-base', '');
-    wp_enqueue_script('script-base');
-    $script_inline = <<<EOD
-    function setVHVariable() {
-        var vh;
-        if (window.visualViewport) {
-            vh = window.visualViewport.height * 0.01;
-        } else {
-            vh = window.innerHeight * 0.01;
-        }
-        document.documentElement.style.setProperty('--vh', vh + 'px');
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        setVHVariable();
-
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', setVHVariable);
-        } else {
-            window.addEventListener('resize', setVHVariable);
-        }
-    });
-EOD;
-    wp_add_inline_script('script-base', $script_inline);
-}
-add_action('wp_enqueue_scripts', 'innerHeight');
+?>
