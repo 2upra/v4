@@ -32,8 +32,8 @@ function formTarea()
         <div class="A1806241" id="sTipo-sTipo">
             <div class="A1806242">
                 <button value="una vez">Una vez</button>
-                <button value="habito">Habito flexible</button>
-                <button value="habito rigido">Habito rigido</button>
+                <button value="habito">Hábito flexible</button>
+                <button value="habito rigido">Hábito rígido</button>
                 <button value="meta" style="display: none;">Meta</button>
             </div>
         </div>
@@ -114,26 +114,23 @@ function borrarTarea()
     $log = '';
     if (!current_user_can('edit_posts')) {
         $log .= 'No tienes permisos.';
-        guardarLog("borrarTarea: 
- $log");
+        guardarLog("borrarTarea: \n $log");
         wp_send_json_error('No tienes permisos.');
     }
 
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
 
     if ($id === 0) {
-        $log .= 'ID de tarea invalido.';
-        guardarLog("borrarTarea: 
- $log");
-        wp_send_json_error('ID de tarea invalido.');
+        $log .= 'ID de tarea inválido.';
+        guardarLog("borrarTarea: \n $log");
+        wp_send_json_error('ID de tarea inválido.');
     }
 
     $tarea = get_post($id);
 
     if (empty($tarea) || $tarea->post_type != 'tarea') {
         $log .= 'Tarea no encontrada.';
-        guardarLog("borrarTarea: 
- $log");
+        guardarLog("borrarTarea: \n $log");
         wp_send_json_error('Tarea no encontrada.');
     }
 
@@ -142,14 +139,12 @@ function borrarTarea()
     if (is_wp_error($res)) {
         $msg = $res->get_error_message();
         $log .= "Error al borrar tarea: $msg";
-        guardarLog("borrarTarea: 
- $log");
+        guardarLog("borrarTarea: \n $log");
         wp_send_json_error($msg);
     }
 
     $log .= "Tarea con ID $id borrada exitosamente.";
-    guardarLog("borrarTarea: 
- $log");
+    guardarLog("borrarTarea: \n $log");
     wp_send_json_success();
 }
 
@@ -161,8 +156,7 @@ function modificarTarea()
     $log = '';
     if (!current_user_can('edit_posts')) {
         $log .= 'No tienes permisos.';
-        guardarLog("modificarTarea: 
- $log");
+        guardarLog("modificarTarea: \n $log");
         wp_send_json_error('No tienes permisos.');
     }
 
@@ -170,10 +164,9 @@ function modificarTarea()
     $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
 
     if (empty($tit)) {
-        $log .= 'Titulo vacio.';
-        guardarLog("modificarTarea: 
- $log");
-        wp_send_json_error('Titulo vacio.');
+        $log .= 'Título vacío.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('Título vacío.');
     }
 
     if ($id === 0) {
@@ -182,7 +175,7 @@ function modificarTarea()
         if (is_wp_error($tareaId)) {
             wp_send_json_error($tareaId->get_error_message());
         } else {
-            wp_send_json_success(array('id' => $tareaId)); // Envia el ID en la respuesta
+            wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
         }
 
         return;
@@ -192,8 +185,7 @@ function modificarTarea()
 
     if (empty($tarea) || $tarea->post_type != 'tarea') {
         $log .= 'Tarea no encontrada.';
-        guardarLog("modificarTarea: 
- $log");
+        guardarLog("modificarTarea: \n $log");
         wp_send_json_error('Tarea no encontrada.');
     }
 
@@ -206,16 +198,13 @@ function modificarTarea()
 
     if (is_wp_error($res)) {
         $msg = $res->get_error_message();
-        $log .= "Error al modificar tarea: $msg 
-";
-        guardarLog("modificarTarea: 
- $log");
+        $log .= "Error al modificar tarea: $msg \n";
+        guardarLog("modificarTarea: \n $log");
         wp_send_json_error($msg);
     }
 
     $log .= "Tarea modificada con id $id";
-    guardarLog("modificarTarea: 
- $log");
+    guardarLog("modificarTarea: \n $log");
     wp_send_json_success();
 }
 
@@ -240,7 +229,7 @@ function crearTarea()
     $pad = isset($_POST['padre']) ? (int) sanitize_text_field($_POST['padre']) : 0;
 
     if (empty($tit)) {
-        $log = 'Titulo vacio.';
+        $log = 'Título vacío.';
         guardarLog("crearTarea: $log");
         wp_send_json_error($log);
     }
@@ -338,13 +327,10 @@ function completarTarea()
     }
 
     $tipo = get_post_meta($id, 'tipo', true);
-    $log = "Funcion completarTarea(). 
- ID: $id, tipo: $tipo. 
-";
+    $log = "Funcion completarTarea(). \n ID: $id, tipo: $tipo. \n";
 
     if ($tipo == 'una vez') {
-        $log .= "Se actualizo el estado de la tarea a $estado 
-";
+        $log .= "Se actualizo el estado de la tarea a $estado \n";
         update_post_meta($id, 'estado', $estado);
     } else if ($tipo == 'habito' || $tipo == 'habito rigido') {
         $fecha = get_post_meta($id, 'fecha', true);
@@ -378,8 +364,7 @@ function completarTarea()
             $nuevaFechaProxima = date('Y-m-d', strtotime($fechaProxima . " + $frecuencia days"));
         }
 
-        $log .= "Se actualizo fechaProxima de $fechaProxima a $nuevaFechaProxima, y se agrego +1 a vecesCompletado (actualmente en $vecesCompletado), ademas se registraron las fechas de completado 
-";
+        $log .= "Se actualizo fechaProxima de $fechaProxima a $nuevaFechaProxima, y se agrego +1 a vecesCompletado (actualmente en $vecesCompletado), ademas se registraron las fechas de completado \n";
         update_post_meta($id, 'fechaProxima', $nuevaFechaProxima);
     }
     guardarLog($log);
@@ -403,37 +388,32 @@ function archivarTarea()
         wp_send_json_error('Tarea no encontrada.');
     }
 
-    $log = "Funcion archivarTarea(). 
-  ID: $id. 
-";
+    $log = "Funcion archivarTarea(). \n  ID: $id. \n";
 
     $usu = get_current_user_id();
     $orden = get_user_meta($usu, 'ordenTareas', true);
     $estadoActual = get_post_meta($id, 'estado', true);
 
-    $log .= "Estado inicial de la tarea: $estadoActual. 
-";
+    $log .= "Estado inicial de la tarea: $estadoActual. \n";
 
     if ($estadoActual == 'archivado') {
         update_post_meta($id, 'estado', 'pendiente');
         update_post_meta($id, 'sesion', 'General');
         $log .= "Se cambio el estado de la tarea $id a pendiente y la sesion a General.";
-        // Eliminar la relacion de subtarea si la tarea estaba archivada y se desarchiva
+        // Eliminar la relación de subtarea si la tarea estaba archivada y se desarchiva
         wp_update_post(array(
             'ID' => $id,
             'post_parent' => 0
         ));
         delete_post_meta($id, 'subtarea');
-        $log .= ", 
-  Se elimino la relacion de subtarea para la tarea $id.";
+        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
     } else {
         if (is_array($orden) && in_array($id, $orden)) {
             $pos = array_search($id, $orden);
             unset($orden[$pos]);
             $orden[] = $id;
             update_user_meta($usu, 'ordenTareas', $orden);
-            $log .= "Se actualizo el orden de la tarea $id, moviendola al final. 
-";
+            $log .= "Se actualizo el orden de la tarea $id, moviendola al final. \n";
         }
 
         // Archivar subtareas (tareas hijas)
@@ -447,22 +427,19 @@ function archivarTarea()
 
         foreach ($subtareas as $subtarea) {
             update_post_meta($subtarea->ID, 'estado', 'archivado');
-            $log .= ", 
-  Se archivo la subtarea {$subtarea->ID}.";
+            $log .= ", \n  Se archivó la subtarea {$subtarea->ID}.";
         }
 
-        // Eliminar la relacion de subtarea si la tarea se esta archivando
+        // Eliminar la relación de subtarea si la tarea se está archivando
         wp_update_post(array(
             'ID' => $id,
             'post_parent' => 0
         ));
         delete_post_meta($id, 'subtarea');
-        $log .= ", 
-  Se elimino la relacion de subtarea para la tarea $id.";
+        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
 
         update_post_meta($id, 'estado', 'archivado');
-        $log .= ", 
-  Se cambio el estado de la tarea $id a archivado.";
+        $log .= ", \n  Se cambió el estado de la tarea $id a archivado.";
     }
 
     guardarLog($log);
@@ -490,7 +467,7 @@ function cambiarPrioridad()
     }
 
     if (!in_array($prioridad, ['baja', 'media', 'alta', 'importante'])) {
-        wp_send_json_error('Prioridad invalida.');
+        wp_send_json_error('Prioridad inválida.');
     }
 
     $impnum = 0;
@@ -505,7 +482,7 @@ function cambiarPrioridad()
     }
 
     update_post_meta($tareaId, 'importancia', $prioridad);
-    update_post_meta($tareaId, 'impnum', $impnum); // Guarda el valor numerico
+    update_post_meta($tareaId, 'impnum', $impnum); // Guarda el valor numérico
 
     wp_send_json_success();
 }
@@ -528,7 +505,7 @@ function cambiarFrecuencia()
     }
 
     if ($frec < 1 || $frec > 365) {
-        wp_send_json_error('Frecuencia invalida.');
+        wp_send_json_error('Frecuencia inválida.');
     }
 
     $fec = date('Y-m-d');
@@ -537,10 +514,8 @@ function cambiarFrecuencia()
     update_post_meta($tareaId, 'frecuencia', $frec);
     update_post_meta($tareaId, 'fechaProxima', $fecprox);
 
-    $log = "Frecuencia de tarea actualizada correctamente. ID: $tareaId, Frecuencia: $frec 
- Fecha proxima: $fecprox";
-    guardarLog("cambiarFrecuencia:  
- $log");
+    $log = "Frecuencia de tarea actualizada correctamente. ID: $tareaId, Frecuencia: $frec \n Fecha proxima: $fecprox";
+    guardarLog("cambiarFrecuencia:  \n $log");
     wp_send_json_success();
 }
 
@@ -558,44 +533,35 @@ function actualizarOrdenTareas()
     $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
     $padre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
 
-    $log = "actualizarOrdenTareas: 
-  Usuario ID: $usu, 
-  Tarea movida: $tareaMov, 
-  Nuevo orden recibido: " . implode(',', $ordenNue) . ", 
-  Orden antes de cambiar: " . implode(',', $ordenTar) . ", 
-  Sesion arriba: $sesionArr";
+    $log = "actualizarOrdenTareas: \n  Usuario ID: $usu, \n  Tarea movida: $tareaMov, \n  Nuevo orden recibido: " . implode(',', $ordenNue) . ", \n  Orden antes de cambiar: " . implode(',', $ordenTar) . ", \n  Sesion arriba: $sesionArr";
 
     if ($tareaMov !== null && !empty($ordenNue)) {
-        // Manejar creacion o eliminacion de subtareas
+        // Manejar creación o eliminación de subtareas
         if ($esSubtarea) {
-            $log .= ", 
-  " . manejarSubtarea($tareaMov, $padre);
+            $log .= ", \n  " . manejarSubtarea($tareaMov, $padre);
         } else {
             // Si no es una subtarea, pero tiene el metadato 'subtarea', eliminarlo
             $subtareaExistente = get_post_meta($tareaMov, 'subtarea', true);
             if (!empty($subtareaExistente)) {
-                $log .= ", 
-  " . manejarSubtarea($tareaMov, 0);
+                $log .= ", \n  " . manejarSubtarea($tareaMov, 0);
             }
         }
 
         $ordenTar = actualizarOrden($ordenTar, $ordenNue);
         actualizarSesionEstado($tareaMov, $sesionArr);
-        $log .= ", 
-  Orden de tareas actualizado exitosamente para el usuario $usu";
+        $log .= ", \n  Orden de tareas actualizado exitosamente para el usuario $usu";
         guardarLog($log);
         wp_send_json_success(['ordenTareas' => $ordenTar]);
     } else {
-        $log .= ", 
-  Error: ";
+        $log .= ", \n  Error: ";
         if ($tareaMov === null) {
             $log .= "tareaMovida es null";
         }
         if (empty($ordenNue)) {
-            $log .= ($tareaMov === null ? ", " : "") . "ordenNuevo esta vacio";
+            $log .= ($tareaMov === null ? ", " : "") . "ordenNuevo está vacío";
         }
         guardarLog($log);
-        wp_send_json_error(['error' => 'Falta informacion para actualizar el orden de tareas.'], 400);
+        wp_send_json_error(['error' => 'Falta información para actualizar el orden de tareas.'], 400);
     }
 }
 
@@ -627,9 +593,9 @@ function manejarSubtarea($id, $idPadre)
             }
 
             update_post_meta($id, 'subtarea', $idPadre);
-            $log .= "Se creo la subtarea $id, tarea padre $idPadre. ";
+            $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
         } else {
-            $log .= "La subtarea $id ya existia como subtarea de $idPadre. No se realizaron cambios. ";
+            $log .= "La subtarea $id ya existía como subtarea de $idPadre. No se realizaron cambios. ";
         }
     } else {
         // Eliminar subtarea
@@ -643,7 +609,7 @@ function manejarSubtarea($id, $idPadre)
         }
 
         delete_post_meta($id, 'subtarea');
-        $log .= "Se elimino la subtarea $id. ";
+        $log .= "Se eliminó la subtarea $id. ";
     }
 
     return $log;
@@ -667,8 +633,7 @@ function actualizarOrden($ordenTar, $ordenNue)
 
     $usu = get_current_user_id();
     update_user_meta($usu, 'ordenTareas', $ordenNue);
-    $log .= "
-  Se actualizo el orden de tareas para el usuario $usu a: " . implode(',', $ordenNue);
+    $log .= "\n  Se actualizó el orden de tareas para el usuario $usu a: " . implode(',', $ordenNue);
 
     guardarLog($log);
     return $ordenNue;
@@ -688,19 +653,16 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
     $estadoAct = strtolower(get_post_meta($tareaMov, 'estado', true));
     $sesionTarea = get_post_meta($tareaMov, 'sesion', true);
 
-    // Si $sesionTarea es null, 'null' o una cadena vacia, forzar a "General"
+    // Si $sesionTarea es null, 'null' o una cadena vacía, forzar a "General"
     if (empty($sesionTarea) || $sesionTarea === 'null') {
         $sesionTarea = "General";
     }
 
-    $log .= "
-  Se recibio: '" . var_export($sesionArrString, true) . "' para la tarea '$tareaMov'.";
-    $log .= "
-  Estado actual de la tarea '$tareaMov' es '$estadoAct'.";
-    $log .= "
-  Sesion actual de la tarea '$tareaMov' es '" . var_export($sesionTarea, true) . "'.";
+    $log .= "\n  Se recibió: '" . var_export($sesionArrString, true) . "' para la tarea '$tareaMov'.";
+    $log .= "\n  Estado actual de la tarea '$tareaMov' es '$estadoAct'.";
+    $log .= "\n  Sesión actual de la tarea '$tareaMov' es '" . var_export($sesionTarea, true) . "'.";
 
-    // Obtener informacion sobre la tarea padre y las subtareas
+    // Obtener información sobre la tarea padre y las subtareas
     $tarea = get_post($tareaMov);
     $esSubtarea = !empty($tarea->post_parent);
     $tieneSubtareas = false;
@@ -714,79 +676,67 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
         $tieneSubtareas = !empty($hijas);
     }
 
-    // Si la sesion es "General", no se cambie el estado
+    // Si la sesión es "General", no se cambie el estado
     if (strtolower($sesionParaActualizar) !== 'general') {
         if (strtolower($sesionParaActualizar) === 'archivado' && $estadoAct !== 'archivado') {
             update_post_meta($tareaMov, 'estado', 'Archivado');
-            $log .= "
-  Se actualizo el estado de la tarea '$tareaMov' a 'Archivado'.";
+            $log .= "\n  Se actualizó el estado de la tarea '$tareaMov' a 'Archivado'.";
 
-            // Si es una tarea padre, archivar tambien las subtareas
+            // Si es una tarea padre, archivar también las subtareas
             if ($tieneSubtareas) {
                 foreach ($hijas as $hija) {
                     update_post_meta($hija->ID, 'estado', 'Archivado');
-                    $log .= "
-  Se actualizo el estado de la subtarea '{$hija->ID}' a 'Archivado'.";
+                    $log .= "\n  Se actualizó el estado de la subtarea '{$hija->ID}' a 'Archivado'.";
                 }
             }
         } elseif (strtolower($sesionParaActualizar) !== 'archivado' && $estadoAct === 'archivado') {
             update_post_meta($tareaMov, 'estado', 'Pendiente');
-            $log .= "
-  Se actualizo el estado de la tarea '$tareaMov' a 'Pendiente'.";
+            $log .= "\n  Se actualizó el estado de la tarea '$tareaMov' a 'Pendiente'.";
 
-            // Si es una tarea padre, desarchivar tambien las subtareas
+            // Si es una tarea padre, desarchivar también las subtareas
             if ($tieneSubtareas) {
                 foreach ($hijas as $hija) {
                     update_post_meta($hija->ID, 'estado', 'Pendiente');
-                    $log .= "
-  Se actualizo el estado de la subtarea '{$hija->ID}' a 'Pendiente'.";
+                    $log .= "\n  Se actualizó el estado de la subtarea '{$hija->ID}' a 'Pendiente'.";
                 }
             }
         } else {
-            $log .= "
-  No se actualizo el estado de la tarea '$tareaMov' porque no era necesario.";
+            $log .= "\n  No se actualizó el estado de la tarea '$tareaMov' porque no era necesario.";
         }
     } else {
-        $log .= "
-  La sesion es 'General', no se cambia el estado.";
+        $log .= "\n  La sesion es 'General', no se cambia el estado.";
     }
 
-    // Si es una subtarea y se archiva, eliminar la relacion de subtarea
+    // Si es una subtarea y se archiva, eliminar la relación de subtarea
     if ($esSubtarea && strtolower($sesionParaActualizar) === 'archivado') {
         wp_update_post(array(
             'ID' => $tareaMov,
             'post_parent' => 0
         ));
         delete_post_meta($tareaMov, 'subtarea');
-        $log .= "
-  La tarea '$tareaMov' era una subtarea y se archivo, se elimino la relacion de subtarea.";
+        $log .= "\n  La tarea '$tareaMov' era una subtarea y se archivó, se eliminó la relación de subtarea.";
     }
 
-    // Actualizar la sesion siempre que $sesionParaActualizar sea diferente a la actual
+    // Actualizar la sesión siempre que $sesionParaActualizar sea diferente a la actual
     if ($sesionParaActualizar !== $sesionTarea) {
         update_post_meta($tareaMov, 'sesion', $sesionParaActualizar);
-        $log .= "
-  Se actualizo la sesion de la tarea '$tareaMov' a '$sesionParaActualizar'.";
+        $log .= "\n  Se actualizó la sesión de la tarea '$tareaMov' a '$sesionParaActualizar'.";
     } else {
-        $log .= "
-  No se actualizo la sesion de la tarea '$tareaMov' porque es la misma que la actual.";
+        $log .= "\n  No se actualizó la sesión de la tarea '$tareaMov' porque es la misma que la actual.";
     }
 
     $estadoFin = strtolower(get_post_meta($tareaMov, 'estado', true));
     $sesionFin = get_post_meta($tareaMov, 'sesion', true);
 
-    // Si $sesionFin es null, 'null' o una cadena vacia, forzar a "General"
+    // Si $sesionFin es null, 'null' o una cadena vacía, forzar a "General"
     if (empty($sesionFin) || $sesionFin === 'null') {
         $sesionFin = "General";
         update_post_meta($tareaMov, 'sesion', $sesionFin);
-        $log .= "
-  Se corrigio la sesion final de la tarea '$tareaMov' a 'General'.";
+        $log .= "\n  Se corrigió la sesión final de la tarea '$tareaMov' a 'General'.";
     }
 
-    $log .= "
-  Estado final de la tarea '$tareaMov' es '$estadoFin'.";
-    $log .= "
-  Sesion final de la tarea '$tareaMov' es '$sesionFin'.";
+    $log .= "\n  Estado final de la tarea '$tareaMov' es '$estadoFin'.";
+    $log .= "\n  Sesión final de la tarea '$tareaMov' es '$sesionFin'.";
 
     guardarLog($log);
 }
@@ -820,7 +770,7 @@ function crearSubtarea()
         }
 
         delete_post_meta($id, 'subtarea');
-        $log .= "Se elimino la subtarea $id. ";
+        $log .= "Se eliminó la subtarea $id. ";
         guardarLog("crearSubtarea: $log");
         wp_send_json_success();
     }
@@ -848,9 +798,9 @@ function crearSubtarea()
             }
 
             update_post_meta($id, 'subtarea', $idPadre);
-            $log .= "Se creo la subtarea $id, tarea padre $idPadre. ";
+            $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
         } else {
-            $log .= "La subtarea $id ya existia como subtarea de $idPadre. No se realizaron cambios. ";
+            $log .= "La subtarea $id ya existía como subtarea de $idPadre. No se realizaron cambios. ";
         }
     }
 
@@ -889,7 +839,7 @@ function borrarTareasCompletadas()
             wp_send_json_success('Tareas completadas borradas exitosamente');
         }
     } else {
-        wp_send_json_error('No se solicito limpiar');
+        wp_send_json_error('No se solicitó limpiar');
     }
     wp_die();
 }
@@ -926,8 +876,7 @@ function actualizarSesion()
 
     $tareas = get_posts($args);
     $cant = count($tareas);
-    $log .= ", 
- Se encontraron $cant tareas a modificar. ";
+    $log .= ", \n Se encontraron $cant tareas a modificar. ";
 
     if (empty($tareas)) {
         guardarLog("actualizarSesion:" . $log);
@@ -938,8 +887,7 @@ function actualizarSesion()
         update_post_meta($tarea->ID, 'sesion', $valNue);
     }
 
-    $log .= ", 
-  Se actualizaron las sesiones de las tareas.";
+    $log .= ", \n  Se actualizaron las sesiones de las tareas.";
     guardarLog("actualizarSesion:" . $log);
     wp_send_json_success();
 }
