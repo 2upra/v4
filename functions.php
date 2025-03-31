@@ -259,37 +259,6 @@ function custom_site_icon($meta_tags)
 }
 add_filter('site_icon_meta_tags', 'custom_site_icon');
 
-/**
- * Configura los metadatos de la página (título, descripción) y las cookies
- * basándose en el idioma detectado del navegador.
- */
-function configurarMetadatosPaginaIdioma() {
-    // Utiliza la función namespaced de BrowserUtils
-    $idioma = obtenerIdiomaDelNavegador();
-
-    if ($idioma === 'es') {
-        $titulo = "Social Media para Artistas | Samples y VST Gratis";
-        $descripcion = "Unete a una red de creadores donde puedes conectar con artistas, colaborar en proyectos, y encontrar una amplia variedad de samples y plugins VST gratuitos para potenciar tus producciones musicales.";
-    } else {
-        $titulo = "Social Media for Artists | Free Samples & VSTs";
-        $descripcion = "Join a network of creators where you can connect with artists, collaborate on projects, and access a wide range of free samples and VST plugins to enhance your music productions.";
-    }
-
-    // Añadir el título y la descripción al <head>
-    add_action('wp_head', function () use ($titulo, $descripcion) {
-        echo '<title>' . esc_html($titulo) . '</title>' . "\n";
-        echo '<meta name="description" content="' . esc_attr($descripcion) . '">' . "\n";
-    }, 1); // Prioridad baja para que se ejecute temprano en wp_head
-
-    // Configurar cookies para el título y descripción (si aún son necesarias)
-    if (!headers_sent()) {
-        setcookie("page_title", $titulo, time() + 3600, "/");
-        setcookie("page_description", $descripcion, time() + 3600, "/");
-    } else {
-        // Opcional: Registrar un error si las cabeceras ya se enviaron
-        // error_log("Advertencia: No se pudieron establecer las cookies page_title/page_description porque las cabeceras ya se enviaron.");
-    }
-}
 
 function incluirArchivos($directorio)
 {
