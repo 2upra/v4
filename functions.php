@@ -49,53 +49,6 @@ add_action('shutdown', 'debug_page_load_time');
 */
 
 
-function headGeneric()
-{
-    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
-        update_option('paginasIniciales1', '1');
-        return;
-    }
-?>
-
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="https://2upra.com/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" sizes="57x57" href="https://2upra.com/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="https://2upra.com/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="https://2upra.com/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="https://2upra.com/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="https://2upra.com/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="https://2upra.com/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="https://2upra.com/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://2upra.com/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://2upra.com/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="https://2upra.com/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/favicon-16x16.png">
-    <link rel="manifest" href="https://2upra.com/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="https://2upra.com/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
-
-    <!-- Etiquetas Open Graph para Facebook y otras plataformas -->
-    <meta property="og:title" content="<?php echo get_the_title(); ?>" />
-    <meta property="og:description" content="Social Media para artistas" />
-    <meta property="og:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all" />
-    <meta property="og:url" content="https://2upra.com" />
-    <meta property="og:type" content="website" />
-
-    <!-- Etiquetas de Twitter Cards -->
-    <meta property="og:title" content="<?php echo get_the_title(); ?>" />
-    <meta name="twitter:title" content="Social Media para artistas">
-    <meta name="twitter:description" content="Descripcion de tu pagina que aparecera al compartir.">
-    <meta name="twitter:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all">
-    <meta name="twitter:site" content="@wandorius" />
-
-<?php
-}
-add_action('wp_head', 'headGeneric');
 
 function preload_fonts()
 {
