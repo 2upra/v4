@@ -56,7 +56,7 @@ function calcularPuntosIntereses($postId, $datos)
             }
         } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
             // Asumiendo que $datos['interesesUsuario'][$value] es un objeto con propiedad intensity
-             // Idealmente, anadir aqui tambien is_object() y isset()->intensity
+            // Idealmente, anadir aqui tambien is_object() y isset()->intensity
             $pIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
         }
     }
@@ -243,15 +243,7 @@ function calcularPuntosIdentifier($postId, $identifier, $datos)
         $resumen['puntos']['datos'] +
         $resumen['puntos']['bonus'];
 
-    $log .= "calcularPuntosIdentifier: 
- Post ID: $postId, 
- Identifiers: " . implode(", ", $identifiers) . ", 
- Coincidencias en contenido: " . $resumen['matches']['content'] . ", 
- Coincidencias en datos: " . $resumen['matches']['data'] . ", 
- Puntos de contenido: " . $resumen['puntos']['contenido'] . ", 
- Puntos de datos: " . $resumen['puntos']['datos'] . ", 
- Bonus: " . $resumen['puntos']['bonus'] . ", 
- Puntos totales: " . $resumen['puntos']['total'];
+    $log .= "calcularPuntosIdentifier: \n Post ID: $postId, \n Identifiers: " . implode(", ", $identifiers) . ", \n Coincidencias en contenido: " . $resumen['matches']['content'] . ", \n Coincidencias en datos: " . $resumen['matches']['data'] . ", \n Puntos de contenido: " . $resumen['puntos']['contenido'] . ", \n Puntos de datos: " . $resumen['puntos']['datos'] . ", \n Bonus: " . $resumen['puntos']['bonus'] . ", \n Puntos totales: " . $resumen['puntos']['total'];
 
     //guardarLog($log);
     return $resumen['puntos']['total'];
@@ -314,21 +306,7 @@ function procesarMetaValue($meta_value)
     //error_log("meta_value no es un array ni una cadena, es de tipo: " . gettype($meta_value));
     return [];
 }
-/*
-\[
-p_{	ext{final}}''(p_i) = 
-\Bigg[
-\Big(
-w_u \cdot \delta_u + 
-w_I \cdot 	ext{calcId}(p_i, I, d) + 
-w_S \cdot 	ext{calcSim}(p_i, S, d) + 
-w_L \cdot (30 + l(p_i)) + 
-w_m \cdot (\delta_v + \delta_a)
-\Big) \cdot f_t(d_i) \cdot (1 - r_v)^{v(p_i)}
-\Big]
-\cdot (1 + rac{r}{100}) + r_e
-\]
-*/
+
 
 function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 {
