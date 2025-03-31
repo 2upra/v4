@@ -216,3 +216,21 @@ if (!wp_next_scheduled('clean_log_files_hook')) {
 // Note: The function is defined globally in this file, so we call it without namespace.
 // The include mechanism in functions.php makes it available globally.
 add_action('clean_log_files_hook', 'limpiarLogs');
+
+/**
+ * Registra un resumen de los puntos calculados para el feed personalizado de un usuario.
+ * Llama a logAlgoritmo para registrar los detalles.
+ *
+ * @param int   $userId        ID del usuario.
+ * @param array $resumenPuntos Array asociativo [post_id => puntos].
+ */
+function logResumenDePuntos($userId, $resumenPuntos)
+{
+    // Llama a logAlgoritmo, que ya está definida en este archivo (o incluida globalmente)
+    logAlgoritmo("Feed personalizado calculado para el usuario ID: $userId. Total de posts: " . count($resumenPuntos));
+    $resumen_formateado = [];
+    foreach ($resumenPuntos as $post_id => $puntos) {
+        $resumen_formateado[] = "$post_id:$puntos";
+    }
+    logAlgoritmo("Resumen de puntos - " . implode(', ', $resumen_formateado));
+}
