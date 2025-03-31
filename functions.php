@@ -539,10 +539,7 @@ function scriptsOrdenados()
 
     // Registro de errores
     if (!empty($error_log)) {
-        $log_message = "Detalles de scriptsOrdenados:
-" . implode("
-", $error_log) . "
-";
+        $log_message = "Detalles de scriptsOrdenados:\n" . implode("\n", $error_log) . "\n";
         //error_log($log_message);
     }
 }
@@ -676,7 +673,8 @@ function loadingBar()
 add_action('wp_head', 'loadingBar');
 
 // Funcion para obtener el idioma preferido del navegador
-function obtenerIdiomaDelNavegador() {
+function obtenerIdiomaDelNavegador()
+{
     if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
         return 'en';
     }
