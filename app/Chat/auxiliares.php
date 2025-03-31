@@ -1,16 +1,5 @@
 <?
 
-function obtenerNombreUsuario($usuarioId)
-{
-    $usuario = get_userdata($usuarioId);
-
-    if ($usuario) {
-        return !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
-    }
-
-    return 'Usuario desconocido';
-}
-
 
 function infoUsuario() {
     if (!is_user_logged_in()) {
@@ -25,6 +14,8 @@ function infoUsuario() {
         wp_die();
     }
 
+    // Asumiendo que UserUtils.php está incluido globalmente o donde se necesite
+    // Si no, se necesitaría: require_once __DIR__ . '/../Utils/UserUtils.php';
     $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
     $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
 
