@@ -50,16 +50,6 @@ add_action('shutdown', 'debug_page_load_time');
 
 
 
-function preload_fonts()
-{
-    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
-        return;
-    }
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
-}
-add_action('wp_head', 'preload_fonts', 1);
-
 
 /*
 function encolar_sw_js()
