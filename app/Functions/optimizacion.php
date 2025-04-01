@@ -59,22 +59,7 @@ function eliminar_scripts_y_estilos()
 add_action('wp_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
 add_action('admin_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
 add_filter('use_block_editor_for_post', '__return_false', 10);
-function desactivar_embeds()
-{
-    // Deshabilitar scripts y estilos relacionados con embeds
-    wp_dequeue_script('wp-embed');
 
-    // Eliminar acciones relacionadas con embeds
-    remove_action('rest_api_init', 'wp_oembed_register_route');
-    remove_filter('oembed_dataparse', 'wp_filter_oembed_result', 10);
-    remove_action('wp_head', 'wp_oembed_add_discovery_links');
-    remove_action('wp_head', 'wp_oembed_add_host_js');
-
-    // Desactivar shortcodes oembed
-    add_filter('embed_oembed_discover', '__return_false');
-    remove_filter('pre_oembed_result', 'wp_filter_pre_oembed_result', 10);
-}
-add_action('init', 'desactivar_embeds', 9999);
 function eliminar_version_wp()
 {
     return '';
