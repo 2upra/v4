@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Setup;
-
 /**
  * Optimizations
  *
@@ -65,4 +63,4 @@ function disable_emojis_remove_dns_prefetch($urls, $relation_type) {
 }
 
 
-add_action('init', __NAMESPACE__ . '\\disable_emojis');
+add_action('init', 'disable_emojis');
