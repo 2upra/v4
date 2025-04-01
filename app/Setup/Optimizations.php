@@ -84,3 +84,30 @@ function desactivar_embeds()
     remove_filter('pre_oembed_result', 'wp_filter_pre_oembed_result', 10);
 }
 add_action('init', 'desactivar_embeds', 9999);
+
+/**
+ * Elimina scripts y estilos innecesarios del frontend y backend.
+ */
+function eliminar_scripts_y_estilos()
+{
+    // Ejemplo: Eliminar el script de emoji (ya desactivado anteriormente)
+    wp_dequeue_script('wp-emoji');
+    wp_dequeue_style('wp-emoji');
+    // Eliminar Gutenberg Block Library CSS
+    wp_dequeue_style('wp-block-library');
+    wp_dequeue_style('wp-block-library-theme');
+    wp_dequeue_style('wc-block-style'); // WooCommerce
+    // Eliminar Dashicons en el frontend si no se usan
+    if (! is_admin()) {
+        wp_dequeue_style('dashicons');
+    }
+    // Eliminar estilos de Gutenberg en el frontend
+    wp_dequeue_style('wp-block-library-theme');
+    wp_dequeue_style('wc-block-style');
+    // Eliminar estilos de la admin bar si no se usa
+    if (! is_admin()) {
+        wp_dequeue_style('admin-bar');
+    }
+}
+add_action('wp_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
+add_action('admin_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);

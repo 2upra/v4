@@ -35,29 +35,6 @@ function desactivar_todos_soportes_bloques($settings, $name)
 }
 add_filter('block_type_metadata_settings', 'desactivar_todos_soportes_bloques', 10, 2);
 
-function eliminar_scripts_y_estilos()
-{
-    // Ejemplo: Eliminar el script de emoji (ya desactivado anteriormente)
-    wp_dequeue_script('wp-emoji');
-    wp_dequeue_style('wp-emoji');
-    // Eliminar Gutenberg Block Library CSS
-    wp_dequeue_style('wp-block-library');
-    wp_dequeue_style('wp-block-library-theme');
-    wp_dequeue_style('wc-block-style'); // WooCommerce
-    // Eliminar Dashicons en el frontend si no se usan
-    if (! is_admin()) {
-        wp_dequeue_style('dashicons');
-    }
-    // Eliminar estilos de Gutenberg en el frontend
-    wp_dequeue_style('wp-block-library-theme');
-    wp_dequeue_style('wc-block-style');
-    // Eliminar estilos de la admin bar si no se usa
-    if (! is_admin()) {
-        wp_dequeue_style('admin-bar');
-    }
-}
-add_action('wp_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
-add_action('admin_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
 add_filter('use_block_editor_for_post', '__return_false', 10);
 
 function eliminar_version_wp()
