@@ -49,45 +49,7 @@ function registrarPrecios($postId)
     }
 }
 
-#Paso 3
-function datosParaAlgoritmo($postId)
-{
-    $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
-    // Decodificar entidades HTML podría ser necesario dependiendo de cómo se guardó el texto
-    // $textoNormal = htmlspecialchars_decode($textoNormal, ENT_QUOTES); // Descomentar si es necesario
-    $tags_string = isset($_POST['tags']) ? sanitize_text_field($_POST['tags']) : '';
-    $tags = !empty($tags_string) ? array_map('trim', explode(',', $tags_string)) : [];
-
-    $autorId = get_post_field('post_author', $postId);
-    $autorData = get_userdata($autorId); // Obtener datos del autor de forma segura
-
-    $nombreUsuario = $autorData ? $autorData->user_login : 'desconocido';
-    $nombreMostrar = $autorData ? $autorData->display_name : 'Desconocido';
-
-    $datosAlgoritmo = [
-        'tags' => $tags,
-        'texto' => $textoNormal, // Usar el texto sanitizado
-        'autor' => [
-            'id' => $autorId,
-            'usuario' => $nombreUsuario,
-            'nombre' => $nombreMostrar,
-        ],
-    ];
-
-    // Usar wp_json_encode para manejo de errores de WordPress si aplica, o json_encode estándar
-    $datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE);
-
-    if ($datosAlgoritmoJson === false) {
-        // Reemplazar saltos de línea en el mensaje de error JSON si los hubiera (poco probable pero seguro)
-        $json_error_message = str_replace("\n", " | ", json_last_error_msg());
-        error_log("Error en datosParaAlgoritmo: Fallo al codificar JSON para el post ID: " . $postId . ". Error: " . $json_error_message);
-    } else {
-        if (update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson) === false) {
-            // Mensaje de log simple
-            error_log("Error en datosParaAlgoritmo: Fallo al actualizar meta datosAlgoritmo para el post ID " . $postId);
-        }
-    }
-}
+// Refactor(Org): Funcion datosParaAlgoritmo movida a app/Services/PostService.php
 
 #Paso 4
 function confirmarArchivos($postId)
