@@ -1,10 +1,5 @@
 <?php
 
-namespace App\Services;
-
-// It's better practice to inject dependencies or use WordPress hooks/functions directly if available globally.
-// Assuming global WordPress functions are available.
-
 /**
  * Asigna tags a un post específico basado en los datos de $_POST.
  *
