@@ -125,4 +125,48 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     return $postId;
 }
 
+
+#Paso 2
+function actualizarMetaDatos($postId)
+{
+    $meta_fields = [
+        'paraColab'         => 'colab',
+        'esExclusivo'       => 'exclusivo',
+        'paraDescarga'      => 'descarga',
+        'rola'              => 'music',
+        'fan'               => 'fan',
+        'artista'           => 'artista',
+        'individual'        => 'individual',
+        'multiple'          => 'multiple',
+        'tienda'            => 'tienda',
+        'momento'           => 'momento'
+    ];
+
+    foreach ($meta_fields as $meta_key => $post_key) {
+        // Asegúrate que el índice existe antes de accederlo
+        $value = (isset($_POST[$post_key]) && $_POST[$post_key] == '1') ? 1 : 0;
+        if (update_post_meta($postId, $meta_key, $value) === false) {
+            // Los logs aquí están comentados, no se requiere acción inmediata
+            //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta $meta_key para el post ID $postId.");
+        }
+    }
+
+    // Manejo de nombreLanzamiento
+    if (isset($_POST['nombreLanzamiento'])) {
+        $nombreLanzamiento = sanitize_text_field($_POST['nombreLanzamiento']);
+        if (update_post_meta($postId, 'nombreLanzamiento', $nombreLanzamiento) === false) {
+            // Log comentado
+            //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta nombreLanzamiento para el post ID $postId.");
+        }
+    }
+
+    if (isset($_POST['music']) && $_POST['music'] == '1') {
+        registrarNombreRolas($postId);
+    }
+    if (isset($_POST['tienda']) && $_POST['tienda'] == '1') {
+        registrarPrecios($postId);
+    }
+}
+
+
 ?>
