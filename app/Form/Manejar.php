@@ -29,12 +29,9 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         return $postId;
     }
 
-    // Actualizar metadatos (tags)
-    if (!empty($tags)) {
-        if (update_post_meta($postId, 'tagsUsuario', $tags) === false) {
-            error_log('Error en crearPost: Fallo al actualizar meta tagsUsuario para el post ID ' . $postId);
-        }
-    }
+    // El bloque de actualización de 'tagsUsuario' ha sido eliminado de aquí.
+    // La asignación de tags ahora es manejada por la función asignarTags en PostService.php
+
     /*
     // Código de notificaciones comentado - los logs aquí no parecen tener variables con saltos de línea
     $seguidores = get_user_meta($autor, 'seguidores', true);
