@@ -91,3 +91,45 @@ function obtenerNombreUsuario($usuarioId)
 
     return 'Usuario desconocido';
 }
+
+function guardarBloqueo() {
+    global $wpdb;
+    $tabla_bloqueo = $wpdb->prefix . 'bloqueo';
+    $usuario_actual = get_current_user_id();
+    $post_id = intval($_POST['post_id']);
+    $post = get_post($post_id);
+    
+    if (!$post) {
+        wp_send_json_error('Post no encontrado.');
+        return;
+    }
+    
+    $autor_id = $post->post_author;
+
+    // Verificar si el autor es un administrador
+    if (user_can($autor_id, 'administrator')) {
+        wp_send_json_error('Pero que haces boludo?');
+        return;
+    }
+    
+    $bloqueo_existente = $wpdb->get_var($wpdb->prepare(
+        "SELECT id FROM $tabla_bloqueo WHERE idUser = %d AND idBloqueado = %d",
+        $usuario_actual,
+        $autor_id
+    ));
+    
+    if ($bloqueo_existente) {
+        $wpdb->delete($tabla_bloqueo, array(
+            'idUser' => $usuario_actual,
+            'idBloqueado' => $autor_id
+        ));
+        wp_send_json_success('Usuario desbloqueado.');
+    } else {
+        $wpdb->insert($tabla_bloqueo, array(
+            'idUser' => $usuario_actual,
+            'idBloqueado' => $autor_id
+        ));
+        wp_send_json_success('Usuario bloqueado.');
+    }
+}
+add_action('wp_ajax_guardarBloqueo', 'guardarBloqueo');
