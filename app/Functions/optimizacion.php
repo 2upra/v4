@@ -37,11 +37,6 @@ add_filter('block_type_metadata_settings', 'desactivar_todos_soportes_bloques', 
 
 add_filter('use_block_editor_for_post', '__return_false', 10);
 
-function eliminar_version_wp()
-{
-    return '';
-}
-add_filter('the_generator', 'eliminar_version_wp');
 function desactivar_feeds()
 {
     wp_die(__('Las feeds RSS están deshabilitadas.'));

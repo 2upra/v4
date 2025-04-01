@@ -111,3 +111,12 @@ function eliminar_scripts_y_estilos()
 }
 add_action('wp_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
 add_action('admin_enqueue_scripts', 'eliminar_scripts_y_estilos', 100);
+
+/**
+ * Elimina la etiqueta meta generator con la versión de WordPress.
+ */
+function eliminar_version_wp()
+{
+    return '';
+}
+add_filter('the_generator', 'eliminar_version_wp');
