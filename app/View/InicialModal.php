@@ -134,22 +134,6 @@ function modalGeneros()
     return ob_get_clean();
 }
 
-function guardarTipoUsuario()
-{
-    if (!is_user_logged_in()) {
-        wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
-    }
-    $tipoUsuario = isset($_POST['tipoUsuario']) ? sanitize_text_field($_POST['tipoUsuario']) : '';
-    if (empty($tipoUsuario)) {
-        wp_send_json_error('No se recibió el tipo de usuario.');
-    }
-    $userId = get_current_user_id();
-    reiniciarFeed($userId);
-    update_user_meta($userId, 'tipoUsuario', $tipoUsuario);
-    wp_send_json_success('El tipo de usuario ha sido guardado.');
-}
-add_action('wp_ajax_guardarTipoUsuario', 'guardarTipoUsuario');
-
 
 function guardarGenerosUsuario()
 {
