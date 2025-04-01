@@ -160,3 +160,74 @@ function desactivar_todos_soportes_bloques($settings, $name)
     return $settings;
 }
 add_filter('block_type_metadata_settings', 'desactivar_todos_soportes_bloques', 10, 2);
+
+// --- Código movido desde app/Functions/optimizacion.php ---
+
+/**
+ * Desactiva el script Heartbeat de WordPress.
+ */
+add_action('init', function () {
+    wp_deregister_script('heartbeat');
+});
+
+/**
+ * Desactiva el editor de bloques (Gutenberg).
+ */
+add_filter('use_block_editor_for_post', '__return_false', 10);
+
+/**
+ * Desactiva completamente las feeds RSS.
+ */
+function desactivar_feeds()
+{
+    wp_die(__('Las feeds RSS están deshabilitadas.'));
+}
+// Elimina las feeds principales
+add_action('do_feed', 'desactivar_feeds', 1);
+add_action('do_feed_rdf', 'desactivar_feeds', 1);
+add_action('do_feed_rss', 'desactivar_feeds', 1);
+add_action('do_feed_rss2', 'desactivar_feeds', 1);
+add_action('do_feed_atom', 'desactivar_feeds', 1);
+// Elimina la generación de enlaces en el encabezado
+remove_action('wp_head', 'feed_links_extra', 3);
+remove_action('wp_head', 'feed_links', 2);
+
+/**
+ * Desactiva la funcionalidad de autosave de WordPress.
+ */
+function desactivar_autosave()
+{
+    wp_deregister_script('autosave');
+}
+add_action('wp_print_scripts', 'desactivar_autosave');
+
+/**
+ * Elimina widgets innecesarios del dashboard y áreas de widgets.
+ */
+function eliminar_widgets_innecesarios()
+{
+    unregister_widget('WP_Widget_Calendar');
+    unregister_widget('WP_Widget_Meta');
+    unregister_widget('WP_Widget_Search');
+    // Añade otros widgets según necesites
+}
+add_action('widgets_init', 'eliminar_widgets_innecesarios', 11);
+
+/**
+ * Limpia elementos innecesarios del footer de WordPress.
+ */
+function limpiar_footer_wordpress()
+{
+    remove_action('wp_footer', 'wp_admin_bar_render', 1000);
+    remove_action('wp_footer', 'wp_footer');
+}
+add_action('init', 'limpiar_footer_wordpress');
+
+/**
+ * Desactiva la página de ajustes de discusión en la administración.
+ */
+function eliminar_ajustes_discusion()
+{
+    remove_menu_page('options-discussion.php');
+}
+add_action('admin_menu', 'eliminar_ajustes_discusion');
