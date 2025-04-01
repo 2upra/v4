@@ -120,3 +120,43 @@ function eliminar_version_wp()
     return '';
 }
 add_filter('the_generator', 'eliminar_version_wp');
+
+/**
+ * Desactiva todos los soportes de bloques posibles para reducir la carga.
+ *
+ * @param array $settings Configuración del tipo de bloque.
+ * @param string $name Nombre del tipo de bloque.
+ * @return array Configuración modificada.
+ */
+function desactivar_todos_soportes_bloques($settings, $name)
+{
+    // Lista completa de soportes a desactivar
+    $soportes_a_desactivar = array(
+        'align',
+        'alignWide',
+        'anchor',
+        'color',
+        'customClassName',
+        'html',
+        'typography',
+        'spacing',
+        'border',
+        'gradients',
+        'responsive',
+        'fontSize',
+        'links',
+        'inserter',
+        'multiple',
+        'reusable',
+        'lock',
+    );
+    if (isset($settings['supports']) && is_array($settings['supports'])) {
+        foreach ($soportes_a_desactivar as $soporte) {
+            if (isset($settings['supports'][$soporte])) {
+                unset($settings['supports'][$soporte]);
+            }
+        }
+    }
+    return $settings;
+}
+add_filter('block_type_metadata_settings', 'desactivar_todos_soportes_bloques', 10, 2);

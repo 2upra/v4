@@ -2,38 +2,6 @@
 add_action('init', function () {
     wp_deregister_script('heartbeat');
 });
-function desactivar_todos_soportes_bloques($settings, $name)
-{
-    // Lista completa de soportes a desactivar
-    $soportes_a_desactivar = array(
-        'align',
-        'alignWide',
-        'anchor',
-        'color',
-        'customClassName',
-        'html',
-        'typography',
-        'spacing',
-        'border',
-        'gradients',
-        'responsive',
-        'fontSize',
-        'links',
-        'inserter',
-        'multiple',
-        'reusable',
-        'lock',
-    );
-    if (isset($settings['supports']) && is_array($settings['supports'])) {
-        foreach ($soportes_a_desactivar as $soporte) {
-            if (isset($settings['supports'][$soporte])) {
-                unset($settings['supports'][$soporte]);
-            }
-        }
-    }
-    return $settings;
-}
-add_filter('block_type_metadata_settings', 'desactivar_todos_soportes_bloques', 10, 2);
 
 add_filter('use_block_editor_for_post', '__return_false', 10);
 
