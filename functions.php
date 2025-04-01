@@ -70,13 +70,6 @@ add_action('wp_enqueue_scripts', 'encolar_sw_js');
 
 
 
-function custom_site_icon($meta_tags)
-{
-    $meta_tags[] = sprintf('<link rel="icon" href="%s">', 'https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png');
-    return $meta_tags;
-}
-add_filter('site_icon_meta_tags', 'custom_site_icon');
-
 
 function incluirArchivos($directorio)
 {

@@ -237,3 +237,20 @@ function preload_fonts()
     echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
 }
 add_action('wp_head', 'preload_fonts', 1);
+
+/**
+ * Personaliza los meta tags del icono del sitio (favicon).
+ *
+ * Añade un enlace específico para el favicon.
+ *
+ * @param array $meta_tags Array de meta tags existentes.
+ * @return array Array de meta tags modificado.
+ */
+function custom_site_icon($meta_tags)
+{
+    $meta_tags[] = sprintf('<link rel="icon" href="%s">', 'https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png');
+    return $meta_tags;
+}
+add_filter('site_icon_meta_tags', 'custom_site_icon');
+
+?>
