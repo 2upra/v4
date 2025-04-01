@@ -170,7 +170,6 @@ add_action('wp_head', 'headGeneric');
  * basándose en el idioma detectado del navegador.
  */
 function configurarMetadatosPaginaIdioma() {
-    // Utiliza la función namespaced de BrowserUtils
     $idioma = obtenerIdiomaDelNavegador();
 
     if ($idioma === 'es') {
