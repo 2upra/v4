@@ -50,16 +50,6 @@ add_action('shutdown', 'debug_page_load_time');
 
 
 
-function preload_fonts()
-{
-    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
-        return;
-    }
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
-}
-add_action('wp_head', 'preload_fonts', 1);
-
 
 /*
 function encolar_sw_js()
@@ -79,13 +69,6 @@ add_action('wp_enqueue_scripts', 'encolar_sw_js');
 //wave
 
 
-
-function custom_site_icon($meta_tags)
-{
-    $meta_tags[] = sprintf('<link rel="icon" href="%s">', 'https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png');
-    return $meta_tags;
-}
-add_filter('site_icon_meta_tags', 'custom_site_icon');
 
 
 function incluirArchivos($directorio)
