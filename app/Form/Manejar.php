@@ -13,41 +13,7 @@ add_filter('cron_schedules', function ($schedules) {
 });
 
 
-#Paso 2.1
-function registrarNombreRolas($postId)
-{
-    for ($i = 1; $i <= 30; $i++) {
-        $rola_key = 'nombreRola' . $i;
-        if (isset($_POST[$rola_key])) {
-            $nombre_rola = sanitize_text_field($_POST[$rola_key]);
-            if (update_post_meta($postId, $rola_key, $nombre_rola) === false) {
-                // Mensaje de log simple, sin variables complejas
-                error_log("Error en registrarNombreRolas: Fallo al actualizar el meta $rola_key para el post ID $postId.");
-            }
-        }
-    }
-}
-
-#Paso 2.2 (Renumerado para seguir la secuencia lógica)
-function registrarPrecios($postId)
-{
-    for ($i = 1; $i <= 30; $i++) {
-        $precio_key = 'precioRola' . $i;
-        if (isset($_POST[$precio_key])) {
-            $precio = sanitize_text_field($_POST[$precio_key]);
-
-            if (is_numeric($precio)) {
-                if (update_post_meta($postId, $precio_key, $precio) === false) {
-                    // Mensaje de log simple
-                    error_log("Error en registrarPrecios: Fallo al actualizar el meta $precio_key para el post ID $postId.");
-                }
-            } else {
-                // Mensaje de log simple
-                error_log("Error en registrarPrecios: El valor para $precio_key no es numerico. Post ID: $postId, valor ingresado: " . $precio);
-            }
-        }
-    }
-}
+// Refactor(Org): Funciones registrarNombreRolas y registrarPrecios movidas a app/Services/PostService.php
 
 // Refactor(Org): Funcion datosParaAlgoritmo movida a app/Services/PostService.php
 
