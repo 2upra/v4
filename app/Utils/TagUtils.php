@@ -71,19 +71,7 @@ function obtenerTagsFrecuentes(): array {
     return $clavesSeleccionadas;
 }
 
-function tagsPosts() {
-    $tagsFrecuentes = obtenerTagsFrecuentes();
-
-    if (!empty($tagsFrecuentes)) {
-        echo '<div class="tags-frecuentes">';
-        foreach ($tagsFrecuentes as $tag) {
-            echo '<span class="postTag">' . esc_html(ucwords($tag)) . '</span> ';
-        }
-        echo '</div>';
-    } else {
-        echo '<div class="tags-frecuentes">No tags available.</div>';
-    }
-}
+// Function tagsPosts moved to app/View/Helpers/TagHelper.php
 
 // Funciones movidas desde app/Functions/normalizarTags.php
 function normalizarNuevoPost($post_id, $post, $update) {
