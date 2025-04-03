@@ -383,22 +383,7 @@ function botonSuscribir($autorId, $author_name, $subscription_price_id = 'price_
 
     return ob_get_clean();
 }
-//
-function botonComentar($postId)
-{
-    ob_start();
-?>
-
-    <div class="RTAWOD">
-        <button class="WNLOFT" data-post-id="<? echo $postId; ?>">
-            <? echo $GLOBALS['iconocomentario']; ?>
-        </button>
-    </div>
-
-
-<?
-    return ob_get_clean();
-}
+// Función botonComentar() movida a app/View/Helpers/CommentHelper.php
 
 function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
