@@ -29,7 +29,9 @@ function htmlPost($filtro)
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
 
-        <? if ($sampleList || $rolaList): ?>
+        <? if ($sampleList || $rolaList):
+            // Refactor(Org): Función limpiarJSON movida a StringUtils.php
+             ?>
             <? sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
@@ -278,7 +280,9 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
 ?>
     <div class="post-content">
         <div class="JNUZCN">
-            <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
+            <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])):
+                // Refactor(Org): Función limpiarJSON movida a StringUtils.php
+                 ?>
                 <? echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
             <? else: ?>
                 <div class="XABLJI">
@@ -469,22 +473,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
     <?
 }
 
-
-function limpiarJSON($json_data)
-{
-    // Si es una cadena y empieza y termina con comillas
-    if (is_string($json_data) && substr($json_data, 0, 1) === '"' && substr($json_data, -1) === '"') {
-        // Eliminar las comillas extras y decodificar los caracteres escapados
-        $json_data = json_decode($json_data);
-    }
-
-    // Si es un array u objeto, convertirlo a JSON
-    if (is_array($json_data) || is_object($json_data)) {
-        $json_data = json_encode($json_data);
-    }
-
-    return $json_data;
-}
+// Refactor(Org): Función limpiarJSON movida a StringUtils.php
 
 
 function nohayPost($filtro, $is_ajax)
@@ -522,6 +511,8 @@ function nohayPost($filtro, $is_ajax)
     <?
     return ob_get_clean();
 }
+
+
 
 
 
