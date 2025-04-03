@@ -29,6 +29,7 @@ function realizar_busqueda($texto)
         'perfiles'    => [],
     ];
 
+    // Refactor(Org): La función buscar_posts fue movida a app/Services/SearchService.php
     $resultados['social_post'] = buscar_posts('social_post', $texto);
     $resultados['colecciones'] = buscar_posts('colecciones', $texto);
     $resultados['perfiles'] = buscar_usuarios($texto);
@@ -36,31 +37,7 @@ function realizar_busqueda($texto)
     return balancear_resultados($resultados);
 }
 
-function buscar_posts($post_type, $texto)
-{
-    $args = [
-        'post_type'      => $post_type,
-        'post_status'    => 'publish',
-        's'              => $texto,
-        'posts_per_page' => 3,
-    ];
-    $query = new WP_Query($args);
-    $resultados = [];
-
-    if ($query->have_posts()) {
-        while ($query->have_posts()) {
-            $query->the_post();
-            $resultados[] = [
-                'titulo' => get_the_title(),
-                'url'    => get_permalink(),
-                'tipo'   => ucfirst(str_replace('_', ' ', $post_type)),
-                'imagen' => obtenerImagenPost(get_the_ID()),
-            ];
-        }
-    }
-    wp_reset_postdata();
-    return $resultados;
-}
+// Refactor(Org): Función buscar_posts movida a app/Services/SearchService.php
 
 function buscar_usuarios($texto)
 {
@@ -148,7 +125,8 @@ function generar_html_resultados($resultados)
 ?>
             <a href="<? echo esc_url($resultado['url']); ?>">
                 <div class="resultado-item">
-                    <? if (!empty($resultado['imagen'])): ?>
+                    <? if (!empty($resultado['imagen'])):
+ ?>
                         <img class="resultado-imagen" src="<? echo esc_url($resultado['imagen']); ?>" alt="<? echo esc_attr($resultado['titulo']); ?>">
                     <? endif; ?>
                     <div class="resultado-info">
