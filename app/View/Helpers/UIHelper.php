@@ -742,3 +742,9 @@ function botonDescarga($postId)
     }
     return ob_get_clean();
 }
+
+// Refactor(Org): Funcion botonColab() movida desde app/Content/Colab/logicColab.php
+function botonColab($postId, $colab)
+{
+    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
+}
