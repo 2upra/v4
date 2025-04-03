@@ -707,11 +707,7 @@ function formRs()
 
 // Refactor(Exec): Funcion botonDescarga() movida a app/View/Helpers/DownloadHelper.php
 
-// Refactor(Org): Funcion botonColab() movida desde app/Content/Colab/logicColab.php
-function botonColab($postId, $colab)
-{
-    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
-}
+// Refactor(Exec): Mover función botonColab() a ColabHelper.php
 
 // Refactor(Org): Funcion botonColeccion() movida desde app/Content/Colecciones/Logic/logicColecciones.php
 function botonColeccion($postId)
