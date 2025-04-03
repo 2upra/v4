@@ -1,18 +1,21 @@
 <?php
-// Refactor(Org): Movido desde app/Content/Logic/estado.php
-// Contiene funciones y hooks AJAX para gestionar el estado de los posts.
 
-function permitirDescarga($post_id)
+/**
+ * Permite la descarga de un post.
+ */
+function permitirDescarga($idDelPost)
 {
-    update_post_meta($post_id, 'paraDescarga', true);
-    return json_encode(['success' => true, 'message' => 'Descarga permitida']);
+    update_post_meta($idDelPost, 'paraDescarga', true);
+    wp_send_json_success(['message' => 'Descarga permitida']);
 }
 
-function comprobarColabsUsuario($user_id)
+/**
+ * Comprueba el número de colaboraciones publicadas de un usuario.
+ */
+function comprobarColabsUsuario($idDelUsuario)
 {
-    // Query para obtener las colaboraciones publicadas del usuario
     $args = [
-        'author'         => $user_id,
+        'author'         => $idDelUsuario,
         'post_status'    => 'publish',
         'post_type'      => 'colab',
         'posts_per_page' => -1,
@@ -22,32 +25,43 @@ function comprobarColabsUsuario($user_id)
     return $query->found_posts;
 }
 
-function cambiarEstado($post_id, $new_status)
+/**
+ * Cambia el estado de un post.
+ */
+function cambiarEstado($idDelPost, $nuevoEstado)
 {
-    $post = get_post($post_id);
-    $post->post_status = $new_status;
-    wp_update_post($post);
-    return json_encode(['success' => true, 'new_status' => $new_status]);
+    $post = get_post($idDelPost);
+    if (!$post) {
+         wp_send_json_error(['message' => 'Post no encontrado.']);
+    }
+    $post->post_status = $nuevoEstado;
+    $resultado = wp_update_post($post);
+
+    if (is_wp_error($resultado)) {
+         wp_send_json_error(['message' => 'Error al actualizar el post.', 'error' => $resultado->get_error_message()]);
+    }
+    
+    wp_send_json_success(['new_status' => $nuevoEstado]);
 }
 
+/**
+ * Gestiona los cambios de estado de los posts mediante AJAX.
+ */
 function cambioDeEstado()
 {
     if (!isset($_POST['post_id'])) {
-        echo json_encode(['success' => false, 'message' => 'Post ID is missing']);
-        wp_die();
+        wp_send_json_error(['message' => 'Falta el ID del post']);
     }
 
-    $post_id = $_POST['post_id'];
-    $action = $_POST['action'];
-    $current_user_id = get_current_user_id();
+    $idDelPost = intval($_POST['post_id']); //Sanitizar y convertir a entero
+    $accion = sanitize_text_field($_POST['action']); //Sanitizar
+    $idDelUsuarioActual = get_current_user_id();
 
-    // Si la acción es aceptar colaboración, comprobar el número de colabs publicadas
-    if ($action === 'aceptarcolab') {
-        $colabsPublicadas = comprobarColabsUsuario($current_user_id);
+    if ($accion === 'aceptarcolab') {
+        $colabsPublicadas = comprobarColabsUsuario($idDelUsuarioActual);
 
         if ($colabsPublicadas >= 3) {
-            echo json_encode(['success' => false, 'message' => 'Ya tienes 3 colaboraciones en curso. Debes finalizar una para aceptar otra.']);
-            wp_die();
+            wp_send_json_error(['message' => 'Ya tienes 3 colaboraciones en curso. Debes finalizar una para aceptar otra.']);
         }
     }
 
@@ -60,42 +74,44 @@ function cambioDeEstado()
         'aceptarcolab'          => 'publish',
     ];
 
-    if ($action === 'permitirDescarga') {
-        echo permitirDescarga($post_id);
-    } elseif (isset($estados[$action])) {
-        $new_status = $estados[$action];
-        echo cambiarEstado($post_id, $new_status);
+    if ($accion === 'permitirDescarga') {
+        permitirDescarga($idDelPost);
+    } elseif (isset($estados[$accion])) {
+        $nuevoEstado = $estados[$accion];
+        cambiarEstado($idDelPost, $nuevoEstado);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid action']);
+        wp_send_json_error(['message' => 'Acción inválida']);
     }
 
     wp_die();
 }
 
+/**
+ * Verifica un post.
+ */
 function verificarPost()
 {
     if (!isset($_POST['post_id'])) {
-        echo json_encode(['success' => false, 'message' => 'Post ID is missing']);
-        wp_die();
+        wp_send_json_error(['message' => 'Falta el ID del post']);
     }
 
-    $post_id = $_POST['post_id'];
-    $current_user = wp_get_current_user();
+    $idDelPost = intval($_POST['post_id']); //Sanitizar y convertir a entero
+    $usuarioActual = wp_get_current_user();
 
-    // Verificar si el usuario es administrador
-    if (!user_can($current_user, 'administrator')) {
-        echo json_encode(['success' => false, 'message' => 'No tienes permisos para verificar este post']);
-        wp_die();
+    if (!user_can($usuarioActual, 'administrator')) {
+        wp_send_json_error(['message' => 'No tienes permisos para verificar este post']);
+    }
+    
+    // Verificar que el post existe antes de actualizar metadatos.
+    if (!get_post($idDelPost)) {
+        wp_send_json_error(['message' => 'El post no existe.']);
     }
 
-    // Actualizar el meta 'Verificado' a true
-    update_post_meta($post_id, 'Verificado', true);
+    update_post_meta($idDelPost, 'Verificado', true);
 
-    echo json_encode(['success' => true, 'message' => 'Post verificado correctamente']);
+    wp_send_json_success(['message' => 'Post verificado correctamente']);
     wp_die();
 }
-
-
 
 add_action('wp_ajax_verificarPost', 'verificarPost');
 add_action('wp_ajax_permitirDescarga', 'cambioDeEstado');
