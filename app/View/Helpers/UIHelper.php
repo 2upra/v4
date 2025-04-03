@@ -742,3 +742,73 @@ function botonDescarga($postId)
     }
     return ob_get_clean();
 }
+
+// Refactor(Org): Funcion botonColab() movida desde app/Content/Colab/logicColab.php
+function botonColab($postId, $colab)
+{
+    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
+}
+
+// Refactor(Org): Funcion botonColeccion() movida desde app/Content/Colecciones/Logic/logicColecciones.php
+function botonColeccion($postId)
+{
+
+    $extraClass = '';
+    if (is_user_logged_in()) {
+        $userId = get_current_user_id();
+        $coleccion = get_user_meta($userId, 'samplesGuardados', true);
+        if (is_array($coleccion) && isset($coleccion[$postId])) {
+            $extraClass = ' colabGuardado';
+        }
+    }
+
+    ob_start();
+?>
+    <div class="ZAQIBB botonColeccion<? echo esc_attr($extraClass); ?>">
+        <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<? echo esc_attr($postId); ?>" data-nonce="<? echo wp_create_nonce('colec_nonce'); ?>">
+            <? echo isset($GLOBALS['iconoGuardar']) ? $GLOBALS['iconoGuardar'] : ''; // Verifica si $GLOBALS['iconoGuardar'] está definida 
+            ?>
+        </button>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+// Refactor(Org): Mueve función botonSincronizar() desde app/Functions/descargas.php
+function botonSincronizar($postId)
+{
+    ob_start();
+    $paraDescarga = get_post_meta($postId, 'paraDescarga', true);
+    $userId = get_current_user_id();
+
+    if ($paraDescarga == '1') {
+        if ($userId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            $yaDescargado = isset($descargasAnteriores[$postId]);
+            $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+            $esColeccion = get_post_type($postId) === 'colecciones' ? 'true' : 'false';
+
+
+?>
+            <div class="ZAQIBB">
+                <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
+                    data-post-id="<?php echo esc_attr($postId); ?>"
+                    aria-label="Boton Descarga"
+                    id="download-button-<?php echo esc_attr($postId); ?>"
+                    onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userId); ?>', '<?php echo $esColeccion; ?>')">
+                    <?php echo $GLOBALS['descargaicono']; ?>
+                </button>
+            </div>
+        <?php
+        } else {
+        ?>
+            <div class="ZAQIBB">
+                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
+                    <?php echo $GLOBALS['descargaicono']; ?>
+                </button>
+            </div>
+<?php
+        }
+    }
+    return ob_get_clean();
+}

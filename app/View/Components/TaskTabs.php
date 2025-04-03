@@ -1,4 +1,5 @@
-<?
+<?php
+// Refactor(Org): Funcion taskTabs() movida desde app/Pages/taskTabs.php
 
 function taskTabs()
 {
@@ -69,6 +70,6 @@ function taskTabs()
             </div>
         </div>
 
-    <?
+    <?php // Asegurarse de usar <?php para cerrar el ob_start
     return ob_get_clean();
 }

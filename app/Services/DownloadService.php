@@ -1,6 +1,124 @@
 <?php
 
 // Refactor(Org): Función procesarDescarga() y su hook AJAX movidos desde app/Functions/descargas.php
+// Refactor(Org): Función procesarColeccion() movida desde app/Functions/descargarColeccion.php
+function procesarColeccion($postId, $userId, $sync = false)
+{
+    error_log("[procesarColeccion] Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId . ", Sync: " . ($sync ? 'true' : 'false'));
+
+    $samples = get_post_meta($postId, 'samples', true);
+    $numSamples = is_array($samples) ? count($samples) : 0;
+
+    error_log("[procesarColeccion] Número de samples: " . $numSamples);
+
+    if ($numSamples === 0) {
+        error_log("[procesarColeccion] Error: No hay samples en esta colección.");
+        return new WP_Error('no_samples', __('No hay samples en esta colección.', 'text-domain'));
+    }
+
+    if (!$sync) {
+        $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
+        $upload_dir = wp_upload_dir();
+        $zipPath = $upload_dir['path'] . '/' . $zipName;
+
+        error_log("[procesarColeccion] Nombre del archivo ZIP: " . $zipName);
+        error_log("[procesarColeccion] Ruta del archivo ZIP: " . $zipPath);
+
+        // Buscar y eliminar ZIPs antiguos
+        $files = glob($upload_dir['path'] . '/coleccion-' . $postId . '-*.zip');
+        if ($files) {
+            foreach ($files as $file) {
+                if ($file !== $zipPath && file_exists($file)) {
+                    unlink($file);
+                    error_log("[procesarColeccion] Archivo ZIP antiguo eliminado: " . $file);
+                }
+            }
+        }
+
+        if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
+            error_log("[procesarColeccion] Error: El directorio de uploads no existe o no tiene permisos de escritura.");
+            return new WP_Error('upload_dir_error', __('Error: El directorio de uploads no existe o no tiene permisos de escritura.', 'text-domain'));
+        }
+    }
+
+    list($samplesDescargados, $samplesNoDescargados) = clasificarSamples($samples, $userId);
+    $numSamplesNoDescargados = count($samplesNoDescargados);
+
+    if (!$sync) {
+        if (file_exists($zipPath)) {
+            error_log("[procesarColeccion] El archivo ZIP ya existe.");
+            error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
+            error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
+
+            if ($numSamplesNoDescargados > 0) {
+                $pinky = (int)get_user_meta($userId, 'pinky', true);
+                error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
+
+                if ($pinky < $numSamplesNoDescargados) {
+                    error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+                    return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
+                }
+                restarPinkys($userId, $numSamplesNoDescargados);
+                error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
+            }
+        } else {
+            error_log("[procesarColeccion] El archivo ZIP no existe. Creando...");
+            $zip = new ZipArchive();
+
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+                error_log("[procesarColeccion] Error al crear el archivo ZIP.");
+                return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
+            }
+
+            if (!agregarArchivosAlZip($zip, $samples)) {
+                $zip->close();
+                if (file_exists($zipPath)) {
+                    unlink($zipPath);
+                }
+                error_log("[procesarColeccion] Error al agregar archivos al ZIP.");
+                return new WP_Error('add_file_error', __('Error al agregar archivo al ZIP.', 'text-domain'));
+            }
+
+            $zip->close();
+            error_log("[procesarColeccion] Archivo ZIP cerrado.");
+        }
+    }
+
+    error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
+    error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
+
+    if ($numSamplesNoDescargados > 0) {
+        $pinky = (int)get_user_meta($userId, 'pinky', true);
+        error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
+
+        if ($pinky < $numSamplesNoDescargados) {
+            error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+            if (!$sync && file_exists($zipPath)) {
+                unlink($zipPath);
+                error_log("[procesarColeccion] Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
+            }
+            return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
+        }
+        restarPinkys($userId, $numSamplesNoDescargados);
+        error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
+    }
+
+    actualizarTimestampDescargas($userId);
+    actualizarDescargas($userId, $samplesNoDescargados, $samplesDescargados);
+    $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
+    $totalDescargas++;
+    update_post_meta($postId, 'totalDescargas', $totalDescargas);
+    error_log("[procesarColeccion] Total de descargas del post actualizado: " . $totalDescargas);
+    error_log("[procesarColeccion] Fin de procesarColeccion.");
+
+    if (!$sync) {
+        error_log("[procesarColeccion] Retornando ruta del ZIP: " . $zipPath);
+        return $zipPath; // Devolvemos la ruta física
+    } else {
+        return true;
+    }
+}
+
 
 /**
  * Procesa la solicitud de descarga de un audio individual o una colección.

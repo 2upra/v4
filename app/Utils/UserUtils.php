@@ -81,16 +81,7 @@ function saberSi($user_id) {
     update_user_meta($user_id, 'leGustaAlMenosUnaRola', $le_gusta_rola);
 }
 
-function obtenerNombreUsuario($usuarioId)
-{
-    $usuario = get_userdata($usuarioId);
-
-    if ($usuario) {
-        return !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
-    }
-
-    return 'Usuario desconocido';
-}
+// Refactor(Org): Funcion obtenerNombreUsuario movida a app/Helpers/UserHelper.php
 
 function guardarBloqueo() {
     global $wpdb;

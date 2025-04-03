@@ -1,10 +1,6 @@
 <?
 
-//Boton en todos los post
-function botonColab($postId, $colab)
-{
-    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
-}
+// Refactor(Org): Funcion botonColab() movida a app/View/Helpers/UIHelper.php
 
 
 
@@ -151,5 +147,4 @@ function actualizarEstadoColab($postId, $post_after, $post_before)
     }
 }
 add_action('post_updated', 'actualizarEstadoColab', 10, 3);
-
 

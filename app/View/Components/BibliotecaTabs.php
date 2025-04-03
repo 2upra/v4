@@ -1,4 +1,5 @@
-<?
+<?php
+// Funcion bibliotecaTabs() movida desde app/Pages/bibliotecaTabs.php
 
 function bibliotecaTabs()
 {
@@ -23,7 +24,8 @@ function bibliotecaTabs()
         </div>
     </div>
 
-<?
+<?php
 
     return ob_get_clean();
 }
+?>

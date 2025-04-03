@@ -1,4 +1,5 @@
-<?
+<?php
+// Función colabTabs() movida desde app/Pages/colabTabss.php
 
 function colabTabs()
 {
