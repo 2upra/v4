@@ -96,22 +96,7 @@ function htmlColec($filtro)
     return ob_get_clean();
 }
 
-function aplanarArray($input)
-{
-    $result = [];
-    if (is_array($input)) {
-        foreach ($input as $element) {
-            if (is_array($element)) {
-                $result = array_merge($result, aplanarArray($element));
-            } else {
-                $result[] = $element;
-            }
-        }
-    } else {
-        $result[] = $input;
-    }
-    return $result;
-}
+// Funcion aplanarArray movida a app/Utils/ArrayUtils.php
 
 function datosColeccion($postId)
 {
