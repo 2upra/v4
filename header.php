@@ -338,6 +338,16 @@ if (!defined('ABSPATH')) {
         <? endif; ?>
     </header>
 
+    <?php
+    // Refactor(Org): Incluir el archivo del modal de tipo de usuario si el usuario está logueado
+    if (is_user_logged_in() && function_exists('get_current_user_id')) {
+        $modal_tipo_usuario_path = get_template_directory() . '/app/View/Modals/TipoUsuarioModal.php';
+        if (file_exists($modal_tipo_usuario_path)) {
+            require_once $modal_tipo_usuario_path;
+        }
+    }
+    ?>
+
     <main class="clearfix ">
 
         <? if (is_user_logged_in()) : ?>
@@ -350,8 +360,16 @@ if (!defined('ABSPATH')) {
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
 
                 <div class="modalInicial">
-                    <? echo modalTipoUsuario() ?>
-                    <? echo modalGeneros() ?>
+                    <?php
+                    // Llamar a la función del modal de tipo de usuario (ahora incluida desde su propio archivo)
+                    if (function_exists('modalTipoUsuario')) {
+                        echo modalTipoUsuario();
+                    }
+                    // Llamar a la función del modal de géneros (asumimos que se carga desde functions.php o similar)
+                    if (function_exists('modalGeneros')) {
+                         echo modalGeneros();
+                    }
+                    ?>
                 </div>
 
                 <? echo modalApp() ?>

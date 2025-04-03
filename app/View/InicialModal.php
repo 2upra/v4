@@ -1,42 +1,5 @@
 <?
-
-function modalTipoUsuario()
-{
-    $userId = get_current_user_id();
-    $tipoUsuario = get_user_meta($userId, 'tipoUsuario', true);
-
-    if (!empty($tipoUsuario)) {
-        return '';
-    }
-
-    $fanDiv = img('https://2upra.com/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp');
-    $artistaBg = img('https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
-    ob_start();
-?>
-    <div class="modal selectorModalUsuario" style="display: none;">
-        <h3>Elige un tipo de usuario...</h3>
-        <div class="TIPEARTISTSF">
-            <div class="selectorUsuario borde" id="fanDiv">
-                <p>Fan</p>
-            </div>
-            <div class="selectorUsuario borde" id="artistaDiv">
-                <p>Artista</p>
-            </div>
-        </div>
-        <style>
-            #fanDiv::before {
-                background-image: url('<? echo $fanDiv; ?>');
-            }
-
-            #artistaDiv::before {
-                background-image: url('<? echo $artistaBg; ?>');
-            }
-        </style>
-        <button class="botonsecundario" style="display: none;">Siguiente</button>
-    </div>
-<?
-    return ob_get_clean();
-}
+// Refactor(Org): Funcion modalTipoUsuario() movida a app/View/Modals/TipoUsuarioModal.php
 
 function modalGeneros()
 {
@@ -153,3 +116,4 @@ function guardarGenerosUsuario()
 }
 
 add_action('wp_ajax_guardarGenerosUsuario', 'guardarGenerosUsuario');
+
