@@ -1,4 +1,4 @@
-<?
+<?php
 
 function buscar_resultados()
 {
@@ -11,6 +11,7 @@ function buscar_resultados()
         return;
     }
 
+    // Refactor(Org): Función realizar_busqueda movida a app/Services/SearchService.php
     $resultados = realizar_busqueda($texto);
     $html = generar_html_resultados($resultados);
 
@@ -21,110 +22,13 @@ function buscar_resultados()
 add_action('wp_ajax_buscarResultado', 'buscar_resultados');
 add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
-function realizar_busqueda($texto)
-{
-    $resultados = [
-        'social_post' => [],
-        'colecciones' => [],
-        'perfiles'    => [],
-    ];
+// Refactor(Org): Función realizar_busqueda movida a app/Services/SearchService.php
 
-    $resultados['social_post'] = buscar_posts('social_post', $texto);
-    $resultados['colecciones'] = buscar_posts('colecciones', $texto);
-    $resultados['perfiles'] = buscar_usuarios($texto);
+// Refactor(Org): Función buscar_posts movida a app/Services/SearchService.php
 
-    return balancear_resultados($resultados);
-}
+// Refactor(Org): Función buscar_usuarios movida a app/Services/SearchService.php
 
-function buscar_posts($post_type, $texto)
-{
-    $args = [
-        'post_type'      => $post_type,
-        'post_status'    => 'publish',
-        's'              => $texto,
-        'posts_per_page' => 3,
-    ];
-    $query = new WP_Query($args);
-    $resultados = [];
-
-    if ($query->have_posts()) {
-        while ($query->have_posts()) {
-            $query->the_post();
-            $resultados[] = [
-                'titulo' => get_the_title(),
-                'url'    => get_permalink(),
-                'tipo'   => ucfirst(str_replace('_', ' ', $post_type)),
-                'imagen' => obtenerImagenPost(get_the_ID()),
-            ];
-        }
-    }
-    wp_reset_postdata();
-    return $resultados;
-}
-
-function buscar_usuarios($texto)
-{
-    $user_query = new WP_User_Query([
-        'search'         => '*' . esc_attr($texto) . '*',
-        'search_columns' => ['user_login', 'display_name'],
-        'number'         => 3,
-    ]);
-    $resultados = [];
-
-    if (!empty($user_query->get_results())) {
-        foreach ($user_query->get_results() as $user) {
-            $resultados[] = [
-                'titulo' => $user->display_name,
-                'url'    => get_author_posts_url($user->ID),
-                'tipo'   => 'Perfil',
-                'imagen' => imagenPerfil($user->ID),
-            ];
-        }
-    }
-    return $resultados;
-}
-
-function balancear_resultados($resultados)
-{
-    $num_resultados = count($resultados['social_post']) + count($resultados['colecciones']) + count($resultados['perfiles']);
-    if ($num_resultados > 6) {
-        $social_post_count = count($resultados['social_post']);
-        $colecciones_count = count($resultados['colecciones']);
-        $perfiles_count = count($resultados['perfiles']);
-
-        $max_each = 2;
-
-        if ($social_post_count < $max_each) {
-            $diff = $max_each - $social_post_count;
-            if ($colecciones_count >= $max_each + $diff) {
-                $max_each += $diff;
-            } elseif ($perfiles_count >= $max_each + $diff) {
-                $max_each += $diff;
-            }
-        }
-        if ($colecciones_count < $max_each) {
-            $diff = $max_each - $colecciones_count;
-            if ($social_post_count >= $max_each + $diff) {
-                $max_each += $diff;
-            } elseif ($perfiles_count >= $max_each + $diff) {
-                $max_each += $diff;
-            }
-        }
-        if ($perfiles_count < $max_each) {
-            $diff = $max_each - $perfiles_count;
-            if ($social_post_count >= $max_each + $diff) {
-                $max_each += $diff;
-            } elseif ($colecciones_count >= $max_each + $diff) {
-                $max_each += $diff;
-            }
-        }
-
-        $resultados['social_post'] = array_slice($resultados['social_post'], 0, $max_each);
-        $resultados['colecciones'] = array_slice($resultados['colecciones'], 0, $max_each);
-        $resultados['perfiles'] = array_slice($resultados['perfiles'], 0, $max_each);
-    }
-    return $resultados;
-}
+// Refactor(Org): Función balancear_resultados movida a app/Services/SearchService.php
 
 function obtenerImagenPost($post_id)
 {
@@ -146,15 +50,16 @@ function generar_html_resultados($resultados)
         $num_resultados += count($grupo);
         foreach ($grupo as $resultado) {
 ?>
-            <a href="<? echo esc_url($resultado['url']); ?>">
+            <a href="<?php echo esc_url($resultado['url']); ?>">
                 <div class="resultado-item">
-                    <? if (!empty($resultado['imagen'])): ?>
-                        <img class="resultado-imagen" src="<? echo esc_url($resultado['imagen']); ?>" alt="<? echo esc_attr($resultado['titulo']); ?>">
-                    <? endif; ?>
+                    <?php if (!empty($resultado['imagen'])):
+ ?>
+                        <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
+                    <?php endif; ?>
                     <div class="resultado-info">
-                        <h3><? echo esc_html($resultado['titulo']); ?></h3>
+                        <h3><?php echo esc_html($resultado['titulo']); ?></h3>
                         <p>
-                            <?
+                            <?php
                             if ($resultado['tipo'] === 'social post') {
                                 echo 'Post';
                             } else {
@@ -165,14 +70,14 @@ function generar_html_resultados($resultados)
                     </div>
                 </div>
             </a>
-        <?
+        <?php
         }
     }
 
     if ($num_resultados === 0) {
         ?>
         <div class="resultado-item">No se encontraron resultados.</div>
-    <?
+    <?php
     }
 
     return ob_get_clean();
@@ -189,6 +94,7 @@ function busqueda()
 
         <div class="resultadosBL"></div>
     </div>
-<?
+<?php
     return ob_get_clean();
 }
+

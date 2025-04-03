@@ -190,27 +190,6 @@ function save_extra_user_profile_fields($idUsuario) { // Cambiado $user_id a $id
 add_action('personal_options_update', 'save_extra_user_profile_fields');
 add_action('edit_user_profile_update', 'save_extra_user_profile_fields');
 
-
-function save_profile_description_ajax() {
-    $idUsuario = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
-    $desc = isset($_POST['profile_description']) ? sanitize_textarea_field($_POST['profile_description']) : ''; // Usar sanitize_textarea_field
-
-    // Verificar nonce aquí sería una buena práctica de seguridad
-    // check_ajax_referer('tu_nonce_action', 'security');
-
-    if ($idUsuario && current_user_can('edit_user', $idUsuario)) {
-        if (update_user_meta($idUsuario, 'profile_description', $desc)) {
-             wp_send_json_success('Descripción actualizada.'); // Mejor usar wp_send_json_*
-        } else {
-             wp_send_json_error('Error al actualizar o valor sin cambios.');
-        }
-    } else {
-        wp_send_json_error('Permiso denegado.');
-    }
-    // wp_die() es llamado automáticamente por wp_send_json_*
-}
-add_action('wp_ajax_save_profile_description', 'save_profile_description_ajax');
-// Si necesitas que funcione para usuarios no logueados (poco probable aquí):
-// add_action('wp_ajax_nopriv_save_profile_description', 'save_profile_description_ajax');
+// Function save_profile_description_ajax and its hook moved to app/Services/UserService.php
 
 ?>
