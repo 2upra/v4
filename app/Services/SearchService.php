@@ -37,3 +37,22 @@ function buscar_posts($post_type, $texto)
 // Nota: Esta función depende de funciones globales de WordPress y de la función obtenerImagenPost.
 // Asegúrate de que este archivo sea incluido correctamente (ej. en functions.php)
 // y que la función obtenerImagenPost esté definida y accesible globalmente.
+
+// Refactor(Org): Función realizar_busqueda movida desde app/Content/Logic/busqueda.php
+function realizar_busqueda($texto)
+{
+    $resultados = [
+        'social_post' => [],
+        'colecciones' => [],
+        'perfiles'    => [],
+    ];
+
+    // Refactor(Org): La función buscar_posts fue movida a app/Services/SearchService.php
+    $resultados['social_post'] = buscar_posts('social_post', $texto);
+    $resultados['colecciones'] = buscar_posts('colecciones', $texto);
+    // Nota: buscar_usuarios y balancear_resultados deben estar disponibles globalmente
+    // (actualmente están en app/Content/Logic/busqueda.php)
+    $resultados['perfiles'] = buscar_usuarios($texto);
+
+    return balancear_resultados($resultados);
+}

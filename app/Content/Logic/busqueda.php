@@ -11,6 +11,7 @@ function buscar_resultados()
         return;
     }
 
+    // Refactor(Org): Función realizar_busqueda movida a app/Services/SearchService.php
     $resultados = realizar_busqueda($texto);
     $html = generar_html_resultados($resultados);
 
@@ -21,21 +22,7 @@ function buscar_resultados()
 add_action('wp_ajax_buscarResultado', 'buscar_resultados');
 add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
-function realizar_busqueda($texto)
-{
-    $resultados = [
-        'social_post' => [],
-        'colecciones' => [],
-        'perfiles'    => [],
-    ];
-
-    // Refactor(Org): La función buscar_posts fue movida a app/Services/SearchService.php
-    $resultados['social_post'] = buscar_posts('social_post', $texto);
-    $resultados['colecciones'] = buscar_posts('colecciones', $texto);
-    $resultados['perfiles'] = buscar_usuarios($texto);
-
-    return balancear_resultados($resultados);
-}
+// Refactor(Org): Función realizar_busqueda movida a app/Services/SearchService.php
 
 // Refactor(Org): Función buscar_posts movida a app/Services/SearchService.php
 
