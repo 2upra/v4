@@ -1,11 +1,7 @@
 <?php
 
 
-
-function obtener_seguidores_o_siguiendo($idUsuario, $metadato) {
-    $data = get_user_meta($idUsuario, $metadato, true);
-    return is_array($data) ? $data : [];
-}
+// Funcion obtener_seguidores_o_siguiendo movida a app/Services/FollowService.php
 
 // Funcion perfilBanner movida a app/View/Components/ProfileBanner.php
 
