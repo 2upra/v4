@@ -2,7 +2,7 @@
 
 # Guarda la vista de un post y actualiza las vistas totales.
 function guardarVista() {
-    
+
     if (!isset($_POST['id_post']) || !is_numeric($_POST['id_post'])) {
         wp_send_json_error('ID de post inválido.');
         wp_die();
@@ -11,13 +11,11 @@ function guardarVista() {
     $idPost = intval($_POST['id_post']);
     $idUsuario = get_current_user_id();
 
-    # Lógica para usuarios registrados
     if ($idUsuario) {
         $vistasUsuario = get_user_meta($idUsuario, 'vistas_posts', true) ?: [];
         $vistasTotalesUsuario = get_user_meta($idUsuario, 'vistas_totales_usuario', true) ?: 0;
         $fechaActual = time();
 
-        # Actualiza el conteo de vistas del post
         if (isset($vistasUsuario[$idPost])) {
             $vistasUsuario[$idPost]['count']++;
             $vistasUsuario[$idPost]['last_view'] = $fechaActual;
@@ -29,25 +27,18 @@ function guardarVista() {
         }
 
         $vistasTotalesUsuario++;
-
-        # Guarda los metadatos del usuario
         update_user_meta($idUsuario, 'vistas_posts', $vistasUsuario);
         update_user_meta($idUsuario, 'vistas_totales_usuario', $vistasTotalesUsuario);
 
-        # Reinicia el feed si se alcanza un múltiplo de 6 vistas
+
         if (function_exists('reiniciarFeed') && $vistasTotalesUsuario % 6 === 0) {
             reiniciarFeed($idUsuario);
         }
     }
 
-    # Lógica para vistas totales del post
     $vistaTotales = get_post_meta($idPost, 'vistas_totales', true) ?: 0;
     $vistaTotales++;
-
-    # Guarda las vistas totales del post
     update_post_meta($idPost, 'vistas_totales', $vistaTotales);
-
-    # Prepara la respuesta JSON
     $respuesta = ['vistas_totales' => $vistaTotales];
 
     if ($idUsuario && isset($vistasUsuario[$idPost])) {
