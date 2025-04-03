@@ -26,7 +26,7 @@ function buscar_posts($post_type, $texto)
                 'titulo' => get_the_title(),
                 'url'    => get_permalink(),
                 'tipo'   => ucfirst(str_replace('_', ' ', $post_type)),
-                'imagen' => obtenerImagenPost(get_the_ID()), // Asume que obtenerImagenPost está disponible globalmente
+                'imagen' => obtenerImagenPost(get_the_ID()), // Llama a obtenerImagenPost definida abajo
             ];
         }
     }
@@ -35,8 +35,6 @@ function buscar_posts($post_type, $texto)
 }
 
 // Nota: Esta función depende de funciones globales de WordPress y de la función obtenerImagenPost.
-// Asegúrate de que este archivo sea incluido correctamente (ej. en functions.php)
-// y que la función obtenerImagenPost esté definida y accesible globalmente.
 
 // Refactor(Org): Función realizar_busqueda movida desde app/Content/Logic/busqueda.php
 function realizar_busqueda($texto)
@@ -73,7 +71,7 @@ function buscar_usuarios($texto)
                 'titulo' => $user->display_name,
                 'url'    => get_author_posts_url($user->ID),
                 'tipo'   => 'Perfil',
-                'imagen' => imagenPerfil($user->ID), // Asume que imagenPerfil está disponible globalmente
+                'imagen' => imagenPerfil($user->ID), // Asume que imagenPerfil está disponible globalmente (app/Utils/ImageUtils.php)
             ];
         }
     }
@@ -125,4 +123,19 @@ function balancear_resultados($resultados)
         $resultados['perfiles'] = array_slice($resultados['perfiles'], 0, $max_each);
     }
     return $resultados;
+}
+
+// Refactor(Org): Función obtenerImagenPost movida desde app/Content/Logic/busqueda.php
+function obtenerImagenPost($post_id)
+{
+    if (has_post_thumbnail($post_id)) {
+        // Asume que la función img() está disponible globalmente (app/Utils/ImageUtils.php)
+        return img(get_the_post_thumbnail_url($post_id, 'thumbnail'));
+    }
+    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+    if ($imagen_temporal_id) {
+        // Asume que la función img() está disponible globalmente (app/Utils/ImageUtils.php)
+        return img(wp_get_attachment_image_url($imagen_temporal_id, 'thumbnail'));
+    }
+    return false;
 }

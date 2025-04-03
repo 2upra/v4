@@ -11,8 +11,8 @@ function buscar_resultados()
         return;
     }
 
-    // Refactor(Org): Función realizar_busqueda movida a app/Services/SearchService.php
-    $resultados = realizar_busqueda($texto);
+    // Refactor(Org): La lógica de búsqueda ahora reside en SearchService
+    $resultados = realizar_busqueda($texto); // Asume que SearchService.php está incluido
     $html = generar_html_resultados($resultados);
 
     guardarCache($cache_key, $html, 7200);
@@ -22,25 +22,8 @@ function buscar_resultados()
 add_action('wp_ajax_buscarResultado', 'buscar_resultados');
 add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
-// Refactor(Org): Función realizar_busqueda movida a app/Services/SearchService.php
+// Refactor(Org): Funciones realizar_busqueda, buscar_posts, buscar_usuarios, balancear_resultados y obtenerImagenPost movidas a app/Services/SearchService.php
 
-// Refactor(Org): Función buscar_posts movida a app/Services/SearchService.php
-
-// Refactor(Org): Función buscar_usuarios movida a app/Services/SearchService.php
-
-// Refactor(Org): Función balancear_resultados movida a app/Services/SearchService.php
-
-function obtenerImagenPost($post_id)
-{
-    if (has_post_thumbnail($post_id)) {
-        return img(get_the_post_thumbnail_url($post_id, 'thumbnail'));
-    }
-    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
-    if ($imagen_temporal_id) {
-        return img(wp_get_attachment_image_url($imagen_temporal_id, 'thumbnail'));
-    }
-    return false;
-}
 
 function generar_html_resultados($resultados)
 {
@@ -97,4 +80,3 @@ function busqueda()
 <?php
     return ob_get_clean();
 }
-
