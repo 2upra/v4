@@ -160,4 +160,97 @@ function guardarBloqueo() {
 }
 add_action('wp_ajax_guardarBloqueo', 'guardarBloqueo');
 
+// Refactor(Org): Moved Pinkys and User Type logic from UserUtils.php
+
+// Funciones de manejo de 'pinkys' movidas desde app/Functions/pinkys.php
+
+function agregarPinkys($userID, $cantidad)
+{
+    $monedas_actuales = (int) get_user_meta($userID, 'pinky', true);
+    $nuevas_monedas = $monedas_actuales + $cantidad;
+    update_user_meta($userID, 'pinky', $nuevas_monedas);
+}
+
+function restarPinkys($userID, $cantidad)
+{
+    $monedas_actuales = (int) get_user_meta($userID, 'pinky', true);
+    $nuevas_monedas = $monedas_actuales - $cantidad;
+    update_user_meta($userID, 'pinky', $nuevas_monedas);
+}
+
+function restarPinkysEliminacion($postID)
+{
+    $post = get_post($postID);
+    $userID = $post->post_author;
+
+    if ($userID) {
+        restarPinkys($userID, 1);
+    }
+}
+
+function pinkysRegistro($user_id)
+{
+    $pinkys_iniciales = 10;
+    update_user_meta($user_id, 'pinky', $pinkys_iniciales);
+}
+add_action('user_register', 'pinkysRegistro');
+
+function restablecerPinkys()
+{
+    $usuarios_query = new WP_User_Query(array(
+        'fields' => 'ID',
+    ));
+
+    if (!empty($usuarios_query->results)) {
+        foreach ($usuarios_query->results as $userID) {
+            $monedas_actuales = (int) get_user_meta($userID, 'pinky', true);
+            if ($monedas_actuales < 10) {
+                update_user_meta($userID, 'pinky', 10);
+            }
+        }
+    }
+}
+add_action('restablecer_pinkys_semanal', 'restablecerPinkys');
+
+
+if (!wp_next_scheduled('restablecer_pinkys_semanal')) {
+    wp_schedule_event(time(), 'weekly', 'restablecer_pinkys_semanal');
+}
+
+// Funciones movidas desde app/Functions/cambiarTipoUser.php
+
+function cambiar_tipo_usuario_callback()
+{
+    $user_id = get_current_user_id();
+    $tipo = $_POST['tipo'];
+
+    if ($tipo === 'fan') {
+        $estado_actual = get_user_meta($user_id, 'fan', true);
+        update_user_meta($user_id, 'fan', !$estado_actual);
+    }
+
+    echo !$estado_actual;
+    wp_die();
+}
+
+add_action('wp_ajax_cambiar_tipo_usuario', 'cambiar_tipo_usuario_callback');
+add_action('wp_ajax_nopriv_cambiar_tipo_usuario', 'cambiar_tipo_usuario_callback');
+
+// Función movida desde app/View/InicialModal.php
+function guardarTipoUsuario()
+{
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
+    }
+    $tipoUsuario = isset($_POST['tipoUsuario']) ? sanitize_text_field($_POST['tipoUsuario']) : '';
+    if (empty($tipoUsuario)) {
+        wp_send_json_error('No se recibió el tipo de usuario.');
+    }
+    $userId = get_current_user_id();
+    reiniciarFeed($userId); // Asegúrate de que esta función esté disponible globalmente o incluida.
+    update_user_meta($userId, 'tipoUsuario', $tipoUsuario);
+    wp_send_json_success('El tipo de usuario ha sido guardado.');
+}
+add_action('wp_ajax_guardarTipoUsuario', 'guardarTipoUsuario');
+
 ?>
