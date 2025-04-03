@@ -48,3 +48,21 @@ function guardarVista() {
     wp_send_json_success($respuesta);
     wp_die();
 }
+
+// Funcion obtenerVistasPosts() movida desde app/Utils/AnalyticsUtils.php
+/**
+ * Obtiene el historial de vistas de posts para un usuario específico.
+ *
+ * @param int $userId ID del usuario.
+ * @return array Array asociativo con ID de post como clave y datos de vista como valor, o array vacío si no hay vistas.
+ */
+function obtenerVistasPosts($userId)
+{
+    $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
+
+    if (empty($vistas_posts) || !is_array($vistas_posts)) {
+        return [];
+    }
+
+    return $vistas_posts;
+}
