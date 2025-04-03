@@ -96,6 +96,7 @@ function procesarDescarga()
         error_log("Total de descargas del post actualizado: " . $totalDescargas);
 
         if (!$sync) {
+            // Refactor(Org): Función generarEnlaceDescarga() movida desde app/Functions/descargas.php
             $downloadUrl = generarEnlaceDescarga($userId, $audioId);
             error_log("URL de descarga generada: " . $downloadUrl);
         }
@@ -111,6 +112,34 @@ function procesarDescarga()
     }
 
     error_log("Fin del proceso de descarga.");
+}
+
+// Refactor(Org): Función generarEnlaceDescarga() movida desde app/Functions/descargas.php
+function generarEnlaceDescarga($userID, $audioID)
+{
+    $token = bin2hex(random_bytes(16));
+
+    $token_data = array(
+        'user_id' => $userID,
+        'audio_id' => $audioID,
+        'time' => time(),
+        'usos' => 0, // Inicializar el contador de usos
+    );
+
+    error_log("--------------------------------------------------");
+    error_log("[Inicio] Generando enlace de descarga. UserID: " . $userID . ", AudioID: " . $audioID . ", Token: " . $token . ", Time: " . time());
+
+    set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS); // válido por 1 hora
+    error_log("Token data set in transient: " . print_r($token_data, true));
+
+    $enlaceDescarga = add_query_arg([
+        'descarga_token' => $token,
+    ], home_url());
+
+    error_log("Enlace de descarga generado: " . $enlaceDescarga);
+    error_log("[Fin] Generando enlace de descarga.");
+    error_log("--------------------------------------------------");
+    return $enlaceDescarga;
 }
 
 add_action('wp_ajax_descargar_audio', 'procesarDescarga');
