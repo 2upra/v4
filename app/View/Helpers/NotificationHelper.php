@@ -51,3 +51,58 @@ function iconoNotificaciones()
 
     return $html_completo;
 }
+
+// Refactor(Org): Funcion listarNotificaciones movida desde app/Pendiente por refactorizar/notificaciones.php
+function listarNotificaciones($pagina = 1)
+{
+    $usuarioReceptor = get_current_user_id();
+    $notificacionesPorPagina = 12;
+    $offset = ($pagina - 1) * $notificacionesPorPagina;
+    $args = [
+        'post_type'      => 'notificaciones',
+        'post_status'    => 'publish',
+        'posts_per_page' => $notificacionesPorPagina,
+        'offset'         => $offset,
+        'author'         => $usuarioReceptor,
+    ];
+
+    $query = new WP_Query($args);
+    ob_start();
+
+    if ($query->have_posts()) {
+        echo '<ul>';
+        while ($query->have_posts()) {
+            $query->the_post();
+            $emisor = get_post_meta(get_the_ID(), 'emisor', true);
+            $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
+            $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);
+            $fechaPublicacion = get_the_date('Y-m-d H:i:s');
+            $fechaRelativa = tiempoRelativo($fechaPublicacion); // Dependencia: app/Utils/DateUtils.php
+            if ($emisor) {
+                $avatar_optimizado = imagenPerfil($emisor); // Dependencia: app/Helpers/UserHelper.php
+            }
+?>
+            <li class="notificacion-item" data-notificacion-id="<? echo get_the_ID(); ?>">
+                <? if (!empty($postRelacionado)) : ?>
+                    <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace">
+                    <? endif; ?>
+                    <? if (!empty($avatar_optimizado)) : ?>
+                        <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
+                    <? endif; ?>
+                    <div class="DAEFSE">
+                        <p class="notificacion-contenido"><? the_content(); ?></p>
+                        <p class="notificacion-fecha"><? echo $fechaRelativa; ?></p>
+                    </div>
+                    <? if (!empty($postRelacionado)) : ?>
+                    </a>
+                <? endif; ?>
+            </li>
+<?
+        }
+        echo '</ul>';
+    } else {
+        echo '<p class="sinnotifi">No hay notificaciones disponibles.</p>';
+    }
+    wp_reset_postdata();
+    return ob_get_clean();
+}
