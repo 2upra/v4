@@ -1,27 +1,7 @@
-<?
+<?php
+// Funcion busquedaTabs() movida a app/View/Components/BusquedaTabs.php
 
-function busquedaTabs()
-{
-    ob_start();
+// El archivo ahora está vacío de funcionalidad PHP principal,
+// pero puede contener includes o lógica futura.
 
 ?>
-    <div id="menuData" style="display:none;" pestanaActual="">
-        <div data-tab="Busquedatab"></div>
-    </div>
-    
-    <div class="tabs">
-        <div class="tab-content">
-
-            <div class="tab INICIO S4K7I3" id="Busquedatab">
-                <div class="GSDKRA DSOE4LS">
-                    <? echo busqueda(); ?>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-<?
-
-    return ob_get_clean();
-}
