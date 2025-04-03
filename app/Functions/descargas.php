@@ -2,6 +2,8 @@
 
 // Refactor(Org): Función procesarDescarga() y su hook AJAX movidos a app/Services/DownloadService.php
 
+add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
+
 function descargaAudio()
 {
     if (isset($_GET['descarga_token'])) {
