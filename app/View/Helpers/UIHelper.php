@@ -750,3 +750,5 @@ function botonSincronizar($postId)
     }
     return ob_get_clean();
 }
+
+// Refactor(Exec): Funcion botonComentar() movida a app/View/Helpers/CommentHelper.php
