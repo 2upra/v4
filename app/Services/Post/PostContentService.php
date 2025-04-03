@@ -4,8 +4,8 @@
 function cambiarDescripcion()
 {
     if (!is_user_logged_in()) {
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        wp_die();
+        wp_send_json_error(['message' => 'No autorizado']);
+        return;
     }
 
     $usuarioActual = wp_get_current_user();
@@ -13,27 +13,26 @@ function cambiarDescripcion()
     $descripcion = isset($_POST['descripcion']) ? sanitize_text_field($_POST['descripcion']) : '';
 
     if ($idPost <= 0) {
-        echo json_encode(['success' => false, 'message' => 'ID de post no válido']);
-        wp_die();
+        wp_send_json_error(['message' => 'ID de post no válido']);
+        return;
     }
 
     $post = get_post($idPost);
     if (!$post) {
-        echo json_encode(['success' => false, 'message' => 'El post no existe']);
-        wp_die();
+        wp_send_json_error(['message' => 'El post no existe']);
+        return;
     }
 
     if ($post->post_author != $usuarioActual->ID && !current_user_can('administrator')) {
-        echo json_encode(['success' => false, 'message' => 'No tienes permisos para editar este post']);
-        wp_die();
+        wp_send_json_error(['message' => 'No tienes permisos para editar este post']);
+        return;
     }
 
     $post->post_content = wp_kses_post($descripcion);
     wp_update_post($post);
     rehacerDescripcionAccion($post->ID);
 
-    echo json_encode(['success' => true]);
-    wp_die();
+    wp_send_json_success();
 }
 
 // Activa la re-generación de la descripción del audio si existe un audio adjunto.
@@ -94,8 +93,8 @@ function rehacerDescripcionAudio($idPost, $archivoAudio)
 function corregirTags()
 {
     if (!is_user_logged_in()) {
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        wp_die();
+        wp_send_json_error(['message' => 'No autorizado']);
+        return;
     }
 
     $usuario = wp_get_current_user();
@@ -103,25 +102,24 @@ function corregirTags()
     $descripcion = isset($_POST['descripcion']) ? sanitize_text_field($_POST['descripcion']) : '';
 
     if ($idPost <= 0) {
-        echo json_encode(['success' => false, 'message' => 'ID de post no válido']);
-        wp_die();
+        wp_send_json_error(['message' => 'ID de post no válido']);
+        return;
     }
 
     $post = get_post($idPost);
     if (!$post) {
-        echo json_encode(['success' => false, 'message' => 'El post no existe']);
-        wp_die();
+        wp_send_json_error(['message' => 'El post no existe']);
+        return;
     }
 
     if ($post->post_author != $usuario->ID && !current_user_can('administrator')) {
-        echo json_encode(['success' => false, 'message' => 'No tienes permisos para editar este post']);
-        wp_die();
+        wp_send_json_error(['message' => 'No tienes permisos para editar este post']);
+        return;
     }
 
     rehacerJsonPost($post->ID, $descripcion);
 
-    echo json_encode(['success' => true]);
-    wp_die();
+    wp_send_json_success();
 }
 
 add_action('wp_ajax_corregirTags', 'corregirTags');
