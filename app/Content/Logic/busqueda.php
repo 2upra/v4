@@ -28,47 +28,7 @@ add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
 // Refactor(Org): Función buscar_usuarios movida a app/Services/SearchService.php
 
-function balancear_resultados($resultados)
-{
-    $num_resultados = count($resultados['social_post']) + count($resultados['colecciones']) + count($resultados['perfiles']);
-    if ($num_resultados > 6) {
-        $social_post_count = count($resultados['social_post']);
-        $colecciones_count = count($resultados['colecciones']);
-        $perfiles_count = count($resultados['perfiles']);
-
-        $max_each = 2;
-
-        if ($social_post_count < $max_each) {
-            $diff = $max_each - $social_post_count;
-            if ($colecciones_count >= $max_each + $diff) {
-                $max_each += $diff;
-            } elseif ($perfiles_count >= $max_each + $diff) {
-                $max_each += $diff;
-            }
-        }
-        if ($colecciones_count < $max_each) {
-            $diff = $max_each - $colecciones_count;
-            if ($social_post_count >= $max_each + $diff) {
-                $max_each += $diff;
-            } elseif ($perfiles_count >= $max_each + $diff) {
-                $max_each += $diff;
-            }
-        }
-        if ($perfiles_count < $max_each) {
-            $diff = $max_each - $perfiles_count;
-            if ($social_post_count >= $max_each + $diff) {
-                $max_each += $diff;
-            } elseif ($colecciones_count >= $max_each + $diff) {
-                $max_each += $diff;
-            }
-        }
-
-        $resultados['social_post'] = array_slice($resultados['social_post'], 0, $max_each);
-        $resultados['colecciones'] = array_slice($resultados['colecciones'], 0, $max_each);
-        $resultados['perfiles'] = array_slice($resultados['perfiles'], 0, $max_each);
-    }
-    return $resultados;
-}
+// Refactor(Org): Función balancear_resultados movida a app/Services/SearchService.php
 
 function obtenerImagenPost($post_id)
 {
@@ -137,3 +97,4 @@ function busqueda()
 <?php
     return ob_get_clean();
 }
+

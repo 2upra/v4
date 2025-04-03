@@ -53,9 +53,7 @@ function realizar_busqueda($texto)
     // Refactor(Org): La función buscar_usuarios fue movida a app/Services/SearchService.php
     $resultados['perfiles'] = buscar_usuarios($texto);
 
-    // Nota: balancear_resultados debe estar disponible globalmente
-    // (actualmente está en app/Content/Logic/busqueda.php)
-    // TODO: Mover balancear_resultados a SearchService.php también.
+    // Refactor(Org): La función balancear_resultados fue movida a app/Services/SearchService.php
     return balancear_resultados($resultados);
 }
 
@@ -85,3 +83,46 @@ function buscar_usuarios($texto)
 // Nota: Esta función depende de funciones globales de WordPress y de la función imagenPerfil.
 // Asegúrate de que este archivo sea incluido correctamente (ej. en functions.php)
 // y que la función imagenPerfil esté definida y accesible globalmente.
+
+// Refactor(Org): Función balancear_resultados movida desde app/Content/Logic/busqueda.php
+function balancear_resultados($resultados)
+{
+    $num_resultados = count($resultados['social_post']) + count($resultados['colecciones']) + count($resultados['perfiles']);
+    if ($num_resultados > 6) {
+        $social_post_count = count($resultados['social_post']);
+        $colecciones_count = count($resultados['colecciones']);
+        $perfiles_count = count($resultados['perfiles']);
+
+        $max_each = 2;
+
+        if ($social_post_count < $max_each) {
+            $diff = $max_each - $social_post_count;
+            if ($colecciones_count >= $max_each + $diff) {
+                $max_each += $diff;
+            } elseif ($perfiles_count >= $max_each + $diff) {
+                $max_each += $diff;
+            }
+        }
+        if ($colecciones_count < $max_each) {
+            $diff = $max_each - $colecciones_count;
+            if ($social_post_count >= $max_each + $diff) {
+                $max_each += $diff;
+            } elseif ($perfiles_count >= $max_each + $diff) {
+                $max_each += $diff;
+            }
+        }
+        if ($perfiles_count < $max_each) {
+            $diff = $max_each - $perfiles_count;
+            if ($social_post_count >= $max_each + $diff) {
+                $max_each += $diff;
+            } elseif ($colecciones_count >= $max_each + $diff) {
+                $max_each += $diff;
+            }
+        }
+
+        $resultados['social_post'] = array_slice($resultados['social_post'], 0, $max_each);
+        $resultados['colecciones'] = array_slice($resultados['colecciones'], 0, $max_each);
+        $resultados['perfiles'] = array_slice($resultados['perfiles'], 0, $max_each);
+    }
+    return $resultados;
+}
