@@ -50,9 +50,38 @@ function realizar_busqueda($texto)
     // Refactor(Org): La función buscar_posts fue movida a app/Services/SearchService.php
     $resultados['social_post'] = buscar_posts('social_post', $texto);
     $resultados['colecciones'] = buscar_posts('colecciones', $texto);
-    // Nota: buscar_usuarios y balancear_resultados deben estar disponibles globalmente
-    // (actualmente están en app/Content/Logic/busqueda.php)
+    // Refactor(Org): La función buscar_usuarios fue movida a app/Services/SearchService.php
     $resultados['perfiles'] = buscar_usuarios($texto);
 
+    // Nota: balancear_resultados debe estar disponible globalmente
+    // (actualmente está en app/Content/Logic/busqueda.php)
+    // TODO: Mover balancear_resultados a SearchService.php también.
     return balancear_resultados($resultados);
 }
+
+// Refactor(Org): Función buscar_usuarios movida desde app/Content/Logic/busqueda.php
+function buscar_usuarios($texto)
+{
+    $user_query = new WP_User_Query([
+        'search'         => '*' . esc_attr($texto) . '*',
+        'search_columns' => ['user_login', 'display_name'],
+        'number'         => 3,
+    ]);
+    $resultados = [];
+
+    if (!empty($user_query->get_results())) {
+        foreach ($user_query->get_results() as $user) {
+            $resultados[] = [
+                'titulo' => $user->display_name,
+                'url'    => get_author_posts_url($user->ID),
+                'tipo'   => 'Perfil',
+                'imagen' => imagenPerfil($user->ID), // Asume que imagenPerfil está disponible globalmente
+            ];
+        }
+    }
+    return $resultados;
+}
+
+// Nota: Esta función depende de funciones globales de WordPress y de la función imagenPerfil.
+// Asegúrate de que este archivo sea incluido correctamente (ej. en functions.php)
+// y que la función imagenPerfil esté definida y accesible globalmente.

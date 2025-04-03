@@ -1,4 +1,4 @@
-<?
+<?php
 
 function buscar_resultados()
 {
@@ -26,27 +26,7 @@ add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
 // Refactor(Org): Función buscar_posts movida a app/Services/SearchService.php
 
-function buscar_usuarios($texto)
-{
-    $user_query = new WP_User_Query([
-        'search'         => '*' . esc_attr($texto) . '*',
-        'search_columns' => ['user_login', 'display_name'],
-        'number'         => 3,
-    ]);
-    $resultados = [];
-
-    if (!empty($user_query->get_results())) {
-        foreach ($user_query->get_results() as $user) {
-            $resultados[] = [
-                'titulo' => $user->display_name,
-                'url'    => get_author_posts_url($user->ID),
-                'tipo'   => 'Perfil',
-                'imagen' => imagenPerfil($user->ID),
-            ];
-        }
-    }
-    return $resultados;
-}
+// Refactor(Org): Función buscar_usuarios movida a app/Services/SearchService.php
 
 function balancear_resultados($resultados)
 {
@@ -110,16 +90,16 @@ function generar_html_resultados($resultados)
         $num_resultados += count($grupo);
         foreach ($grupo as $resultado) {
 ?>
-            <a href="<? echo esc_url($resultado['url']); ?>">
+            <a href="<?php echo esc_url($resultado['url']); ?>">
                 <div class="resultado-item">
-                    <? if (!empty($resultado['imagen'])):
+                    <?php if (!empty($resultado['imagen'])):
  ?>
-                        <img class="resultado-imagen" src="<? echo esc_url($resultado['imagen']); ?>" alt="<? echo esc_attr($resultado['titulo']); ?>">
-                    <? endif; ?>
+                        <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
+                    <?php endif; ?>
                     <div class="resultado-info">
-                        <h3><? echo esc_html($resultado['titulo']); ?></h3>
+                        <h3><?php echo esc_html($resultado['titulo']); ?></h3>
                         <p>
-                            <?
+                            <?php
                             if ($resultado['tipo'] === 'social post') {
                                 echo 'Post';
                             } else {
@@ -130,14 +110,14 @@ function generar_html_resultados($resultados)
                     </div>
                 </div>
             </a>
-        <?
+        <?php
         }
     }
 
     if ($num_resultados === 0) {
         ?>
         <div class="resultado-item">No se encontraron resultados.</div>
-    <?
+    <?php
     }
 
     return ob_get_clean();
@@ -154,6 +134,6 @@ function busqueda()
 
         <div class="resultadosBL"></div>
     </div>
-<?
+<?php
     return ob_get_clean();
 }
