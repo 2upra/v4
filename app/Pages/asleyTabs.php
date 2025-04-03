@@ -1,29 +1,5 @@
 <?
-
-function asleyTab()
-{
-
-    ob_start();
-?>
-
-    <div id="menuData" style="display:none;" pestanaActual="">
-        <div data-tab="Proyecto"></div>
-
-    </div>
-
-    <div class="tabs">
-        <div class="tab-content">
-
-            <div class="tab S4K7I3 asleyPorf" id="Proyecto">
-                <? echo portafolio(); ?>
-            </div>
-
-        </div>
-    </div>
-
-<?
-    return ob_get_clean();
-}
+// Funcion asleyTab() movida a app/View/Components/AsleyTabs.php
 
 function portafolio()
 {
