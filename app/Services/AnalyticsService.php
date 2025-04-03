@@ -99,3 +99,7 @@ function limpiarVistasAntiguas($vistas, $dias)
 
     return $vistas;
 }
+
+// Hooks AJAX para guardarVista() movidos desde app/Utils/AnalyticsUtils.php
+add_action('wp_ajax_guardar_vistas', 'guardarVista');        // Para usuarios logueados
+add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVista'); // Para usuarios no logueados
