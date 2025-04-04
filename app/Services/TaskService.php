@@ -1,5 +1,6 @@
 <?php
 // Refactor(Org): Funcion crearTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
+// La funcion crearTarea() y su hook AJAX ya estaban presentes en este archivo.
 
 //aqui necesito que cuando llega un padre, haga lo que hace crearSubtarea
 function crearTarea()

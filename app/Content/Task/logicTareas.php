@@ -9,6 +9,7 @@
 // Refactor(Org): Funcion modificarTarea() y hook AJAX movidos a app/Services/TaskService.php
 
 // Refactor(Org): Funcion crearTarea() y hook AJAX movidos a app/Services/TaskService.php
+// La funcion crearTarea() y su hook AJAX ya no estaban presentes en este archivo.
 
 function completarTarea()
 {
