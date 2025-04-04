@@ -253,4 +253,20 @@ function guardarTipoUsuario()
 }
 add_action('wp_ajax_guardarTipoUsuario', 'guardarTipoUsuario');
 
+// Refactor(Org): Moved function obtenerInteresesUsuario from app/Content/Logic/datosParaCalculo.php
+function obtenerInteresesUsuario($userId) {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
+    $tablaIntereses = INTERES_TABLE;
+    $intereses = $wpdb->get_results($wpdb->prepare(
+        "SELECT interest, intensity FROM $tablaIntereses WHERE user_id = %d",
+        $userId
+    ), OBJECT_K);
+    if ($wpdb->last_error) {
+        //guardarLog("[obtenerInteresesUsuario] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
+    }
+    //rendimientolog("[obtenerInteresesUsuario] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $intereses;
+}
+
 ?>

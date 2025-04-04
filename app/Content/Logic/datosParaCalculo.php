@@ -4,6 +4,8 @@
 2.5 segundos
 */
 
+// Refactor(Org): Moved function obtenerInteresesUsuario to app/Services/UserService.php
+
 function obtenerDatosFeed($userId) {
     $log = "[obtenerDatosFeed] Inicio para usuario ID: $userId \n";
     $tiempoInicio = microtime(true);
@@ -24,6 +26,7 @@ function obtenerDatosFeed($userId) {
         // Funcion obtenerUsuariosSeguidos movida a app/Services/FollowService.php
         // Se asume que la función está disponible globalmente o se cargará desde FollowService
         $siguiendo = obtenerUsuariosSeguidos($userId);
+        // Se asume que la función obtenerInteresesUsuario está disponible globalmente (movida a UserService.php)
         $intereses = obtenerInteresesUsuario($userId);
         $vistas = vistasDatos($userId);
         generarMetaDeIntereses($userId);
@@ -102,20 +105,7 @@ function validarUsuario($userId) {
     return true;
 }
 
-function obtenerInteresesUsuario($userId) {
-    global $wpdb;
-    $tiempoInicio = microtime(true);
-    $tablaIntereses = INTERES_TABLE;
-    $intereses = $wpdb->get_results($wpdb->prepare(
-        "SELECT interest, intensity FROM $tablaIntereses WHERE user_id = %d",
-        $userId
-    ), OBJECT_K);
-    if ($wpdb->last_error) {
-        //guardarLog("[obtenerInteresesUsuario] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
-    }
-    //rendimientolog("[obtenerInteresesUsuario] Tiempo para obtener 'intereses': " . (microtime(true) - $tiempoInicio) . " segundos");
-    return $intereses;
-}
+// Funcion obtenerInteresesUsuario movida a app/Services/UserService.php
 
 function vistasDatos($userId) {
     $tiempoInicio = microtime(true);
