@@ -32,3 +32,7 @@ function cambiarTitulo()
 // y add_action('wp_ajax_nopriv_cambiar_titulo', 'cambiarTitulo'); (si aplica)
 // deben estar registrados en otro lugar (ej. functions.php o un archivo de inicialización)
 // para que esta función sea accesible vía AJAX.
+
+// Refactor(Org): Hook AJAX para cambiarTitulo movido desde estado.php
+add_action('wp_ajax_cambiarTitulo', 'cambiarTitulo');
+
