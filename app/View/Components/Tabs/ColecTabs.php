@@ -1,4 +1,5 @@
-<?
+<?php
+// Refactor(Org): Función colecTabs() movida desde app/Pages/colebTabs.php
 
 function colecTabs()
 {

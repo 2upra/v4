@@ -284,4 +284,23 @@ EOD;
 
 add_action('wp_enqueue_scripts', 'innerHeight');
 
+// Refactor(Org): Mover hooks agregar_soporte_jfif y extender_wp_check_filetype aquí
+function agregar_soporte_jfif($mimes)
+{
+    $mimes['jfif'] = 'image/jpeg';
+    return $mimes;
+}
+add_filter('upload_mimes', 'agregar_soporte_jfif');
+
+// Extiende wp_check_filetype para reconocer .jfif
+function extender_wp_check_filetype($types, $filename, $mimes)
+{
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    if ($ext === 'jfif') {
+        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
+    }
+    return $types;
+}
+add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
+
 ?>

@@ -1,4 +1,4 @@
-<?
+<?php
 
 
 function calcularPuntosIntereses($postId, $datos)
@@ -89,29 +89,7 @@ function calcularPuntosFinales($pUsuario, $pIntereses, $puntosLikes, $metaVerifi
     return $pUsuario + $pIntereses + $puntosLikes;
 }
 
-function getDecayFactor($days, $useDecay = false)
-{
-    static $decaimientoF = [];
-    static $use_decay = false;
-
-    if (func_num_args() > 1) {
-        $use_decay = $useDecay;
-    }
-
-    if (!$use_decay) {
-        return 1;
-    }
-
-    if (empty($decaimientoF)) {
-        for ($d = 0; $d <= 365; $d++) {
-            $decaimientoF[$d] = pow(0.99, $d);
-        }
-    }
-
-    $days = min(max(0, (int) $days), 365);
-
-    return $decaimientoF[$days];
-}
+// Funcion getDecayFactor movida a app/Utils/MathUtils.php
 
 //en datos ahora viene el valor nombreOriginal, lo puedes incluir aca para que lo tenga en cuenta, viene dentro de datos
 function calcularPuntosIdentifier($postId, $identifier, $datos)

@@ -139,23 +139,7 @@ function subirImagenALibreria($file_path, $postId)
     return false;
 }
 
-function agregar_soporte_jfif($mimes)
-{
-    $mimes['jfif'] = 'image/jpeg';
-    return $mimes;
-}
-add_filter('upload_mimes', 'agregar_soporte_jfif');
-
-// Extiende wp_check_filetype para reconocer .jfif
-function extender_wp_check_filetype($types, $filename, $mimes)
-{
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    if ($ext === 'jfif') {
-        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
-    }
-    return $types;
-}
-add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
+// Refactor(Org): Funciones agregar_soporte_jfif y extender_wp_check_filetype movidas a app/Setup/ThemeSetup.php
 
 
 
