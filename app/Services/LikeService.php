@@ -189,4 +189,49 @@ function chequearLike($postId, $userId, $likeType = 'like')
     return $results > 0;
 }
 
+// Refactor(Org): Función obtenerLikesPorPost() movida desde app/Content/Logic/datosParaCalculo.php
+function obtenerLikesPorPost($postsIds) {
+    global $wpdb;
+    $tiempoInicio = microtime(true);
+    $tablaLikes = "{$wpdb->prefix}post_likes";
+
+    // Asegurarse de que $postsIds no esté vacío para evitar errores SQL
+    if (empty($postsIds)) {
+        return [];
+    }
+
+    $placeholders = implode(', ', array_fill(0, count($postsIds), '%d'));
+
+    $sqlLikes = "
+        SELECT post_id, like_type, COUNT(*) as cantidad
+        FROM $tablaLikes
+        WHERE post_id IN ($placeholders)
+        GROUP BY post_id, like_type
+    ";
+
+    // Usar array_merge correctamente para pasar los argumentos a prepare
+    $args = array_merge([$sqlLikes], $postsIds);
+    $likesResultados = $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], $args));
+
+    if ($wpdb->last_error) {
+        //guardarLog("[obtenerLikesPorPost] Error: Fallo al obtener likes: " . $wpdb->last_error);
+    }
+    //rendimientolog("[obtenerLikesPorPost] Tiempo para obtener \$likesResultados: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    $likesPorPost = [];
+    foreach ($likesResultados as $like) {
+        if (!isset($likesPorPost[$like->post_id])) {
+            $likesPorPost[$like->post_id] = [
+                'like' => 0,
+                'favorito' => 0,
+                'no_me_gusta' => 0
+            ];
+        }
+        $likesPorPost[$like->post_id][$like->like_type] = (int)$like->cantidad;
+    }
+    //rendimientolog("[obtenerLikesPorPost] Tiempo para procesar \$likesPorPost: " . (microtime(true) - $tiempoInicio) . " segundos");
+
+    return $likesPorPost;
+}
+
 ?>
