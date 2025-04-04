@@ -1,25 +1,5 @@
 <?
 
-
-function variablesArticulo($postId)
-{
-    // Si no se proporciona un postId, usa el ID del post global.
-    if ($postId === null) {
-        global $post;
-        $postId = $post->ID;
-    }
-
-    $usuarioActual = get_current_user_id();
-    $autorId = get_post_field('post_author', $postId);
-
-
-    return [
-        'fecha' => get_the_date('', $postId),
-        'colecStatus' => get_post_status($postId),
-        'autorId' => $autorId,
-    ];
-}
-
 function imagenArticulo($postId)
 {
     $imagenSize = 'large';
