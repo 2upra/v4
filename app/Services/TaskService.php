@@ -709,3 +709,38 @@ function crearSubtarea()
 }
 
 add_action('wp_ajax_crearSubtarea', 'crearSubtarea');
+
+// Refactor(Org): Funcion borrarTareasCompletadas() y hook AJAX movidos desde app/Content/Task/logicTareas.php
+function borrarTareasCompletadas()
+{
+    if (isset($_POST['limpiar']) && $_POST['limpiar'] === 'true') {
+        $usuarioActual = get_current_user_id();
+
+        $args = array(
+            'post_type'      => 'tarea',
+            'author'         => $usuarioActual,
+            'meta_query'     => array(
+                array(
+                    'key'   => 'estado',
+                    'value' => 'completada',
+                ),
+            ),
+            'posts_per_page' => -1,
+        );
+
+        $tareas = get_posts($args);
+
+        if (empty($tareas)) {
+            wp_send_json_error('No hay tareas completadas');
+        } else {
+            foreach ($tareas as $tarea) {
+                wp_delete_post($tarea->ID, true);
+            }
+            wp_send_json_success('Tareas completadas borradas exitosamente');
+        }
+    } else {
+        wp_send_json_error('No se solicitó limpiar');
+    }
+    wp_die();
+}
+add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
