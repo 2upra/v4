@@ -133,6 +133,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
         $quality = 20;
     }
 
+    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
     $image_url = imagenPost($postId, $image_size, $quality, 'all', ($block && !$es_suscriptor), true);
 
     $processed_image_url = img($image_url, $quality, 'all');
@@ -155,6 +156,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
     return $output;
 }
 
+// Refactor(Clean): Función imagenPost() movida a app/View/Helpers/ImageHelper.php
 
 function subirImagenALibreria($file_path, $postId)
 {
@@ -325,17 +327,11 @@ function botonSuscribir($autorId, $author_name, $subscription_price_id = 'price_
 
 function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
-    $thumbnail_url = get_the_post_thumbnail_url($postId, 'full');
-
-    // Si la URL de la portada no está disponible, intenta obtener la URL de la meta 'imagenTemporal'
-    if (!$thumbnail_url) {
-        $imagen_temporal_id = get_post_meta($postId, 'imagenTemporal', true);
-        if ($imagen_temporal_id) {
-            $thumbnail_url = wp_get_attachment_url($imagen_temporal_id);
-        }
-    }
+    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
+    $thumbnail_url = imagenPost($postId, 'full', 80, 'all', false, true); // Calidad 80 para fondo
 
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    // Optimización adicional para el fondo si es necesario
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
     ob_start();

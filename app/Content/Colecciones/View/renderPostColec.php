@@ -310,6 +310,7 @@ function imagenColeccion($postId)
 {
     $imagenSize = 'large';
     $quality = 60;
+    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
     $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
     $imagenProcesada = img($imagenUrl, $quality, 'all');
     $postType = get_post_type($postId);
@@ -335,50 +336,7 @@ function imagenColeccion($postId)
     return $output;
 }
 
-
-function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
-{
-    $post_thumbnail_id = get_post_thumbnail_id($postId);
-    if ($post_thumbnail_id) {
-        $url = wp_get_attachment_image_url($post_thumbnail_id, $size);
-    } elseif ($use_temp) {
-        $temp_image_id = get_post_meta($postId, 'imagenTemporal', true);
-
-        // Si existe una imagen temporal, úsala
-        if ($temp_image_id && wp_attachment_is_image($temp_image_id)) {
-            $url = wp_get_attachment_image_url($temp_image_id, $size);
-        } else {
-            // Si no existe imagen temporal, sube una nueva
-            $random_image_path = obtenerImagenAleatoria('/home/asley01/MEGA/Waw/random');
-            if (!$random_image_path) {
-                ejecutarScriptPermisos();
-                error_log('imagenPost: No se pudo obtener imagen aleatoria para el post ID ' . $postId);
-                return false;
-            }
-            $temp_image_id = subirImagenALibreria($random_image_path, $postId);
-            if (!$temp_image_id) {
-                ejecutarScriptPermisos();
-                error_log('imagenPost: No se pudo subir imagen temporal para el post ID ' . $postId);
-                return false;
-            }
-            update_post_meta($postId, 'imagenTemporal', $temp_image_id);
-            $url = wp_get_attachment_image_url($temp_image_id, $size);
-        }
-    } else {
-        return false;
-    }
-
-    if (function_exists('jetpack_photon_url') && $url) {
-        $args = array('quality' => $quality, 'strip' => $strip);
-        if ($pixelated) {
-            $args['w'] = 50;
-            $args['h'] = 50;
-            $args['zoom'] = 2;
-        }
-        return jetpack_photon_url($url, $args);
-    }
-    return $url;
-}
+// Refactor(Clean): Función imagenPost() movida a app/View/Helpers/ImageHelper.php
 
 function singleColec($postId)
 {
