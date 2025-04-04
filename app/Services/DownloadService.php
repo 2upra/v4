@@ -70,6 +70,7 @@ function procesarColeccion($postId, $userId, $sync = false)
                 return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
             }
 
+            // Refactor(Org): Función agregarArchivosAlZip() movida desde app/Functions/descargarColeccion.php
             if (!agregarArchivosAlZip($zip, $samples)) {
                 $zip->close();
                 if (file_exists($zipPath)) {
@@ -119,6 +120,52 @@ function procesarColeccion($postId, $userId, $sync = false)
     }
 }
 
+// Refactor(Org): Función agregarArchivosAlZip() movida desde app/Functions/descargarColeccion.php
+function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
+{
+    $agregado = false;
+    $functionName = __FUNCTION__;
+
+    foreach ($samples as $sampleId) {
+        $audioIds = get_post_meta($sampleId, 'post_audio', true);
+        error_log("[{$functionName}] IDs de audio para sample {$sampleId}: " . json_encode($audioIds));
+
+        // Convertir $audioIds a un array si no lo es
+        if (!is_array($audioIds)) {
+            if (is_string($audioIds) && !empty($audioIds)) {
+                $audioIds = [$audioIds]; // Crea un array con el string como único elemento
+            } else {
+                error_log("[{$functionName}] Error: El valor de 'post_audio' para el sample {$sampleId} no es un array ni un string válido.");
+                continue; // Salta a la siguiente iteración del bucle principal
+            }
+        }
+
+        foreach ($audioIds as $audioId) {
+            $audioFile = get_attached_file($audioId);
+            error_log("[{$functionName}] Ruta del archivo de audio {$audioId}: " . ($audioFile ?: 'No disponible'));
+
+            if (!$audioFile) {
+                error_log("[{$functionName}] Error: No se pudo obtener la ruta del archivo de audio con ID: {$audioId}");
+                continue; // Salta a la siguiente iteración del bucle de audioIds
+            }
+
+            if (!file_exists($audioFile)) {
+                error_log("[{$functionName}] Error: El archivo de audio no existe: {$audioFile}");
+                continue; // Salta a la siguiente iteración del bucle de audioIds
+            }
+
+            if ($zip->addFile($audioFile, basename($audioFile))) {
+                error_log("[{$functionName}] Archivo agregado al ZIP: " . basename($audioFile));
+                $agregado = true;
+            } else {
+                error_log("[{$functionName}] Error al agregar archivo al ZIP: " . basename($audioFile));
+                return false; // Retorna falso inmediatamente en caso de error
+            }
+        }
+    }
+
+    return $agregado;
+}
 
 /**
  * Procesa la solicitud de descarga de un audio individual o una colección.
