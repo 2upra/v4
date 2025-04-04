@@ -1,5 +1,5 @@
 <?php
-// Funcion movida desde app/Pages/busquedaTabs.php
+// Funcion busquedaTabs() movida desde app/Pages/busquedaTabs.php
 
 function busquedaTabs()
 {
