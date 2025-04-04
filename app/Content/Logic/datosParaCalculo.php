@@ -21,6 +21,8 @@ function obtenerDatosFeed($userId) {
             return [];
         }
 
+        // Funcion obtenerUsuariosSeguidos movida a app/Services/FollowService.php
+        // Se asume que la función está disponible globalmente o se cargará desde FollowService
         $siguiendo = obtenerUsuariosSeguidos($userId);
         $intereses = obtenerInteresesUsuario($userId);
         $vistas = vistasDatos($userId);
@@ -73,33 +75,7 @@ function obtenerDatosFeed($userId) {
     }
 }
 
-function obtenerUsuariosSeguidos($userId) {
-    $tiempoInicio = microtime(true);
-
-
-    global $wpdb;
-    $siguiendo = $wpdb->get_col(
-        $wpdb->prepare(
-            "SELECT meta_value 
-             FROM {$wpdb->usermeta} 
-             WHERE user_id = %d AND meta_key = 'siguiendo'",
-            $userId
-        )
-    );
-
-    if (empty($siguiendo)) {
-        //guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
-        $siguiendo = [];  
-    } else {
-
-      $siguiendo = maybe_unserialize($siguiendo[0]);
-      //si no es un array devolver un array vacio
-      $siguiendo = is_array($siguiendo) ? $siguiendo : [];
-    }
-
-    //rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
-    return $siguiendo;
-}
+// Funcion obtenerUsuariosSeguidos movida a app/Services/FollowService.php
 
 
 function comprobarConexionBD() {

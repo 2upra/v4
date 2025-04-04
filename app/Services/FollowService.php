@@ -98,4 +98,33 @@ function obtener_seguidores_o_siguiendo($idUsuario, $metadato) {
     return is_array($data) ? $data : [];
 }
 
+// Funcion movida desde app/Content/Logic/datosParaCalculo.php
+function obtenerUsuariosSeguidos($userId) {
+    $tiempoInicio = microtime(true);
+
+
+    global $wpdb;
+    $siguiendo = $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT meta_value 
+             FROM {$wpdb->usermeta} 
+             WHERE user_id = %d AND meta_key = 'siguiendo'",
+            $userId
+        )
+    );
+
+    if (empty($siguiendo)) {
+        //guardarLog("[obtenerUsuariosSeguidos] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
+        $siguiendo = [];  
+    } else {
+
+      $siguiendo = maybe_unserialize($siguiendo[0]);
+      //si no es un array devolver un array vacio
+      $siguiendo = is_array($siguiendo) ? $siguiendo : [];
+    }
+
+    //rendimientolog("[obtenerUsuariosSeguidos] Tiempo para obtener 'siguiendo': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $siguiendo;
+}
+
 ?>
