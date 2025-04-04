@@ -1,14 +1,5 @@
 <?
 
-function imagenArticulo($postId)
-{
-    $imagenSize = 'large';
-    $quality = 60;
-    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-    $imagenProcesada = img($imagenUrl, $quality, 'all');
-
-    return esc_url($imagenProcesada);
-}
 
 function htmlArticulo($filtro)
 {
