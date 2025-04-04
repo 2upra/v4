@@ -609,3 +609,36 @@ function cambiarPrioridad()
 }
 
 add_action('wp_ajax_cambiarPrioridad', 'cambiarPrioridad');
+
+// Refactor(Org): Funcion cambiarFrecuencia() y hook AJAX movidos desde app/Content/Task/logicTareas.php
+function cambiarFrecuencia()
+{
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $tareaId = isset($_POST['tareaId']) ? intval($_POST['tareaId']) : 0;
+    $frec = isset($_POST['frecuencia']) ? intval($_POST['frecuencia']) : 0;
+
+    $tarea = get_post($tareaId);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    if ($frec < 1 || $frec > 365) {
+        wp_send_json_error('Frecuencia inválida.');
+    }
+
+    $fec = date('Y-m-d');
+    $fecprox = date('Y-m-d', strtotime("+{$frec} days"));
+
+    update_post_meta($tareaId, 'frecuencia', $frec);
+    update_post_meta($tareaId, 'fechaProxima', $fecprox);
+
+    $log = "Frecuencia de tarea actualizada correctamente. ID: $tareaId, Frecuencia: $frec \n Fecha proxima: $fecprox";
+    guardarLog("cambiarFrecuencia:  \n $log");
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_cambiarFrecuencia', 'cambiarFrecuencia');
