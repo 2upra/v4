@@ -4,54 +4,7 @@
 
 #Los selectores sImportancia y sTipo ya abren los submenu que son los A1806241, al ejecutarse el script tiene que remplazar el texto ejemplo y poner el primer valor de los botones, esta info se guarda en variables globales, y si el usuario da click a otro boton, se cambia, dame esa parte del script en una funcion, js vanilla 
 
-
-function borrarTarea()
-{
-    // Añadir verificacion de nonce
-    if (!isset($_POST['nonce']) || empty($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'borrar_tarea_nonce')) {
-        wp_send_json_error('Nonce invalido.');
-        // wp_die(); // wp_send_json_error ya incluye wp_die()
-    }
-
-    $log = '';
-    if (!current_user_can('edit_posts')) {
-        $log .= 'No tienes permisos.';
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error('No tienes permisos.');
-    }
-
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-
-    if ($id === 0) {
-        $log .= 'ID de tarea inválido.';
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error('ID de tarea inválido.');
-    }
-
-    $tarea = get_post($id);
-
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        $log .= 'Tarea no encontrada.';
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $res = wp_delete_post($id, true);
-
-    if (is_wp_error($res)) {
-        $msg = $res->get_error_message();
-        $log .= "Error al borrar tarea: $msg";
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error($msg);
-    }
-
-    $log .= "Tarea con ID $id borrada exitosamente.";
-    guardarLog("borrarTarea: \n $log");
-    wp_send_json_success();
-}
-
-add_action('wp_ajax_borrarTarea', 'borrarTarea');
-
+// Refactor(Org): Funcion borrarTarea() y hook AJAX movidos a app/Services/TaskService.php
 
 function modificarTarea()
 {
