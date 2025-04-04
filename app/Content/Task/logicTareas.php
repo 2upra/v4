@@ -26,72 +26,7 @@
 // Refactor(Org): Funcion cambiarFrecuencia() y hook AJAX movidos a app/Services/TaskService.php
 
 
-//te muestro como se crean las subtareas 
-function crearSubtarea()
-{
-    if (!current_user_can('edit_posts')) {
-        $msg = 'No tienes permisos.';
-        guardarLog("crearSubtarea: $msg");
-        wp_send_json_error($msg);
-    }
-
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
-    $idPadre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
-    $log = '';
-
-    if (!$esSubtarea) {
-        $res = wp_update_post(array(
-            'ID' => $id,
-            'post_parent' => 0
-        ), true);
-
-        if (is_wp_error($res)) {
-            $msg = $res->get_error_message();
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
-        }
-
-        delete_post_meta($id, 'subtarea');
-        $log .= "Se eliminó la subtarea $id. ";
-        guardarLog("crearSubtarea: $log");
-        wp_send_json_success();
-    }
-
-    if ($idPadre) {
-        $tareaPadre = get_post($idPadre);
-        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
-            $msg = 'Tarea padre no encontrada.';
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
-        }
-
-        $subtareaExistente = get_post_meta($id, 'subtarea', true);
-
-        if (empty($subtareaExistente)) {
-            $res = wp_update_post(array(
-                'ID' => $id,
-                'post_parent' => $idPadre
-            ), true);
-
-            if (is_wp_error($res)) {
-                $msg = $res->get_error_message();
-                guardarLog("crearSubtarea: $msg");
-                wp_send_json_error($msg);
-            }
-
-            update_post_meta($id, 'subtarea', $idPadre);
-            $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
-        } else {
-            $log .= "La subtarea $id ya existía como subtarea de $idPadre. No se realizaron cambios. ";
-        }
-    }
-
-    guardarLog("crearSubtarea: $log");
-    wp_send_json_success();
-}
-
-add_action('wp_ajax_crearSubtarea', 'crearSubtarea');
+// Refactor(Org): Funcion crearSubtarea() y hook AJAX movidos a app/Services/TaskService.php
 
 
 function borrarTareasCompletadas()
