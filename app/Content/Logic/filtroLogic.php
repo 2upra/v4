@@ -56,4 +56,4 @@ function obtenerFiltros()
 }
 add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
-// Refactor(Org): Función guardarFiltro() y su hook AJAX movidos a app/Services/FilterService.php
+// Refactor(Org): Función guardarFiltro() y su hook AJAX ya se encuentran en app/Services/FilterService.php. No se realiza ninguna acción.

@@ -1,5 +1,5 @@
 <?php
-// Refactor(Org): Mover función guardarFiltro() y su hook AJAX aquí desde filtroLogic.php
+// Refactor(Org): Función guardarFiltro() y su hook AJAX ya presentes en este archivo. No se realiza ninguna acción.
 
 function guardarFiltro()
 {
