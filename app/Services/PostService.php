@@ -298,4 +298,56 @@ function variablesPosts($postId = null)
     ];
 }
 
+// Refactor(Org): Funcion configuracionQueryArgs() movida desde app/Content/Logic/queryPost.php
+function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario)
+{
+    try {
+        $FALLBACK_USER_ID = 44;
+        $is_authenticated = $usuarioActual && $usuarioActual != 0;
+        $isAdmin = current_user_can('administrator');
+
+        if (!$is_authenticated) {
+            $usuarioActual = $FALLBACK_USER_ID;
+        }
+
+        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+
+        if (!empty($userId)) {
+            $queryArgs = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $args['posts'],
+                'paged' => $paged,
+                'ignore_sticky_posts' => true,
+                'suppress_filters' => false,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'author' => $userId,
+            ];
+
+            $queryArgs = aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId);
+            return $queryArgs;
+        }
+
+        $posts = $args['posts'];
+        $similarTo = $args['similar_to'] ?? null;
+
+        $filtroTiempo = (int)get_user_meta($usuarioActual, 'filtroTiempo', true);
+
+        $queryArgs = preOrdenamiento($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario);
+
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            if ($tipoUsuario !== 'Fan') {
+                $queryArgs = aplicarFiltrosUsuario($queryArgs, $usuarioActual);
+            }
+        }
+
+        $queryArgs = aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId, $tipoUsuario);
+
+
+        return $queryArgs;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 ?>
