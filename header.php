@@ -501,7 +501,14 @@ if (!defined('ABSPATH')) {
 
             </div>
         <? else : ?>
-            <? echo modalCarta() ?>
+            <?php
+            // Refactor(Org): Incluir el modal de la carta desde su archivo dedicado
+            $carta_modal_path = get_template_directory() . '/app/View/Modals/CartaModal.php';
+            if (file_exists($carta_modal_path)) {
+                require_once $carta_modal_path;
+            }
+            echo modalCarta();
+            ?>
             <div class="CGUNVP" id="modalregistro" data-nosnippet>
                 <? echo registrar_usuario() ?>
             </div>
