@@ -247,5 +247,55 @@ function datosParaAlgoritmo($postId)
     }
 }
 
+// Refactor(Org): Función variablesPosts() movida desde app/Content/Posts/View/componentPost.php
+//VARIABLES POSTS
+function variablesPosts($postId = null)
+{
+    if ($postId === null) {
+        global $post;
+        $postId = $post->ID;
+    }
+
+    $usuarioActual = get_current_user_id();
+    $autores_suscritos = get_user_meta($usuarioActual, 'offering_user_ids', true);
+    $autorId = get_post_field('post_author', $postId);
+
+    $datos_algoritmo = get_post_meta($postId, 'datosAlgoritmo', true);
+    $datos_algoritmo_respaldo = get_post_meta($postId, 'datosAlgoritmo_respaldo', true);
+
+    if (is_array($datos_algoritmo_respaldo)) {
+        $datos_algoritmo_respaldo = json_encode($datos_algoritmo_respaldo);
+    } elseif (is_object($datos_algoritmo_respaldo)) {
+        $datos_algoritmo_respaldo = serialize($datos_algoritmo_respaldo);
+    }
+
+    // Elegir entre datos_algoritmo o su respaldo
+    $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
+
+    return [
+        'current_user_id' => $usuarioActual,
+        'autores_suscritos' => $autores_suscritos,
+        'author_id' => $autorId,
+        'es_suscriptor' => in_array($autorId, (array)$autores_suscritos),
+        'author_name' => get_the_author_meta('display_name', $autorId),
+        'author_avatar' => imagenPerfil($autorId),
+        'audio_id_lite' => get_post_meta($postId, 'post_audio_lite', true),
+        'audio_id' => get_post_meta($postId, 'post_audio', true),
+        'audio_url' => wp_get_attachment_url(get_post_meta($postId, 'post_audio', true)),
+        'audio_lite' => wp_get_attachment_url(get_post_meta($postId, 'post_audio_lite', true)),
+        'wave' => get_post_meta($postId, 'waveform_image_url', true),
+        'post_date' => get_the_date('', $postId),
+        'block' => get_post_meta($postId, 'esExclusivo', true),
+        'colab' => get_post_meta($postId, 'paraColab', true),
+        'post_status' => get_post_status($postId),
+        'bpm' => get_post_meta($postId, 'audio_bpm', true),
+        'key' => get_post_meta($postId, 'audio_key', true),
+        'scale' => get_post_meta($postId, 'audio_scale', true),
+        'detallesIA' => get_post_meta($postId, 'audio_descripcion', true),
+        'datosAlgoritmo' => $datos_algoritmo_final,
+        'postAut' => get_post_meta($postId, 'postAut', true),
+        'ultimoEdit' => get_post_meta($postId, 'ultimoEdit', true),
+    ];
+}
 
 ?>
