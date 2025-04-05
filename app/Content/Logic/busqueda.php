@@ -1,26 +1,6 @@
 <?php
 
-function buscar_resultados()
-{
-    $texto = sanitize_text_field($_POST['busqueda']);
-    $cache_key = 'resultadoBusqueda_' . md5($texto);
-    $resultados_cache = obtenerCache($cache_key);
-
-    if ($resultados_cache !== false) {
-        wp_send_json(['success' => true, 'data' => $resultados_cache]);
-        return;
-    }
-
-    // Refactor(Org): La lógica de búsqueda ahora reside en SearchService
-    $resultados = realizar_busqueda($texto); // Asume que SearchService.php está incluido
-    $html = generar_html_resultados($resultados);
-
-    guardarCache($cache_key, $html, 7200);
-    wp_send_json(['success' => true, 'data' => $html]);
-}
-
-add_action('wp_ajax_buscarResultado', 'buscar_resultados');
-add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
+// Refactor(Org): Función AJAX buscar_resultados() y sus hooks movidos a app/Services/SearchService.php
 
 // Refactor(Org): Funciones realizar_busqueda, buscar_posts, buscar_usuarios, balancear_resultados y obtenerImagenPost movidas a app/Services/SearchService.php
 

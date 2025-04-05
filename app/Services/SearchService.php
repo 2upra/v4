@@ -139,3 +139,28 @@ function obtenerImagenPost($post_id)
     }
     return false;
 }
+
+// Refactor(Org): Función AJAX buscar_resultados() y sus hooks movidos desde app/Content/Logic/busqueda.php
+function buscar_resultados()
+{
+    $texto = sanitize_text_field($_POST['busqueda']);
+    $cache_key = 'resultadoBusqueda_' . md5($texto);
+    $resultados_cache = obtenerCache($cache_key);
+
+    if ($resultados_cache !== false) {
+        wp_send_json(['success' => true, 'data' => $resultados_cache]);
+        return;
+    }
+
+    // Refactor(Org): La lógica de búsqueda ahora reside en SearchService
+    $resultados = realizar_busqueda($texto); // Llama a función en este mismo archivo
+    // Nota: La función generar_html_resultados() se encuentra en app/Content/Logic/busqueda.php
+    // Asegurarse de que esté disponible globalmente o moverla también si es necesario.
+    $html = generar_html_resultados($resultados);
+
+    guardarCache($cache_key, $html, 7200);
+    wp_send_json(['success' => true, 'data' => $html]);
+}
+
+add_action('wp_ajax_buscarResultado', 'buscar_resultados');
+add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
