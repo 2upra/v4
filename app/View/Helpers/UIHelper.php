@@ -180,3 +180,5 @@ function generarEstilosModalActualizacion()
 // Refactor(Exec): Funcion botonSincronizar() movida a app/View/Helpers/DownloadHelper.php
 
 // Refactor(Exec): Funcion botonComentar() movida a app/View/Helpers/CommentHelper.php
+
+// Refactor(Exec): Funcion modalColeccion() movida a app/View/Modals/CollectionModal.php
