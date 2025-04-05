@@ -24,6 +24,7 @@ function subidaRs()
     #Paso 4
     confirmarArchivos($postId);
     #Paso 5
+    // Refactor(Org): Funciones procesarURLs y procesarArchivo movidas a PostAttachmentService
     procesarURLs($postId);
     #Paso 6
     asignarTags($postId);

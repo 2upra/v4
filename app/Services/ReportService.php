@@ -1,5 +1,6 @@
 <?php
 
+// Refactor(Org): Funcion guardarReporte() y hook AJAX movidos desde Reportar.php
 //que esto en vez de guardarlo en una tabla lo guarde en un post type reporte
 function guardarReporte() {
     // 1. Verificar el nonce
@@ -42,6 +43,4 @@ function guardarReporte() {
     wp_send_json_success('Reporte guardado con ID: ' . $reporte_id);
 }
 add_action('wp_ajax_guardarReporte', 'guardarReporte');
-
-
 

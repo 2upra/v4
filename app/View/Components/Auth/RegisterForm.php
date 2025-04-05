@@ -1,5 +1,6 @@
 <?php
 // Refactor(Org): Moved function registrar_usuario() from app/Authentication/Registrar.php
+// Acción: No se realizaron cambios. La función 'registrar_usuario' no se encontró en 'header.php' y ya existía en este archivo.
 
 function registrar_usuario() {
     if (is_user_logged_in()) return '<div>Hola.</div>';
