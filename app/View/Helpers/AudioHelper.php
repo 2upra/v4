@@ -67,4 +67,6 @@ function reproductor()
 <?
 
 }
+// Acción no realizada: La función reproductor() y su hook ya se encuentran en este archivo (AudioHelper.php).
+// No se encontraron en el archivo de origen especificado (reproductor.php).
 add_action('wp_footer', 'reproductor');
