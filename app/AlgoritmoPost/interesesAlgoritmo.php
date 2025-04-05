@@ -1,20 +1,6 @@
 <?
 
-function obtenerLikesDelUsuario($userId, $limit = 500)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'post_likes';
-    $query = $wpdb->prepare(
-        "SELECT post_id, like_type FROM $table_name WHERE user_id = %d ORDER BY like_date DESC LIMIT %d",
-        $userId,
-        $limit
-    );
-    $liked_posts = $wpdb->get_results($query); // Cambiado a get_results para obtener todas las columnas
-    if (empty($liked_posts)) {
-        return [];
-    }
-    return $liked_posts;
-}
+// Refactor(Org): Función obtenerLikesDelUsuario() movida a app/Services/LikeService.php
 
 function generarMetaDeIntereses($user_id) {
     // Validación inicial del user_id
@@ -24,6 +10,9 @@ function generarMetaDeIntereses($user_id) {
     }
 
     global $wpdb;
+    // La función obtenerLikesDelUsuario se movió a LikeService.php
+    // Se necesita incluir o llamar a la función desde su nueva ubicación.
+    // Por ahora, esta llamada fallará si LikeService.php no está incluido.
     $likePost = obtenerLikesDelUsuario($user_id, 500);
     if (empty($likePost) || !is_array($likePost)) {
         error_log("No se encontraron likes para el usuario: " . $user_id);
