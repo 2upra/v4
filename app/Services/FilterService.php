@@ -27,3 +27,23 @@ function guardarFiltro()
     }
 }
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
+
+// Refactor(Org): Mover función obtenerFiltroActual() y su hook AJAX aquí desde filtroLogic.php
+function obtenerFiltroActual()
+{
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Usuario no autenticado']);
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $filtro_tiempo = intval(get_user_meta($user_id, 'filtroTiempo', true) ?: 0);
+    $nombres_filtros = ['Feed', 'Reciente', 'Semanal', 'Mensual'];
+    $nombre_filtro = $nombres_filtros[$filtro_tiempo] ?? 'Feed';
+
+    wp_send_json_success([
+        'filtroTiempo' => $filtro_tiempo,
+        'nombreFiltro' => $nombre_filtro
+    ]);
+}
+add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
