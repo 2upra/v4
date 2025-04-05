@@ -1,26 +1,4 @@
-<? 
-
-function actualizarConexion() {
-    if (isset($_POST['user_id'])) {
-        $user_id = intval($_POST['user_id']);
-        //guardarLog("ID de usuario recibido: " . $user_id);  
-        $usuario = get_user_by('ID', $user_id);
-        if ($usuario) {
-            update_user_meta($user_id, 'onlineStatus', 'conectado');
-            update_user_meta($user_id, 'ultimaActividad', current_time('timestamp'));
-            //guardarLog("Estado del usuario {$user_id} actualizado a 'conectado'."); 
-            wp_send_json_success('Usuario actualizado como conectado.');
-        } else {
-            //guardarLog("Error: Usuario con ID {$user_id} no encontrado."); 
-            wp_send_json_error('Usuario no encontrado.');
-        }
-    } else {
-        //guardarLog("Error: No se proporcionó un ID de usuario."); 
-        wp_send_json_error('No se proporcionó un ID de usuario.');
-    }
-}
-
-add_action('wp_ajax_actualizarConexion', 'actualizarConexion');
+<?php // Refactor: Función actualizarConexion() y su hook movidos a app/Services/ChatService.php
 
 function verificarConexionReceptor() {
     if (isset($_POST['receptor_id'])) {
