@@ -164,3 +164,5 @@ function buscar_resultados()
 
 add_action('wp_ajax_buscarResultado', 'buscar_resultados');
 add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
+
+// Refactor(Exec): No se realizaron cambios ya que las funciones ya estaban movidas según el contenido proporcionado.
