@@ -54,4 +54,31 @@ function guardarHash($hash, $url, $user_id, $status = 'pending')
     }
 }
 
+// Refactor(Org): Moved function actualizarEstadoArchivo from app/Utils/HashUtils.php
+function actualizarEstadoArchivo($id, $estado)
+{
+    global $wpdb;
+
+    try {
+        ////guardarLog("Intentando actualizar estado del archivo ID: {$id} a {$estado}");
+        $actualizado = $wpdb->update(
+            "{$wpdb->prefix}file_hashes",
+            ['status' => $estado],
+            ['id' => $id],
+            ['%s'],
+            ['%d']
+        );
+
+        if ($actualizado === false) {
+            throw new Exception("Error al actualizar estado para ID: " . $id);
+        }
+
+        ////guardarLog("Estado actualizado para ID {$id}: {$estado}");
+        return true;
+    } catch (Exception $e) {
+        ////guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
+        return false;
+    }
+}
+
 ?>

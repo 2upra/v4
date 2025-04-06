@@ -130,32 +130,7 @@ function recalcularHash($audio_file_path)
     }
 }
 
-
-function actualizarEstadoArchivo($id, $estado)
-{
-    global $wpdb;
-
-    try {
-        ////guardarLog("Intentando actualizar estado del archivo ID: {$id} a {$estado}");
-        $actualizado = $wpdb->update(
-            "{$wpdb->prefix}file_hashes",
-            ['status' => $estado],
-            ['id' => $id],
-            ['%s'],
-            ['%d']
-        );
-
-        if ($actualizado === false) {
-            throw new Exception("Error al actualizar estado para ID: " . $id);
-        }
-
-        ////guardarLog("Estado actualizado para ID {$id}: {$estado}");
-        return true;
-    } catch (Exception $e) {
-        ////guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
-        return false;
-    }
-}
+// Refactor(Org): Moved function actualizarEstadoArchivo to app/Services/FileHashService.php
 
 //tengo una duda, en el caso de administrador, subo una imagen qeu se llama imagen.jpg, y la url de la imagen es asi https://2upra.com/wp-content/uploads/2024/12/imagen-1.jpg, y en guardo en la tabla de hash asi: https://2upra.com/wp-content/uploads/2024/12/imagen-1.jpg, o sea obviamente hay una diferencia entre imagen.jpg y imagen-1.jpg y a hay que averiguar si sucede en el caso de no administrador. Tambien he visto que en algunas opcaciones se borran las imagenes. 
 function subidaArchivo() {
