@@ -200,7 +200,7 @@ function verificarAudio($token)
 
     $refererHost = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     guardarLog("[verificarAudio] info Verificando host del Referer: $refererHost");
-    if ($refererHost !== '2upra.com') {
+    if ($refererHost !== '2upra.com') { // Asegúrate que este sea tu dominio real
         guardarLog("[verificarAudio] error Host del Referer invalido: $refererHost");
         return false;
     }
@@ -380,11 +380,14 @@ function clean_audio_cache()
 
         foreach ($listaArchivos as $rutaArchivo) {
              guardarLog("[clean_audio_cache] info Procesando archivo: $rutaArchivo");
+             // Comprueba si es un archivo y si su última modificación fue hace más de tiempoLimite
             if (is_file($rutaArchivo) && ($tiempoActual - filemtime($rutaArchivo) > $tiempoLimite)) {
-                 guardarLog("[clean_audio_cache] info Archivo antiguo (modificado: " . date('Y-m-d H:i:s' filemtime($rutaArchivo)) . ") eliminando: $rutaArchivo");
+                 // Corrige la sintaxis de la llamada a date() y la concatenación
+                 guardarLog("[clean_audio_cache] info Archivo antiguo (modificado: " . date('Y-m-d H:i:s', filemtime($rutaArchivo)) . ") eliminando: $rutaArchivo");
                 unlink($rutaArchivo);
             } else if (is_file($rutaArchivo)){
-                 guardarLog("[clean_audio_cache] info Archivo conservado (modificado: " . date('Y-m-d H:i:s' filemtime($rutaArchivo)) . "): $rutaArchivo");
+                 // Corrige la sintaxis de la llamada a date() y la concatenación
+                 guardarLog("[clean_audio_cache] info Archivo conservado (modificado: " . date('Y-m-d H:i:s', filemtime($rutaArchivo)) . "): $rutaArchivo");
             } else {
                  guardarLog("[clean_audio_cache] info Elemento omitido (no es archivo): $rutaArchivo");
             }
