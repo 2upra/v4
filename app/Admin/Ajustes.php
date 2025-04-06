@@ -77,27 +77,7 @@ function remplazarFuncionObsoleta()
 add_action('after_setup_theme', 'remplazarFuncionObsoleta');
 
 
-
-function mimesPermitidos($mimes)
-{
-    $mimes['flp'] = 'application/octet-stream';
-    $mimes['zip'] = 'application/zip';
-    $mimes['rar'] = 'application/x-rar-compressed';
-    $mimes['cubase'] = 'application/octet-stream';
-    $mimes['proj'] = 'application/octet-stream';
-    $mimes['aiff'] = 'audio/aiff';
-    $mimes['midi'] = 'audio/midi';
-    $mimes['ptx'] = 'application/octet-stream';
-    $mimes['sng'] = 'application/octet-stream';
-    $mimes['aup'] = 'application/octet-stream';
-    $mimes['omg'] = 'application/octet-stream';
-    $mimes['rpp'] = 'application/octet-stream';
-    $mimes['xpm'] = 'image/x-xpixmap';
-    $mimes['tst'] = 'application/octet-stream';
-
-    return $mimes;
-}
-add_filter('upload_mimes', 'mimesPermitidos');
+// Refactor(Org): Función mimesPermitidos movida a app/Setup/ThemeSetup.php
 
 /*
 nada de esto esta funcionando para mentener la sesion abierta infinitamente
