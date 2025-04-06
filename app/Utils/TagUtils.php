@@ -30,7 +30,7 @@ function obtenerTagsFrecuentes(): array {
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio', 'artista_posible'];
     
     if (empty($resultados)) {
-        error_log('obtenerTagsFrecuentes: No se encontraron resultados en la consulta a la base de datos.');
+        //error_log('obtenerTagsFrecuentes: No se encontraron resultados en la consulta a la base de datos.');
         return [];
     }
 
@@ -39,7 +39,7 @@ function obtenerTagsFrecuentes(): array {
         $datosMeta = json_decode($valorMeta, true);
     
         if (!is_array($datosMeta)) {
-            error_log('obtenerTagsFrecuentes: Valor meta no es un array JSON válido. Valor: ' . $valorMeta);
+            //error_log('obtenerTagsFrecuentes: Valor meta no es un array JSON válido. Valor: ' . $valorMeta);
             continue;
         }
     
@@ -65,7 +65,7 @@ function obtenerTagsFrecuentes(): array {
     guardarCache($claveCache, $top70Tags, $tiempoCache);
 
     if (empty($clavesSeleccionadas)) {
-         error_log('obtenerTagsFrecuentes: No se encontraron tags frecuentes.');
+         //error_log('obtenerTagsFrecuentes: No se encontraron tags frecuentes.');
     }
 
     return $clavesSeleccionadas;
@@ -178,7 +178,7 @@ function verificarYRestaurarDatos($post_id) {
             update_post_meta($post_id, 'datosAlgoritmo', $respaldo);
             
             // Opcional: Registrar la restauración
-            error_log("Datos 'datosAlgoritmo' restaurados desde respaldo para el post ID: " . $post_id);
+            //error_log("Datos 'datosAlgoritmo' restaurados desde respaldo para el post ID: " . $post_id);
         }
     }
 }
@@ -235,7 +235,7 @@ function crearRespaldoYNormalizar($batch_size = 100) {
             $meta_datos = maybe_unserialize($meta_datos_serializados);
             
             if (!is_array($meta_datos)) {
-                error_log("Error al deserializar datosAlgoritmo para post ID: {$row->ID}");
+                //error_log("Error al deserializar datosAlgoritmo para post ID: {$row->ID}");
                 continue;
             }
 
@@ -279,7 +279,7 @@ function crearRespaldoYNormalizar($batch_size = 100) {
 
     } while (count($resultados) === $batch_size);
 
-    error_log("Proceso de respaldo y normalización completado. Total procesados: " . $total_procesados);
+    //error_log("Proceso de respaldo y normalización completado. Total procesados: " . $total_procesados);
     return $total_procesados;
 }
 
@@ -327,7 +327,7 @@ function revertirNormalizacion($batch_size = 100) {
 
     } while (count($resultados) === $batch_size);
 
-    error_log("Proceso de reversión completado. Total revertidos: " . $total_revertidos);
+    //error_log("Proceso de reversión completado. Total revertidos: " . $total_revertidos);
     return $total_revertidos;
 }
 
@@ -381,7 +381,7 @@ function restaurar_datos_algoritmo() {
                 // Restaurar el valor de 'datosAlgoritmo' desde 'datosAlgoritmo_respaldo'
                 // Asumimos que $datos_algoritmo_respaldo es el valor correcto (puede ser serializado o no)
                 update_post_meta($post_id, 'datosAlgoritmo', $datos_algoritmo_respaldo);
-                error_log("Restaurado 'datosAlgoritmo' para el post ID: $post_id");
+                //error_log("Restaurado 'datosAlgoritmo' para el post ID: $post_id");
                 $restaurados_count++;
             }
         }
@@ -390,7 +390,7 @@ function restaurar_datos_algoritmo() {
     }
 
     // Agregar un log para saber que la función se ejecutó y cuántos se restauraron
-    error_log("Restauración de 'datosAlgoritmo' completada. Posts restaurados: " . $restaurados_count);
+    //error_log("Restauración de 'datosAlgoritmo' completada. Posts restaurados: " . $restaurados_count);
 }
 
 // Ejecutar la función de restauración una sola vez al inicio
