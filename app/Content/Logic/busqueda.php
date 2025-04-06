@@ -7,17 +7,6 @@
 
 // Refactor(Exec): Función generar_html_resultados() movida a app/Services/SearchService.php
 
+// Refactor(Exec): Función busqueda() movida a app/View/Components/Forms/SearchForm.php
 
-function busqueda()
-{
-
-    ob_start();
-    ?>
-    <div class="buscadorBL bloque">
-        <input name="buscadorLocal" id="buscadorLocal" placeholder="Ingresa tu busqueda"></input>
-
-        <div class="resultadosBL"></div>
-    </div>
-<?php
-    return ob_get_clean();
-}
+?>
