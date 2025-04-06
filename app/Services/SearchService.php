@@ -140,6 +140,48 @@ function obtenerImagenPost($post_id)
     return false;
 }
 
+// Refactor(Exec): Función generar_html_resultados() movida desde app/Content/Logic/busqueda.php
+function generar_html_resultados($resultados)
+{
+    ob_start();
+    $num_resultados = 0;
+    foreach ($resultados as $grupo) {
+        $num_resultados += count($grupo);
+        foreach ($grupo as $resultado) {
+?>
+            <a href="<?php echo esc_url($resultado['url']); ?>">
+                <div class="resultado-item">
+                    <?php if (!empty($resultado['imagen'])):
+ ?>
+                        <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
+                    <?php endif; ?>
+                    <div class="resultado-info">
+                        <h3><?php echo esc_html($resultado['titulo']); ?></h3>
+                        <p>
+                            <?php
+                            if ($resultado['tipo'] === 'social post') {
+                                echo 'Post';
+                            } else {
+                                echo esc_html($resultado['tipo']);
+                            }
+                            ?>
+                        </p>
+                    </div>
+                </div>
+            </a>
+        <?php
+        }
+    }
+
+    if ($num_resultados === 0) {
+        ?>
+        <div class="resultado-item">No se encontraron resultados.</div>
+    <?php
+    }
+
+    return ob_get_clean();
+}
+
 // Refactor(Org): Función AJAX buscar_resultados() y sus hooks movidos desde app/Content/Logic/busqueda.php
 function buscar_resultados()
 {
@@ -154,8 +196,7 @@ function buscar_resultados()
 
     // Refactor(Org): La lógica de búsqueda ahora reside en SearchService
     $resultados = realizar_busqueda($texto); // Llama a función en este mismo archivo
-    // Nota: La función generar_html_resultados() se encuentra en app/Content/Logic/busqueda.php
-    // Asegurarse de que esté disponible globalmente o moverla también si es necesario.
+    // Refactor(Exec): La función generar_html_resultados() ahora está en este archivo.
     $html = generar_html_resultados($resultados);
 
     guardarCache($cache_key, $html, 7200);
@@ -166,3 +207,4 @@ add_action('wp_ajax_buscarResultado', 'buscar_resultados');
 add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
 // Refactor(Exec): No se realizaron cambios ya que las funciones ya estaban movidas según el contenido proporcionado.
+// Nota: El comentario anterior se refería a otras funciones, no a generar_html_resultados.
