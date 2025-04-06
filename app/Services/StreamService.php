@@ -326,9 +326,3 @@ function desprogramarLimpiezaCacheAudio() {
     }
 }
 register_deactivation_hook(__FILE__, 'desprogramarLimpiezaCacheAudio');
-
-# Funcion de ejemplo para guardar logs, adapta esto a tu contexto.
-function guardarLog($nombreFuncion, $mensaje) {
-    $fecha = date('Y-m-d H:i:s');
-    error_log("[{$fecha}] {$nombreFuncion}: {$mensaje}\n", 3, __DIR__ . '/audio_debug.log');
-}
