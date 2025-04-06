@@ -17,4 +17,6 @@ Este archivo ha sido creado por el usuario humano que maneja de este proyecto pa
 
 // Refactor(Org): Moved function recalcularHash to app/Services/FileHashService.php tu acción, despues de momverla a la carpeta services, la mueves a la carpeta utils, y asi, a veces en bucle repite movera como si no te decidieras si es un servicio o mejor va en la carpeta utils. No se cual es la mejor solución, pero mejor decidite y toma en cuenta los comentarios de los movimientos realizados para que no caigas en bucle. 
 
+Si el archivo se encuentra ya en una carpeta de services o utils (carpetas que has creaodo tu) es porque ya esta ordenado, enfocate en las demás cosas. 
+
 */
