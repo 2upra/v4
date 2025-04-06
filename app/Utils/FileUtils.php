@@ -129,3 +129,9 @@ function adjuntarArchivo($newPostId, $fileUrl) {
 
     return false;
 }
+
+// Refactor(Org): Moved function nombreUnicoFile from HashUtils.php
+function nombreUnicoFile($dir, $name, $ext)
+{
+    return basename($name, $ext) . $ext;
+}

@@ -205,7 +205,7 @@ function subidaArchivo() {
 
             $movefile = wp_handle_upload($file, array(
                 'test_form' => false,
-                'unique_filename_callback' => 'nombreUnicoFile',
+                'unique_filename_callback' => 'nombreUnicoFile', // Note: This function is now in FileUtils.php
             ));
 
             // Eliminar el filtro después de la carga si se aplicó
@@ -267,7 +267,7 @@ function subidaArchivo() {
 
     $movefile = wp_handle_upload($file, array(
         'test_form' => false,
-        'unique_filename_callback' => 'nombreUnicoFile',
+        'unique_filename_callback' => 'nombreUnicoFile', // Note: This function is now in FileUtils.php
     ));
 
     // Eliminar el filtro después de la carga si se aplicó
@@ -366,16 +366,7 @@ function actualizarUrlArchivo($file_id, $new_url)
     return $resultado;
 }
 
-
-
-
-
-function nombreUnicoFile($dir, $name, $ext)
-{
-    return basename($name, $ext) . $ext;
-}
-
-
+// Refactor(Org): Moved function nombreUnicoFile to FileUtils.php
 
 
 
