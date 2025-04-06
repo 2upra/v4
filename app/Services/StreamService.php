@@ -1,4 +1,6 @@
-<?php
+<?
+define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
+
 
 // Function moved from app/Functions/streamPro.php
 function audioStreamEndPro($request) {
@@ -32,7 +34,18 @@ function audioStreamEndPro($request) {
     exit;
 }
 
-// Refactor(Org): Moved streaming functions from app/Functions/stream.php
+
+// Añade esto al inicio de tu archivo
+add_action('init', function () {
+    if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
+        return;
+    }
+    $user_id = wp_validate_auth_cookie('', 'logged_in');
+    if ($user_id) {
+        wp_set_current_user($user_id);
+    }
+});
+
 function audioUrlSegura($audio_id)
 {
     //guardarLog("Generando URL segura para audio ID: " . $audio_id);
@@ -88,6 +101,36 @@ function decrementaUsosToken($unique_id)
         }
     }
 }
+
+/*
+el ataque se recibio aca, como se hace para bloquear automaticamente solicitudes repetidas de esta forma 
+172.70.254.90 - - [18/Dec/2024:01:03:18 +0100] "GET /wp-json/1/v1/2?token=dasodnsaodnoasdoasnodnasodnoasndoasdmkasmdoasmdqwei0uohfnwriojfnwerio HTTP/1.1" 401 116 "-" "python-requests/2.32.3"
+*/
+
+add_action('rest_api_init', function () {
+    //guardarLog('Registrando rutas REST API');
+
+    // Ruta para usuarios pro
+    register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEndPro',
+        'permission_callback' => function () {
+            return usuarioEsAdminOPro(get_current_user_id());
+        },
+        'args' => array(
+            'id' => array(
+                'validate_callback' => function ($param) {
+                    return is_numeric($param);
+                }
+            ),
+        ),
+    ));
+
+    // Refactor(Org): Ruta para usuarios normales movida a StreamService.php
+    // register_rest_route('1/v1', '/2', ...);
+
+    //guardarLog('Rutas REST API registradas');
+});
 
 function verificarAudio($token)
 {
@@ -223,7 +266,6 @@ function verificarAudio($token)
     }
 }
 
-// Refactor(Org): Función tokenAudio() movida desde app/Functions/stream.php
 function tokenAudio($audio_id)
 {
     //guardarLog("Generando token para audio_id: $audio_id");
@@ -264,3 +306,58 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
+
+
+
+
+
+
+// Refactor(Org): Función audioStreamEnd() movida a StreamService.php
+/*
+function audioStreamEnd($data)
+{
+    // ... (contenido original eliminado)
+}
+*/
+
+
+
+// Registra el cron job
+add_action('wp', 'schedule_audio_cache_cleanup');
+
+function schedule_audio_cache_cleanup()
+{
+    if (!wp_next_scheduled('audio_cache_cleanup')) {
+        wp_schedule_event(time(), 'daily', 'audio_cache_cleanup');
+    }
+}
+
+// Función para limpiar el caché
+add_action('audio_cache_cleanup', 'clean_audio_cache');
+
+function clean_audio_cache()
+{
+    $upload_dir = wp_upload_dir();
+    $cache_dir = $upload_dir['basedir'] . '/audio_cache';
+
+    if (is_dir($cache_dir)) {
+        $files = glob($cache_dir . '/*');
+        $now = time();
+
+        foreach ($files as $file) {
+            if (is_file($file) && ($now - filemtime($file) > 7 * 24 * 60 * 60)) {
+                unlink($file);
+            }
+        }
+    }
+}
+
+// Desprogramar el cron job cuando el plugin se desactiva
+function unschedule_audio_cache_cleanup()
+{
+    $timestamp = wp_next_scheduled('audio_cache_cleanup');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'audio_cache_cleanup');
+    }
+}
+register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
