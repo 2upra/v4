@@ -90,6 +90,7 @@ function rehacerDescripcionAudio($idPost, $archivoAudio)
     }
 }
 
+// Refactor(Org): Función corregirTags() movida desde estado.php
 // Permite corregir los tags de un post a través de una solicitud AJAX.
 function corregirTags()
 {

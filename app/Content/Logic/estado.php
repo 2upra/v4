@@ -2,7 +2,8 @@
 
 // Funciones y hooks relacionados con el estado del post movidos a app/Services/Post/PostStatusService.php
 
-add_action('wp_ajax_corregirTags', 'corregirTags');
+// Refactor(Org): Hook AJAX corregirTags movido a PostContentService.php junto con su función
+
 // Refactor(Org): Hook AJAX cambiarTitulo movido a PostTitleService.php
 
 
