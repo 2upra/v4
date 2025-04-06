@@ -103,3 +103,11 @@ function limpiarVistasAntiguas($vistas, $dias)
 // Hooks AJAX para guardarVista() movidos desde app/Utils/AnalyticsUtils.php
 add_action('wp_ajax_guardar_vistas', 'guardarVista');        // Para usuarios logueados
 add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVista'); // Para usuarios no logueados
+
+// Refactor(Exec): Moved function vistasDatos from app/Content/Logic/datosParaCalculo.php
+function vistasDatos($userId) {
+    $tiempoInicio = microtime(true);
+    $vistas = get_user_meta($userId, 'vistas_posts', true);
+    //rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
+    return $vistas;
+}

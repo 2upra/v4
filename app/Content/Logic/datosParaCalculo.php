@@ -15,12 +15,7 @@
 
 // Funcion obtenerInteresesUsuario movida a app/Services/UserService.php
 
-function vistasDatos($userId) {
-    $tiempoInicio = microtime(true);
-    $vistas = get_user_meta($userId, 'vistas_posts', true);
-    //rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
-    return $vistas;
-}
+// Refactor(Exec): Moved function vistasDatos to app/Services/AnalyticsService.php
 
 function obtenerIdsPostsRecientes() {
     $tiempoInicio = microtime(true);
