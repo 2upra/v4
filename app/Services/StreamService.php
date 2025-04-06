@@ -223,6 +223,7 @@ function verificarAudio($token)
     }
 }
 
+// Refactor(Org): Función tokenAudio() movida desde app/Functions/stream.php
 function tokenAudio($audio_id)
 {
     //guardarLog("Generando token para audio_id: $audio_id");

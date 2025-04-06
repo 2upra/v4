@@ -232,3 +232,4 @@ function unschedule_audio_cache_cleanup()
 }
 register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
 
+// Refactor(Org): Función tokenAudio() eliminada de este archivo y movida/confirmada en app/Services/StreamService.php
