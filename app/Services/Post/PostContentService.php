@@ -122,7 +122,7 @@ function corregirTags()
     wp_send_json_success();
 }
 
-add_action('wp_ajax_corregirTags', 'corregirTags');
+
 
 // Inicia el proceso para rehacer el JSON de un post.
 function rehacerJsonPost($idPost, $descripcion)
@@ -171,8 +171,8 @@ function rehacerJson($idPost, $audio, $descripcion)
         return;
     }
 
-    $descripcionLimpia = preg_replace('/```(?:json)?\n/', '', $descripcionMejorada);
-    $descripcionLimpia = preg_replace('/\n```/', '', $descripcionLimpia);
+    $descripcionLimpia = preg_replace('/```(?:json)?\\n/', '', $descripcionMejorada);
+    $descripcionLimpia = preg_replace('/\\n```/', '', $descripcionLimpia);
     $datosActualizados = json_decode($descripcionLimpia, true);
 
     if (json_last_error() === JSON_ERROR_NONE) {
@@ -199,3 +199,7 @@ function rehacerJson($idPost, $audio, $descripcion)
         }
     }
 }
+
+// Refactor(Org): Moved AJAX action hooks from estado.php
+add_action('wp_ajax_cambiarDescripcion', 'cambiarDescripcion');
+add_action('wp_ajax_corregirTags', 'corregirTags');
