@@ -138,3 +138,17 @@ if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
 // Hook the regeneration function to the scheduled event
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
+// Refactor(Org): Moved from app/Functions/protegerAudio.php - Hook to prevent audio file deletion.
+add_filter('pre_delete_attachment', function($delete, $post) {
+    // Check if the file being deleted is within the '/audio/' directory
+    $file_path = get_attached_file($post->ID); // Use $post->ID to get the attachment ID
+    if ($file_path && strpos($file_path, '/audio/') !== false) {
+        // Log the attempt and prevent deletion
+        // Assuming logAudio function is available globally
+        logAudio("Intento de eliminación PREVENIDO de archivo de audio protegido: " . $file_path . " (Post ID: " . $post->ID . ")");
+        return false; // Prevent deletion
+    }
+    // Allow deletion for other attachments
+    return $delete;
+}, 10, 2);
+

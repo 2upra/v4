@@ -1,17 +1,5 @@
 <?php // Refactor(Org): Removed regenerarLite(), intervalo_cada_seis_horas() and associated cron hooks. Moved to app/Services/AudioProcessingService.php
-
-add_filter('pre_delete_attachment', function($delete, $post) {
-    // Check if the file being deleted is within the '/audio/' directory
-    $file_path = get_attached_file($post->ID); // Use $post->ID to get the attachment ID
-    if ($file_path && strpos($file_path, '/audio/') !== false) {
-        // Log the attempt and prevent deletion
-        // Assuming logAudio function is available globally
-        logAudio("Intento de eliminación PREVENIDO de archivo de audio protegido: " . $file_path . " (Post ID: " . $post->ID . ")");
-        return false; // Prevent deletion
-    }
-    // Allow deletion for other attachments
-    return $delete;
-}, 10, 2);
+// Refactor(Org): Moved pre_delete_attachment hook to app/Services/AudioProcessingService.php
 
 
 // Function to add a 55-minute interval
@@ -261,4 +249,3 @@ function optimizarAudioPost($post_id) {
         // update_post_meta($post_id, 'audio_optimizado_error', 'No se encontró post_audio meta');
     }
 }
-
