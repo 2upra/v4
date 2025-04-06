@@ -274,4 +274,21 @@ function saberSi($user_id) {
     update_user_meta($user_id, 'leGustaAlMenosUnaRola', $le_gusta_rola);
 }
 
+// Refactor(Org): Función obtenerLikesDelUsuario() movida desde app/AlgoritmoPost/interesesAlgoritmo.php
+function obtenerLikesDelUsuario($userId, $limit = 500)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'post_likes';
+    $query = $wpdb->prepare(
+        "SELECT post_id, like_type FROM $table_name WHERE user_id = %d ORDER BY like_date DESC LIMIT %d",
+        $userId,
+        $limit
+    );
+    $liked_posts = $wpdb->get_results($query); // Cambiado a get_results para obtener todas las columnas
+    if (empty($liked_posts)) {
+        return [];
+    }
+    return $liked_posts;
+}
+
 ?>

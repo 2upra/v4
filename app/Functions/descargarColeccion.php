@@ -2,35 +2,7 @@
 
 // Refactor(Org): Función procesarColeccion() movida a app/Services/DownloadService.php
 
-function generarEnlaceDescargaColeccion($userID, $zipPath, $postId)
-{
-    $token = bin2hex(random_bytes(16));
-
-    $token_data = array(
-        'user_id' => $userID,
-        'zip_path' => $zipPath, // Guarda la ruta física
-        'post_id' => $postId,
-        'time' => time(),
-        'usos' => 0,
-        'tipo' => 'coleccion'
-    );
-
-    error_log("--------------------------------------------------");
-    error_log("[Inicio] Generando enlace de descarga de colección. UserID: " . $userID . ", ZipPath: " . $zipPath . ", Token: " . $token . ", Time: " . time());
-
-    set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS); // válido por 1 hora
-    error_log("Token data set in transient: " . print_r($token_data, true));
-
-    $enlaceDescarga = add_query_arg([
-        'descarga_token' => $token,
-        'tipo'          => 'coleccion'
-    ], home_url());
-
-    error_log("Enlace de descarga de colección generado: " . $enlaceDescarga);
-    error_log("[Fin] Generando enlace de descarga de colección.");
-    error_log("--------------------------------------------------");
-    return $enlaceDescarga;
-}
+// Refactor(Org): Función generarEnlaceDescargaColeccion() movida a app/Services/DownloadService.php
 
 function descargaAudioColeccion()
 {
