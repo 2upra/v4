@@ -15,6 +15,6 @@ Este archivo ha sido creado por el usuario humano que maneja de este proyecto pa
 
 1) te quedas en bucles absurdos, por ejemplo 
 
-// Refactor(Org): Moved function recalcularHash to app/Services/FileHashService.php tu acción, despues de vomverla a la carpeta services, la mueves a la carpeta utils, y asi, a veces en bucle repite movera como si no te decidieras si es un servicio o mejor va en la carpeta utils. No se cual es la mejor solución, pero mejor decidite y toma en cuenta los comentarios de los movimientos realizados para que no caigas en bucle. 
+// Refactor(Org): Moved function recalcularHash to app/Services/FileHashService.php tu acción, despues de momverla a la carpeta services, la mueves a la carpeta utils, y asi, a veces en bucle repite movera como si no te decidieras si es un servicio o mejor va en la carpeta utils. No se cual es la mejor solución, pero mejor decidite y toma en cuenta los comentarios de los movimientos realizados para que no caigas en bucle. 
 
 */
