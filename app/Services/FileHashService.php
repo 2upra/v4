@@ -290,4 +290,23 @@ function subidaArchivo() {
 
 add_action('wp_ajax_file_upload', 'subidaArchivo');
 
+// Refactor(Org): Moved function eliminarPorHash from app/Utils/HashUtils.php
+function eliminarPorHash($file_hash)
+{
+    global $wpdb;
+    $resultado = (bool) $wpdb->delete(
+        "{$wpdb->prefix}file_hashes",
+        array('file_hash' => $file_hash),
+        array('%s')
+    );
+
+    if ($resultado) {
+        ////guardarLog("eliminarPorHash: Registro eliminado con hash: $file_hash");
+    } else {
+        ////guardarLog("eliminarPorHash: Error al eliminar el registro con hash: $file_hash");
+    }
+
+    return $resultado;
+}
+
 ?>

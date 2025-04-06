@@ -132,23 +132,7 @@ function eliminarHash($id)
     return $resultado;
 }
 
-function eliminarPorHash($file_hash)
-{
-    global $wpdb;
-    $resultado = (bool) $wpdb->delete(
-        "{$wpdb->prefix}file_hashes",
-        array('file_hash' => $file_hash),
-        array('%s')
-    );
-
-    if ($resultado) {
-        ////guardarLog("eliminarPorHash: Registro eliminado con hash: $file_hash");
-    } else {
-        ////guardarLog("eliminarPorHash: Error al eliminar el registro con hash: $file_hash");
-    }
-
-    return $resultado;
-}
+// Refactor(Org): Moved function eliminarPorHash to app/Services/FileHashService.php
 
 function obtenerFileIDPorURL($url)
 {
