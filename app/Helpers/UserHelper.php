@@ -66,3 +66,16 @@ function usuarioEsAdminOPro($user_id)
     ////guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
+
+// Refactor(Exec): Moved function validarUsuario from app/Content/Logic/datosParaCalculo.php
+function validarUsuario($userId) {
+    $tiempoInicio = microtime(true);
+    if (!$userId) {
+        //guardarLog("[validarUsuario] Error: ID de usuario no válido");
+        //rendimientolog("[validarUsuario] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
+        return false;
+    }
+    return true;
+}
+
+?>

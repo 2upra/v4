@@ -71,7 +71,7 @@ function obtenerTagsFrecuentes(): array {
     return $clavesSeleccionadas;
 }
 
-// Function tagsPosts moved to app/View/Helpers/TagHelper.php
+// Refactor(Org): Funcion tagsPosts() movida a app/View/Helpers/TagHelper.php
 
 // Funciones movidas desde app/Functions/normalizarTags.php
 function normalizarNuevoPost($post_id, $post, $update) {

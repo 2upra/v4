@@ -11,15 +11,7 @@
 
 // Refactor(Org): Moved function comprobarConexionBD to app/Utils/DatabaseUtils.php
 
-function validarUsuario($userId) {
-    $tiempoInicio = microtime(true);
-    if (!$userId) {
-        //guardarLog("[validarUsuario] Error: ID de usuario no válido");
-        //rendimientolog("[validarUsuario] Terminó con error (ID de usuario no válido) en " . (microtime(true) - $tiempoInicio) . " segundos");
-        return false;
-    }
-    return true;
-}
+// Refactor(Exec): Moved function validarUsuario to app/Helpers/UserHelper.php
 
 // Funcion obtenerInteresesUsuario movida a app/Services/UserService.php
 

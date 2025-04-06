@@ -303,4 +303,26 @@ function extender_wp_check_filetype($types, $filename, $mimes)
 }
 add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
 
+// Refactor(Org): Función mimesPermitidos movida desde app/Admin/Ajustes.php
+function mimesPermitidos($mimes)
+{
+    $mimes['flp'] = 'application/octet-stream';
+    $mimes['zip'] = 'application/zip';
+    $mimes['rar'] = 'application/x-rar-compressed';
+    $mimes['cubase'] = 'application/octet-stream';
+    $mimes['proj'] = 'application/octet-stream';
+    $mimes['aiff'] = 'audio/aiff';
+    $mimes['midi'] = 'audio/midi';
+    $mimes['ptx'] = 'application/octet-stream';
+    $mimes['sng'] = 'application/octet-stream';
+    $mimes['aup'] = 'application/octet-stream';
+    $mimes['omg'] = 'application/octet-stream';
+    $mimes['rpp'] = 'application/octet-stream';
+    $mimes['xpm'] = 'image/x-xpixmap';
+    $mimes['tst'] = 'application/octet-stream';
+
+    return $mimes;
+}
+add_filter('upload_mimes', 'mimesPermitidos');
+
 ?>
