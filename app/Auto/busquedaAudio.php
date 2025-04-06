@@ -308,15 +308,7 @@ function sonHashesSimilaresAut($hash1, $hash2, $umbral = 0.85)
     return $similitud >= $umbral;
 }
 
-
-function obtenerHash($file_hash)
-{
-    global $wpdb;
-    return $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
-        $file_hash
-    ), ARRAY_A);
-}
+// Refactor(Org): Moved function obtenerHash to app/Services/FileHashService.php
 
 function enviarAudioaProcesar($audio, $file_hash)
 {

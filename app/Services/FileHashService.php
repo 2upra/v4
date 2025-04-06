@@ -94,4 +94,14 @@ function confirmarHashId($file_id)
     );
 }
 
+// Refactor(Org): Moved function obtenerHash from app/Auto/busquedaAudio.php
+function obtenerHash($file_hash)
+{
+    global $wpdb;
+    return $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
+        $file_hash
+    ), ARRAY_A);
+}
+
 ?>
