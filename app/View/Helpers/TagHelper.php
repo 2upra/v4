@@ -1,6 +1,6 @@
 <?php
 
-// Moved from app/Utils/TagUtils.php
+// Refactor(Org): Funcion tagsPosts() movida desde app/Utils/TagUtils.php
 function tagsPosts() {
     $tagsFrecuentes = obtenerTagsFrecuentes();
 
