@@ -343,4 +343,33 @@ function obtenerFileIDPorURL($url)
     }
 }
 
+// Refactor(Org): Moved function limpiarArchivosPendientes() and its hook/schedule from app/Utils/HashUtils.php
+function limpiarArchivosPendientes()
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'file_hashes';
+    
+    $archivos_pendientes = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM $table_name WHERE status = 'pending' AND upload_date < %s",
+            date('Y-m-d H:i:s', strtotime('-24 hours'))
+        ),
+        ARRAY_A
+    );
+
+    foreach ($archivos_pendientes as $archivo) {
+        $file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $archivo['file_url']);
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+        $wpdb->delete($table_name, array('id' => $archivo['id']));
+        ////guardarLog("Archivo pendiente eliminado: " . $archivo['file_url']);
+    }
+}
+
+if (!wp_next_scheduled('limpiar_archivos_pendientes')) {
+    wp_schedule_event(time(), 'daily', 'limpiar_archivos_pendientes');
+}
+add_action('limpiar_archivos_pendientes', 'limpiarArchivosPendientes');
+
 ?>
