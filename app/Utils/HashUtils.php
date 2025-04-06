@@ -122,24 +122,7 @@ function recalcularHash($audio_file_path)
 
 // Refactor(Org): Moved function eliminarPorHash to app/Services/FileHashService.php
 
-function obtenerFileIDPorURL($url)
-{
-    global $wpdb;
-
-    $file_id = $wpdb->get_var(
-        $wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_url = %s",
-            $url
-        )
-    );
-
-    if ($file_id !== null) {
-        return (int) $file_id;
-    } else {
-        //////guardarLog("No se encontró File ID para la URL: $url");
-        return false;
-    }
-}
+// Refactor(Org): Moved function obtenerFileIDPorURL to app/Services/FileHashService.php
 
 // Ejecutar la función
 
