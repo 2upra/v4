@@ -309,4 +309,18 @@ function eliminarPorHash($file_hash)
     return $resultado;
 }
 
+// Refactor(Org): Moved function eliminarHash from app/Utils/HashUtils.php
+function eliminarHash($id)
+{
+    global $wpdb;
+    $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
+    if ($resultado) {
+        ////guardarLog("eliminarHash: Registro eliminado con ID: $id");
+    } else {
+        ////guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
+    }
+
+    return $resultado;
+}
+
 ?>

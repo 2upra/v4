@@ -118,19 +118,7 @@ function recalcularHash($audio_file_path)
 // Refactor(Org): Moved function confirmarHashId to app/Services/FileHashService.php
 
 
-
-function eliminarHash($id)
-{
-    global $wpdb;
-    $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
-    if ($resultado) {
-        ////guardarLog("eliminarHash: Registro eliminado con ID: $id");
-    } else {
-        ////guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
-    }
-
-    return $resultado;
-}
+// Refactor(Org): Moved function eliminarHash to app/Services/FileHashService.php
 
 // Refactor(Org): Moved function eliminarPorHash to app/Services/FileHashService.php
 
