@@ -30,20 +30,20 @@ function iniciar_sesion()
                 exit;
             }
         } else {
-            $mensaje = '<div class=\"error-mensaje\">Error al iniciar sesión. Por favor, verifica tus credenciales.</div>';
+            $mensaje = '<div class="error-mensaje">Error al iniciar sesión. Por favor, verifica tus credenciales.</div>';
         }
     }
 
     ob_start();
 ?>
-    <div class=\"PUWJVS\">
-        <form class=\"CXHMID\" action=\"\" method=\"post\">
-            <div class=\"XUSEOO\">
-                <div class=\"XYSRLL\">
+    <div class="PUWJVS">
+        <form class="CXHMID" action="" method="post">
+            <div class="XUSEOO">
+                <div class="XYSRLL">
 
 
 
-                    <button type=\"button\" class=\"R0A915 botonprincipal A1 A2\" id=\"google-login-btn\">
+                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <? echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
 
@@ -149,14 +149,14 @@ function iniciar_sesion()
 
 
 
-                    <button type=\"button\" class=\"R0A915 A1 boton-cerrar\">Volver</button>
-                    <p><a href=\"https://2upra.com/tc/\">Política de privacidad</a></p>
+                    <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
+                    <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
                 </div>
                 <? echo $mensaje; ?>
             </div>
         </form>
-        <div class=\"RFZJUH\">
-            <div class=\"HPUYVS\" id=\"fondograno\"><? echo $GLOBALS['iconologo1']; ?></div>
+        <div class="RFZJUH">
+            <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
     </div>
 <?
