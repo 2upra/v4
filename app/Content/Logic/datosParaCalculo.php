@@ -5,80 +5,7 @@
 */
 
 // Refactor(Org): Moved function obtenerInteresesUsuario to app/Services/UserService.php
-
-function obtenerDatosFeed($userId) {
-    $log = "[obtenerDatosFeed] Inicio para usuario ID: $userId \n";
-    $tiempoInicio = microtime(true);
-
-    try {
-        if (!comprobarConexionBD()) {
-            $log .= "[obtenerDatosFeed] Error: No se pudo conectar a la base de datos. \n";
-            //guardarLog($log);
-            return [];
-        }
-
-        if (!validarUsuario($userId)) {
-            $log .= "[obtenerDatosFeed] Error: Usuario no válido. \n";
-            //guardarLog($log);
-            return [];
-        }
-
-        // Funcion obtenerUsuariosSeguidos movida a app/Services/FollowService.php
-        // Se asume que la función está disponible globalmente o se cargará desde FollowService
-        $siguiendo = obtenerUsuariosSeguidos($userId);
-        // Se asume que la función obtenerInteresesUsuario está disponible globalmente (movida a UserService.php)
-        $intereses = obtenerInteresesUsuario($userId);
-        $vistas = vistasDatos($userId);
-        generarMetaDeIntereses($userId);
-        $log .= "[obtenerDatosFeed] Tiempo para vistas y generarMetaDeIntereses: " . (microtime(true) - $tiempoInicio) . " segundos \n";
-
-        $postsIds = obtenerIdsPostsRecientes();
-        if (empty($postsIds)) {
-            $log .= "[obtenerDatosFeed] Aviso: No se encontraron posts recientes. \n";
-            //guardarLog($log);
-            $log .= "[obtenerDatosFeed] Terminó con aviso (sin posts) en " . (microtime(true) - $tiempoInicio) . " segundos \n";
-            return [];
-        }
-        $cacheKey = 'metaData_' . md5(implode('_', $postsIds));
-        $metaData = obtenerCache($cacheKey);
-
-        if ($metaData === false) {
-            $metaData = obtenerMetadatosPosts($postsIds);
-            guardarCache($cacheKey, $metaData, 14400); 
-        } else {
-            $log .= "[obtenerDatosFeed] MetaData obtenido de la caché. \n";
-        }
-
-        $metaRoles = procesarMetadatosRoles($metaData);
-        // Refactor(Org): Función obtenerLikesPorPost() movida a app/Services/LikeService.php
-        // Se asume que la función está disponible globalmente o se cargará desde LikeService
-        $likesPorPost = obtenerLikesPorPost($postsIds);
-        $postsResultados = obtenerDatosBasicosPosts($postsIds);
-        $postContenido = procesarContenidoPosts($postsResultados);
-
-        $tiempoFin = microtime(true);
-        $tiempoTotal = $tiempoFin - $tiempoInicio;
-        $log .= "[obtenerDatosFeed] Fin. Tiempo total: $tiempoTotal segundos";
-        guardarLog($log);
-
-        return [
-            'siguiendo'        => $siguiendo,
-            'interesesUsuario' => $intereses,
-            'posts_ids'        => $postsIds,
-            'likes_by_post'    => $likesPorPost,
-            'meta_data'        => $metaData,
-            'meta_roles'       => $metaRoles,
-            'author_results'   => $postsResultados,
-            'post_content'     => $postContenido,
-        ];
-
-    } catch (Exception $e) {
-        $log .= "[obtenerDatosFeed] Error: " . $e->getMessage() . "\n";
-        //guardarLog($log);
-        $log .= "[obtenerDatosFeed] Terminó con error en " . (microtime(true) - $tiempoInicio) . " segundos \n";
-        return [];
-    }
-}
+// Refactor(Exec): Moved functions obtenerDatosFeed and obtenerDatosFeedConCache to app/Services/FeedService.php
 
 // Funcion obtenerUsuariosSeguidos movida a app/Services/FollowService.php
 
@@ -208,24 +135,3 @@ function procesarContenidoPosts($postsResultados) {
     return $postContenido;
 }
 
-function obtenerDatosFeedConCache($userId)
-{
-    $cache_key = 'feed_datos_' . $userId;
-    $datos = obtenerCache($cache_key);
-
-    if (false === $datos) {
-        //guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
-        $datos = obtenerDatosFeed($userId);
-        guardarCache($cache_key, $datos, 43200); // Guarda en caché por 12 horas
-        //guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
-    } else {
-        //guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
-    }
-
-    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        ////guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
-        return [];
-    }
-
-    return $datos;
-}
