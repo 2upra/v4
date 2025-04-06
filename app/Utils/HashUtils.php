@@ -33,34 +33,7 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
     return $similitud >= $umbral;
 }
 
-
-function handle_recalcular_hash()
-{
-    try {
-        if (!isset($_FILES['audio_file']) || $_FILES['audio_file']['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error(['message' => 'No se pudo subir el archivo o está corrupto.']);
-        }
-        $audio_file = $_FILES['audio_file'];
-        $allowed_mime_types = ['audio/mpeg', 'audio/wav'];
-        if (!in_array($audio_file['type'], $allowed_mime_types)) {
-            wp_send_json_error(['message' => 'Tipo de archivo no permitido.']);
-        }
-        $upload_dir = wp_upload_dir();
-        $temp_file_path = $upload_dir['path'] . '/' . basename($audio_file['name']);
-        if (!move_uploaded_file($audio_file['tmp_name'], $temp_file_path)) {
-            wp_send_json_error(['message' => 'Error al mover el archivo subido.']);
-        }
-        $hash = recalcularHash($temp_file_path);
-        if ($hash === false) {
-            wp_send_json_error(['message' => 'Error al generar el hash del archivo.']);
-        }
-        unlink($temp_file_path);
-        wp_send_json_success(['hash' => $hash]);
-    } catch (Exception $e) {
-        wp_send_json_error(['message' => $e->getMessage()]);
-    }
-}
-add_action('wp_ajax_recalcularHash', 'handle_recalcular_hash');
+// Refactor(Org): Moved function handle_recalcular_hash() and its hook to app/Services/FileHashService.php
 
 function recalcularHash($audio_file_path)
 {
