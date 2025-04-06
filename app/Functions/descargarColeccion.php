@@ -8,32 +8,7 @@
 
 // Refactor(Org): Función agregarArchivosAlZip() movida a app/Services/DownloadService.php
 
-function clasificarSamples(array $samples, int $userId): array
-{
-    $functionName = __FUNCTION__;
-    $samplesDescargados = [];
-    $samplesNoDescargados = [];
-
-    foreach ($samples as $sampleId) {
-        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
-
-        if (!is_array($descargasAnteriores)) {
-            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
-            $descargasAnteriores = [];
-        }
-
-        if (isset($descargasAnteriores[$sampleId])) {
-            $samplesDescargados[] = $sampleId;
-        } else {
-            $samplesNoDescargados[] = $sampleId;
-        }
-    }
-
-    //error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
-    //error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
-
-    return [$samplesDescargados, $samplesNoDescargados];
-}
+// Refactor(Org): Función clasificarSamples() movida a app/Services/DownloadService.php
 
 function actualizarDescargas(int $userId, array $samplesNoDescargados, array $samplesDescargados): void
 {

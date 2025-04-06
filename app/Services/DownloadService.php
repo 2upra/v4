@@ -41,6 +41,7 @@ function procesarColeccion($postId, $userId, $sync = false)
         }
     }
 
+    // Refactor(Org): Función clasificarSamples() movida desde app/Functions/descargarColeccion.php
     list($samplesDescargados, $samplesNoDescargados) = clasificarSamples($samples, $userId);
     $numSamplesNoDescargados = count($samplesNoDescargados);
 
@@ -118,6 +119,34 @@ function procesarColeccion($postId, $userId, $sync = false)
     } else {
         return true;
     }
+}
+
+// Refactor(Org): Función clasificarSamples() movida desde app/Functions/descargarColeccion.php
+function clasificarSamples(array $samples, int $userId): array
+{
+    $functionName = __FUNCTION__;
+    $samplesDescargados = [];
+    $samplesNoDescargados = [];
+
+    foreach ($samples as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        if (isset($descargasAnteriores[$sampleId])) {
+            $samplesDescargados[] = $sampleId;
+        } else {
+            $samplesNoDescargados[] = $sampleId;
+        }
+    }
+
+    //error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
+    //error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
+
+    return [$samplesDescargados, $samplesNoDescargados];
 }
 
 // Refactor(Org): Función generarEnlaceDescargaColeccion() movida desde app/Functions/descargarColeccion.php
