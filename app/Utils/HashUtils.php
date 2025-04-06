@@ -35,73 +35,7 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
 
 // Refactor(Org): Moved function handle_recalcular_hash() and its hook to app/Services/FileHashService.php
 
-function recalcularHash($audio_file_path)
-{
-    try {
-        // Verificaciones iniciales
-        if (!is_string($audio_file_path) || empty($audio_file_path)) {
-            throw new Exception("Ruta de archivo inválida: " . $audio_file_path);
-        }
-
-        $file_path = $audio_file_path;
-
-        // Verificaciones de archivo
-        if (!file_exists($file_path)) {
-            throw new Exception("Archivo no encontrado: " . $file_path);
-        }
-
-        if (!is_readable($file_path)) {
-            $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
-            throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
-        }
-
-        if (!file_exists(WRAPPER_SCRIPT_PATH)) {
-            throw new Exception("Script wrapper no encontrado en: " . WRAPPER_SCRIPT_PATH);
-        }
-
-        if (!is_executable(WRAPPER_SCRIPT_PATH)) {
-            throw new Exception("Script wrapper no tiene permisos de ejecución: " . WRAPPER_SCRIPT_PATH);
-        }
-
-        $command = escapeshellarg(WRAPPER_SCRIPT_PATH) . ' ' . escapeshellarg($file_path);
-
-
-        $descriptorspec = array(
-            0 => array("pipe", "r"),
-            1 => array("pipe", "w"),
-            2 => array("pipe", "w")
-        );
-
-        $process = proc_open($command, $descriptorspec, $pipes);
-
-        if (!is_resource($process)) {
-            throw new Exception("No se pudo iniciar el proceso");
-        }
-
-        $output = stream_get_contents($pipes[1]);
-        $error = stream_get_contents($pipes[2]);
-
-        foreach ($pipes as $pipe) {
-            fclose($pipe);
-        }
-
-        $return_value = proc_close($process);
-
-        if ($return_value !== 0) {
-            throw new Exception("Error en el proceso Python: " . $error);
-        }
-
-        $hash = trim($output);
-        if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
-            throw new Exception("Hash inválido generado: " . $output);
-        }
-
-        return $hash;
-    } catch (Exception $e) {
-        $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
-        return false;
-    }
-}
+// Refactor(Org): Moved function recalcularHash to app/Services/FileHashService.php
 
 // Refactor(Org): Moved function actualizarEstadoArchivo to app/Services/FileHashService.php
 
