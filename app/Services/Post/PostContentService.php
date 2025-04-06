@@ -203,3 +203,4 @@ function rehacerJson($idPost, $audio, $descripcion)
 
 // Refactor(Org): Hook AJAX cambiarDescripcion movido desde estado.php
 add_action('wp_ajax_cambiarDescripcion', 'cambiarDescripcion');
+

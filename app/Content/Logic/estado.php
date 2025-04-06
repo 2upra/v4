@@ -13,3 +13,4 @@ add_action('wp_ajax_corregirTags', 'corregirTags');
 // Refactor(Org): Mover función cambiar_imagen_post_handler y hook AJAX a PostAttachmentService.php
 // La función y su hook asociado han sido movidos a app/Services/Post/PostAttachmentService.php
 
+
