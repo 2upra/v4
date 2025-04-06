@@ -293,18 +293,7 @@ function actualizarUrlArchivo($file_id, $new_url)
 // Refactor(Org): Moved function nombreUnicoFile to FileUtils.php
 
 
-
-function confirmarHashId($file_id)
-{
-    global $wpdb;
-    return $wpdb->update(
-        "{$wpdb->prefix}file_hashes",
-        array('status' => 'confirmed'),
-        array('id' => $file_id),
-        array('%s'),
-        array('%d')
-    );
-}
+// Refactor(Org): Moved function confirmarHashId to app/Services/FileHashService.php
 
 
 

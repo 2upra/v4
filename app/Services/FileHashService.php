@@ -81,4 +81,17 @@ function actualizarEstadoArchivo($id, $estado)
     }
 }
 
+// Refactor(Org): Moved function confirmarHashId from app/Utils/HashUtils.php
+function confirmarHashId($file_id)
+{
+    global $wpdb;
+    return $wpdb->update(
+        "{$wpdb->prefix}file_hashes",
+        array('status' => 'confirmed'),
+        array('id' => $file_id),
+        array('%s'),
+        array('%d')
+    );
+}
+
 ?>
