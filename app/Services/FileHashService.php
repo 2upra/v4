@@ -441,4 +441,25 @@ if (!wp_next_scheduled('limpiar_archivos_pendientes')) {
 }
 add_action('limpiar_archivos_pendientes', 'limpiarArchivosPendientes');
 
+// Refactor(Org): Moved function sonHashesSimilares from app/Utils/HashUtils.php
+function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
+{
+    if (empty($hash1) || empty($hash2)) {
+        return false;
+    }
+
+    // Convertir hashes a valores binarios
+    $bin1 = hex2bin($hash1);
+    $bin2 = hex2bin($hash2);
+
+    if ($bin1 === false || $bin2 === false) {
+        return false;
+    }
+
+    // Calcular similitud usando distancia de Hamming
+    $similitud = 1 - (count(array_diff_assoc(str_split($bin1), str_split($bin2))) / strlen($bin1));
+
+    return $similitud >= $umbral;
+}
+
 ?>

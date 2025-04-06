@@ -13,25 +13,7 @@ if (!defined('HASH_SIMILARITY_THRESHOLD')) {
 define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Commands/process_audio.sh');
 
 
-function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
-{
-    if (empty($hash1) || empty($hash2)) {
-        return false;
-    }
-
-    // Convertir hashes a valores binarios
-    $bin1 = hex2bin($hash1);
-    $bin2 = hex2bin($hash2);
-
-    if ($bin1 === false || $bin2 === false) {
-        return false;
-    }
-
-    // Calcular similitud usando distancia de Hamming
-    $similitud = 1 - (count(array_diff_assoc(str_split($bin1), str_split($bin2))) / strlen($bin1));
-
-    return $similitud >= $umbral;
-}
+// Refactor(Org): Moved function sonHashesSimilares() to app/Services/FileHashService.php
 
 // Refactor(Org): Moved function handle_recalcular_hash() and its hook to app/Services/FileHashService.php
 
