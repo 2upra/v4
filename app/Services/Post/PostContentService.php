@@ -1,5 +1,6 @@
 <?php
 
+// Refactor(Org): Mover función cambiarDescripcion() de estado.php a PostContentService.php
 // Permite cambiar la descripción de un post a través de una solicitud AJAX.
 function cambiarDescripcion()
 {
@@ -171,8 +172,8 @@ function rehacerJson($idPost, $audio, $descripcion)
         return;
     }
 
-    $descripcionLimpia = preg_replace('/```(?:json)?\n/', '', $descripcionMejorada);
-    $descripcionLimpia = preg_replace('/\n```/', '', $descripcionLimpia);
+    $descripcionLimpia = preg_replace('/```(?:json)?\\n/', '', $descripcionMejorada);
+    $descripcionLimpia = preg_replace('/\\n```/', '', $descripcionLimpia);
     $datosActualizados = json_decode($descripcionLimpia, true);
 
     if (json_last_error() === JSON_ERROR_NONE) {
@@ -199,3 +200,6 @@ function rehacerJson($idPost, $audio, $descripcion)
         }
     }
 }
+
+// Refactor(Org): Hook AJAX cambiarDescripcion movido desde estado.php
+add_action('wp_ajax_cambiarDescripcion', 'cambiarDescripcion');

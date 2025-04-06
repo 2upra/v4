@@ -7,7 +7,7 @@ add_action('wp_ajax_corregirTags', 'corregirTags');
 
 
 
-add_action('wp_ajax_cambiarDescripcion', 'cambiarDescripcion');
+// Refactor(Org): Hook AJAX cambiarDescripcion movido a PostContentService.php
 
 
 // Refactor(Org): Mover función cambiar_imagen_post_handler y hook AJAX a PostAttachmentService.php
