@@ -1,7 +1,7 @@
 <?
 if (!is_user_logged_in()) {
 } else {
-    // Refactor(Org): Use helper function to get user data
+    // Refactor(Exec): Re-aplicado uso de helper obtenerDatosUsuarioCabecera()
     $datosUsuario = obtenerDatosUsuarioCabecera();
     $user_id = $datosUsuario['user_id'];
     $nombre_usuario = $datosUsuario['nombre_usuario'];
