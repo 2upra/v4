@@ -3,6 +3,9 @@
 // Action: Created SEOService class
 // Purpose: Handles generation of SEO meta tags (title, description, schema) for different post types.
 
+// Refactor: Ensure BrowserUtils is available for language detection
+require_once get_template_directory() . '/app/Utils/BrowserUtils.php';
+
 class SEOService {
 
     /**
@@ -179,6 +182,96 @@ class SEOService {
                 "name"  => get_the_author_meta('display_name', get_post_field('post_author', $postId))
             ]
         ];
+
+        // Return the calculated SEO data
+        return ['title' => $seo_title, 'description' => $meta_description, 'schema' => $schema];
+    }
+
+    /**
+     * Generates SEO meta tags specifically for 'social_post' post type.
+     *
+     * @param int $postId The ID of the 'social_post' post.
+     * @return array An array containing 'title', 'description', and 'schema'.
+     */
+    public function generateSocialPostMetaTags($postId) {
+        // Refactor(Org): Moved SEO meta generation logic from single-social_post.php
+        $active_lang     = obtenerIdiomaDelNavegador();
+        $filtro          = 'single'; // This might not be needed here, depends on htmlPost usage context
+
+        $datos_algoritmo_pri      = get_post_meta($postId, 'datosAlgoritmo', true);
+        $datos_algoritmo_respaldo = get_post_meta($postId, 'datosAlgoritmo_respaldo', true);
+
+        $datosAlgoritmo = empty($datos_algoritmo_pri) ? $datos_algoritmo_respaldo : $datos_algoritmo_pri;
+        $datos_decoded  = is_string($datosAlgoritmo) ? json_decode($datosAlgoritmo, true) : $datosAlgoritmo;
+
+        // Generar el título SEO
+        $post_title = get_the_title($postId);
+        $tipo_audio = isset($datos_decoded['tipo_audio'][$active_lang][0]) ? $datos_decoded['tipo_audio'][$active_lang][0] : '';
+
+        // Para evitar duplicar "Sample": si el título ya lo tiene, no se añade al tipo de audio
+        if (stripos($post_title, 'sample') === false && stripos($tipo_audio, 'sample') === false) {
+            $tipo_audio .= ' Sample';
+        }
+
+        // Añadir el sufijo (en este ejemplo se usa "free" para ambos idiomas)
+        $seo_suffix = 'free';
+        if (stripos($tipo_audio, $seo_suffix) === false) {
+            $tipo_audio .= ' ' . $seo_suffix;
+        }
+
+        $seo_title = $post_title . ' | ' . $tipo_audio;
+
+        // Construir la parte base de la descripción (usando sugerencias o descripción corta)
+        $base_desc = '';
+        if (isset($datos_decoded['sugerencia_busqueda'][$active_lang]) && ! empty($datos_decoded['sugerencia_busqueda'][$active_lang])) {
+            $base_desc = implode(', ', $datos_decoded['sugerencia_busqueda'][$active_lang]);
+        } elseif (isset($datos_decoded['descripcion_corta'][$active_lang]) && ! empty($datos_decoded['descripcion_corta'][$active_lang])) {
+            $base_desc = implode(', ', $datos_decoded['descripcion_corta'][$active_lang]);
+        }
+
+        // Definir el sufijo fijo para la descripción
+        $desc_suffix = 'Download samples, beats and drum kits free';
+
+        // Armar la descripción final:
+        // - Se asegura que la parte base inicie en mayúscula
+        // - Se agrega el separador " - " antes del sufijo
+        $final_desc = ucfirst(trim($base_desc));
+        if (! empty($final_desc)) {
+            $final_desc .= ' - ' . $desc_suffix;
+        } else {
+            $final_desc = $desc_suffix;
+        }
+
+        // Si la descripción excede los 160 caracteres, se trunca y se añade "..."
+        if (mb_strlen($final_desc) > 160) {
+            $final_desc = mb_substr($final_desc, 0, 160 - 3) . '...';
+        }
+
+        $meta_description = esc_attr(trim($final_desc));
+
+        // Esquema JSON-LD
+        $schema = [
+            "@context"      => "https://schema.org",
+            "@type"         => "AudioObject",
+            "name"          => $seo_title,
+            "description"   => $meta_description,
+            "datePublished" => get_the_date('c', $postId),
+            "author"        => [
+                "@type" => "Person",
+                "name"  => get_the_author_meta('display_name', get_post_field('post_author', $postId))
+            ]
+        ];
+
+        if (! empty($datos_decoded)) {
+            if (isset($datos_decoded['genero_posible'][$active_lang])) {
+                $schema['genre'] = esc_html(implode(", ", $datos_decoded['genero_posible'][$active_lang]));
+            }
+            if (isset($datos_decoded['tags_posibles'][$active_lang])) {
+                // Limitar a 5 tags para el SEO
+                $tags_array         = array_slice($datos_decoded['tags_posibles'][$active_lang], 0, 5);
+                $schema['keywords'] = esc_html(implode(", ", $tags_array));
+            }
+        }
 
         // Return the calculated SEO data
         return ['title' => $seo_title, 'description' => $meta_description, 'schema' => $schema];
