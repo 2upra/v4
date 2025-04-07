@@ -36,3 +36,28 @@ function audioStreamEndPro($request)
     guardarLog("[audioStreamEndPro] exito Finalizado envio para idAudio: $idAudio");
     exit;
 }
+
+# Registra la ruta REST para servir audio a usuarios Pro.
+add_action('rest_api_init', function () {
+    guardarLog("[rest_api_init_hook] inicio Registrando rutas REST");
+    register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEndPro',
+        'permission_callback' => function () {
+             $userId = get_current_user_id();
+             $esPro = usuarioEsAdminOPro($userId);
+             guardarLog("[rest_api_init_hook] info Verificando permisos para usuario ID: $userId resultado: " . ($esPro ? 'permitido' : 'denegado'));
+             return $esPro;
+        },
+        'args' => array(
+            'id' => array(
+                'validate_callback' => function ($param) {
+                    $esNumerico = is_numeric($param);
+                    guardarLog("[rest_api_init_hook] info Validando parametro id: $param resultado: " . ($esNumerico ? 'valido' : 'invalido'));
+                    return $esNumerico;
+                }
+            ),
+        ),
+    ));
+     guardarLog("[rest_api_init_hook] exito Rutas REST registradas");
+});
