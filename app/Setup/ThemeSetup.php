@@ -398,6 +398,7 @@ function verificar_subida_apk($data, $file, $filename, $mimes)
 }
 add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
 
+<<<<<<< HEAD
 // Refactor(Org): Mover lógica de normalización de posts y hooks desde TagUtils.php
 // Funciones movidas desde app/Functions/normalizarTags.php (originalmente en app/Utils/TagUtils.php)
 function normalizarNuevoPost($post_id, $post, $update) {
@@ -839,4 +840,6 @@ add_action('template_redirect', function () {
     }
 });
 
+=======
+>>>>>>> parent of 42ed1397... Refactor(Org): Mueve lógica de normalización de posts y hooks de TagUtils.php a ThemeSetup.php
 ?>
