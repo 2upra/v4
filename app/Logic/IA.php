@@ -12,12 +12,9 @@ use GuzzleHttp\Client;
 // // No se realiza la acción de mover ya que la función no existe en este archivo.
 
 
-add_action('wp_ajax_ai_request', 'iaSend');
-add_action('wp_ajax_nopriv_ai_request', 'iaSend');
+// Refactor(Clean): Removed potentially dead AJAX action hooks for 'iaSend'.
 
 // Refactor(Org): Función generarDescripcionIAPro movida a app/Services/IAService.php
 
-add_action('wp_ajax_ai_request', 'iaSend');
-add_action('wp_ajax_nopriv_ai_request', 'iaSend');
 
 
