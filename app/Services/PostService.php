@@ -49,6 +49,7 @@ function asignarTags($postId)
 
 // Add other post-related service functions here...
 
+// Refactor(Org): Función crearPost() movida desde app/Form/Procesar.php
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
     $contenido = isset($_POST['textoNormal']) ? sanitize_textarea_field($_POST['textoNormal']) : '';

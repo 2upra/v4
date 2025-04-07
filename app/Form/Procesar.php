@@ -1,4 +1,4 @@
-<?
+<?php
 
 // Formulario principal
 
@@ -12,6 +12,7 @@ function subidaRs()
     }
 
     #Paso 1
+    // Refactor(Org): Función crearPost() movida a app/Services/PostService.php
     $postId = crearPost();
     if (is_wp_error($postId)) {
         guardarLog('Error al crear el post: ' . $postId->get_error_message());
@@ -38,3 +39,5 @@ function subidaRs()
 }
 
 add_action('wp_ajax_subidaRs', 'subidaRs');
+
+?>
