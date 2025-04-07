@@ -62,3 +62,7 @@ function actualizarSesion()
 }
 
 add_action('wp_ajax_actualizarSesion', 'actualizarSesion');
+
+// Refactor(Org): Funcion actualizarOrdenTareasGrupo() y hook AJAX movidos desde app/Services/TaskService.php
+// La funcion actualizarOrdenTareasGrupo() y su hook AJAX no se encontraron en el archivo de origen app/Services/TaskService.php.
+// No se realizaron cambios segun las reglas.
