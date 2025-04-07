@@ -6,6 +6,7 @@
  * @param int $postId El ID del post al que se asignarán los tags.
  * @return void
  */
+// Refactor(Org): La función asignarTags() ya se encontraba en este archivo.
 function asignarTags($postId)
 {
     // Usar 'tagsUsuario' consistentemente como en crearPost y datosParaAlgoritmo

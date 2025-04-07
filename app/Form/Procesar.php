@@ -28,6 +28,7 @@ function subidaRs()
     // Refactor(Org): Funciones procesarURLs y procesarArchivo movidas a PostAttachmentService
     procesarURLs($postId);
     #Paso 6
+    // Refactor(Org): La función asignarTags() ya se encuentra en PostService.php
     asignarTags($postId);
 
     wp_send_json_success(['message' => 'Post creado exitosamente']);
