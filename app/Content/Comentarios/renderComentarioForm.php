@@ -1,4 +1,4 @@
-<?
+<?php 
 
 function comentariosForm()
 {
@@ -42,7 +42,3 @@ function comentariosForm()
     <?
     return ob_get_clean();
 }
-
-
-
-

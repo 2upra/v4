@@ -1,4 +1,6 @@
-<?
+<?php
+
+// Refactor(Org): Moved database table creation logic from app/Chat/tablaGalle.php
 
 //necesito una funcion como esta
 function tablas()
@@ -55,8 +57,6 @@ function tablas()
   update_option('tablasIniciales', true);
 }
 
-// Hook para verificar y crear las tablas al cargar WordPress
-add_action('init', 'tablas');
 
 function tablasPost()
 {
@@ -109,8 +109,6 @@ function tablasPost()
   update_option('tablasPost', true);
 }
 
-// Hook para verificar y crear las tablas al cargar WordPress
-add_action('init', 'tablasPost');
 
 function fileHashTable() {
   global $wpdb;
@@ -143,5 +141,11 @@ function fileHashTable() {
 
   update_option('tablaFileHashesCreada', true);
 }
+
+// Hook para verificar y crear las tablas al cargar WordPress
+add_action('init', 'tablas');
+
+// Hook para verificar y crear las tablas al cargar WordPress
+add_action('init', 'tablasPost');
 
 add_action('init', 'fileHashTable');
