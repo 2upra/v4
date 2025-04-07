@@ -1,5 +1,5 @@
 <?php
-
+/*
 # Envía el archivo de audio aplicando caché.
 function audioStreamEndPro($request)
 {
@@ -61,3 +61,5 @@ add_action('rest_api_init', function () {
     ));
      guardarLog("[rest_api_init_hook] exito Rutas REST registradas");
 });
+
+*/

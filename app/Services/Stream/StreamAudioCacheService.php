@@ -1,5 +1,5 @@
 <?
-
+/*
 # Programa la tarea diaria de limpieza de caché si no está ya programada.
 add_action('wp', 'schedule_audio_cache_cleanup');
 function schedule_audio_cache_cleanup()
@@ -61,3 +61,4 @@ function unschedule_audio_cache_cleanup()
         guardarLog("[unschedule_audio_cache_cleanup] info Tarea no encontrada no es necesario desprogramar");
     }
 }
+    */
