@@ -106,6 +106,7 @@ function procesarColeccion($postId, $userId, $sync = false)
     }
 
     actualizarTimestampDescargas($userId);
+    // Refactor(Org): Función actualizarDescargas() movida desde app/Functions/descargarColeccion.php
     actualizarDescargas($userId, $samplesNoDescargados, $samplesDescargados);
     $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
     $totalDescargas++;
@@ -684,3 +685,37 @@ function descargaAudioColeccion()
     }
 }
 add_action('template_redirect', 'descargaAudioColeccion');
+
+// Refactor(Org): Función actualizarDescargas() movida desde app/Functions/descargarColeccion.php
+function actualizarDescargas(int $userId, array $samplesNoDescargados, array $samplesDescargados): void
+{
+    $functionName = __FUNCTION__;
+
+    foreach ($samplesNoDescargados as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        $descargasAnteriores[$sampleId] = 1;
+        update_user_meta($userId, 'descargas', $descargasAnteriores);
+        error_log("[{$functionName}] Sample no descargado ({$sampleId}) agregado a descargas para el usuario {$userId}.");
+    }
+
+    foreach ($samplesDescargados as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        if (isset($descargasAnteriores[$sampleId])) {
+            $descargasAnteriores[$sampleId]++;
+            update_user_meta($userId, 'descargas', $descargasAnteriores);
+            //error_log("[{$functionName}] Contador de descargas incrementado para sample {$sampleId} (usuario {$userId}). Nuevo valor: {$descargasAnteriores[$sampleId]} ");
+        }
+    }
+}
