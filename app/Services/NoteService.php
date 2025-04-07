@@ -1,4 +1,7 @@
-<?
+<?php
+// Servicio para gestionar la lógica de las notas (crear, modificar, borrar)
+
+// Acción realizada: Mover lógica de Notas (crear, modificar, borrar) y sus hooks AJAX desde app/Content/Notas/logicNota.php
 
 function crearNota()
 {
@@ -29,8 +32,6 @@ function crearNota()
     guardarLog("crearNota: Nota creada $notaId");
     wp_send_json_success(array('notaId' => $notaId));
 }
-
-add_action('wp_ajax_crearNota', 'crearNota');
 
 function modificarNota()
 {
@@ -79,9 +80,6 @@ function modificarNota()
     wp_send_json_success();
 }
 
-add_action('wp_ajax_modificarNota', 'modificarNota');
-
-
 function borrarLasNotas()
 {
     if (isset($_POST['limpiar']) && $_POST['limpiar'] === 'true') {
@@ -108,4 +106,8 @@ function borrarLasNotas()
     }
     wp_die();
 }
+
+// Hooks AJAX para las operaciones de notas
+add_action('wp_ajax_crearNota', 'crearNota');
+add_action('wp_ajax_modificarNota', 'modificarNota');
 add_action('wp_ajax_borrarLasNotas', 'borrarLasNotas');

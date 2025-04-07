@@ -1,5 +1,6 @@
-<?
+<?php
 
+// Refactor(Org): Función guardarMensaje() movida a app/Services/ChatService.php
 
 function procesarMensaje($request)
 {
@@ -50,6 +51,7 @@ function procesarMensaje($request)
     chatLog('Intentando guardar mensaje');
 
     try {
+        // Asumiendo que guardarMensaje está ahora disponible globalmente o se incluye desde ChatService.php
         $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata, $conversacion_id);
 
         if ($resultado) {
@@ -65,73 +67,4 @@ function procesarMensaje($request)
     }
 }
 
-function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null, $conversacion_id = null)
-{
-    global $wpdb;
-    $tablaMensajes = $wpdb->prefix . 'mensajes';
-    $tablaConversacion = $wpdb->prefix . 'conversacion';
-    $emisor = (int) $emisor;
-    $receptor = (int) $receptor;
-
-    // Iniciar la transacción
-    $wpdb->query('START TRANSACTION');
-
-    try {
-        // Si se recibe una conversacion_id, utilizarla
-        if ($conversacion_id) {
-            $conversacionID = (int) $conversacion_id;
-            chatLog("Usando la conversación existente con ID: $conversacionID");
-        } else {
-            // Buscar una conversación existente entre los participantes
-            $query = $wpdb->prepare("
-                SELECT id FROM $tablaConversacion
-                WHERE tipo = 1
-                AND JSON_CONTAINS(participantes, %s)
-                AND JSON_CONTAINS(participantes, %s)
-            ", json_encode($emisor), json_encode($receptor));
-
-            $conversacionID = $wpdb->get_var($query);
-
-            // Si no se encuentra, crear una nueva conversación
-            if (!$conversacionID) {
-                $participantes = json_encode([$emisor, $receptor], JSON_NUMERIC_CHECK);
-                $wpdb->insert($tablaConversacion, [
-                    'tipo' => 1,
-                    'participantes' => $participantes,
-                    'fecha' => current_time('mysql')
-                ]);
-                $conversacionID = $wpdb->insert_id;
-                chatLog("Nueva conversación creada con ID: $conversacionID");
-            } else {
-                chatLog("Conversación existente encontrada con ID: $conversacionID");
-            }
-        }
-
-        // Guardar el mensaje en la conversación obtenida o creada
-        $resultado = $wpdb->insert($tablaMensajes, [
-            'conversacion' => $conversacionID,
-            'emisor' => $emisor,
-            'mensaje' => $mensaje,
-            'fecha' => current_time('mysql'),
-            'adjunto' => isset($adjunto) ? json_encode($adjunto) : null,
-            'metadata' => isset($metadata) ? json_encode($metadata) : null,
-        ]);
-
-        // Verificar si se guardó correctamente
-        if ($resultado === false) {
-            throw new Exception("Error al insertar el mensaje: " . $wpdb->last_error);
-        }
-
-        $mensajeID = $wpdb->insert_id;
-        $wpdb->query('COMMIT');
-        chatLog("Mensaje guardado con ID: $mensajeID en la conversación: $conversacionID");
-
-        return $mensajeID;
-    } catch (Exception $e) {
-        // Si ocurre un error, hacer rollback de la transacción
-        $wpdb->query('ROLLBACK');
-        error_log($e->getMessage());
-        chatLog("Error al guardar el mensaje: " . $e->getMessage());
-        return false;
-    }
-}
+// La función guardarMensaje() ha sido movida a app/Services/ChatService.php
