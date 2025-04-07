@@ -1,5 +1,7 @@
 <?php
 
+#ESTE ARCHIVO SE ESTA HACIENDO MUY GRANDE; HAY QUE ORGANIZAR MEJOR EL CODIGO
+
 // Refactor: Función obtenerChats() movida desde app/Chat/renderListaChats.php
 function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
 {
