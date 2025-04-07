@@ -1,56 +1,64 @@
 <?php
 
-/**
- * Asigna tags a un post específico basado en los datos de $_POST.
- *
- * @param int $postId El ID del post al que se asignarán los tags.
- * @return void
- */
-// Refactor(Org): La función asignarTags() ya se encontraba en este archivo.
-function asignarTags($postId)
+#Maneja la subida de un post
+function subidaRs()
 {
-    // Usar 'tagsUsuario' consistentemente como en crearPost y datosParaAlgoritmo
-    // Note: Direct use of $_POST here might violate SRP if this service is used outside a direct web request context.
-    // Consider passing tags as an argument instead.
+    guardarLog("Contenido de \$_POST en subidaRs: " . print_r($_POST, true));
+
+    if (!is_user_logged_in()) {
+        guardarLog('Error: Usuario no autorizado');
+        wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
+    }
+
+    $idPost = crearPost();
+    if (is_wp_error($idPost)) {
+        guardarLog('Error al crear el post: ' . $idPost->get_error_message());
+        wp_send_json_error(['message' => 'Error al crear el post']);
+    }
+    actualizarMetaDatos($idPost);
+    datosParaAlgoritmo($idPost);
+    confirmarArchivos($idPost);
+    procesarURLs($idPost);
+    asignarTags($idPost);
+
+    wp_send_json_success(['message' => 'Post creado exitosamente']);
+    
+    if (isset($_POST['multiple']) && $_POST['multiple'] == '1') {
+        multiplesPost($idPost);
+    }
+    wp_die();
+}
+
+add_action('wp_ajax_subidaRs', 'subidaRs');
+
+#Asigna tags a un post
+function asignarTags($idPost)
+{
     if (!empty($_POST['tags'])) {
-        $tags_string = sanitize_text_field($_POST['tags']);
-        // Convertir string separado por comas a un array de nombres de tag
-        $tags_array = array_map('trim', explode(',', $tags_string));
-        // Filtrar tags vacíos que podrían resultar de comas extra
-        $tags_array = array_filter($tags_array);
+        $tagsString = sanitize_text_field($_POST['tags']);
+        $tagsArreglo = array_map('trim', explode(',', $tagsString));
+        $tagsArreglo = array_filter($tagsArreglo);
 
-        if (!empty($tags_array)) {
-            // wp_set_post_tags asigna etiquetas de la taxonomía 'post_tag'
-            // Asegúrate de que tu Custom Post Type 'social_post' soporta 'post_tag'
-            // o usa wp_set_object_terms para una taxonomía personalizada.
-            $result = wp_set_post_tags($postId, $tags_array, false); // false = reemplazar tags existentes
+        if (!empty($tagsArreglo)) {
+            $resultado = wp_set_post_tags($idPost, $tagsArreglo, false);
 
-            if (is_wp_error($result)) {
-                 $error_message = str_replace("\n", " | ", $result->get_error_message());
-                 // Consider using a dedicated logging service or PSR-3 logger
-                 error_log("Error en App\\Services\\asignarTags: Fallo al asignar tags para Post ID {$postId}. Error: " . $error_message);
-            } elseif (empty($result)) {
-                 // A veces retorna un array vacío si no se añadieron nuevos términos pero no es error.
-                 error_log("Advertencia en App\\Services\\asignarTags: wp_set_post_tags retornó vacío para Post ID {$postId}. Tags: " . implode(', ', $tags_array) . ". Podría ser normal si los tags no cambiaron o no existen.");
+            if (is_wp_error($resultado)) {
+                $mensajeError = str_replace("\n", " | ", $resultado->get_error_message());
+                error_log("Error en asignarTags: Fallo al asignar tags para Post ID {$idPost}. Error: " . $mensajeError);
+            } elseif (empty($resultado)) {
+                error_log("Advertencia en asignarTags: wp_set_post_tags retornó vacío para Post ID {$idPost}. Tags: " . implode(', ', $tagsArreglo) . ".");
             } else {
-                 error_log("Tags asignados correctamente por App\\Services\\asignarTags para Post ID {$postId}: " . implode(', ', $tags_array));
+                error_log("Tags asignados correctamente por asignarTags para Post ID {$idPost}: " . implode(', ', $tagsArreglo));
             }
         } else {
-             // Si después de limpiar, el array está vacío, opcionalmente eliminar todos los tags
-             // wp_set_post_tags($postId, [], false);
-             error_log("Info en App\\Services\\asignarTags: No se proporcionaron tags válidos para Post ID {$postId} en el campo 'tags'.");
+            error_log("Info en asignarTags: No se proporcionaron tags válidos para Post ID {$idPost} en el campo 'tags'.");
         }
     } else {
-         // No se proporcionó el campo 'tags'
-         // Opcionalmente, podrías querer eliminar todos los tags existentes si el campo está vacío:
-         // wp_set_post_tags($postId, [], false);
-         error_log("Info en App\\Services\\asignarTags: Campo 'tags' no presente o vacío para Post ID {$postId}. No se asignaron tags.");
+        error_log("Info en asignarTags: Campo 'tags' no presente o vacío para Post ID {$idPost}. No se asignaron tags.");
     }
 }
 
-// Add other post-related service functions here...
-
-// Refactor(Org): Función crearPost() movida desde app/Form/Procesar.php
+#Crea un post
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
     $contenido = isset($_POST['textoNormal']) ? sanitize_textarea_field($_POST['textoNormal']) : '';
@@ -64,8 +72,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
 
-    // Insertar el post
-    $postId = wp_insert_post([
+    $idPost = wp_insert_post([
         'post_title'   => $titulo,
         'post_content' => $contenido,
         'post_status'  => $estadoPost,
@@ -73,65 +80,19 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         'post_type'    => $tipoPost,
     ]);
 
-    if (is_wp_error($postId)) {
-        // Reemplazar saltos de línea en el mensaje de error para loguear en una sola línea
-        $error_message = str_replace("\n", " | ", $postId->get_error_message());
-        error_log('Error en crearPost: Error al insertar el post. Detalles: ' . $error_message);
-        return $postId;
+    if (is_wp_error($idPost)) {
+        $mensajeError = str_replace("\n", " | ", $idPost->get_error_message());
+        error_log('Error en crearPost: Error al insertar el post. Detalles: ' . $mensajeError);
+        return $idPost;
     }
 
-    // El bloque de actualización de 'tagsUsuario' ha sido eliminado de aquí.
-    // La asignación de tags ahora es manejada por la función asignarTags en PostService.php
-
-    /*
-    // Código de notificaciones comentado - los logs aquí no parecen tener variables con saltos de línea
-    $seguidores = get_user_meta($autor, 'seguidores', true);
-    if (!empty($seguidores) && is_array($seguidores)) {
-        $autor_nombre = esc_html(get_the_author_meta('display_name', $autor));
-        $contenido_corto = mb_strimwidth($contenido, 0, 100, "...");
-        $post_url = get_permalink($postId);
-
-        $notificaciones = get_option('notificaciones_pendientes', []);
-        $notificaciones_unicas = [];
-
-        foreach ($seguidores as $seguidor_id) {
-            if (get_user_by('id', $seguidor_id) === false) {
-                error_log("Error en crearPost: Seguidor ID {$seguidor_id} no es un usuario valido.");
-                continue;
-            }
-
-            $clave_notificacion = "{$seguidor_id}_{$postId}";
-
-            if (!isset($notificaciones_unicas[$clave_notificacion])) {
-                $notificaciones[] = [
-                    'seguidor_id' => $seguidor_id,
-                    'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"", // Corregido el escape de comillas
-                    'post_id' => $postId,
-                    'titulo' => 'Nueva publicacion',
-                    'url'  => $post_url,
-                    'autor_id' => $autor
-                ];
-                $notificaciones_unicas[$clave_notificacion] = true;
-            }
-        }
-
-        update_option('notificaciones_pendientes', $notificaciones);
-
-        if (!wp_next_scheduled('wp_enqueue_notifications')) {
-            wp_schedule_event(time(), 'minute', 'wp_enqueue_notifications');
-        }
-    } else {
-        error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es valida.");
-    }
-    */
-    return $postId;
+    return $idPost;
 }
 
-
-#Paso 2
-function actualizarMetaDatos($postId)
+#Actualiza los metadatos de un post
+function actualizarMetaDatos($idPost)
 {
-    $meta_fields = [
+    $camposMeta = [
         'paraColab'         => 'colab',
         'esExclusivo'       => 'exclusivo',
         'paraDescarga'      => 'descarga',
@@ -144,200 +105,140 @@ function actualizarMetaDatos($postId)
         'momento'           => 'momento'
     ];
 
-    foreach ($meta_fields as $meta_key => $post_key) {
-        // Asegúrate que el índice existe antes de accederlo
-        $value = (isset($_POST[$post_key]) && $_POST[$post_key] == '1') ? 1 : 0;
-        if (update_post_meta($postId, $meta_key, $value) === false) {
-            // Los logs aquí están comentados, no se requiere acción inmediata
-            //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta $meta_key para el post ID $postId.");
+    foreach ($camposMeta as $claveMeta => $clavePost) {
+        $valor = (isset($_POST[$clavePost]) && $_POST[$clavePost] == '1') ? 1 : 0;
+        if (update_post_meta($idPost, $claveMeta, $valor) === false) {
         }
     }
 
-    // Manejo de nombreLanzamiento
     if (isset($_POST['nombreLanzamiento'])) {
         $nombreLanzamiento = sanitize_text_field($_POST['nombreLanzamiento']);
-        if (update_post_meta($postId, 'nombreLanzamiento', $nombreLanzamiento) === false) {
-            // Log comentado
-            //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta nombreLanzamiento para el post ID $postId.");
+        if (update_post_meta($idPost, 'nombreLanzamiento', $nombreLanzamiento) === false) {
         }
     }
 
     if (isset($_POST['music']) && $_POST['music'] == '1') {
-        registrarNombreRolas($postId);
+        registrarNombreRolas($idPost);
     }
     if (isset($_POST['tienda']) && $_POST['tienda'] == '1') {
-        registrarPrecios($postId);
+        registrarPrecios($idPost);
     }
 }
 
-// Refactor(Org): Funciones registrarNombreRolas y registrarPrecios movidas desde app/Form/Manejar.php
-#Paso 2.1
-function registrarNombreRolas($postId)
+#Registra el nombre de las rolas
+function registrarNombreRolas($idPost)
 {
     for ($i = 1; $i <= 30; $i++) {
-        $rola_key = 'nombreRola' . $i;
-        if (isset($_POST[$rola_key])) {
-            $nombre_rola = sanitize_text_field($_POST[$rola_key]);
-            if (update_post_meta($postId, $rola_key, $nombre_rola) === false) {
-                // Mensaje de log simple, sin variables complejas
-                error_log("Error en registrarNombreRolas: Fallo al actualizar el meta $rola_key para el post ID $postId.");
+        $claveRola = 'nombreRola' . $i;
+        if (isset($_POST[$claveRola])) {
+            $nombreRola = sanitize_text_field($_POST[$claveRola]);
+            if (update_post_meta($idPost, $claveRola, $nombreRola) === false) {
+                error_log("Error en registrarNombreRolas: Fallo al actualizar el meta $claveRola para el post ID $idPost.");
             }
         }
     }
 }
 
-#Paso 2.2 (Renumerado para seguir la secuencia lógica)
-function registrarPrecios($postId)
+#Registra los precios de las rolas
+function registrarPrecios($idPost)
 {
     for ($i = 1; $i <= 30; $i++) {
-        $precio_key = 'precioRola' . $i;
-        if (isset($_POST[$precio_key])) {
-            $precio = sanitize_text_field($_POST[$precio_key]);
+        $clavePrecio = 'precioRola' . $i;
+        if (isset($_POST[$clavePrecio])) {
+            $precio = sanitize_text_field($_POST[$clavePrecio]);
 
             if (is_numeric($precio)) {
-                if (update_post_meta($postId, $precio_key, $precio) === false) {
-                    // Mensaje de log simple
-                    error_log("Error en registrarPrecios: Fallo al actualizar el meta $precio_key para el post ID $postId.");
+                if (update_post_meta($idPost, $clavePrecio, $precio) === false) {
+                    error_log("Error en registrarPrecios: Fallo al actualizar el meta $clavePrecio para el post ID $idPost.");
                 }
             } else {
-                // Mensaje de log simple
-                error_log("Error en registrarPrecios: El valor para $precio_key no es numerico. Post ID: $postId, valor ingresado: " . $precio);
+                error_log("Error en registrarPrecios: El valor para $clavePrecio no es numerico. Post ID: $idPost, valor ingresado: " . $precio);
             }
         }
     }
 }
 
-
-// Refactor(Org): Funcion datosParaAlgoritmo movida desde app/Form/Manejar.php
-#Paso 3
-function datosParaAlgoritmo($postId)
+#Prepara los datos para el algoritmo
+function datosParaAlgoritmo($idPost)
 {
     $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
-    // Decodificar entidades HTML podría ser necesario dependiendo de cómo se guardó el texto
-    // $textoNormal = htmlspecialchars_decode($textoNormal, ENT_QUOTES); // Descomentar si es necesario
-    $tags_string = isset($_POST['tags']) ? sanitize_text_field($_POST['tags']) : '';
-    $tags = !empty($tags_string) ? array_map('trim', explode(',', $tags_string)) : [];
+    $tagsString = isset($_POST['tags']) ? sanitize_text_field($_POST['tags']) : '';
+    $tags = !empty($tagsString) ? array_map('trim', explode(',', $tagsString)) : [];
 
-    $autorId = get_post_field('post_author', $postId);
-    $autorData = get_userdata($autorId); // Obtener datos del autor de forma segura
+    $idAutor = get_post_field('post_author', $idPost);
+    $datosAutor = get_userdata($idAutor);
 
-    $nombreUsuario = $autorData ? $autorData->user_login : 'desconocido';
-    $nombreMostrar = $autorData ? $autorData->display_name : 'Desconocido';
+    $nombreUsuario = $datosAutor ? $datosAutor->user_login : 'desconocido';
+    $nombreMostrar = $datosAutor ? $datosAutor->display_name : 'Desconocido';
 
     $datosAlgoritmo = [
         'tags' => $tags,
-        'texto' => $textoNormal, // Usar el texto sanitizado
+        'texto' => $textoNormal,
         'autor' => [
-            'id' => $autorId,
+            'id' => $idAutor,
             'usuario' => $nombreUsuario,
             'nombre' => $nombreMostrar,
         ],
     ];
 
-    // Usar wp_json_encode para manejo de errores de WordPress si aplica, o json_encode estándar
     $datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE);
 
     if ($datosAlgoritmoJson === false) {
-        // Reemplazar saltos de línea en el mensaje de error JSON si los hubiera (poco probable pero seguro)
-        $json_error_message = str_replace("\n", " | ", json_last_error_msg());
-        error_log("Error en datosParaAlgoritmo: Fallo al codificar JSON para el post ID: " . $postId . ". Error: " . $json_error_message);
+        $mensajeErrorJson = str_replace("\n", " | ", json_last_error_msg());
+        error_log("Error en datosParaAlgoritmo: Fallo al codificar JSON para el post ID: " . $idPost . ". Error: " . $mensajeErrorJson);
     } else {
-        if (update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson) === false) {
-            // Mensaje de log simple
-            error_log("Error en datosParaAlgoritmo: Fallo al actualizar meta datosAlgoritmo para el post ID " . $postId);
+        if (update_post_meta($idPost, 'datosAlgoritmo', $datosAlgoritmoJson) === false) {
+            error_log("Error en datosParaAlgoritmo: Fallo al actualizar meta datosAlgoritmo para el post ID " . $idPost);
         }
     }
 }
 
-// Refactor(Org): Función variablesPosts() movida desde app/Content/Posts/View/componentPost.php
-//VARIABLES POSTS
-function variablesPosts($postId = null)
+#Define las variables de los posts
+function variablesPosts($idPost = null)
 {
-    if ($postId === null) {
+    if ($idPost === null) {
         global $post;
-        $postId = $post->ID;
+        $idPost = $post->ID;
     }
 
-    $usuarioActual = get_current_user_id();
-    $autores_suscritos = get_user_meta($usuarioActual, 'offering_user_ids', true);
-    $autorId = get_post_field('post_author', $postId);
+    $idUsuarioActual = get_current_user_id();
+    $autoresSuscritos = get_user_meta($idUsuarioActual, 'offering_user_ids', true);
+    $idAutor = get_post_field('post_author', $idPost);
 
-    $datos_algoritmo = get_post_meta($postId, 'datosAlgoritmo', true);
-    $datos_algoritmo_respaldo = get_post_meta($postId, 'datosAlgoritmo_respaldo', true);
+    $datosAlgoritmo = get_post_meta($idPost, 'datosAlgoritmo', true);
+    $datosAlgoritmoRespaldo = get_post_meta($idPost, 'datosAlgoritmo_respaldo', true);
 
-    if (is_array($datos_algoritmo_respaldo)) {
-        $datos_algoritmo_respaldo = json_encode($datos_algoritmo_respaldo);
-    } elseif (is_object($datos_algoritmo_respaldo)) {
-        $datos_algoritmo_respaldo = serialize($datos_algoritmo_respaldo);
+    if (is_array($datosAlgoritmoRespaldo)) {
+        $datosAlgoritmoRespaldo = json_encode($datosAlgoritmoRespaldo);
+    } elseif (is_object($datosAlgoritmoRespaldo)) {
+        $datosAlgoritmoRespaldo = serialize($datosAlgoritmoRespaldo);
     }
 
-    // Elegir entre datos_algoritmo o su respaldo
-    $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
+    $datosAlgoritmoFinal = empty($datosAlgoritmo) ? $datosAlgoritmoRespaldo : $datosAlgoritmo;
 
     return [
-        'current_user_id' => $usuarioActual,
-        'autores_suscritos' => $autores_suscritos,
-        'author_id' => $autorId,
-        'es_suscriptor' => in_array($autorId, (array)$autores_suscritos),
-        'author_name' => get_the_author_meta('display_name', $autorId),
-        'author_avatar' => imagenPerfil($autorId),
-        'audio_id_lite' => get_post_meta($postId, 'post_audio_lite', true),
-        'audio_id' => get_post_meta($postId, 'post_audio', true),
-        'audio_url' => wp_get_attachment_url(get_post_meta($postId, 'post_audio', true)),
-        'audio_lite' => wp_get_attachment_url(get_post_meta($postId, 'post_audio_lite', true)),
-        'wave' => get_post_meta($postId, 'waveform_image_url', true),
-        'post_date' => get_the_date('', $postId),
-        'block' => get_post_meta($postId, 'esExclusivo', true),
-        'colab' => get_post_meta($postId, 'paraColab', true),
-        'post_status' => get_post_status($postId),
-        'bpm' => get_post_meta($postId, 'audio_bpm', true),
-        'key' => get_post_meta($postId, 'audio_key', true),
-        'scale' => get_post_meta($postId, 'audio_scale', true),
-        'detallesIA' => get_post_meta($postId, 'audio_descripcion', true),
-        'datosAlgoritmo' => $datos_algoritmo_final,
-        'postAut' => get_post_meta($postId, 'postAut', true),
-        'ultimoEdit' => get_post_meta($postId, 'ultimoEdit', true),
+        'current_user_id' => $idUsuarioActual,
+        'autores_suscritos' => $autoresSuscritos,
+        'author_id' => $idAutor,
+        'es_suscriptor' => in_array($idAutor, (array)$autoresSuscritos),
+        'author_name' => get_the_author_meta('display_name', $idAutor),
+        'author_avatar' => imagenPerfil($idAutor),
+        'audio_id_lite' => get_post_meta($idPost, 'post_audio_lite', true),
+        'audio_id' => get_post_meta($idPost, 'post_audio', true),
+        'audio_url' => wp_get_attachment_url(get_post_meta($idPost, 'post_audio', true)),
+        'audio_lite' => wp_get_attachment_url(get_post_meta($idPost, 'post_audio_lite', true)),
+        'wave' => get_post_meta($idPost, 'waveform_image_url', true),
+        'post_date' => get_the_date('', $idPost),
+        'block' => get_post_meta($idPost, 'esExclusivo', true),
+        'colab' => get_post_meta($idPost, 'paraColab', true),
+        'post_status' => get_post_status($idPost),
+        'bpm' => get_post_meta($idPost, 'audio_bpm', true),
+        'key' => get_post_meta($idPost, 'audio_key', true),
+        'scale' => get_post_meta($idPost, 'audio_scale', true),
+        'detallesIA' => get_post_meta($idPost, 'audio_descripcion', true),
+        'datosAlgoritmo' => $datosAlgoritmoFinal,
+        'postAut' => get_post_meta($idPost, 'postAut', true),
+        'ultimoEdit' => get_post_meta($idPost, 'ultimoEdit', true),
     ];
 }
 
-// Refactor(Org): Función AJAX subidaRs() y su hook movidos desde app/Form/Procesar.php
-function subidaRs()
-{
-    guardarLog("Contenido de \$_POST en subidaRs: " . print_r($_POST, true));
-
-    if (!is_user_logged_in()) {
-        guardarLog('Error: Usuario no autorizado');
-        wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
-    }
-
-    #Paso 1
-    // Refactor(Org): Función crearPost() movida a app/Services/PostService.php
-    $postId = crearPost();
-    if (is_wp_error($postId)) {
-        guardarLog('Error al crear el post: ' . $postId->get_error_message());
-        wp_send_json_error(['message' => 'Error al crear el post']);
-    }
-    #Paso 2
-    actualizarMetaDatos($postId);
-    #Paso 3
-    datosParaAlgoritmo($postId);
-    #Paso 4
-    confirmarArchivos($postId);
-    #Paso 5
-    // Refactor(Org): Funciones procesarURLs y procesarArchivo movidas a PostAttachmentService
-    procesarURLs($postId);
-    #Paso 6
-    // Refactor(Org): La función asignarTags() ya se encuentra en PostService.php
-    asignarTags($postId);
-
-    wp_send_json_success(['message' => 'Post creado exitosamente']);
-    
-    if (isset($_POST['multiple']) && $_POST['multiple'] == '1') {
-        multiplesPost($postId);
-    }
-    wp_die();
-}
-
-add_action('wp_ajax_subidaRs', 'subidaRs');
-
-?>
