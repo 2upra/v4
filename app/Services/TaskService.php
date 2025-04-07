@@ -6,67 +6,54 @@
 // Refactor(Org): Funcion crearTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 
 // Refactor(Org): Funcion borrarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
-// Refactor(Org): Funcion borrarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
-
-// Refactor(Org): Funcion modificarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
-function modificarTarea()
+function borrarTarea()
 {
+    // Añadir verificacion de nonce
+    if (!isset($_POST['nonce']) || empty($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'borrar_tarea_nonce')) {
+        wp_send_json_error('Nonce invalido.');
+        // wp_die(); // wp_send_json_error ya incluye wp_die()
+    }
+
     $log = '';
     if (!current_user_can('edit_posts')) {
         $log .= 'No tienes permisos.';
-        guardarLog("modificarTarea: \n $log");
+        guardarLog("borrarTarea: \n $log");
         wp_send_json_error('No tienes permisos.');
     }
 
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
-
-    if (empty($tit)) {
-        $log .= 'Título vacío.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('Título vacío.');
-    }
 
     if ($id === 0) {
-        $tareaId = crearTarea(); // Captura el ID devuelto por crearTarea()
-
-        if (is_wp_error($tareaId)) {
-            wp_send_json_error($tareaId->get_error_message());
-        } else {
-            wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
-        }
-        wp_send_json_error('La creación de tareas (ID 0) debe manejarse a través de la acción AJAX crearTarea.');
-        return;
+        $log .= 'ID de tarea inválido.';
+        guardarLog("borrarTarea: \n $log");
+        wp_send_json_error('ID de tarea inválido.');
     }
 
     $tarea = get_post($id);
 
     if (empty($tarea) || $tarea->post_type != 'tarea') {
         $log .= 'Tarea no encontrada.';
-        guardarLog("modificarTarea: \n $log");
+        guardarLog("borrarTarea: \n $log");
         wp_send_json_error('Tarea no encontrada.');
     }
 
-    $args = array(
-        'ID' => $id,
-        'post_title' => $tit
-    );
-
-    $res = wp_update_post($args, true);
+    $res = wp_delete_post($id, true);
 
     if (is_wp_error($res)) {
         $msg = $res->get_error_message();
-        $log .= "Error al modificar tarea: $msg \n";
-        guardarLog("modificarTarea: \n $log");
+        $log .= "Error al borrar tarea: $msg";
+        guardarLog("borrarTarea: \n $log");
         wp_send_json_error($msg);
     }
 
-    $log .= "Tarea modificada con id $id";
-    guardarLog("modificarTarea: \n $log");
+    $log .= "Tarea con ID $id borrada exitosamente.";
+    guardarLog("borrarTarea: \n $log");
     wp_send_json_success();
 }
 
-add_action('wp_ajax_modificarTarea', 'modificarTarea');
+add_action('wp_ajax_borrarTarea', 'borrarTarea');
+
+// Refactor(Org): Funcion modificarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 
 // Refactor(Org): Funcion archivarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
 //necesito que cuando se archive una tarea, deje ser una subtarea en caso de que lo hubiera sido, y si tenia tareas hijos, sus tareas hijos tambien se archiven
@@ -604,4 +591,72 @@ add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
 
 // Refactor(Org): Funcion ordenamientoTareas() movida a app/Services/Task/TaskOrderingService.php
 // Refactor(Org): Funciones ordenamientoTareas() y ordenamientoTareasPorPrioridad() movidas desde app/Content/Task/ordenamientoTareas.php
-// Refactor(Org): Funcion ordenamientoTareasPorPrioridad() movida a app/Services/Task/TaskOrderingService.php
+
+function ordenamientoTareasPorPrioridad($queryArgs, $usu)
+{
+    global $wpdb;
+    $tareasPend = [];
+    $tareasNoPend = [];
+    $ordenActual = get_user_meta($usu, 'ordenTareas', true);
+    $log = "ordenamientoTareasPorPrioridad, \n ";
+    $todasTareasArgs = [
+        'post_type'      => 'tarea',
+        'author'         => $usu,
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ];
+
+    $todasTareas = get_posts($todasTareasArgs);
+
+    if (empty($todasTareas) || !is_array($todasTareas)) {
+        $log .= "No se encontraron tareas para el usuario $usu";
+        guardarLog($log);
+        return $queryArgs;
+    }
+
+    foreach ($todasTareas as $tareaId) {
+        $estado = strtolower(get_post_meta($tareaId, 'estado', true));
+        if ($estado === 'pendiente') {
+            $tareasPend[] = $tareaId;
+        } else {
+            $tareasNoPend[] = $tareaId;
+        }
+    }
+
+    if (!is_array($ordenActual)) {
+        $ordenActual = [];
+    }
+
+    $tareasPendOrdenadas = [];
+    foreach ($ordenActual as $tareaId) {
+        if (in_array($tareaId, $tareasPend)) {
+            $tareasPendOrdenadas[] = $tareaId;
+        }
+    }
+
+    $tareasPendNoOrdenadas = array_diff($tareasPend, $tareasPendOrdenadas);
+
+    usort($tareasPendNoOrdenadas, function ($a, $b) use ($wpdb) {
+        $impnumA = get_post_meta($a, 'impnum', true);
+        $impnumB = get_post_meta($b, 'impnum', true);
+        return $impnumB - $impnumA;
+    });
+
+    $tareasPend = array_merge($tareasPendOrdenadas, $tareasPendNoOrdenadas);
+
+    $tareasOrd = array_merge($tareasPend, $tareasNoPend);
+
+    update_user_meta($usu, 'ordenTareas', $tareasOrd);
+    $log .= "Se actualizaron las IDs de ordenTareas para el usuario $usu";
+    guardarLog($log);
+
+    $queryArgs['post__in'] = $tareasOrd;
+    $queryArgs['orderby'] = 'post__in';
+    unset($queryArgs['meta_key']);
+    unset($queryArgs['meta_query']);
+    unset($queryArgs['order']);
+    unset($queryArgs['orderby']);
+
+
+    return $queryArgs;
+}
