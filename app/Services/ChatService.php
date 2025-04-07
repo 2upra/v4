@@ -229,3 +229,98 @@ function reiniciarChats()
     exit;
 }
 add_action('wp_ajax_reiniciarChats', 'reiniciarChats');
+
+// Refactor(Org): Función obtenerChatColab() y su hook movidos desde app/Chat/renderChat.php
+function obtenerChatColab()
+{
+    chatLog('Iniciando obtenerChatColab...');
+
+    // Verificar si el usuario está autenticado
+    if (!is_user_logged_in()) {
+        chatLog('Usuario no autenticado.');
+        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
+        wp_die();
+    }
+
+    global $wpdb;
+    $usuarioActual = get_current_user_id();
+    chatLog('Usuario actual: ' . $usuarioActual);
+
+    $mensajesPorPagina = 20;
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+
+    // Obtener el ID de la conversación proporcionado
+    $conversacion = isset($_POST['conversacion_id']) ? intval($_POST['conversacion_id']) : null;
+
+    if (!$conversacion) {
+        chatLog('No se proporcionó un ID de conversación.');
+        wp_send_json_error(array('message' => 'No se proporcionó un ID de conversación.'));
+        wp_die();
+    }
+
+    $tablaConversaciones = $wpdb->prefix . 'conversacion';
+
+    chatLog('Conversación ID proporcionado: ' . $conversacion);
+
+    // Verificar si la conversación existe y obtener participantes
+    $conversacionData = $wpdb->get_row($wpdb->prepare("
+        SELECT participantes
+        FROM $tablaConversaciones
+        WHERE id = %d
+    ", $conversacion));
+
+    if (!$conversacionData) {
+        chatLog('No se encontró la conversación en la base de datos.');
+        wp_send_json_error(array('message' => 'No se encontró la conversación.'));
+        wp_die();
+    }
+
+    $participantes = json_decode($conversacionData->participantes, true);
+
+    if (!in_array($usuarioActual, $participantes)) {
+        chatLog('El usuario no está autorizado en la conversación.');
+        wp_send_json_error(array('message' => 'El usuario actual no está autorizado para acceder a esta conversación.'));
+        wp_die();
+    }
+
+    // Obtener mensajes
+    $tablaMensajes = $wpdb->prefix . 'mensajes';
+    $offset = ($page - 1) * $mensajesPorPagina;
+    chatLog('Consultando mensajes con offset: ' . $offset);
+
+    $query = $wpdb->prepare("
+        SELECT id, mensaje, emisor AS remitente, fecha, adjunto, metadata, leido
+        FROM $tablaMensajes
+        WHERE conversacion = %d
+        ORDER BY fecha DESC
+        LIMIT %d OFFSET %d
+    ", $conversacion, $mensajesPorPagina, $offset);
+
+    $mensajes = $wpdb->get_results($query);
+
+    if ($mensajes === false) { // Cambiado de === null a === false para manejar errores de consulta
+        chatLog('Error en la consulta a la base de datos.');
+        wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
+        wp_die();
+    }
+
+    chatLog('Mensajes obtenidos: ' . count($mensajes));
+
+    // Procesar mensajes
+    $mensajes = array_reverse($mensajes); // Para mostrar en orden ascendente
+    foreach ($mensajes as $mensaje) {
+        $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
+        if (!empty($mensaje->adjunto)) {
+            $mensaje->adjunto = json_decode($mensaje->adjunto, true);
+        }
+    }
+
+    chatLog('Enviando respuesta con los mensajes.');
+    wp_send_json_success(array(
+        'mensajes'     => $mensajes,
+        'conversacion' => $conversacion,
+    ));
+    wp_die();
+}
+
+add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
