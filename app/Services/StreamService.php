@@ -13,6 +13,7 @@ add_action('init', function () {
 
 function audioUrlSegura($audio_id)
 {
+    //
     //guardarLog("Generando URL segura para audio ID: " . $audio_id);
     /*
     $user_id = get_current_user_id();
