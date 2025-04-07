@@ -375,4 +375,27 @@ add_action('init', 'register_custom_post_types');
 
 // Acción de refactorización: La función configurarMetadatosPaginaIdioma() ya se encontraba en este archivo. No se realizaron cambios.
 
+// Refactor(Org): Hooks de tipo MIME APK movidos desde app/Pages/Temporal.php
+function permitir_subir_apks($mime_types)
+{
+    $mime_types['apk'] = 'application/vnd.android.package-archive';
+    return $mime_types;
+}
+add_filter('upload_mimes', 'permitir_subir_apks');
+
+function verificar_subida_apk($data, $file, $filename, $mimes)
+{
+
+    if (substr($filename, -4) === '.apk') {
+        if (! current_user_can('manage_options')) {
+            $data['error'] = 'Lo siento, no tienes permisos para subir archivos APK.';
+        } else {
+            $data['type'] = 'application/vnd.android.package-archive';
+        }
+    }
+
+    return $data;
+}
+add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
+
 ?>
