@@ -73,12 +73,13 @@ function modificarTarea()
     }
 
     if ($id === 0) {
-        // Refactor(Fix): Llamada a crearTarea() debe usar la funcion movida.
-        // // Asumiendo que crearTarea() ahora está en TaskCrudService.php y devuelve el ID o WP_Error
-        // // Esta llamada directa puede fallar si el archivo no está incluido.
-        // // Se requiere una revisión de la inclusión de archivos o un cargador automático.
-        // $tareaId = crearTarea(); // Esta llamada es ahora incorrecta aquí.
-        // // Temporalmente, devolvemos un error indicando que la creación debe hacerse de otra forma.
+        $tareaId = crearTarea(); // Captura el ID devuelto por crearTarea()
+
+        if (is_wp_error($tareaId)) {
+            wp_send_json_error($tareaId->get_error_message());
+        } else {
+            wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
+        }
         wp_send_json_error('La creación de tareas (ID 0) debe manejarse a través de la acción AJAX crearTarea.');
         return;
     }
