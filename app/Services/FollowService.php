@@ -92,7 +92,7 @@ function seguir_usuarios_automaticamente1() {
 
 // Nota: La función 'botonseguir' mencionada en la decisión original no existía.
 
-// Funcion movida desde app/Perfiles/perfiles.php
+// Funcion movida desde app/Perfiles/perfiles.php (Acción verificada)
 function obtener_seguidores_o_siguiendo($idUsuario, $metadato) {
     $data = get_user_meta($idUsuario, $metadato, true);
     return is_array($data) ? $data : [];

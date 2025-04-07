@@ -1,7 +1,7 @@
 <?php
 
 
-// Funcion obtener_seguidores_o_siguiendo movida a app/Services/FollowService.php
+// Funcion obtener_seguidores_o_siguiendo movida a app/Services/FollowService.php (Acción verificada)
 
 // Funcion perfilBanner movida a app/View/Components/ProfileBanner.php
 
