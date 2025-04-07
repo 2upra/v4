@@ -19,30 +19,11 @@ add_action('rest_api_init', function () {
         'callback' => 'verificarCambiosAudios',
         'permission_callback' => 'chequearElectron',
     ));
-    register_rest_route('1/v1',  '/infoUsuario', array(
-        'methods' => 'POST',
-        'callback' => 'handle_info_usuario',
-        'permission_callback' => 'chequearElectron',
-    ));
+    // Refactor(Org): Ruta /infoUsuario movida a app/Services/UserService.php
 });
 
 
-function handle_info_usuario(WP_REST_Request $request)
-{
-    $receptor = intval($request->get_param('receptor'));
-
-    if ($receptor <= 0) {
-        return new WP_Error('invalid_receptor', 'ID del receptor inválido.', array('status' => 400));
-    }
-
-    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
-    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
-
-    return array(
-        'imagenPerfil' => $imagenPerfil,
-        'nombreUsuario' => $nombreUsuario,
-    );
-}
+// Refactor(Org): Función handle_info_usuario() movida a app/Services/UserService.php
 
 // Función de permiso: valida la cabecera X-Electron-App
 function chequearElectron()
@@ -299,4 +280,3 @@ function descargarAudiosSync(WP_REST_Request $request)
         return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
     }
 }
-

@@ -302,4 +302,33 @@ function cambiar_imagen_perfil()
 }
 add_action('wp_ajax_cambiar_imagen_perfil', 'cambiar_imagen_perfil');
 
+// Refactor(Org): Función handle_info_usuario() movida desde app/Sync/api.php
+function handle_info_usuario(WP_REST_Request $request)
+{
+    $receptor = intval($request->get_param('receptor'));
+
+    if ($receptor <= 0) {
+        return new WP_Error('invalid_receptor', 'ID del receptor inválido.', array('status' => 400));
+    }
+
+    // Dependencias: imagenPerfil() y obtenerNombreUsuario() deben estar disponibles (ej: en app/Helpers/UserHelper.php)
+    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
+    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
+
+    return array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario,
+    );
+}
+
+// Refactor(Org): Ruta REST /infoUsuario movida desde app/Sync/api.php
+add_action('rest_api_init', function () {
+    register_rest_route('1/v1',  '/infoUsuario', array(
+        'methods' => 'POST',
+        'callback' => 'handle_info_usuario',
+        // Dependencia: chequearElectron() debe estar disponible globalmente (ej: en app/Sync/api.php)
+        'permission_callback' => 'chequearElectron',
+    ));
+});
+
 ?>
