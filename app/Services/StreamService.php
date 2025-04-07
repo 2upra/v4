@@ -1,378 +1,464 @@
-<?php
+<?
 define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
-
-# Autentica usuario en peticiones AJAX o REST al inicio.
+// Añade esto al inicio de tu archivo
 add_action('init', function () {
-    guardarLog("[init_auth_hook] inicio Verificando autenticacion");
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
-        guardarLog("[init_auth_hook] info Omitiendo verificacion no es AJAX ni REST");
         return;
     }
-    $idUsuarioValidado = wp_validate_auth_cookie('', 'logged_in');
-    if ($idUsuarioValidado) {
-        guardarLog("[init_auth_hook] exito Usuario autenticado idUsuarioValidado: $idUsuarioValidado");
-        wp_set_current_user($idUsuarioValidado);
-    } else {
-        guardarLog("[init_auth_hook] info No se encontro cookie de autenticacion valida");
+    $user_id = wp_validate_auth_cookie('', 'logged_in');
+    if ($user_id) {
+        wp_set_current_user($user_id);
     }
 });
 
-# Genera una URL segura con token para acceder al audio.
-function audioUrlSegura($idAudio)
+function audioUrlSegura($audio_id)
 {
-    guardarLog("[audioUrlSegura] inicio Generando URL para idAudio: $idAudio");
-    $tokenGenerado = tokenAudio($idAudio);
-    if (!$tokenGenerado) {
-        guardarLog("[audioUrlSegura] error Fallo al generar token para idAudio: $idAudio");
+    //
+    //guardarLog("Generando URL segura para audio ID: " . $audio_id);
+    /*
+    $user_id = get_current_user_id();
+    if (usuarioEsAdminOPro($user_id)) {
+        $url = site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
+        //guardarLog("URL generada para admin/pro: " . $url);
+        return $url;
+    }
+    */
+    $token = tokenAudio($audio_id);
+    if (!$token) {
+        //guardarLog("Error generando token para audio ID: " . $audio_id);
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
-    guardarLog("[audioUrlSegura] info Token generado (parcial): " . substr($tokenGenerado, 0, 10) . "...");
 
-    $nonceSeguridad = wp_create_nonce('wp_rest');
-    guardarLog("[audioUrlSegura] info Nonce generado: $nonceSeguridad");
-    $urlSegura = site_url("/wp-json/1/v1/2?token=" . urlencode($tokenGenerado) . '&_wpnonce=' . $nonceSeguridad);
-    guardarLog("[audioUrlSegura] exito URL segura generada para idAudio: $idAudio url: $urlSegura");
-    return $urlSegura;
+    $nonce = wp_create_nonce('wp_rest');
+    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
+    //guardarLog("URL generada para usuario normal: " . $url);
+    return $url;
 }
 
-# Bloquea el acceso directo a archivos en wp-content/uploads si no hay token válido.
 function bloquear_acceso_directo_archivos()
 {
-    guardarLog("[bloquear_acceso_directo_archivos] inicio Verificando acceso a: {$_SERVER['REQUEST_URI']}");
     if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
-        guardarLog("[bloquear_acceso_directo_archivos] info Ruta de uploads detectada intentando validar token");
-        $tokenRecibido = $_GET['token'] ?? $_COOKIE['audio_token'] ?? null;
-        if (!$tokenRecibido) {
-             guardarLog("[bloquear_acceso_directo_archivos] error Token no encontrado acceso denegado para URI: {$_SERVER['REQUEST_URI']}");
-             wp_die('Acceso denegado', 'Acceso denegado', array('response' => 403));
-        }
-
-        guardarLog("[bloquear_acceso_directo_archivos] info Token encontrado procediendo a verificar para URI: {$_SERVER['REQUEST_URI']}");
-        if (!verificarAudio($tokenRecibido)) {
-            guardarLog("[bloquear_acceso_directo_archivos] error Token invalido acceso denegado para URI: {$_SERVER['REQUEST_URI']}");
+        // Check for a valid token, maybe in a query parameter or cookie
+        $token = $_GET['token'] ?? $_COOKIE['audio_token'] ?? null;
+        if (!$token || !verificarAudio($token)) {
             wp_die('Acceso denegado', 'Acceso denegado', array('response' => 403));
         }
-         guardarLog("[bloquear_acceso_directo_archivos] exito Token valido acceso permitido para URI: {$_SERVER['REQUEST_URI']}");
-    } else {
-         guardarLog("[bloquear_acceso_directo_archivos] info Omitiendo no es ruta de uploads URI: {$_SERVER['REQUEST_URI']}");
     }
 }
 add_action('init', 'bloquear_acceso_directo_archivos');
 
-# Decrementa los usos restantes de un token de audio si el caché de navegador está desactivado.
-function decrementaUsosToken($idUnico)
+function decrementaUsosToken($unique_id)
 {
-    guardarLog("[decrementaUsosToken] inicio Intentando decrementar usos para idUnico: $idUnico");
+    // Solo decrementar si el cacheo del navegador está desactivado
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        guardarLog("[decrementaUsosToken] info Cache de navegador habilitado omitiendo decremento");
-        return;
+        return; // No decrementar para tokens cacheados
     }
 
-    $claveTransitoria = 'audio_token_' . $idUnico;
-    guardarLog("[decrementaUsosToken] info Obteniendo usos restantes para clave: $claveTransitoria");
-    $usosRestantesActuales = get_transient($claveTransitoria);
+    //guardarLog("Decrementando usos del token: $unique_id");
+    $key = 'audio_token_' . $unique_id;
+    $usos_restantes = get_transient($key);
 
-    if ($usosRestantesActuales !== false && $usosRestantesActuales > 0) {
-        guardarLog("[decrementaUsosToken] info Usos restantes actuales: $usosRestantesActuales");
-        $usosRestantesActuales--;
-        guardarLog("[decrementaUsosToken] info Decrementando usos a: $usosRestantesActuales");
-        if ($usosRestantesActuales > 0) {
-            guardarLog("[decrementaUsosToken] info Actualizando transient clave: $claveTransitoria nuevos usos: $usosRestantesActuales");
-            set_transient($claveTransitoria, $usosRestantesActuales, get_option('transient_timeout_' . $claveTransitoria));
+    if ($usos_restantes !== false && $usos_restantes > 0) {
+        $usos_restantes--;
+        if ($usos_restantes > 0) {
+            set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
         } else {
-            guardarLog("[decrementaUsosToken] info Eliminando transient clave: $claveTransitoria ultimo uso");
-            delete_transient($claveTransitoria);
+            delete_transient($key);
         }
-    } else {
-         guardarLog("[decrementaUsosToken] info No se encontraron usos restantes o ya expiraron para clave: $claveTransitoria");
     }
 }
 
-# Registra la ruta REST para servir audio a usuarios Pro.
+/*
+el ataque se recibio aca, como se hace para bloquear automaticamente solicitudes repetidas de esta forma 
+172.70.254.90 - - [18/Dec/2024:01:03:18 +0100] "GET /wp-json/1/v1/2?token=dasodnsaodnoasdoasnodnasodnoasndoasdmkasmdoasmdqwei0uohfnwriojfnwerio HTTP/1.1" 401 116 "-" "python-requests/2.32.3"
+*/
+
 add_action('rest_api_init', function () {
-    guardarLog("[rest_api_init_hook] inicio Registrando rutas REST");
+    //guardarLog('Registrando rutas REST API');
+
+    // Ruta para usuarios pro
     register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
         'methods' => 'GET',
         'callback' => 'audioStreamEndPro',
         'permission_callback' => function () {
-             $userId = get_current_user_id();
-             $esPro = usuarioEsAdminOPro($userId);
-             guardarLog("[rest_api_init_hook] info Verificando permisos para usuario ID: $userId resultado: " . ($esPro ? 'permitido' : 'denegado'));
-             return $esPro;
+            return usuarioEsAdminOPro(get_current_user_id());
         },
         'args' => array(
             'id' => array(
                 'validate_callback' => function ($param) {
-                    $esNumerico = is_numeric($param);
-                    guardarLog("[rest_api_init_hook] info Validando parametro id: $param resultado: " . ($esNumerico ? 'valido' : 'invalido'));
-                    return $esNumerico;
+                    return is_numeric($param);
                 }
             ),
         ),
     ));
-     guardarLog("[rest_api_init_hook] exito Rutas REST registradas");
+
+    // Ruta para usuarios normales
+    register_rest_route('1/v1', '/2', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEnd',
+        'args' => array(
+            'token' => array(
+                'required' => true,
+            ),
+        ),
+        'permission_callback' => function ($request) {
+            //guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
+            return verificarAudio($request->get_param('token'));
+        }
+    ));
+
+    //guardarLog('Rutas REST API registradas');
 });
 
-# Verifica la validez de un token de audio y aplica limitación de intentos.
 function verificarAudio($token)
 {
-    $ipSolicitante = $_SERVER['REMOTE_ADDR'];
-    guardarLog("[verificarAudio] inicio Verificando token (parcial): " . substr($token, 0, 10) . "... desde IP: $ipSolicitante");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $limit = 10; // Número máximo de intentos fallidos en un período de tiempo
+    $time_window = 10; // Período de tiempo en segundos (60 segundos = 1 minuto)
+    $block_duration = 300; // Tiempo de bloqueo en segundos (300 segundos = 5 minutos)
 
-    # Limitación de intentos por IP
-    $limiteIntentos = 10;
-    $ventanaTiempoSegundos = 10;
-    $duracionBloqueoSegundos = 300;
-    $claveTransitoriaIntentos = 'failed_attempts_' . $ipSolicitante;
-    $numeroIntentos = get_transient($claveTransitoriaIntentos);
-    if ($numeroIntentos === false) $numeroIntentos = 0;
+    // Obtener el contador de intentos fallidos para la IP actual
+    $attempts_key = 'failed_attempts_' . $ip;
+    $attempts = get_transient($attempts_key);
 
-    $claveTransitoriaBloqueo = 'blocked_ip_' . $ipSolicitante;
-    $ipEstaBloqueada = get_transient($claveTransitoriaBloqueo);
+    if ($attempts === false) {
+        $attempts = 0;
+    }
 
-    guardarLog("[verificarAudio] info Verificando limites de intentos para IP: $ipSolicitante intentos: $numeroIntentos bloqueado: " . ($ipEstaBloqueada !== false ? 'si' : 'no'));
+    // Comprobar si la IP está bloqueada
+    $blocked_key = 'blocked_ip_' . $ip;
+    $is_blocked = get_transient($blocked_key);
 
-    if ($ipEstaBloqueada !== false) {
-        guardarLog("[verificarAudio] error IP bloqueada: $ipSolicitante");
+    if ($is_blocked !== false) {
+        //guardarLog("Error: IP bloqueada temporalmente debido a múltiples intentos fallidos");
         header("HTTP/1.1 429 Too Many Requests");
         return false;
     }
 
     if (empty($token)) {
-        $numeroIntentos++;
-        guardarLog("[verificarAudio] error Token vacio incrementando intentos fallidos para IP: $ipSolicitante a: $numeroIntentos");
-        set_transient($claveTransitoriaIntentos, $numeroIntentos, $ventanaTiempoSegundos);
-        if ($numeroIntentos >= $limiteIntentos) {
-             guardarLog("[verificarAudio] error Limite de intentos alcanzado bloqueando IP: $ipSolicitante");
-             set_transient($claveTransitoriaBloqueo, true, $duracionBloqueoSegundos);
+        // Incrementar el contador de intentos fallidos
+        $attempts++;
+        set_transient($attempts_key, $attempts, $time_window);
+
+        // Bloquear la IP si se excede el límite
+        if ($attempts >= $limit) {
+            set_transient($blocked_key, true, $block_duration);
+            //guardarLog("Bloqueando IP: " . $ip . " por " . $block_duration . " segundos");
         }
         header("HTTP/1.1 401 Unauthorized");
         return false;
     }
 
-    # Verificaciones de Headers (simple anti-hotlinking/scraping)
-     guardarLog("[verificarAudio] info Verificando Referer y X-Requested-With");
-    if (!isset($_SERVER['HTTP_REFERER'])) {
-         guardarLog("[verificarAudio] error Header Referer ausente");
-         return false;
-    }
-     if(!isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-         guardarLog("[verificarAudio] error Header X-Requested-With ausente");
-         return false;
-     }
-
-    $refererHost = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    guardarLog("[verificarAudio] info Verificando host del Referer: $refererHost");
-    if ($refererHost !== '2upra.com') { // Asegúrate que este sea tu dominio real
-        guardarLog("[verificarAudio] error Host del Referer invalido: $refererHost");
+    // Verificar referer y headers
+    if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+        //guardarLog("Error: Faltan headers requeridos");
         return false;
     }
 
-    guardarLog("[verificarAudio] info Verificando valor X-Requested-With: {$_SERVER['HTTP_X_REQUESTED_WITH']}");
+    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+    if ($referer_host !== '2upra.com') {
+        //guardarLog("Error: referer no válido");
+        return false;
+    }
+
     if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-        guardarLog("[verificarAudio] error Valor X-Requested-With invalido: {$_SERVER['HTTP_X_REQUESTED_WITH']}");
+        //guardarLog("Error: No es una petición AJAX");
         return false;
     }
 
-    # Decodificar y validar token
-    guardarLog("[verificarAudio] info Decodificando token");
-    $tokenDecodificado = base64_decode($token);
-    $partesToken = explode('|', $tokenDecodificado);
-    if (count($partesToken) !== 6) {
-        guardarLog("[verificarAudio] error Token con numero incorrecto de partes: " . count($partesToken));
+    $decoded = base64_decode($token);
+    $parts = explode('|', $decoded);
+    if (count($parts) !== 6) {
+        //guardarLog("Error: número incorrecto de partes en el token");
         return false;
     }
+    //guardarLog("Partes del token: " . print_r($parts, true));
 
-    list($idAudio, $expiracion, $ipUsuario, $idUnico, $maxUsos, $firma) = $partesToken;
-    guardarLog("[verificarAudio] info Partes del token idAudio: $idAudio expiracion: $expiracion ipUsuario: $ipUsuario idUnico: $idUnico maxUsos: $maxUsos");
+    list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
-    # Lógica principal según caché de navegador
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-         guardarLog("[verificarAudio] info Procesando logica de cache de navegador");
-        $claveTransitoriaSesion = 'audio_session_' . $idAudio . '_' . $ipSolicitante;
-        $claveTransitoriaCache = 'audio_access_' . $idAudio . '_' . $ipSolicitante;
+        // Generar una clave única para esta sesión y audio
+        $session_key = 'audio_session_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
+        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
 
-        $datosParaFirma = $idAudio . '|' . $expiracion . '|' . $ipUsuario . '|' . $idUnico;
-        guardarLog("[verificarAudio] info Calculando firma esperada (cache) con datos: $datosParaFirma");
-        $firmaCalculada = hash_hmac('sha256', $datosParaFirma, $_ENV['AUDIOCLAVE']);
+        // Verificar la firma
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
-        if (!hash_equals($firmaCalculada, $firma)) {
-            guardarLog("[verificarAudio] error Firma invalida (cache) esperada: $firmaCalculada recibida: $firma");
+        if (!hash_equals($expected_signature, $signature)) {
+            //guardarLog("Error: firma no válida");
             return false;
         }
-        guardarLog("[verificarAudio] info Firma valida (cache)");
 
-        guardarLog("[verificarAudio] info Verificando transient de sesion clave: $claveTransitoriaSesion");
-        $tokenSesionGuardado = get_transient($claveTransitoriaSesion);
+        // Verificar sesión actual
+        $current_session = get_transient($session_key);
 
-        if ($tokenSesionGuardado === false) {
-            guardarLog("[verificarAudio] info Transient de sesion no encontrado (primer acceso) estableciendo transients");
-            set_transient($claveTransitoriaSesion, $token, 3600);
-            set_transient($claveTransitoriaCache, 1, 3600);
-            guardarLog("[verificarAudio] exito Token verificado correctamente (cache primer acceso)");
+        if ($current_session === false) {
+            // Primera solicitud en esta sesión
+            set_transient($session_key, $token, 3600); // 1 hora
+            set_transient($cache_key, 1, 3600); // Contador de accesos
             return true;
         } else {
-            guardarLog("[verificarAudio] info Transient de sesion encontrado valor (parcial): " . substr($tokenSesionGuardado, 0, 10) . "...");
-             guardarLog("[verificarAudio] info Verificando transient de conteo de accesos clave: $claveTransitoriaCache");
-            $numeroAccesosCache = get_transient($claveTransitoriaCache);
+            // Verificar si es una solicitud válida desde la página
+            $access_count = get_transient($cache_key);
 
-            if ($numeroAccesosCache !== false) {
-                 guardarLog("[verificarAudio] info Conteo de accesos OK ($numeroAccesosCache) incrementando");
-                 set_transient($claveTransitoriaCache, $numeroAccesosCache + 1, 3600);
-                 guardarLog("[verificarAudio] exito Token verificado correctamente (cache acceso subsecuente)");
-                 return true;
-            } else {
-                 guardarLog("[verificarAudio] error Conteo de accesos invalido o condiciones no cumplidas");
-                 return false;
+            if (
+                $access_count !== false &&
+                $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
+                strpos($_SERVER['HTTP_REFERER'], '2upra.com') !== false
+            ) {
+
+                set_transient($cache_key, $access_count + 1, 3600);
+                return true;
             }
+
+            //guardarLog("Error: acceso directo o no autorizado");
+            return false;
         }
     } else {
-        guardarLog("[verificarAudio] info Procesando logica sin cache de navegador");
-        if ($ipSolicitante !== $ipUsuario) {
-            guardarLog("[verificarAudio] error Discrepancia de IP solicitante: $ipSolicitante vs token: $ipUsuario");
+        // Comportamiento original para modo sin caché
+        if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+            //guardarLog("Error: IP no coincide");
             return false;
         }
 
-        if (time() > $expiracion) {
-            guardarLog("[verificarAudio] error Token expirado tiempo actual: " . time() . " expiracion: $expiracion");
+        if (time() > $expiration) {
+            //guardarLog("Error: token expirado");
             return false;
         }
 
-        $claveUsoToken = 'audio_token_' . $idUnico;
-        guardarLog("[verificarAudio] info Verificando usos restantes clave: $claveUsoToken");
-        $usosRestantes = get_transient($claveUsoToken);
-        if ($usosRestantes === false || $usosRestantes <= 0) {
-            guardarLog("[verificarAudio] error No quedan usos o el transient expiro para clave: $claveUsoToken");
+        $usos_restantes = get_transient('audio_token_' . $unique_id);
+        if ($usos_restantes === false || $usos_restantes <= 0) {
             return false;
         }
-         guardarLog("[verificarAudio] info Usos restantes encontrados: $usosRestantes");
 
-        $datosParaFirma = $idAudio . '|' . $expiracion . '|' . $ipUsuario . '|' . $idUnico;
-         guardarLog("[verificarAudio] info Calculando firma esperada (sin cache) con datos: $datosParaFirma");
-        $firmaCalculada = hash_hmac('sha256', $datosParaFirma, $_ENV['AUDIOCLAVE']);
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
-        if (hash_equals($firmaCalculada, $firma)) {
-             guardarLog("[verificarAudio] info Firma valida (sin cache) decrementando usos para idUnico: $idUnico");
-            decrementaUsosToken($idUnico);
-             guardarLog("[verificarAudio] exito Token verificado correctamente (sin cache)");
+        if (hash_equals($expected_signature, $signature)) {
+            decrementaUsosToken($unique_id);
             return true;
+        }
+
+        return false;
+    }
+}
+
+function tokenAudio($audio_id)
+{
+    //guardarLog("Generando token para audio_id: $audio_id");
+
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+        //guardarLog("Error: audio_id inválido: $audio_id");
+        return false;
+    }
+
+    // Si el cacheo del navegador está activado, generamos un token más persistente
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        // Usar una fecha fija para que el token sea consistente
+        $expiration = strtotime('2030-12-31'); // Fecha lejana fija
+        $user_ip = 'cached'; // No usamos IP para permitir el cacheo
+        $unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']); // ID único pero consistente
+        $max_usos = 999999; // Número alto de usos
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
+
+        // No necesitamos almacenar el contador de usos para tokens cacheados
+        return $token;
+    } else {
+        // Comportamiento original para cuando el cacheo está desactivado
+        $expiration = time() + 3600;
+        $user_ip = $_SERVER['REMOTE_ADDR'];
+        $unique_id = uniqid('', true);
+        $max_usos = 3;
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
+
+        set_transient('audio_token_' . $unique_id, $max_usos, 3600);
+
+        //guardarLog("Token generado exitosamente: $token");
+        return $token;
+    }
+}
+
+
+
+
+
+
+function audioStreamEnd($data)
+{
+    if (ob_get_level()) ob_end_clean();
+    $token = $data['token'];
+    $parts = explode('|', base64_decode($token));
+    $audio_id = $parts[0];
+
+    // Directorio de caché
+    $upload_dir = wp_upload_dir();
+    $cache_dir = $upload_dir['basedir'] . '/audio_cache';
+    if (!file_exists($cache_dir)) {
+        wp_mkdir_p($cache_dir);
+    }
+
+    $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
+
+    if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
+        //guardarLog("audioStreamEnd: Cargando audio desde el archivo en caché: $cache_file");
+        $file = $cache_file;
+    } else {
+        $original_file = get_attached_file($audio_id);
+        if (!file_exists($original_file)) {
+            //guardarLog("audioStreamEnd: Error - Archivo de audio original no encontrado para el audio ID: $audio_id");
+            return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
+        }
+        if (!@copy($original_file, $cache_file)) {
+            //guardarLog("audioStreamEnd: Error - Fallo al copiar el archivo de audio al caché.");
+            return new WP_Error('copy_failed', 'Error al copiar el archivo de audio al caché.', array('status' => 500));
+        }
+
+        //guardarLog("audioStreamEnd: Archivo de audio copiado exitosamente al caché: $cache_file");
+        $file = $cache_file;
+    }
+
+    $fp = @fopen($file, 'rb');
+    if (!$fp) {
+        //guardarLog("audioStreamEnd: Error - No se pudo abrir el archivo de audio: $file");
+        return new WP_Error('file_open_error', 'No se pudo abrir el archivo de audio.', array('status' => 500));
+    }
+
+    $size = filesize($file);
+    $length = $size;
+    $start = 0;
+    $end = $size - 1;
+
+    // Generar ETag único para el archivo
+    $etag = '"' . md5($file . filemtime($file)) . '"';
+
+    // Headers básicos
+    header('Content-Type: ' . get_post_mime_type($audio_id));
+    header('Accept-Ranges: bytes');
+
+    // Configurar headers de caché según la constante
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        $cache_time = 60 * 60 * 2190; // 24 horas
+        header('Cache-Control: public, max-age=' . $cache_time);
+        header('Pragma: public');
+        header('ETag: ' . $etag);
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cache_time) . ' GMT');
+
+        // Verificar si el contenido no ha cambiado
+        if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
+            header('HTTP/1.1 304 Not Modified');
+            exit;
+        }
+    } else {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+    }
+
+
+    // Manejar Ranges HTTP para streaming parcial
+    if (isset($_SERVER['HTTP_RANGE'])) {
+        //guardarLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
+        $c_start = $start;
+        $c_end = $end;
+        list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+        if (strpos($range, ',') !== false) {
+            //guardarLog("audioStreamEnd: Error - Rango solicitado no soportado.");
+            header('HTTP/1.1 416 Requested Range Not Satisfiable');
+            header("Content-Range: bytes $start-$end/$size");
+            exit;
+        }
+        if ($range == '-') {
+            $c_start = $size - substr($range, 1);
         } else {
-             guardarLog("[verificarAudio] error Firma invalida (sin cache) esperada: $firmaCalculada recibida: $firma");
-             return false;
+            $range = explode('-', $range);
+            $c_start = $range[0];
+            $c_end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $size;
+        }
+        $c_end = ($c_end > $end) ? $end : $c_end;
+        if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
+            //guardarLog("audioStreamEnd: Error - Rango solicitado fuera de los límites.");
+            header('HTTP/1.1 416 Requested Range Not Satisfiable');
+            header("Content-Range: bytes $start-$end/$size");
+            exit;
+        }
+        $start = $c_start;
+        $end = $c_end;
+        $length = $end - $start + 1;
+        fseek($fp, $start);
+        header('HTTP/1.1 206 Partial Content');
+    }
+
+    header("Content-Range: bytes $start-$end/$size");
+    header("Content-Length: " . $length);
+
+    // Streaming con rate limiting
+    $buffer = 1024 * 8; // 8 KB
+    $sleep = 1000; // Microsegundos de espera entre cada envío de buffer
+    $sent = 0;
+    while (!feof($fp) && ($p = ftell($fp)) <= $end) {
+        if ($p + $buffer > $end) {
+            $buffer = $end - $p + 1;
+        }
+        echo fread($fp, $buffer);
+        $sent += $buffer;
+        flush();
+        if ($sent >= 64 * 1024) { // Cada 64 KB
+            usleep($sleep);
+            $sent = 0;
         }
     }
 
-    // Este punto no deberia alcanzarse en teoria si la logica es correcta
-    guardarLog("[verificarAudio] error Verificacion de token llego al final sin retornar true/false");
-    return false;
+    //guardarLog("audioStreamEnd: Transmisión del audio completada para el archivo: $file");
+    fclose($fp);
+    exit();
 }
 
-# Genera un token de corta o larga duración para un ID de audio.
-function tokenAudio($idAudio)
-{
-     guardarLog("[tokenAudio] inicio Generando token para idAudio: $idAudio");
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $idAudio)) {
-         guardarLog("[tokenAudio] error ID de audio invalido formato incorrecto: $idAudio");
-         return false;
-    }
 
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-         guardarLog("[tokenAudio] info Generando token con cache de navegador habilitado");
-        $tiempoExpiracion = strtotime('2030-12-31'); # Expiracion larga para cache
-        $ipUsuarioToken = 'cached'; # IP no relevante para cache
-        $identificadorUnico = md5($idAudio . $_ENV['AUDIOCLAVE']); # ID unico basado en audio y clave secreta
-        $maximoUsos = 999999; # Usos "ilimitados" para cache
 
-        $datosParaFirma = $idAudio . '|' . $tiempoExpiracion . '|' . $ipUsuarioToken . '|' . $identificadorUnico;
-        guardarLog("[tokenAudio] info Preparando datos para token cache idAudio: $idAudio expiracion: $tiempoExpiracion ip: $ipUsuarioToken idUnico: $identificadorUnico");
-        guardarLog("[tokenAudio] info Calculando firma para token cache");
-        $firmaCalculada = hash_hmac('sha256', $datosParaFirma, $_ENV['AUDIOCLAVE']);
-        $tokenGenerado = base64_encode($datosParaFirma . '|' . $maximoUsos . '|' . $firmaCalculada);
-
-        guardarLog("[tokenAudio] exito Token cache generado (parcial): " . substr($tokenGenerado, 0, 20) . "...");
-        return $tokenGenerado;
-    } else {
-        guardarLog("[tokenAudio] info Generando token sin cache de navegador");
-        $tiempoExpiracion = time() + 3600; # 1 hora de validez
-        $ipUsuarioToken = $_SERVER['REMOTE_ADDR'];
-        $identificadorUnico = uniqid('', true); # ID unico para este token especifico
-        $maximoUsos = 3; # Limite de usos
-
-        $datosParaFirma = $idAudio . '|' . $tiempoExpiracion . '|' . $ipUsuarioToken . '|' . $identificadorUnico;
-        guardarLog("[tokenAudio] info Preparando datos para token no-cache idAudio: $idAudio expiracion: $tiempoExpiracion ip: $ipUsuarioToken idUnico: $identificadorUnico maxUsos: $maximoUsos");
-        guardarLog("[tokenAudio] info Calculando firma para token no-cache");
-        $firmaCalculada = hash_hmac('sha256', $datosParaFirma, $_ENV['AUDIOCLAVE']);
-        $tokenGenerado = base64_encode($datosParaFirma . '|' . $maximoUsos . '|' . $firmaCalculada);
-
-        $claveTransitoriaToken = 'audio_token_' . $identificadorUnico;
-        guardarLog("[tokenAudio] info Guardando transient $claveTransitoriaToken con maxUsos: $maximoUsos duracion: 3600");
-        set_transient($claveTransitoriaToken, $maximoUsos, 3600);
-
-        guardarLog("[tokenAudio] exito Token no-cache generado (parcial): " . substr($tokenGenerado, 0, 20) . "...");
-        return $tokenGenerado;
-    }
-}
-
-# Programa la tarea diaria de limpieza de caché si no está ya programada.
+// Registra el cron job
 add_action('wp', 'schedule_audio_cache_cleanup');
+
 function schedule_audio_cache_cleanup()
 {
-    guardarLog("[schedule_audio_cache_cleanup] inicio Verificando programacion de limpieza");
     if (!wp_next_scheduled('audio_cache_cleanup')) {
-         guardarLog("[schedule_audio_cache_cleanup] info Programando tarea audio_cache_cleanup");
         wp_schedule_event(time(), 'daily', 'audio_cache_cleanup');
-    } else {
-        guardarLog("[schedule_audio_cache_cleanup] info Tarea audio_cache_cleanup ya programada");
     }
 }
 
-# Ejecuta la limpieza de archivos de caché de audio antiguos.
+// Función para limpiar el caché
 add_action('audio_cache_cleanup', 'clean_audio_cache');
+
 function clean_audio_cache()
 {
-    guardarLog("[clean_audio_cache] inicio Ejecutando limpieza de cache de audio");
-    $directorioUploads = wp_upload_dir();
-    $directorioCache = $directorioUploads['basedir'] . '/audio_cache';
-    guardarLog("[clean_audio_cache] info Verificando directorio: $directorioCache");
+    $upload_dir = wp_upload_dir();
+    $cache_dir = $upload_dir['basedir'] . '/audio_cache';
 
-    if (is_dir($directorioCache)) {
-        guardarLog("[clean_audio_cache] info Directorio de cache encontrado buscando archivos antiguos");
-        $listaArchivos = glob($directorioCache . '/*');
-        $tiempoActual = time();
-        $tiempoLimite = 7 * 24 * 60 * 60; // 7 dias
+    if (is_dir($cache_dir)) {
+        $files = glob($cache_dir . '/*');
+        $now = time();
 
-        foreach ($listaArchivos as $rutaArchivo) {
-             guardarLog("[clean_audio_cache] info Procesando archivo: $rutaArchivo");
-             // Comprueba si es un archivo y si su última modificación fue hace más de tiempoLimite
-            if (is_file($rutaArchivo) && ($tiempoActual - filemtime($rutaArchivo) > $tiempoLimite)) {
-                 // Corrige la sintaxis de la llamada a date() y la concatenación
-                 guardarLog("[clean_audio_cache] info Archivo antiguo (modificado: " . date('Y-m-d H:i:s', filemtime($rutaArchivo)) . ") eliminando: $rutaArchivo");
-                unlink($rutaArchivo);
-            } else if (is_file($rutaArchivo)){
-                 // Corrige la sintaxis de la llamada a date() y la concatenación
-                 guardarLog("[clean_audio_cache] info Archivo conservado (modificado: " . date('Y-m-d H:i:s', filemtime($rutaArchivo)) . "): $rutaArchivo");
-            } else {
-                 guardarLog("[clean_audio_cache] info Elemento omitido (no es archivo): $rutaArchivo");
+        foreach ($files as $file) {
+            if (is_file($file) && ($now - filemtime($file) > 7 * 24 * 60 * 60)) {
+                unlink($file);
             }
         }
-         guardarLog("[clean_audio_cache] exito Limpieza de cache finalizada");
-    } else {
-        guardarLog("[clean_audio_cache] info Directorio de cache no existe omitiendo limpieza");
     }
 }
 
-# Desprograma la tarea de limpieza de caché al desactivar.
-register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
+// Desprogramar el cron job cuando el plugin se desactiva
 function unschedule_audio_cache_cleanup()
 {
-    guardarLog("[unschedule_audio_cache_cleanup] inicio Intentando desprogramar tarea de limpieza");
-    $proximaEjecucion = wp_next_scheduled('audio_cache_cleanup');
-    if ($proximaEjecucion) {
-        guardarLog("[unschedule_audio_cache_cleanup] info Tarea encontrada en $proximaEjecucion desprogramando");
-        wp_unschedule_event($proximaEjecucion, 'audio_cache_cleanup');
-    } else {
-        guardarLog("[unschedule_audio_cache_cleanup] info Tarea no encontrada no es necesario desprogramar");
+    $timestamp = wp_next_scheduled('audio_cache_cleanup');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'audio_cache_cleanup');
     }
 }
+register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
 
-?>
