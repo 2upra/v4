@@ -391,4 +391,6 @@ function register_custom_post_types()
 }
 add_action('init', 'register_custom_post_types');
 
+// Acción de refactorización: La función configurarMetadatosPaginaIdioma() ya se encontraba en este archivo. No se realizaron cambios.
+
 ?>

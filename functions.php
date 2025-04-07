@@ -95,4 +95,6 @@ foreach ($directorios as $directorio) {
     incluirArchivos($directorio);
 }
 
+// Acción de refactorización: La función configurarMetadatosPaginaIdioma() ya se encontraba en app/Setup/ThemeSetup.php y no en functions.php. No se realizaron cambios.
+
 ?>
