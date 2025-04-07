@@ -15,67 +15,7 @@
 // Refactor(Org): Funcion archivarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 
 // Refactor(Org): Funcion completarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
-function completarTarea()
-{
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
-    }
-
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $estado = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
-
-    $tarea = get_post($id);
-
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $tipo = get_post_meta($id, 'tipo', true);
-    $log = "Funcion completarTarea(). \n ID: $id, tipo: $tipo. \n";
-
-    if ($tipo == 'una vez') {
-        $log .= "Se actualizo el estado de la tarea a $estado \n";
-        update_post_meta($id, 'estado', $estado);
-    } else if ($tipo == 'habito' || $tipo == 'habito rigido') {
-        $fecha = get_post_meta($id, 'fecha', true);
-        $fechaProxima = get_post_meta($id, 'fechaProxima', true);
-        $frecuencia = intval(get_post_meta($id, 'frecuencia', true));
-        $hoy = date('Y-m-d');
-
-
-        $vecesCompletado = get_post_meta($id, 'vecesCompletado', true);
-        if (empty($vecesCompletado)) {
-            add_post_meta($id, 'vecesCompletado', 0, true);
-            $vecesCompletado = 0;
-        }
-        $vecesCompletado++;
-
-        // Manejar el registro de fechas de completado
-        $fechasCompletado = get_post_meta($id, 'fechasCompletado', true);
-        if (empty($fechasCompletado)) {
-            $fechasCompletado = array();
-        }
-
-        // Agregar la fecha actual al array de fechas de completado
-        $fechasCompletado[] = $hoy;
-
-        update_post_meta($id, 'vecesCompletado', $vecesCompletado);
-        update_post_meta($id, 'fechasCompletado', $fechasCompletado);
-
-        if ($tipo == 'habito') {
-            $nuevaFechaProxima = date('Y-m-d', strtotime($hoy . " + $frecuencia days"));
-        } elseif ($tipo == 'habito rigido') {
-            $nuevaFechaProxima = date('Y-m-d', strtotime($fechaProxima . " + $frecuencia days"));
-        }
-
-        $log .= "Se actualizo fechaProxima de $fechaProxima a $nuevaFechaProxima, y se agrego +1 a vecesCompletado (actualmente en $vecesCompletado), ademas se registraron las fechas de completado \n";
-        update_post_meta($id, 'fechaProxima', $nuevaFechaProxima);
-    }
-    guardarLog($log);
-    wp_send_json_success();
-}
-
-add_action('wp_ajax_completarTarea', 'completarTarea');
+// Refactor(Org): Funcion completarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 
 // Refactor(Org): Funcion actualizarOrdenTareas() y hook AJAX movidos desde app/Content/Task/logicTareas.php
 function actualizarOrdenTareas()
