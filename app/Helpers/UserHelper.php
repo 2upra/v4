@@ -78,35 +78,4 @@ function validarUsuario($userId) {
     return true;
 }
 
-// Refactor(Org): Añadida función para obtener datos de usuario para la cabecera.
-/**
- * Obtiene los datos básicos del usuario actual para la cabecera.
- *
- * @return array|null Un array con 'user_id', 'nombre_usuario', 'url_imagen_perfil', 'usuarioTipo', o null si el usuario no está logueado.
- */
-function obtenerDatosUsuarioCabecera()
-{
-    if (!is_user_logged_in()) {
-        return null;
-    }
-
-    $usuario = wp_get_current_user();
-    $user_id = $usuario->ID;
-    $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = imagenPerfil($user_id); // Asume que imagenPerfil() está disponible
-    $usuarioTipo = get_user_meta($user_id, 'tipoUsuario', true);
-
-    // Optimizar URL de imagen si Jetpack Photon está activo
-    if (function_exists('jetpack_photon_url')) {
-        $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
-    }
-
-    return [
-        'user_id' => $user_id,
-        'nombre_usuario' => $nombre_usuario,
-        'url_imagen_perfil' => $url_imagen_perfil,
-        'usuarioTipo' => $usuarioTipo,
-    ];
-}
-
 ?>
