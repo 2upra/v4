@@ -62,7 +62,8 @@ function subirArchivo($archivo_path) {
     }
 }
 
-// Refactor(Org): Función generarDescripcionIA movida a app/Services/IAService.php
+// Refactor(Org): Función generarDescripcionIA ya se encuentra en app/Services/IAService.php
+// // No se realiza la acción de mover ya que la función no existe en este archivo.
 
 
 add_action('wp_ajax_ai_request', 'iaSend');
