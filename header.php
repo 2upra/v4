@@ -1,14 +1,12 @@
 <?
 if (!is_user_logged_in()) {
 } else {
-    $usuario = wp_get_current_user();
-    $user_id = get_current_user_id();
-    $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = imagenPerfil($usuario->ID);
-    $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
-    if (function_exists('jetpack_photon_url')) {
-        $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
-    }
+    // Refactor(Org): Use helper function to get user data
+    $datosUsuario = obtenerDatosUsuarioCabecera();
+    $user_id = $datosUsuario['user_id'];
+    $nombre_usuario = $datosUsuario['nombre_usuario'];
+    $url_imagen_perfil = $datosUsuario['url_imagen_perfil'];
+    $usuarioTipo = $datosUsuario['usuarioTipo'];
 }
 if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
