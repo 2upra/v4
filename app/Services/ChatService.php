@@ -214,3 +214,18 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
         return false;
     }
 }
+
+// Refactor: Función reiniciarChats() y su hook AJAX movidos desde app/Chat/renderListaChats.php
+// Función para manejar la solicitud AJAX
+function reiniciarChats()
+{
+    $usuarioId = get_current_user_id();
+    // Refactor: Se llama a la función obtenerChats desde ChatService (este mismo archivo)
+    $conversaciones = obtenerChats($usuarioId);
+    // Refactor: Se llama a la función renderListaChats desde renderListaChats.php
+    // Asegúrate de que renderListaChats.php esté incluido o autocargado
+    $htmlConversaciones = renderListaChats($conversaciones, $usuarioId);
+    wp_send_json_success(['html' => $htmlConversaciones]);
+    exit;
+}
+add_action('wp_ajax_reiniciarChats', 'reiniciarChats');

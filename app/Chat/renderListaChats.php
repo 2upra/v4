@@ -1,18 +1,7 @@
 <?php
 
 
-// Función para manejar la solicitud AJAX
-add_action('wp_ajax_reiniciarChats', 'reiniciarChats');
-function reiniciarChats()
-{
-    $usuarioId = get_current_user_id();
-    // Refactor: Se llama a la función obtenerChats desde ChatService
-    // Asegúrate de que ChatService.php esté incluido o autocargado
-    $conversaciones = obtenerChats($usuarioId);
-    $htmlConversaciones = renderListaChats($conversaciones, $usuarioId);
-    wp_send_json_success(['html' => $htmlConversaciones]);
-    exit;
-}
+// Refactor: Función reiniciarChats() y su hook AJAX movidos a app/Services/ChatService.php
 
 
 
