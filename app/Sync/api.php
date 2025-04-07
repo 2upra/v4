@@ -19,30 +19,11 @@ add_action('rest_api_init', function () {
         'callback' => 'verificarCambiosAudios',
         'permission_callback' => 'chequearElectron',
     ));
-    register_rest_route('1/v1',  '/infoUsuario', array(
-        'methods' => 'POST',
-        'callback' => 'handle_info_usuario',
-        'permission_callback' => 'chequearElectron',
-    ));
+    // Refactor(Org): Ruta /infoUsuario movida a app/Services/UserService.php
 });
 
 
-function handle_info_usuario(WP_REST_Request $request)
-{
-    $receptor = intval($request->get_param('receptor'));
-
-    if ($receptor <= 0) {
-        return new WP_Error('invalid_receptor', 'ID del receptor inválido.', array('status' => 400));
-    }
-
-    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
-    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
-
-    return array(
-        'imagenPerfil' => $imagenPerfil,
-        'nombreUsuario' => $nombreUsuario,
-    );
-}
+// Refactor(Org): Función handle_info_usuario() movida a app/Services/UserService.php
 
 // Función de permiso: valida la cabecera X-Electron-App
 function chequearElectron()
@@ -187,6 +168,7 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                     set_transient('sync_token_' . $token, $attachment_id, 300);
 
                     // Obtener imagen optimizada
+                    // Refactor(Org): Función obtenerImagenOptimizada movida a app/Utils/ImageUtils.php
                     $optimized_image_url = obtenerImagenOptimizada($current_post_id);
 
                     $colecciones = isset($samplesGuardados[$current_post_id]) ? $samplesGuardados[$current_post_id] : ['No coleccionados'];
@@ -216,30 +198,7 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     return rest_ensure_response($downloads);
 }
 
-
-function obtenerImagenOptimizada($post_id)
-{
-    // Intentar obtener la imagen de portada
-    $portada_id = get_post_thumbnail_id($post_id);
-    if ($portada_id) {
-        $portada_url = wp_get_attachment_url($portada_id);
-        if ($portada_url) {
-            return img($portada_url); // Optimizar la imagen
-        }
-    }
-
-    // Si no hay portada, intentar obtener la imagen temporal
-    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
-    if ($imagen_temporal_id) {
-        $imagen_temporal_url = wp_get_attachment_url($imagen_temporal_id);
-        if ($imagen_temporal_url) {
-            return img($imagen_temporal_url); // Optimizar la imagen
-        }
-    }
-
-    // Si no hay imagen, devolver null
-    return null;
-}
+// Refactor(Org): Función obtenerImagenOptimizada movida a app/Utils/ImageUtils.php
 
 function descargarAudiosSync(WP_REST_Request $request)
 {
@@ -321,4 +280,3 @@ function descargarAudiosSync(WP_REST_Request $request)
         return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
     }
 }
-

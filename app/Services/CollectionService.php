@@ -476,6 +476,161 @@ function borrarColec()
     wp_send_json_success(['message' => 'Colección eliminada correctamente']);
 }
 
+// Refactor(Org): Funcion datosColeccion movida desde app/Content/Colecciones/View/renderPostColec.php
+function datosColeccion($postId)
+{
+    // Registro de inicio de la función
+    error_log("Inicio de la función datosColeccion para el post ID: " . $postId);
+
+    try {
+        // Obtener el metadato 'samples' y deserializarlo
+        $samples_serialized = get_post_meta($postId, 'samples', true);
+        if (empty($samples_serialized)) {
+            error_log("Error en datosColeccion: Metadato 'samples' vacío para el post ID: " . $postId);
+            return;
+        }
+
+        // Deserializar el array de muestras
+        $samples = maybe_unserialize_dos($samples_serialized);
+
+        if (!is_array($samples)) {
+            preg_match_all('/i:\d+;i:(\d+);/', $samples_serialized, $matches);
+            if (isset($matches[1])) {
+                $samples = array_map('intval', $matches[1]);
+            } else {
+                error_log("Error en datosColeccion: No se pudo deserializar 'samples' para el post ID: " . $postId);
+                return;
+            }
+        }
+
+        // Inicializar el arreglo para 'datosColeccion'
+        $datos_coleccion = [
+            //'descripcion_corta'      => [],
+            'estado_animo'           => [],
+            'artista_posible'        => [],
+            'genero_posible'         => [],
+            'instrumentos_principal' => [],
+            'tags_posibles'          => [],
+        ];
+
+        // Campos a procesar
+        $campos = array_keys($datos_coleccion);
+
+        foreach ($samples as $sample_id) {
+            // Obtener 'datosAlgoritmo'
+            $datos_algoritmo = get_post_meta($sample_id, 'datosAlgoritmo', true);
+            if (empty($datos_algoritmo)) {
+                $datos_algoritmo_respaldo = get_post_meta($sample_id, 'datosAlgoritmo_respaldo', true);
+                if (!empty($datos_algoritmo_respaldo)) {
+                    if (is_array($datos_algoritmo_respaldo) || is_object($datos_algoritmo_respaldo)) {
+                        // Serializar o codificar según el caso
+                        $datos_algoritmo = json_encode($datos_algoritmo_respaldo);
+                    } else {
+                        // Asumir que está serializado
+                        $datos_algoritmo = maybe_unserialize_dos($datos_algoritmo_respaldo);
+                        if (is_object($datos_algoritmo) || is_array($datos_algoritmo)) {
+                            $datos_algoritmo = json_encode($datos_algoritmo);
+                        }
+                    }
+                } else {
+                    // No hay datos para este sample, continuar al siguiente
+                    error_log("Advertencia en datosColeccion: No se encontraron datosAlgoritmo ni datosAlgoritmo_respaldo para el sample ID: " . $sample_id);
+                    continue;
+                }
+            }
+
+            // Validar que el dato sea un string antes de decodificar JSON
+            if (is_array($datos_algoritmo)) {
+                $datos_algoritmo = json_encode($datos_algoritmo);
+            } elseif (!is_string($datos_algoritmo)) {
+                error_log("Error: datosAlgoritmo no es string ni array. Sample ID: " . $sample_id);
+                continue;
+            }
+
+            // Decodificar el JSON
+            $datos_algoritmo_array = json_decode($datos_algoritmo, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // JSON inválido, intentar deserializar si es posible
+                $datos_algoritmo_array = maybe_unserialize_dos($datos_algoritmo);
+                if (!is_array($datos_algoritmo_array)) {
+                    // No se puede procesar este sample, saltar
+                    error_log("Error en datosColeccion: No se pudo decodificar o deserializar datosAlgoritmo para el sample ID: " . $sample_id);
+                    continue;
+                }
+            }
+
+            // Procesar cada campo
+            foreach ($campos as $campo) {
+                if (isset($datos_algoritmo_array[$campo])) {
+                    // Obtener solo los datos en inglés
+                    if (isset($datos_algoritmo_array[$campo]['en'])) {
+                        $valores = $datos_algoritmo_array[$campo]['en'];
+                    } else {
+                        // Si no existe el campo 'en', saltar
+                        continue;
+                    }
+
+                    // Aplanar el array en caso de que haya arrays anidados
+                    $valores = aplanarArray($valores);
+
+                    if (!is_array($valores)) {
+                        // Asegurarse de que es un array
+                        $valores = [$valores];
+                    }
+
+                    foreach ($valores as $valor) {
+                        // Validar el tipo de dato antes de aplicar trim
+                        if (is_array($valor)) {
+                            error_log("Advertencia: Se encontró un array dentro de '$campo'. Sample ID: $sample_id");
+                            // Aplanar de nuevo si es necesario
+                            $subvalores = aplanarArray($valor);
+                            foreach ($subvalores as $subvalor) {
+                                $subvalor = trim((string) $subvalor);
+                                if ($subvalor === '') {
+                                    continue;
+                                }
+                                if (isset($datos_coleccion[$campo][$subvalor])) {
+                                    $datos_coleccion[$campo][$subvalor]++;
+                                } else {
+                                    $datos_coleccion[$campo][$subvalor] = 1;
+                                }
+                            }
+                            continue; // Ya procesamos los subvalores
+                        }
+
+                        // Normalizar el valor (trim, mayúsculas/minúsculas según necesidad)
+                        $valor = trim((string) $valor); // Convertir a string por seguridad
+                        if ($valor === '') {
+                            continue;
+                        }
+                        if (isset($datos_coleccion[$campo][$valor])) {
+                            $datos_coleccion[$campo][$valor]++;
+                        } else {
+                            $datos_coleccion[$campo][$valor] = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Opcional: Ordenar los resultados por frecuencia descendente
+        foreach ($datos_coleccion as &$campo) {
+            arsort($campo);
+        }
+        unset($campo); // Desreferenciar
+
+        $datos_coleccion_json = json_encode($datos_coleccion, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+        update_post_meta($postId, 'datosColeccion', $datos_coleccion_json);
+
+        // Registro de finalización exitosa de la función
+        error_log("Función datosColeccion completada con éxito para el post ID: " . $postId);
+    } catch (Exception $e) {
+        // Capturar cualquier excepción y registrar el error
+        error_log("Error fatal en datosColeccion para el post ID: " . $postId . ". Mensaje de error: " . $e->getMessage());
+    }
+}
+
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
 add_action('wp_ajax_borrarColec', 'borrarColec');

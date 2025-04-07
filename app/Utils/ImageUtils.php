@@ -61,3 +61,28 @@ function img($url, $quality = 40, $strip = 'all')
 }
 
 // Refactor(Org): Funcion imagenPerfil movida a app/Helpers/UserHelper.php
+
+// Refactor(Org): Función movida desde app/Sync/api.php
+function obtenerImagenOptimizada($post_id)
+{
+    // Intentar obtener la imagen de portada
+    $portada_id = get_post_thumbnail_id($post_id);
+    if ($portada_id) {
+        $portada_url = wp_get_attachment_url($portada_id);
+        if ($portada_url) {
+            return img($portada_url); // Optimizar la imagen
+        }
+    }
+
+    // Si no hay portada, intentar obtener la imagen temporal
+    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+    if ($imagen_temporal_id) {
+        $imagen_temporal_url = wp_get_attachment_url($imagen_temporal_id);
+        if ($imagen_temporal_url) {
+            return img($imagen_temporal_url); // Optimizar la imagen
+        }
+    }
+
+    // Si no hay imagen, devolver null
+    return null;
+}

@@ -165,39 +165,21 @@ function headGeneric()
 }
 add_action('wp_head', 'headGeneric');
 
-/**
- * Obtiene el idioma preferido del navegador del usuario.
- *
- * Analiza la cabecera HTTP_ACCEPT_LANGUAGE para determinar el idioma preferido.
- * Prioriza 'es' (español) o 'en' (inglés).
- *
- * @return string Retorna 'es' o 'en', o 'en' por defecto si no se puede determinar o no está en la lista priorizada.
- */
-function obtenerIdiomaDelNavegador()
-{
-    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) || empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-        return 'en'; // Retorna inglés por defecto si la cabecera no está presente o está vacía
-    }
-
-    $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-    foreach ($accepted_languages as $language) {
-        // Extrae el código de idioma principal (ej. 'es' de 'es-ES,es;q=0.9')
-        $lang = substr(trim(explode(';', $language)[0]), 0, 2);
-
-        // Verifica si el idioma extraído es español o inglés
-        if (in_array($lang, ['es', 'en'])) {
-            return $lang; // Retorna el primer idioma coincidente ('es' o 'en')
-        }
-    }
-
-    return 'en'; // Retorna inglés si ninguno de los idiomas preferidos ('es', 'en') se encuentra
-}
+// Refactor(Org): Función obtenerIdiomaDelNavegador() movida a app/Utils/BrowserUtils.php
 
 /**
  * Configura los metadatos de la página (título, descripción) y las cookies
  * basándose en el idioma detectado del navegador.
  */
 function configurarMetadatosPaginaIdioma() {
+    // Asegúrate de que la función obtenerIdiomaDelNavegador() esté disponible
+    // (puede requerir incluir el archivo app/Utils/BrowserUtils.php si no se carga automáticamente)
+    if (!function_exists('obtenerIdiomaDelNavegador')) {
+        // Opcional: Registrar un error o manejar la ausencia de la función
+        // error_log('Error: La función obtenerIdiomaDelNavegador() no está definida.');
+        return; // Salir si la función no existe
+    }
+
     $idioma = obtenerIdiomaDelNavegador();
 
     if ($idioma === 'es') {
@@ -390,5 +372,471 @@ function register_custom_post_types()
     }
 }
 add_action('init', 'register_custom_post_types');
+
+// Acción de refactorización: La función configurarMetadatosPaginaIdioma() ya se encontraba en este archivo. No se realizaron cambios.
+
+// Refactor(Org): Hooks de tipo MIME APK movidos desde app/Pages/Temporal.php
+function permitir_subir_apks($mime_types)
+{
+    $mime_types['apk'] = 'application/vnd.android.package-archive';
+    return $mime_types;
+}
+add_filter('upload_mimes', 'permitir_subir_apks');
+
+function verificar_subida_apk($data, $file, $filename, $mimes)
+{
+
+    if (substr($filename, -4) === '.apk') {
+        if (! current_user_can('manage_options')) {
+            $data['error'] = 'Lo siento, no tienes permisos para subir archivos APK.';
+        } else {
+            $data['type'] = 'application/vnd.android.package-archive';
+        }
+    }
+
+    return $data;
+}
+add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
+
+// Refactor(Org): Mover lógica de normalización de posts y hooks desde TagUtils.php
+// Funciones movidas desde app/Functions/normalizarTags.php (originalmente en app/Utils/TagUtils.php)
+function normalizarNuevoPost($post_id, $post, $update) {
+    // Verificar si es el tipo de post correcto
+    if ('social_post' !== get_post_type($post_id)) {
+        return;
+    }
+
+    // Obtener los datos del algoritmo
+    $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
+    
+    if (!is_array($meta_datos)) {
+        return;
+    }
+
+    // Normalizaciones
+    $normalizaciones = array(
+        'one-shot' => 'one shot',
+        'oneshot' => 'one shot',
+        'percusión' => 'percusión',
+        'hiphop' => 'hip hop',
+        'hip-hop' => 'hip hop',
+        'rnb' => 'r&b',
+        'vocal' => 'vocals',
+        'r&b' => 'r&b',
+        'randb' => 'r&b',
+        'rock&roll' => 'rock and roll',
+        'rockandroll' => 'rock and roll',
+        'rock-and-roll' => 'rock and roll',
+        'campana de vaca' => 'cowbell',
+        'cowbells' => 'cowbell',
+        'drums' => 'drum',
+    );
+
+    // Verificar si ya existe un respaldo antes de crear uno nuevo
+    $respaldo_existente = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+    if (empty($respaldo_existente)) {
+        // Se usa add_post_meta con $meta_datos que es un array, WP lo serializará
+        add_post_meta($post_id, 'datosAlgoritmo_respaldo', $meta_datos, true);
+    }
+
+    // Normalizar tags
+    $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+    $fue_modificado = false;
+
+    foreach ($campos as $campo) {
+        foreach (['es', 'en'] as $idioma) {
+            if (!empty($meta_datos[$campo][$idioma]) && is_array($meta_datos[$campo][$idioma])) {
+                foreach ($meta_datos[$campo][$idioma] as &$tag) {
+                    $tag_lower = strtolower(trim($tag));
+                    if (isset($normalizaciones[$tag_lower])) {
+                        $tag = $normalizaciones[$tag_lower];
+                        $fue_modificado = true;
+                    }
+                }
+                // Liberar la referencia
+                unset($tag);
+            }
+        }
+    }
+
+    if ($fue_modificado) {
+        // Se usa update_post_meta con $meta_datos que es un array, WP lo serializará
+        update_post_meta($post_id, 'datosAlgoritmo', $meta_datos);
+    }
+
+    // Verificar y restaurar después de la normalización
+    verificarYRestaurarDatos($post_id);
+}
+
+function normalizarPostActualizado($post_id, $post_after, $post_before) {
+    if ('social_post' !== get_post_type($post_id)) {
+        return;
+    }
+    // Solo ejecutar si el contenido del post ha cambiado
+    if ($post_before->post_content === $post_after->post_content) {
+        // Podríamos querer normalizar incluso si el contenido no cambia, 
+        // por si los metadatos se actualizaron por otra vía, pero la lógica original lo evita.
+        // Considerar si esta condición es realmente necesaria o si siempre debe normalizar.
+        return;
+    }
+    normalizarNuevoPost($post_id, $post_after, true);
+    // La llamada a verificarYRestaurarDatos ya está dentro de normalizarNuevoPost
+    // llamarla aquí de nuevo es redundante.
+    // verificarYRestaurarDatos($post_id); 
+}
+
+// Función para verificar y restaurar datos si 'datosAlgoritmo' está vacío
+function verificarYRestaurarDatos($post_id) {
+    // Verificar si datosAlgoritmo existe y no está vacío
+    $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+    
+    if (empty($datos_algoritmo)) {
+        // Intentar restaurar desde el respaldo
+        $respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+        
+        if (!empty($respaldo)) {
+            // Restaurar los datos desde el respaldo
+            // $respaldo ya debería ser un array si se guardó correctamente
+            update_post_meta($post_id, 'datosAlgoritmo', $respaldo);
+            
+            // Opcional: Registrar la restauración
+            //error_log("Datos 'datosAlgoritmo' restaurados desde respaldo para el post ID: " . $post_id);
+        }
+    }
+}
+
+// Función para crear respaldo y normalizar en lote
+function crearRespaldoYNormalizar($batch_size = 100) {
+    global $wpdb;
+    
+    // Normalizaciones (repetidas de normalizarNuevoPost, considerar centralizar)
+    $normalizaciones = array(
+        'one-shot' => 'one shot',
+        'oneshot' => 'one shot',
+        'percusión' => 'percusión',
+        'hiphop' => 'hip hop',
+        'hip-hop' => 'hip hop',
+        'rnb' => 'r&b',
+        'vocal' => 'vocals',
+        'r&b' => 'r&b',
+        'randb' => 'r&b',
+        'rock&roll' => 'rock and roll',
+        'rockandroll' => 'rock and roll',
+        'rock-and-roll' => 'rock and roll',
+        'campana de vaca' => 'cowbell',
+        'cowbells' => 'cowbell',
+        'drums' => 'drum',
+    );
+
+    $offset = 0;
+    $total_procesados = 0;
+
+    do {
+        // Obtener posts que tienen 'datosAlgoritmo' pero no 'datosAlgoritmo_respaldo'
+        // La consulta original tenía un LEFT JOIN incorrecto, corregido aquí:
+        $query = $wpdb->prepare("
+            SELECT p.ID, pm.meta_value 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = 'datosAlgoritmo'
+            LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'datosAlgoritmo_respaldo'
+            WHERE p.post_type = 'social_post'
+            AND pm2.meta_id IS NULL
+            LIMIT %d OFFSET %d
+        ", $batch_size, $offset);
+
+        $resultados = $wpdb->get_results($query);
+        
+        if (empty($resultados)) {
+            break;
+        }
+
+        foreach ($resultados as $row) {
+            // El valor meta ya viene serializado de la BD
+            $meta_datos_serializados = $row->meta_value;
+            // Deserializar para trabajar con él
+            $meta_datos = maybe_unserialize($meta_datos_serializados);
+            
+            if (!is_array($meta_datos)) {
+                //error_log("Error al deserializar datosAlgoritmo para post ID: {$row->ID}");
+                continue;
+            }
+
+            // Crear respaldo usando el valor serializado original
+            add_post_meta($row->ID, 'datosAlgoritmo_respaldo', $meta_datos_serializados, true);
+
+            // Normalizar tags (usando el array deserializado)
+            $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+            $fue_modificado = false;
+
+            foreach ($campos as $campo) {
+                foreach (['es', 'en'] as $idioma) {
+                    if (!empty($meta_datos[$campo][$idioma]) && is_array($meta_datos[$campo][$idioma])) {
+                        foreach ($meta_datos[$campo][$idioma] as &$tag) {
+                            $tag_lower = strtolower(trim($tag));
+                            if (isset($normalizaciones[$tag_lower])) {
+                                $tag = $normalizaciones[$tag_lower];
+                                $fue_modificado = true;
+                            }
+                        }
+                        unset($tag); // Liberar referencia
+                    }
+                }
+            }
+
+            if ($fue_modificado) {
+                // Guardar el array modificado, WP lo serializará
+                update_post_meta($row->ID, 'datosAlgoritmo', $meta_datos);
+            }
+
+            $total_procesados++;
+        }
+
+        // El offset se incrementa por el tamaño del lote para la siguiente página
+        $offset += $batch_size; 
+        
+        // Pequeña pausa para no sobrecargar el servidor
+        if ($total_procesados > 0 && $total_procesados % 1000 === 0) {
+            sleep(1);
+        }
+
+    } while (count($resultados) === $batch_size);
+
+    //error_log("Proceso de respaldo y normalización completado. Total procesados: " . $total_procesados);
+    return $total_procesados;
+}
+
+// Para revertir los cambios si algo sale mal
+function revertirNormalizacion($batch_size = 100) {
+    global $wpdb;
+    
+    $offset = 0;
+    $total_revertidos = 0;
+
+    do {
+        // Obtener posts que tienen respaldo
+        $query = $wpdb->prepare("
+            SELECT p.ID, pm.meta_value 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_type = 'social_post'
+            AND pm.meta_key = 'datosAlgoritmo_respaldo'
+            LIMIT %d OFFSET %d
+        ", $batch_size, $offset);
+
+        $resultados = $wpdb->get_results($query);
+        
+        if (empty($resultados)) {
+            break;
+        }
+
+        foreach ($resultados as $row) {
+            // $row->meta_value contiene el valor serializado del respaldo
+            // Restaurar 'datosAlgoritmo' con el valor del respaldo
+            // Es importante pasar el valor tal cual (serializado) a update_post_meta
+            // o deserializarlo si se espera un array.
+            // Dado que add_post_meta guardó el valor serializado, lo pasamos tal cual.
+            update_post_meta($row->ID, 'datosAlgoritmo', $row->meta_value);
+            // Eliminar el respaldo
+            delete_post_meta($row->ID, 'datosAlgoritmo_respaldo');
+            $total_revertidos++;
+        }
+
+        $offset += $batch_size;
+        
+        if ($total_revertidos > 0 && $total_revertidos % 1000 === 0) {
+            sleep(1);
+        }
+
+    } while (count($resultados) === $batch_size);
+
+    //error_log("Proceso de reversión completado. Total revertidos: " . $total_revertidos);
+    return $total_revertidos;
+}
+
+// Función para restaurar 'datosAlgoritmo' desde 'datosAlgoritmo_respaldo' si está vacío
+function restaurar_datos_algoritmo() {
+    // Parámetros para obtener todos los posts del tipo 'social_post'
+    $args = array(
+        'post_type'      => 'social_post',
+        'posts_per_page' => -1, // Obtener todos los posts
+        'post_status'    => 'any', // Incluir todos los estados (publicados, borradores, etc.)
+        'fields'         => 'ids', // Solo necesitamos los IDs para optimizar
+        'no_found_rows'  => true, // Optimización: no necesitamos paginación
+        'update_post_meta_cache' => false, // Optimización: no necesitamos meta cache
+        'update_post_term_cache' => false, // Optimización: no necesitamos term cache
+    );
+
+    // Obtener los IDs de los posts
+    $post_ids = get_posts($args);
+
+    $restaurados_count = 0;
+    // Verificar cada post
+    foreach ($post_ids as $post_id) {
+        // Intentar obtener el meta dato 'datosAlgoritmo'
+        $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+
+        // Si 'datosAlgoritmo' no existe o está vacío
+        if (empty($datos_algoritmo)) {
+            // Verificar si existe 'datosAlgoritmo_respaldo'
+            $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+
+            if (!empty($datos_algoritmo_respaldo)) {
+                // Restaurar el valor de 'datosAlgoritmo' desde 'datosAlgoritmo_respaldo'
+                // Asumimos que $datos_algoritmo_respaldo es el valor correcto (puede ser serializado o no)
+                update_post_meta($post_id, 'datosAlgoritmo', $datos_algoritmo_respaldo);
+                //error_log("Restaurado 'datosAlgoritmo' para el post ID: $post_id");
+                $restaurados_count++;
+            }
+        }
+        // Liberar memoria
+        unset($datos_algoritmo, $datos_algoritmo_respaldo);
+    }
+
+    // Agregar un log para saber que la función se ejecutó y cuántos se restauraron
+    //error_log("Restauración de 'datosAlgoritmo' completada. Posts restaurados: " . $restaurados_count);
+}
+
+// Hooks movidos desde app/Utils/TagUtils.php
+add_action('wp_insert_post', 'normalizarNuevoPost', 10, 3);
+add_action('post_updated', 'normalizarPostActualizado', 10, 3);
+
+// Ejecutar la función de restauración una sola vez al inicio
+add_action('init', function() {
+    // Usar una opción para asegurar que solo se ejecute una vez
+    if (!get_option('datos_algoritmo_restaurado_v1')) {
+        restaurar_datos_algoritmo();
+        update_option('datos_algoritmo_restaurado_v1', 1); // Marcar que ya se ejecutó
+    }
+});
+
+// Refactor(Org): Mover lógica de redirección/reescritura de perfiles desde reglas.php
+/**
+ * Maneja las redirecciones relacionadas con los perfiles de usuario.
+ *
+ * @action template_redirect
+ */
+function handle_profile_redirects() {
+    $current_url = $_SERVER['REQUEST_URI'];
+
+    // Caso 1: Redirección de /perfil/ al perfil del usuario actual
+    if (rtrim($current_url, '/') === '/perfil' && is_user_logged_in()) {
+        $current_user = wp_get_current_user();
+        $clean_user_login = sanitize_title($current_user->user_login);
+        wp_redirect(home_url("/perfil/{$clean_user_login}/"), 301);
+        exit;
+    }
+
+    // Caso 2: Corregir URLs con espacios o caracteres especiales en los perfiles
+    if (strpos($current_url, '/perfil/') !== false) {
+        $path_parts = explode('/perfil/', $current_url);
+        if (isset($path_parts[1])) {
+            $username_with_spaces = trim(urldecode($path_parts[1]), '/');
+
+            // Eliminar espacios y caracteres especiales del nombre de usuario
+            $clean_username = str_replace([' ', '+', '%20'], '', $username_with_spaces);
+
+            // Si el nombre de usuario original tenía espacios, redirigir a la URL limpia
+            if ($username_with_spaces !== $clean_username) {
+                wp_redirect(home_url("/perfil/{$clean_username}/"), 301);
+                exit;
+            }
+        }
+    }
+
+    // Caso 3: Redirigir author page a perfil
+    if (is_author()) {
+        global $wp;
+        $author_slug = $wp->query_vars['author_name'];
+        $nuevo_url = home_url('/perfil/' . $author_slug);
+        wp_redirect($nuevo_url, 301);
+        exit();
+    }
+
+    // Caso 4: Manejar errores 404 relacionados con nombres de usuario
+    if (is_404()) {
+        $requested_url = $_SERVER['REQUEST_URI'];
+        $url_segments = explode('/', trim($requested_url, '/'));
+        if (count($url_segments) == 1) {
+            $user_slug = $url_segments[0];
+            $user = get_user_by('slug', $user_slug);
+            if ($user) {
+                wp_redirect(home_url('/perfil/' . $user_slug), 301);
+                exit;
+            }
+        }
+    }
+}
+
+/**
+ * Añade reglas de reescritura personalizadas para los perfiles de usuario.
+ *
+ * @action init
+ */
+function custom_rewrite_rules() {
+    add_rewrite_rule('^perfil/([^/]*)/?', 'index.php?profile_user=$matches[1]', 'top');
+}
+
+/**
+ * Añade 'profile_user' al listado de query vars.
+ *
+ * @param array $vars Array de query vars existentes.
+ * @return array Array de query vars actualizado.
+ * @filter query_vars
+ */
+function custom_query_vars($vars) {
+    $vars[] = 'profile_user';
+    return $vars;
+}
+
+/**
+ * Usa una plantilla personalizada para la URL de perfil.
+ *
+ * @param string $template Ruta actual de la plantilla.
+ * @return string Ruta de la plantilla a usar.
+ * @filter template_include
+ */
+function custom_template_include($template) {
+    if (get_query_var('profile_user')) {
+        $new_template = locate_template(array('perfil.php'));
+        if ('' != $new_template) {
+            return $new_template;
+        }
+    }
+    return $template;
+}
+
+/**
+ * Limpia la caché de reglas de reescritura una vez.
+ *
+ * @action init
+ */
+function flush_rewrite_rules_once() {
+    if (get_option('rewrite_rules_flushed') != true) {
+        flush_rewrite_rules();
+        update_option('rewrite_rules_flushed', true);
+    }
+}
+
+// Hooks para las funciones de perfil movidas
+add_action('template_redirect', 'handle_profile_redirects');
+add_action('init', 'custom_rewrite_rules');
+add_filter('query_vars', 'custom_query_vars');
+add_filter('template_include', 'custom_template_include');
+add_action('init', 'flush_rewrite_rules_once');
+
+// Refactor(Org): Mover lógica de redirección de búsqueda desde app/Perfiles/reglas.php
+add_action('template_redirect', function () {
+    // Verificar si estamos en la página de inicio y si el parámetro 'search' está en la URL
+    if (!is_front_page() && isset($_GET['search'])) {
+        $search_query = sanitize_text_field($_GET['search']); // Sanitiza el término de búsqueda
+
+        // Evitar redirección infinita comprobando si ya estamos redirigiendo a esta URL
+        if (!isset($_GET['redirected'])) {
+            // Redirige a la página de inicio con el parámetro de búsqueda y una marca para evitar bucles
+            wp_redirect(home_url('/?search=' . urlencode($search_query) . '&redirected=1'));
+            exit;
+        }
+    }
+});
 
 ?>

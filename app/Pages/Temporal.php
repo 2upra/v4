@@ -190,28 +190,7 @@ function papelera()
 <?
 }
 
-function permitir_subir_apks($mime_types)
-{
-    $mime_types['apk'] = 'application/vnd.android.package-archive';
-    return $mime_types;
-}
-
-function verificar_subida_apk($data, $file, $filename, $mimes)
-{
-
-    if (substr($filename, -4) === '.apk') {
-        if (! current_user_can('manage_options')) {
-            $data['error'] = 'Lo siento, no tienes permisos para subir archivos APK.';
-        } else {
-            $data['type'] = 'application/vnd.android.package-archive';
-        }
-    }
-
-    return $data;
-}
-
-add_filter('upload_mimes', 'permitir_subir_apks');
-add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
+// Refactor(Org): Funciones y hooks para APK movidos a app/Setup/ThemeSetup.php
 
 // Refactor(Org): Función dev() movida a app/View/Components/DevContent.php
 
