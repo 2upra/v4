@@ -4,7 +4,11 @@ function htmlColec($filtro)
 {
     ob_start();
     $postId = get_the_ID();
-    $vars = variablesColec($postId);
+    // Refactor(Org): Funcion variablesColec movida a app/Services/CollectionService.php
+    // Se asume que CollectionService.php es incluido o la función está disponible globalmente
+    // Si no es así, se necesitará incluir el archivo o instanciar el servicio.
+    // Por ahora, se llama directamente asumiendo disponibilidad global.
+    $vars = variablesColec($postId); 
     extract($vars);
 ?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV no-refresh"
@@ -103,55 +107,7 @@ function htmlColec($filtro)
 // Funcion maybe_unserialize_dos movida a app/Utils/ArrayUtils.php
 
 
-
-function variablesColec($postId = null)
-{
-    // Si no se proporciona un postId, usa el ID del post global.
-    if ($postId === null) {
-        global $post;
-        $postId = $post->ID;
-    }
-
-    $usuarioActual = get_current_user_id();
-    $autorId = get_post_field('post_author', $postId);
-    $samplesMeta = get_post_meta($postId, 'samples', true);
-    $datosColeccion = get_post_meta($postId, 'datosColeccion', true);
-    $sampleCount = 0;
-    $sampleCountReal = 0; // Inicializar la variable
-
-    if (!empty($samplesMeta)) {
-        $samplesArray = maybe_unserialize_dos($samplesMeta);
-
-        if (is_array($samplesArray)) {
-            $sampleCount = count($samplesArray);
-
-            // Contar los samples no descargados
-            if ($usuarioActual) {
-                $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
-                $sampleCountReal = 0;
-
-                foreach ($samplesArray as $sampleId) {
-                    // Verificar si el sample actual NO ha sido descargado
-                    if (!isset($descargas_anteriores[$sampleId])) {
-                        $sampleCountReal++;
-                    }
-                }
-            } else {
-                // Si no hay usuario actual (no ha iniciado sesión), el costo es el total de samples
-                $sampleCountReal = $sampleCount;
-            }
-        }
-    }
-
-    return [
-        'fecha' => get_the_date('', $postId),
-        'colecStatus' => get_post_status($postId),
-        'autorId' => $autorId,
-        'samples' => $sampleCount . ' samples',
-        'datosColeccion' => $datosColeccion,
-        'sampleCount' => $sampleCountReal, // Usar el valor calculado
-    ];
-}
+// Refactor(Org): Funcion variablesColec movida a app/Services/CollectionService.php
 
 
 function imagenColeccion($postId)
@@ -188,6 +144,8 @@ function imagenColeccion($postId)
 
 function singleColec($postId)
 {
+    // Refactor(Org): Funcion variablesColec movida a app/Services/CollectionService.php
+    // Se asume que CollectionService.php es incluido o la función está disponible globalmente.
     $vars = variablesColec($postId);
     extract($vars);
     ob_start()

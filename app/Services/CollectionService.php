@@ -631,6 +631,56 @@ function datosColeccion($postId)
     }
 }
 
+// Refactor(Org): Funcion variablesColec movida desde app/Content/Colecciones/View/renderPostColec.php
+function variablesColec($postId = null)
+{
+    // Si no se proporciona un postId, usa el ID del post global.
+    if ($postId === null) {
+        global $post;
+        $postId = $post->ID;
+    }
+
+    $usuarioActual = get_current_user_id();
+    $autorId = get_post_field('post_author', $postId);
+    $samplesMeta = get_post_meta($postId, 'samples', true);
+    $datosColeccion = get_post_meta($postId, 'datosColeccion', true);
+    $sampleCount = 0;
+    $sampleCountReal = 0; // Inicializar la variable
+
+    if (!empty($samplesMeta)) {
+        $samplesArray = maybe_unserialize_dos($samplesMeta);
+
+        if (is_array($samplesArray)) {
+            $sampleCount = count($samplesArray);
+
+            // Contar los samples no descargados
+            if ($usuarioActual) {
+                $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
+                $sampleCountReal = 0;
+
+                foreach ($samplesArray as $sampleId) {
+                    // Verificar si el sample actual NO ha sido descargado
+                    if (!isset($descargas_anteriores[$sampleId])) {
+                        $sampleCountReal++;
+                    }
+                }
+            } else {
+                // Si no hay usuario actual (no ha iniciado sesión), el costo es el total de samples
+                $sampleCountReal = $sampleCount;
+            }
+        }
+    }
+
+    return [
+        'fecha' => get_the_date('', $postId),
+        'colecStatus' => get_post_status($postId),
+        'autorId' => $autorId,
+        'samples' => $sampleCount . ' samples',
+        'datosColeccion' => $datosColeccion,
+        'sampleCount' => $sampleCountReal, // Usar el valor calculado
+    ];
+}
+
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
 add_action('wp_ajax_borrarColec', 'borrarColec');
