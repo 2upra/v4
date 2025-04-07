@@ -147,4 +147,41 @@ class SEOService {
         echo $schema . "\n"; // Schema already includes <script> tags
     }
 
+    /**
+     * Generates SEO meta tags specifically for 'colecciones' post type.
+     *
+     * @param int $postId The ID of the 'coleccion' post.
+     * @return array An array containing 'title', 'description', and 'schema'.
+     */
+    public function generateColeccionMetaTags($postId) {
+        // Refactor: Moved SEO generation logic from single-colecciones.php
+
+        // Obtener el título de la colección
+        $post_title = get_the_title($postId);
+
+        // Generar el título SEO: Primera letra en mayúscula y añadir "| Drum kit & Sample Pack"
+        $seo_title = ucfirst($post_title) . ' | Drum kit & Sample Pack';
+
+        // Meta descripción
+        $meta_description_full = get_post_field('post_content', $postId); // Obtener el contenido completo
+        $meta_description = mb_substr(wp_strip_all_tags($meta_description_full), 0, 160);
+        $meta_description = esc_attr($meta_description);
+
+        // Esquema JSON-LD
+        $schema = [
+            "@context"    => "https://schema.org",
+            "@type"       => "CollectionPage", // Tipo de esquema para una colección
+            "name"        => $seo_title,
+            "description" => $meta_description,
+            "datePublished" => get_the_date('c', $postId),
+            "author"      => [
+                "@type" => "Person",
+                "name"  => get_the_author_meta('display_name', get_post_field('post_author', $postId))
+            ]
+        ];
+
+        // Return the calculated SEO data
+        return ['title' => $seo_title, 'description' => $meta_description, 'schema' => $schema];
+    }
+
 }
