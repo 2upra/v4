@@ -387,3 +387,87 @@ function actualizarOrdenTareas()
 }
 
 add_action('wp_ajax_actualizarOrdenTareas', 'actualizarOrdenTareas');
+
+// Refactor(Org): Funcion actualizarOrdenTareasGrupo() y hook movidos desde app/Services/TaskService.php
+function actualizarOrdenTareasGrupo() {
+    // Verificar nonce para seguridad
+    check_ajax_referer('actualizar_orden_tareas_grupo_nonce', 'nonce');
+
+    // Verificar permisos del usuario
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('No tienes permisos para realizar esta acción.', 403);
+    }
+
+    // Obtener y validar los datos enviados
+    $ordenes = isset($_POST['ordenes']) ? $_POST['ordenes'] : null;
+    $log = "Iniciando actualizarOrdenTareasGrupo...\n";
+
+    if (empty($ordenes) || !is_array($ordenes)) {
+        $log .= "Error: No se recibieron datos de ordenes o el formato es incorrecto.\n";
+        guardarLog($log);
+        wp_send_json_error('Datos de órdenes inválidos.', 400);
+    }
+
+    $usu = get_current_user_id();
+    $ordenActualUsuario = get_user_meta($usu, 'ordenTareas', true) ?: [];
+    $log .= "Usuario ID: $usu\n";
+    $log .= "Orden actual del usuario: " . implode(',', $ordenActualUsuario) . "\n";
+
+    $errores = [];
+    $ordenesProcesados = []; // Para llevar registro de qué tareas ya se procesaron
+
+    foreach ($ordenes as $grupo) {
+        $sesion = isset($grupo['sesion']) ? sanitize_text_field($grupo['sesion']) : null;
+        $tareas = isset($grupo['tareas']) ? array_map('intval', $grupo['tareas']) : [];
+
+        $log .= "Procesando grupo para sesión: '$sesion' con tareas: " . implode(',', $tareas) . "\n";
+
+        if ($sesion === null || empty($tareas)) {
+            $log .= "Advertencia: Grupo inválido (sesión nula o tareas vacías). Saltando.\n";
+            continue; // Saltar este grupo si es inválido
+        }
+
+        foreach ($tareas as $tareaId) {
+            // Verificar si la tarea pertenece al usuario actual (opcional pero recomendado)
+            $post_author = get_post_field('post_author', $tareaId);
+            if ($post_author != $usu) {
+                $msg = "Error: La tarea $tareaId no pertenece al usuario actual ($usu). Pertenece a $post_author.";
+                $log .= "$msg\n";
+                $errores[] = $msg;
+                continue; // Saltar esta tarea
+            }
+
+            // Actualizar sesión y estado
+            try {
+                actualizarSesionEstado($tareaId, $sesion); // Reutilizamos la función existente
+                $log .= "Sesión/Estado actualizado para tarea $tareaId a '$sesion'.\n";
+                $ordenesProcesados[] = $tareaId;
+            } catch (Exception $e) {
+                $msg = "Error al actualizar sesión/estado para tarea $tareaId: " . $e->getMessage();
+                $log .= "$msg\n";
+                $errores[] = $msg;
+            }
+        }
+    }
+
+    // Actualizar el orden general del usuario solo con las tareas procesadas
+    // Mantenemos el orden relativo de las tareas procesadas según llegaron
+    // y añadimos al final las tareas no procesadas que ya estaban en el orden del usuario
+    $nuevoOrdenUsuario = $ordenesProcesados;
+    $tareasNoProcesadasEnOrden = array_diff($ordenActualUsuario, $ordenesProcesados);
+    $nuevoOrdenUsuario = array_merge($nuevoOrdenUsuario, $tareasNoProcesadasEnOrden);
+    // Asegurarse de que no haya duplicados (aunque no debería haber si la lógica es correcta)
+    $nuevoOrdenUsuario = array_unique($nuevoOrdenUsuario);
+
+    update_user_meta($usu, 'ordenTareas', $nuevoOrdenUsuario);
+    $log .= "Orden final actualizado para el usuario $usu: " . implode(',', $nuevoOrdenUsuario) . "\n";
+
+    guardarLog($log);
+
+    if (!empty($errores)) {
+        wp_send_json_error(['message' => 'Se produjeron errores durante la actualización.', 'errors' => $errores], 500);
+    } else {
+        wp_send_json_success(['message' => 'Órdenes de tareas actualizados correctamente.', 'nuevoOrden' => $nuevoOrdenUsuario]);
+    }
+}
+add_action('wp_ajax_actualizarOrdenTareasGrupo', 'actualizarOrdenTareasGrupo');
