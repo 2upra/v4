@@ -24,6 +24,7 @@ $usuarios_a_bloquear = [
 
 //bloquear_y_eliminar_usuarios($usuarios_a_bloquear);
 /*
+// Refactor(Org): Moved to app/Services/UserService.php
 function restringir_acceso_admin() {
     $user = wp_get_current_user();
     $allowed_ip = '104.28.203.220';  // Reemplaza con tu IP

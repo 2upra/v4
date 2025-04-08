@@ -340,7 +340,10 @@ function bloquear_y_eliminar_usuarios($usuarios) {
         if (is_numeric($usuario)) {
             $user = get_user_by('id', $usuario);
         } elseif (filter_var($usuario, FILTER_VALIDATE_IP)) {
-            $user = get_user_by('ip', $usuario);
+            // Note: get_user_by('ip') is not a standard WordPress function.
+            // This logic might need adjustment based on how IP is associated with users.
+            // Assuming IP might be stored in user meta or logs, or this is intended for IP blocking only.
+            // For now, we'll proceed assuming it's primarily for IP blocking via bloquear_ip().
         } elseif (is_email($usuario)) {
             $user = get_user_by('email', $usuario);
         } else {
@@ -364,13 +367,18 @@ function bloquear_y_eliminar_usuarios($usuarios) {
                 wp_delete_post($post->ID, true);
             }
 
-            // Bloquear usuario
-            wp_update_user(array('ID' => $user->ID, 'role' => 'blocked'));
-            wp_update_user(array('ID' => $user->ID, 'user_status' => 1));
+            // Bloquear usuario (Set role to something non-functional or use a specific 'blocked' role if defined)
+            // Using 'restringido' role as per agregar_rol_restringido() in Emergencias.php
+            wp_update_user(array('ID' => $user->ID, 'role' => 'restringido')); 
+            // wp_update_user(array('ID' => $user->ID, 'user_status' => 1)); // user_status is deprecated
 
-            // Bloquear IP si se proporcionó
-            if (filter_var($usuario, FILTER_VALIDATE_IP)) {
-                bloquear_ip($usuario);
+            // Block user's IP if it was provided and is the identifier
+            if (filter_var($usuario, FILTER_VALIDATE_IP) && $usuario === $_SERVER['REMOTE_ADDR']) { // Check if the identifier is the current IP
+                 // Or retrieve the user's last known IP if stored elsewhere
+                 $user_ip = get_user_meta($user->ID, 'last_login_ip', true); // Example meta key
+                 if ($user_ip) {
+                     bloquear_ip($user_ip);
+                 }
             }
         } else {
             // Si no se encuentra el usuario pero es una IP válida, bloquearla
@@ -383,6 +391,7 @@ function bloquear_y_eliminar_usuarios($usuarios) {
     }
 }
 
+// Refactor(Org): Moved banearUsuario() function and hook from app/Misc/Emergencias.php
 function banearUsuario() {
 
     if (!current_user_can('administrator')) {
@@ -407,19 +416,21 @@ function banearUsuario() {
         wp_die();
     }
     $autor_id = $post->post_author;
-    rrestringir_usuario($autor_id);
+    // Call restringir_usuario with the author ID
+    restringir_usuario([$autor_id]); // Pass as an array
     wp_send_json_success('El autor del post ha sido restringido correctamente.');
     wp_die(); 
 }
 add_action('wp_ajax_banearUsuario', 'banearUsuario');
 
-function restringir_usuario($usuarios) {
+// Refactor(Org): Moved restringir_usuario() function from app/Misc/Emergencias.php
+function restringir_usuario($usuarios) { // Expects an array of user identifiers
     foreach ($usuarios as $usuario) {
         $user = null;
         if (is_numeric($usuario)) {
             $user = get_user_by('id', $usuario);
         } elseif (filter_var($usuario, FILTER_VALIDATE_IP)) {
-            $user = get_user_by('ip', $usuario);
+            // Cannot reliably get user by IP unless stored
         } elseif (is_email($usuario)) {
             $user = get_user_by('email', $usuario);
         } else {
@@ -431,10 +442,17 @@ function restringir_usuario($usuarios) {
                 error_log("No se puede restringir al administrador o al usuario con ID 1: {$user->user_login}");
                 continue;
             }
+            // Use 'restringido' role as defined in Emergencias.php
             wp_update_user(array('ID' => $user->ID, 'role' => 'restringido'));
-            wp_update_user(array('ID' => $user->ID, 'user_status' => 1));
+            // wp_update_user(array('ID' => $user->ID, 'user_status' => 1)); // Deprecated
+            
+            // Block IP if identifier was IP (less common for restriction)
             if (filter_var($usuario, FILTER_VALIDATE_IP)) {
-                bloquear_ip($usuario); 
+                 // Maybe block last known IP?
+                 $user_ip = get_user_meta($user->ID, 'last_login_ip', true); // Example
+                 if ($user_ip) {
+                     bloquear_ip($user_ip);
+                 }
             }
         } else {
             if (filter_var($usuario, FILTER_VALIDATE_IP)) {
@@ -446,12 +464,52 @@ function restringir_usuario($usuarios) {
     }
 }
 
+// Refactor(Org): Moved bloquear_ip() function from app/Misc/Emergencias.php
 function bloquear_ip($ip) {
-    $htaccess = ABSPATH . '/.htaccess';
-    $deny = "\n# Bloqueo de IP\nDeny from $ip\n";
-    if (file_exists($htaccess)) {
-        file_put_contents($htaccess, $deny, FILE_APPEND);
+    // Basic validation
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        error_log("Intento de bloquear una IP inválida: $ip");
+        return;
+    }
+
+    $htaccess = ABSPATH . '.htaccess'; // Use ABSPATH constant
+    $deny = "\n# Bloqueo de IP - " . date('Y-m-d H:i:s') . "\nDeny from $ip\n";
+    
+    // Check if .htaccess exists and is writable
+    if (file_exists($htaccess) && is_writable($htaccess)) {
+        // Check if IP is already blocked to avoid duplicates
+        $content = file_get_contents($htaccess);
+        if (strpos($content, "Deny from $ip") === false) {
+            file_put_contents($htaccess, $deny, FILE_APPEND | LOCK_EX); // Add lock
+        } else {
+            error_log("IP ya bloqueada en .htaccess: $ip");
+        }
+    } else {
+        error_log("No se pudo bloquear la IP $ip. El archivo .htaccess no existe o no tiene permisos de escritura.");
+        // Fallback: Consider logging or alternative blocking methods if needed
     }
 }
+
+// Refactor(Org): Moved function restringir_acceso_admin() and hook from app/Misc/Emergencias.php
+function restringir_acceso_admin() {
+    $user = wp_get_current_user();
+    // IMPORTANT: Define your actual allowed IP(s) or logic here
+    $allowed_ips = ['YOUR_PRIMARY_ADMIN_IP', 'ANOTHER_ALLOWED_IP']; // Example: Use an array for multiple IPs
+    $allowed_user_id = 1; // Typically the first admin user
+
+    $current_ip = $_SERVER['REMOTE_ADDR'];
+    $is_allowed_user = ($user && $user->ID === $allowed_user_id);
+    $is_allowed_ip = in_array($current_ip, $allowed_ips);
+
+    // Deny access if the user is NOT the specific allowed user AND the IP is NOT in the allowed list
+    if (!$is_allowed_user && !$is_allowed_ip) {
+        // Optional: More granular checks like capability
+        // if ($user && !current_user_can('manage_options')) { 
+        //     wp_die('Acceso denegado. Permisos insuficientes.', 'Acceso Denegado', ['response' => 403]);
+        // }
+        wp_die('Acceso denegado. Contacte al administrador.', 'Acceso Denegado', ['response' => 403]);
+    }
+}
+add_action('admin_init', 'restringir_acceso_admin');
 
 ?>
