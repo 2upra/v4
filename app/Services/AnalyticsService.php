@@ -111,3 +111,77 @@ function vistasDatos($userId) {
     //rendimientolog("[vistasDatos] Tiempo para obtener 'vistas': " . (microtime(true) - $tiempoInicio) . " segundos");
     return $vistas;
 }
+
+// Refactor(Exec): Moved function contarPostsFiltrados() and its hooks from app/Content/Logic/contador.php
+/**
+ * Cuenta los posts filtrados según los criterios proporcionados vía AJAX.
+ * Requiere que el usuario esté logueado.
+ * Envía una respuesta JSON con el total de posts o un error.
+ */
+function contarPostsFiltrados() {
+    // Verificar si el usuario tiene permisos para realizar la acción
+    // Nota: Se mantiene la verificación de usuario logueado, aunque el hook nopriv también existe.
+    // Considerar si el acceso nopriv es realmente necesario o si se debe restringir.
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Acceso no autorizado.']);
+        return;
+    }
+
+    $current_user_id = get_current_user_id();
+
+    // Obtener el post type desde la petición Ajax
+    $post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : 'social_post';
+
+    $query_args = [
+        'post_type'      => $post_type, // Usar el post type recibido
+        'post_status'    => 'publish',
+        'fields'         => 'ids',
+        'posts_per_page' => -1,
+    ];
+
+    // Obtener parámetros enviados por AJAX
+    $search_query = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+    $filters = isset($_POST['filters']) ? $_POST['filters'] : []; // Nota: $filters no se usa actualmente en esta función.
+
+    // Aplicar filtros específicos del usuario
+    // Asegurarse de que la función aplicarFiltrosUsuario esté disponible en este contexto o moverla/incluirla.
+    // Si aplicarFiltrosUsuario no está definida globalmente, esto causará un error fatal.
+    // Asumiendo que está definida globalmente o en un archivo incluido.
+    if (function_exists('aplicarFiltrosUsuario')) {
+        $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+    } else {
+        // Opcional: Registrar un error o advertencia si la función no existe.
+        error_log('Advertencia: La función aplicarFiltrosUsuario no está definida en el contexto de contarPostsFiltrados.');
+    }
+
+
+    // Si hay una búsqueda activa, modificar los argumentos de la query
+    // Asegurarse de que la función prefiltrarIdentifier esté disponible en este contexto o moverla/incluirla.
+    // Si prefiltrarIdentifier no está definida globalmente, esto causará un error fatal.
+    // Asumiendo que está definida globalmente o en un archivo incluido.
+    if (!empty($search_query)) {
+         if (function_exists('prefiltrarIdentifier')) {
+            $query_args = prefiltrarIdentifier($search_query, $query_args);
+         } else {
+             // Opcional: Registrar un error o advertencia si la función no existe.
+             error_log('Advertencia: La función prefiltrarIdentifier no está definida en el contexto de contarPostsFiltrados.');
+         }
+    }
+
+    // Ejecutar la consulta para contar los posts
+    $query = new WP_Query($query_args);
+    $total_posts = $query->found_posts;
+
+    // Enviar la respuesta en formato JSON
+    wp_send_json_success(['total' => $total_posts]);
+    // wp_die() es llamado implícitamente por wp_send_json_success/error.
+}
+
+// Registrar las acciones AJAX para contarPostsFiltrados
+// Movido desde app/Content/Logic/contador.php
+add_action('wp_ajax_contarPostsFiltrados', 'contarPostsFiltrados');
+// Nota: El hook nopriv permite a usuarios no logueados llamar a esta función,
+// pero la función misma verifica is_user_logged_in() y devuelve error.
+// Esto podría ser intencional para dar un mensaje de error específico,
+// o podría ser un remanente que debería eliminarse si la función es solo para logueados.
+add_action('wp_ajax_nopriv_contarPostsFiltrados', 'contarPostsFiltrados');
