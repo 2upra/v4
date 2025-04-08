@@ -164,3 +164,42 @@ function completarTarea()
 }
 
 add_action('wp_ajax_completarTarea', 'completarTarea');
+
+// Refactor(Org): Funcion cambiarPrioridad() y hook AJAX movidos desde app/Services/TaskService.php
+function cambiarPrioridad()
+{
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $tareaId = isset($_POST['tareaId']) ? intval($_POST['tareaId']) : 0;
+    $prioridad = isset($_POST['prioridad']) ? sanitize_text_field($_POST['prioridad']) : '';
+
+    $tarea = get_post($tareaId);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    if (!in_array($prioridad, ['baja', 'media', 'alta', 'importante'])) {
+        wp_send_json_error('Prioridad inválida.');
+    }
+
+    $impnum = 0;
+    if ($prioridad === 'importante') {
+        $impnum = 4;
+    } elseif ($prioridad === 'alta') {
+        $impnum = 3;
+    } elseif ($prioridad === 'media') {
+        $impnum = 2;
+    } elseif ($prioridad === 'baja') {
+        $impnum = 1;
+    }
+
+    update_post_meta($tareaId, 'importancia', $prioridad);
+    update_post_meta($tareaId, 'impnum', $impnum); // Guarda el valor numérico
+
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_cambiarPrioridad', 'cambiarPrioridad');
