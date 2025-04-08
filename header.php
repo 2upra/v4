@@ -228,7 +228,8 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item">
                             <a>
-                                <? echo iconoNotificaciones() ?>
+                                <? // Refactor(Exec): Funcion iconoNotificaciones movida a app/View/Helpers/NotificationHelper.php
+                                echo iconoNotificaciones() ?>
                             </a>
                         </div>
 
@@ -289,7 +290,8 @@ if (!defined('ABSPATH')) {
 
                                 <div class="xaxa1 menu-item">
                                     <a>
-                                        <? echo iconoNotificaciones() ?>
+                                        <? // Refactor(Exec): Funcion iconoNotificaciones movida a app/View/Helpers/NotificationHelper.php
+                                        echo iconoNotificaciones() ?>
                                     </a>
                                 </div>
 
