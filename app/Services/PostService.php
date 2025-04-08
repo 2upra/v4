@@ -10,7 +10,13 @@ function subidaRs()
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
 
-    $idPost = crearPost();
+    // Refactor(Org): Función crearPost() movida a Post/PostCreationService.php
+    // La función crearPost() ahora se encuentra en app/Services/Post/PostCreationService.php
+    // Si necesitas usarla, asegúrate de que ese archivo esté incluido.
+    // Ejemplo de llamada (asumiendo que PostCreationService.php está incluido):
+    // $idPost = crearPost(); 
+
+    $idPost = crearPost(); // Asegúrate de que PostCreationService.php esté incluido donde se llame a subidaRs
     if (is_wp_error($idPost)) {
         guardarLog('Error al crear el post: ' . $idPost->get_error_message());
         wp_send_json_error(['message' => 'Error al crear el post']);
@@ -58,36 +64,6 @@ function asignarTags($idPost)
     }
 }
 
-#Crea un post
-function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
-{
-    $contenido = isset($_POST['textoNormal']) ? sanitize_textarea_field($_POST['textoNormal']) : '';
-    $tags = isset($_POST['tags']) ? sanitize_text_field($_POST['tags']) : '';
-
-    if (empty($contenido)) {
-        error_log('Error en crearPost: El contenido no puede estar vacio.');
-        return new WP_Error('empty_content', 'El contenido no puede estar vacio.');
-    }
-
-    $titulo = wp_trim_words($contenido, 15, '...');
-    $autor = get_current_user_id();
-
-    $idPost = wp_insert_post([
-        'post_title'   => $titulo,
-        'post_content' => $contenido,
-        'post_status'  => $estadoPost,
-        'post_author'  => $autor,
-        'post_type'    => $tipoPost,
-    ]);
-
-    if (is_wp_error($idPost)) {
-        $mensajeError = str_replace("\n", " | ", $idPost->get_error_message());
-        error_log('Error en crearPost: Error al insertar el post. Detalles: ' . $mensajeError);
-        return $idPost;
-    }
-
-    return $idPost;
-}
 
 #Actualiza los metadatos de un post
 function actualizarMetaDatos($idPost)
