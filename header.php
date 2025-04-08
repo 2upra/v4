@@ -56,52 +56,9 @@ if (!defined('ABSPATH')) {
                                                                             } else {
                                                                             }
                                                                                 ?>
-        <style>
-            <?
-
-            if (LOCAL) {
-                $font_path_gothic = get_template_directory_uri() . '/assets/Fonts/Gothic60-Regular.otf';
-                $font_path_source_sans_3_regular = get_template_directory_uri() . '/assets/Fonts/SourceSans3-Regular.woff2';
-                $font_path_source_sans_3_semibold = get_template_directory_uri() . '/assets/Fonts/SourceSans3-SemiBold.woff2';
-                $font_path_source_sans_3_bold = get_template_directory_uri() . '/assets/Fonts/SourceSans3-Bold.woff2';
-            } else {
-                $font_path_gothic = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf';
-                $font_path_source_sans_3_regular = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2';
-                $font_path_source_sans_3_semibold = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-SemiBold.woff2';
-                $font_path_source_sans_3_bold = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2';
-            }
-            ?>@font-face {
-                font-family: 'Gothic №60';
-                src: url('<? echo $font_path_gothic; ?>') format('opentype');
-                font-weight: 400;
-                font-style: normal;
-                font-display: swap;
-            }
-
-            @font-face {
-                font-family: 'Source Sans 3';
-                src: url('<? echo $font_path_source_sans_3_regular; ?>') format('woff2');
-                font-weight: 400;
-                font-style: normal;
-                font-display: swap;
-            }
-
-            @font-face {
-                font-family: 'Source Sans 3';
-                src: url('<? echo $font_path_source_sans_3_semibold; ?>') format('woff2');
-                font-weight: 500;
-                font-style: normal;
-                font-display: swap;
-            }
-
-            @font-face {
-                font-family: 'Source Sans 3';
-                src: url('<? echo $font_path_source_sans_3_bold; ?>') format('woff2');
-                font-weight: 700;
-                font-style: normal;
-                font-display: swap;
-            }
-        </style>
+        <?php
+        // Refactor(Org): Removed inline @font-face rules. Moved to assets/css/fonts.css and enqueued via ScriptSetup.php
+        ?>
 
         <div id="overlay"></div>
         <? if (is_page('asley')) : ?>

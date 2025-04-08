@@ -6,6 +6,9 @@ function scriptsOrdenados()
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
+    // Refactor(Org): Enqueue custom fonts CSS
+    wp_enqueue_style('custom-fonts', get_template_directory_uri() . '/assets/css/fonts.css', array(), $global_version);
+
     $scripts_only_for_logged_in_users = [
         'galleV2',
         'likes',
