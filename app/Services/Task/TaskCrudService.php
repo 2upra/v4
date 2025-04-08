@@ -102,7 +102,7 @@ function crearTarea()
 
 add_action('wp_ajax_crearTarea', 'crearTarea');
 
-// Refactor(Org): Funcion completarTarea() y hook AJAX movidos desde app/Services/TaskService.php
+// Refactor: Moved completarTarea() and hook from TaskService.php
 function completarTarea()
 {
     if (!current_user_can('edit_posts')) {

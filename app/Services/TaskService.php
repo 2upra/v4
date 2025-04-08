@@ -188,7 +188,7 @@ function archivarTarea()
 
 add_action('wp_ajax_archivarTarea', 'archivarTarea');
 
-// Refactor(Org): Funcion completarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
+// Refactor(Org): Funcion completarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php [COMPLETED]
 
 // Refactor(Org): Funcion actualizarOrdenTareas() y hook AJAX movidos desde app/Content/Task/logicTareas.php
 function actualizarOrdenTareas()
