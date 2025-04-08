@@ -1,16 +1,7 @@
-<?
-if (!is_user_logged_in()) {
-} else {
-    // Refactor(Exec): Re-aplicado uso de helper obtenerDatosUsuarioCabecera()
-    $usuario = wp_get_current_user();
-    $user_id = get_current_user_id();
-    $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = imagenPerfil($usuario->ID);
-    $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
-    if (function_exists('jetpack_photon_url')) {
-        $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
-    }
-}
+<?php
+// Refactor(Org): Moved user data retrieval to UserHelper::obtenerDatosUsuarioCabecera()
+$datosCabecera = obtenerDatosUsuarioCabecera();
+
 if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
@@ -154,7 +145,7 @@ if (!defined('ABSPATH')) {
                                 <? echo $GLOBALS['iconocolab']; ?>
                             </a>
                         </div>
-                        <? if ($usuarioTipo === 'Fan'):  ?>
+                        <? if ($datosCabecera['usuarioTipo'] === 'Fan'):  ?>
                             <div class="menu-item iconoFeedSample">
                                 <a href="<? echo home_url('/feedSample'); ?>">
                                     <? echo $GLOBALS['iconRandom']; ?>
@@ -166,7 +157,7 @@ if (!defined('ABSPATH')) {
                                 </a>
                             </div>
                         <? endif; ?>
-                        <? if ($usuarioTipo === 'Artista'):  ?>
+                        <? if ($datosCabecera['usuarioTipo'] === 'Artista'):  ?>
                             <div class="menu-item iconoFeedSocial">
                                 <a href="<? echo home_url('/feedSocial'); ?>">
                                     <? echo $GLOBALS['iconSocial']; ?>
@@ -209,7 +200,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
                             <a>
-                                <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<? echo esc_url($datosCabecera['url_imagen_perfil']); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
 
@@ -262,8 +253,8 @@ if (!defined('ABSPATH')) {
 
                                 <? echo $GLOBALS['pro']; ?>
                                 <?
-                                $user_id = get_current_user_id();
-                                $pinkys = (int) get_user_meta($user_id, 'pinky', true);
+                                $user_id_local = get_current_user_id(); // Use a local variable to avoid conflict if needed later
+                                $pinkys = (int) get_user_meta($user_id_local, 'pinky', true);
                                 echo ($pinkys > 100) ? '99+' : $pinkys;
                                 ?>
                             </div>
@@ -309,7 +300,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
                             <a>
-                                <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<? echo esc_url($datosCabecera['url_imagen_perfil']); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
 
@@ -386,7 +377,7 @@ if (!defined('ABSPATH')) {
 
                 <div class="bloquesChatTest">
                     <div class="bloqueChatReiniciar">
-                        <? echo conversacionesUsuario($user_id) ?>
+                        <? echo conversacionesUsuario($datosCabecera['user_id']) // Use user_id from helper data ?>
                     </div>
                     <? echo renderChat() ?>
                 </div>
@@ -485,17 +476,18 @@ if (!defined('ABSPATH')) {
 
                 <!-- Información usuario -->
                 <?
+                // This block fetches data again, potentially redundant but kept as per decision scope
                 $current_user = wp_get_current_user();
                 $is_admin = current_user_can('administrator') ? 'true' : 'false';
                 $user_email = $current_user->user_email;
-                $user_name = $current_user->display_name;
-                $user_id = $current_user->ID;
+                $user_name = $current_user->display_name; // This is available in $datosCabecera['nombre_usuario']
+                $user_id = $current_user->ID; // This is available in $datosCabecera['user_id']
                 $descripcion = get_user_meta($user_id, 'profile_description', true);
 
                 echo '<input type="hidden" id="user_is_admin" value="' . esc_attr($is_admin) . '">';
                 echo '<input type="hidden" id="user_email" value="' . esc_attr($user_email) . '">';
-                echo '<input type="hidden" id="user_name" value="' . esc_attr($user_name) . '">';
-                echo '<input type="hidden" id="user_id" value="' . esc_attr($user_id) . '">';
+                echo '<input type="hidden" id="user_name" value="' . esc_attr($user_name) . '">'; // Using locally fetched name
+                echo '<input type="hidden" id="user_id" value="' . esc_attr($user_id) . '">'; // Using locally fetched ID
                 echo '<input type="hidden" id="descripcionUser" value="' . esc_attr($descripcion) . '">';
 
                 ?>
