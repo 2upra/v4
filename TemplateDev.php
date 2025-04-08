@@ -35,7 +35,8 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <? if (is_user_logged_in()) : ?>
             <? echo devlogin(); ?>
         <? else : ?>
-            <? echo dev(); ?>
+            <?php // Refactor: Reemplaza dev() por inicio() para usuarios no logueados ?>
+            <?php echo inicio(); ?>
         <? endif; ?>
 
     </article>

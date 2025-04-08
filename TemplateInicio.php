@@ -24,7 +24,8 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
     <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
         <?php if (!is_user_logged_in()): ?>
-            <?php echo dev(); ?>
+            <?php // Refactor: Reemplaza dev() por inicio() para usuarios no logueados ?>
+            <?php echo inicio(); ?>
         <?php else: ?>
             <?php echo socialTabs(); ?>
         <?php endif; ?>
