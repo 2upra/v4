@@ -36,27 +36,27 @@ function reproductor()
                 </div>
                 <div class="PQWXDA">
                     <button class="prev-btn">
-                        <? echo $GLOBALS['anterior']; ?>
+                        <?php echo $GLOBALS['anterior']; ?>
                     </button>
                     <button class="play-btn">
-                        <? echo $GLOBALS['play']; ?>
+                        <?php echo $GLOBALS['play']; ?>
                     </button>
                     <button class="pause-btn" style="display: none;">
-                        <? echo $GLOBALS['pause']; ?>
+                        <?php echo $GLOBALS['pause']; ?>
                     </button>
                     <button class="next-btn">
-                        <? echo $GLOBALS['siguiente']; ?>
+                        <?php echo $GLOBALS['siguiente']; ?>
                     </button>
                     <div class="BSUXDA">
                         <button class="JMFCAI">
-                            <? echo $GLOBALS['volumen']; ?>
+                            <?php echo $GLOBALS['volumen']; ?>
                         </button>
                         <div class="TGXRDF">
                             <input type="range" class="volume-control" min="0" max="1" step="0.01" value="1">
                         </div>
                     </div>
                     <button class="PCNLEZ">
-                        <? echo $GLOBALS['cancelicon']; ?>
+                        <?php echo $GLOBALS['cancelicon']; ?>
                     </button>
                 </div>
 
@@ -64,9 +64,36 @@ function reproductor()
 
         </div>
     </div>
-<?
+<?php
 
 }
+
+// Refactor(Org): Función audioPost() movida desde app/Content/Posts/View/componentPost.php
+function audioPost($postId)
+{
+    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
+
+    if (empty($audio_id_lite)) {
+        return '';
+    }
+
+    $post_author_id = get_post_field('post_author', $postId);
+    $urlAudioSegura = audioUrlSegura($audio_id_lite);
+
+    ob_start();
+?>
+    <div id="audio-container-<?php echo $postId; ?>" class="audio-container" data-post-id="<?php echo $postId; ?>" artista-id="<?php echo $post_author_id; ?>">
+
+        <div class="play-pause-sobre-imagen">
+            <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
+        </div>
+
+        <audio id="audio-<?php echo $postId; ?>" src="<?php echo esc_url($urlAudioSegura); ?>"></audio>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
 // Acción no realizada: La función reproductor() y su hook ya se encuentran en este archivo (AudioHelper.php).
 // No se encontraron en el archivo de origen especificado (reproductor.php).
 add_action('wp_footer', 'reproductor');

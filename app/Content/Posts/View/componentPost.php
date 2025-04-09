@@ -1,4 +1,4 @@
-<?
+<?php
 
 // Refactor(Org): Función variablesPosts() movida a app/Services/PostService.php
 
@@ -35,11 +35,11 @@ function imagenPostList($block, $es_suscriptor, $postId)
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
         <div class="botonesRep">
-            <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play']; ?></div>
-            <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause']; ?></div>
+            <div class="reproducirSL" id-post="<?php echo $postId; ?>"><?php echo $GLOBALS['play']; ?></div>
+            <div class="pausaSL" id-post="<?php echo $postId; ?>"><?php echo $GLOBALS['pause']; ?></div>
         </div>
     </div>
-<?
+<?php
 
     $output = ob_get_clean();
 
@@ -66,18 +66,18 @@ function botonSuscribir($autorId, $author_name, $subscription_price_id = 'price_
 ?>
     <button
         class="ITKSUG"
-        data-offering-user-id="<? echo esc_attr($autorId); ?>"
-        data-offering-user-login="<? echo esc_attr($author_name); ?>"
-        data-offering-user-email="<? echo esc_attr(get_the_author_meta('user_email', $autorId)); ?>"
-        data-subscriber-user-id="<? echo esc_attr($current_user->ID); ?>"
-        data-subscriber-user-login="<? echo esc_attr($current_user->user_login); ?>"
-        data-subscriber-user-email="<? echo esc_attr($current_user->user_email); ?>"
-        data-price="<? echo esc_attr($subscription_price_id); ?>"
-        data-url="<? echo esc_url(get_permalink()); ?>">
+        data-offering-user-id="<?php echo esc_attr($autorId); ?>"
+        data-offering-user-login="<?php echo esc_attr($author_name); ?>"
+        data-offering-user-email="<?php echo esc_attr(get_the_author_meta('user_email', $autorId)); ?>"
+        data-subscriber-user-id="<?php echo esc_attr($current_user->ID); ?>"
+        data-subscriber-user-login="<?php echo esc_attr($current_user->user_login); ?>"
+        data-subscriber-user-email="<?php echo esc_attr($current_user->user_email); ?>"
+        data-price="<?php echo esc_attr($subscription_price_id); ?>"
+        data-url="<?php echo esc_url(get_permalink()); ?>">
         Suscribirse
     </button>
 
-<?
+<?php
 
     return ob_get_clean();
 }
@@ -95,9 +95,9 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
     ob_start();
 ?>
     <div class="post-background <?= $blurred_class ?>"
-        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? echo esc_url($optimized_thumbnail_url); ?>);">
+        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
     </div>
-<?
+<?php
     $output = ob_get_clean();
     return $output;
 }
@@ -128,16 +128,16 @@ function wave($audio_url, $audio_id_lite, $postId)
         }
     }
 ?>
-    <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>" data-post-id="<? echo esc_attr($postId); ?>">
-        <?
+    <div class="waveforms-container-post" id="waveforms-container-<?php echo $postId; ?>" data-post-id="<?php echo esc_attr($postId); ?>">
+        <?php
         // Mostrar los botones solo si hay más de un audio
         if ($audio_count > 1) : ?>
             <div class="botonesWave">
-                <button class="prevWave" data-post-id="<? echo esc_attr($postId); ?>">Anterior</button>
-                <button class="nextWave" data-post-id="<? echo esc_attr($postId); ?>">Siguiente</button>
+                <button class="prevWave" data-post-id="<?php echo esc_attr($postId); ?>">Anterior</button>
+                <button class="nextWave" data-post-id="<?php echo esc_attr($postId); ?>">Siguiente</button>
             </div>
-        <? endif; ?>
-        <?
+        <?php endif; ?>
+        <?php
         // Generar el HTML para cada audio
         $index = 0;
         foreach ($audio_urls as $meta_key => $audio_url) {
@@ -146,7 +146,7 @@ function wave($audio_url, $audio_id_lite, $postId)
         }
         ?>
     </div>
-<?
+<?php
 }
 
 function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wave, $index)
@@ -160,42 +160,19 @@ function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wav
         $urlAudioSegura = '';
     }
 ?>
-    <div id="waveform-<? echo $unique_id; ?>"
+    <div id="waveform-<?php echo $unique_id; ?>"
         class="waveform-container without-image"
-        postIDWave="<? echo $unique_id; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        postIDWave="<?php echo $unique_id; ?>"
+        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
-<?
+<?php
 }
 
-function audioPost($postId)
-{
-    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
-
-    if (empty($audio_id_lite)) {
-        return '';
-    }
-
-    $post_author_id = get_post_field('post_author', $postId);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite);
-
-    ob_start();
-?>
-    <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
-
-        <div class="play-pause-sobre-imagen">
-            <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
-        </div>
-
-        <audio id="audio-<? echo $postId; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
-    </div>
-<?
-    return ob_get_clean();
-}
+// Refactor(Org): Función audioPost() movida a app/View/Helpers/AudioHelper.php
 
 function audioPostList($postId)
 {
@@ -211,14 +188,14 @@ function audioPostList($postId)
     }
     ob_start();
 ?>
-    <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
+    <div id="audio-container-<?php echo $postId; ?>" class="audio-container" data-post-id="<?php echo $postId; ?>" artista-id="<?php echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
             <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
-        <audio id="audio-<? echo $postId; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
+        <audio id="audio-<?php echo $postId; ?>" src="<?php echo esc_url($urlAudioSegura); ?>"></audio>
     </div>
-<?
+<?php
     return ob_get_clean();
 }
