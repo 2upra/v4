@@ -29,4 +29,10 @@ function obtenerIdiomaDelNavegador()
     return 'en'; // Retorna inglés si ninguno de los idiomas preferidos ('es', 'en') se encuentra
 }
 
+// Refactor(Org): Función is_electron_app() movida desde app/Authentication/Iniciar.php
+function is_electron_app()
+{
+    return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
+}
+
 ?>
