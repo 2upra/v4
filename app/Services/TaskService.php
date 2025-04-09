@@ -162,6 +162,3 @@ add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
 // Refactor(Org): Funciones ordenamientoTareas() y ordenamientoTareasPorPrioridad() movidas desde app/Content/Task/ordenamientoTareas.php
 
 // Refactor(Org): Funcion ordenamientoTareasPorPrioridad() movida a app/Services/Task/TaskOrderingService.php
-
-// Refactor(Org): Funcion actualizarOrdenTareasGrupo() y hook movidos a app/Services/Task/TaskOrderingService.php
-// // La funcion actualizarOrdenTareasGrupo() y su hook ya no estan aqui.
