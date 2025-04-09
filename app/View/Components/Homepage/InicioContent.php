@@ -1,4 +1,6 @@
-<?
+<?php
+// Refactor: Función inicio() movida desde app/Pages/InicioNormal.php
+
 function inicio()
 {
     ob_start();
@@ -15,30 +17,30 @@ function inicio()
         <p class="XXT3">Tu música en todas las tiendas y playlists gratis</p>
 
         <div class="CGUNVP" id="modalregistro">
-            <? echo registrar_usuario() ?>
+            <?php echo registrar_usuario(); ?>
         </div>
         <div class="EJRINA" id="modalsesion">
-            <? echo iniciar_sesion() ?>
+            <?php echo iniciar_sesion(); ?>
         </div>
 
         <div id="fondonegro"></div>
 
         <div class="XXI!">
-            <? echo $GLOBALS['spotify']; ?>
-            <? echo $GLOBALS['apple']; ?>
-            <? echo $GLOBALS['instagram']; ?>
-            <? echo $GLOBALS['facebook']; ?>
-            <? echo $GLOBALS['tiktok']; ?>
-            <? echo $GLOBALS['soundcloud']; ?>
-            <? echo $GLOBALS['tidal']; ?>
-            <? echo $GLOBALS['amazonmusic']; ?>
-            <? echo $GLOBALS['deezer']; ?>
-            <? echo $GLOBALS['youtube']; ?>
+            <?php echo $GLOBALS['spotify']; ?>
+            <?php echo $GLOBALS['apple']; ?>
+            <?php echo $GLOBALS['instagram']; ?>
+            <?php echo $GLOBALS['facebook']; ?>
+            <?php echo $GLOBALS['tiktok']; ?>
+            <?php echo $GLOBALS['soundcloud']; ?>
+            <?php echo $GLOBALS['tidal']; ?>
+            <?php echo $GLOBALS['amazonmusic']; ?>
+            <?php echo $GLOBALS['deezer']; ?>
+            <?php echo $GLOBALS['youtube']; ?>
         </div>
     </div>
 
     <div class="XX1 XX2" style="display: none;">
-        <?
+        <?php
         $images = [
             [
                 'url' => 'https://2upra.com/wp-content/uploads/2024/05/0177.png',
@@ -67,16 +69,17 @@ function inicio()
         ];
 
         foreach ($images as $image):
-            $optimized_url = optimizeImageUrl($image['url'], 'medium', 50, 'all');
+            // Asumiendo que optimizeImageUrl y las funciones esc_* están disponibles globalmente o serán incluidas
+            $optimized_url = function_exists('optimizeImageUrl') ? optimizeImageUrl($image['url'], 'medium', 50, 'all') : $image['url'];
         ?>
             <div class="XXDD">
                 <div class="spaceimagen">
-                    <img src="<? echo esc_url($optimized_url); ?>" alt="<? echo esc_attr($image['alt']); ?>">
+                    <img src="<?php echo esc_url($optimized_url); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
                 </div>
-                <h3 class="XXD1"><? echo esc_html($image['title']); ?></h3>
-                <p class="XXD2"><? echo esc_html($image['description']); ?></p>
+                <h3 class="XXD1"><?php echo esc_html($image['title']); ?></h3>
+                <p class="XXD2"><?php echo esc_html($image['description']); ?></p>
             </div>
-        <? endforeach; ?>
+        <?php endforeach; ?>
     </div>
 
 
@@ -95,6 +98,7 @@ function inicio()
         </div>
     </div>
 
-<?
+<?php
     return ob_get_clean();
 }
+?>

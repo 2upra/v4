@@ -150,11 +150,7 @@ function handle_google_callback()
 }
 add_action('init', 'handle_google_callback');
 
-
-function is_electron_app()
-{
-    return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
-}
+// Refactor(Org): Función is_electron_app() movida a app/Utils/BrowserUtils.php
 
 // Refactor: Moved generate_secure_token function to app/Services/TokenService.php
 

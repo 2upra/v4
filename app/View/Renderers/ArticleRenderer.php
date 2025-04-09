@@ -20,21 +20,14 @@ function variablesArticulo($postId)
     ];
 }
 
-function imagenArticulo($postId)
-{
-    $imagenSize = 'large';
-    $quality = 60;
-    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-    $imagenProcesada = img($imagenUrl, $quality, 'all');
-
-    return esc_url($imagenProcesada);
-}
+// Refactor(Org): Función imagenArticulo movida a app/View/Helpers/ImageHelper.php
 
 function htmlArticulo($filtro)
 {
     $postId = get_the_ID();
     $vars = variablesArticulo($postId);
     extract($vars);
+    // La función imagenArticulo ahora se encuentra en ImageHelper.php y se asume disponible globalmente
     $imagenUrl = imagenArticulo($postId);
 
     ob_start();

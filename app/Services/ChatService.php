@@ -58,6 +58,19 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
     return $conversaciones;
 }
 
+// Refactor(Org): Funcion conversacionesUsuario() movida desde app/Chat/renderListaChats.php
+function conversacionesUsuario($usuarioId)
+{
+    // Refactor: Función obtenerChats() movida a app/Services/ChatService.php
+    // Asegúrate de que ChatService.php esté incluido o autocargado
+    // si no lo está ya.
+    // Se asume que la función obtenerChats() está disponible globalmente o vía autoload
+    $conversaciones = obtenerChats($usuarioId);
+    // Nota: renderListaChats() aún está en app/Chat/renderListaChats.php
+    // Asegúrate de que ese archivo esté incluido o la función autocargada.
+    return renderListaChats($conversaciones, $usuarioId);
+}
+
 // Refactor: Función infoUsuario() y su hook AJAX movidos desde app/Chat/auxiliares.php
 function infoUsuario() {
     if (!is_user_logged_in()) {

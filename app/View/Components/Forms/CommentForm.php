@@ -1,4 +1,5 @@
-<?php 
+<?php
+// Refactor(Exec): Moved function comentariosForm() from app/Content/Comentarios/renderComentarioForm.php
 
 function comentariosForm()
 {

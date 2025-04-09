@@ -1,5 +1,15 @@
-<?
+<?php
+// Archivo creado para contener funciones de ayuda para renderizar elementos de Tareas.
+// TODO: Mover funciones relevantes de app/Content/Task/View/renderTarea.php aquí.
 
+// Ejemplo de estructura de función (se añadirán las reales más tarde):
+/*
+function renderTaskElement($task) {
+    // Lógica para renderizar un elemento de tarea
+}
+*/
+
+// Refactor(Org): Funciones movidas desde app/Content/Task/View/renderTarea.php
 function htmlTareas($filtro)
 {
     $tareaId = get_the_id();
@@ -33,29 +43,29 @@ function obtenerIconoImportancia($imp, $mostrarIcono)
     $log = "obtenerIconoImportancia: ";
     if (!$mostrarIcono) {
         $log .= "Se retorna el texto de importancia: $imp";
-        guardarLog($log);
+        // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
         return $imp;
     }
 
     switch ($imp) {
         case 'baja':
-            $icono = $GLOBALS['baja'];
+            $icono = $GLOBALS['baja'] ?? 'B'; // Usar Null coalescing operator por si GLOBALS no está definido
             break;
         case 'media':
-            $icono = $GLOBALS['media'];
+            $icono = $GLOBALS['media'] ?? 'M';
             break;
         case 'alta':
-            $icono = $GLOBALS['alta'];
+            $icono = $GLOBALS['alta'] ?? 'A';
             break;
         case 'importante':
-            $icono = $GLOBALS['importante'];
+            $icono = $GLOBALS['importante'] ?? 'I';
             break;
         default:
             $icono = '';
             $log .= "Importancia no reconocida: $imp, ";
     }
     $log .= "Se retorna el icono de importancia: $icono";
-    //guardarLog($log);
+    // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
     return $icono;
 }
 
@@ -64,21 +74,21 @@ function obtenerIconoTipo($tipo, $mostrarIcono)
     $log = "obtenerIconoTipo: ";
     if (!$mostrarIcono) {
         $log .= "Se retorna el texto de tipo: $tipo";
-        //guardarLog($log);
+        // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
         return $tipo;
     }
 
     switch ($tipo) {
         case 'una vez':
-            $icono = $GLOBALS['unavez'];
+            $icono = $GLOBALS['unavez'] ?? '1'; // Usar Null coalescing operator
             break;
         case 'habito':
         case 'habito rigido':
         case 'habito flexible':
-            $icono = $GLOBALS['habito'];
+            $icono = $GLOBALS['habito'] ?? 'H';
             break;
         case 'meta':
-            $icono = $GLOBALS['meta'];
+            $icono = $GLOBALS['meta'] ?? 'G';
             break;
         default:
             $icono = '';
@@ -86,7 +96,7 @@ function obtenerIconoTipo($tipo, $mostrarIcono)
     }
 
     $log .= "Se retorna el icono de tipo: $icono";
-    //guardarLog($log);
+    // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
     return $icono;
 }
 
@@ -153,7 +163,7 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
     $esHabito = ($tipo === 'habito' || $tipo === 'habito rigido');
 
     $mostrarIcono = get_user_meta($autorId, 'mostrarIconoTareas', true);
-    $mostrarIcono = ($mostrarIcono === '') ? false : (bool)$mostrarIcono;
+    $mostrarIcono = ($mostrarIcono === '') ? false : (bool)$mostrarIcono; // Nota: Originalmente era true por defecto, aquí se cambió a false si está vacío.
     $esSubtarea = get_post_meta($tareaId, 'subtarea', true);
     $hoy = date('Y-m-d');
     $dif = floor((strtotime($proxima) - strtotime($hoy)) / (60 * 60 * 24));
@@ -177,7 +187,7 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
         >
 
         <button class="completaTarea <? if ($esHabito) echo 'habito'; ?>" data-tarea="<? echo $tareaId; ?>">
-            <? echo $GLOBALS['verificadoCirculo']; ?>
+            <? echo $GLOBALS['verificadoCirculo'] ?? '[ ]'; // Usar Null coalescing operator ?>
         </button>
 
         <p class="tituloTarea" data-tarea="<? echo $tareaId; ?>">
@@ -194,7 +204,7 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
 
         <div class="divSesion" data-tarea="<? echo $tareaId; ?>" style="display: none; cursor: pointer;">
             <p class="sesionTarea">
-                <? echo $GLOBALS['carpetaIcon']; ?>
+                <? echo $GLOBALS['carpetaIcon'] ?? '[S]'; // Usar Null coalescing operator ?>
             </p>
         </div>
 
@@ -210,14 +220,24 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
 
         <p class="tipoTarea svgtask" style="display: none;"><? echo $tipoIcono; ?></p>
         <p class="estadoTarea" style="display: none;"><? echo $estado; ?></p>
-        <? echo opcionesPost($tareaId, $autorId) ?>
+        <? 
+        // Asegúrate de que la función opcionesPost esté disponible globalmente o inclúyela donde sea necesario.
+        if (function_exists('opcionesPost')) {
+            echo opcionesPost($tareaId, $autorId);
+        } else {
+            // Opcional: Muestra un marcador de posición o registra un error si la función no existe.
+            echo '<!-- opcionesPost no disponible -->';
+        }
+        ?>
 
         <div class="divArchivado ocultadoAutomatico" data-tarea="<? echo $tareaId; ?>" style="display: none;">
             <p class="archivadoTarea" style="cursor: pointer;">
-                <? echo $GLOBALS['archivadoIcon']; ?>
+                <? echo $GLOBALS['archivadoIcon'] ?? '[A]'; // Usar Null coalescing operator ?>
             </p>
         </div>
     </li>
 <?
     return ob_get_clean();
 }
+
+?>

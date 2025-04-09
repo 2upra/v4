@@ -4,6 +4,7 @@
 
 use WP_Query;
 
+// Refactor(Exec): Funcion iconoNotificaciones movida desde header.php
 //a pesar que la ultina notificacion esta marcada como visto, muestra de color rojo de igual manera, no se que esa fallando, el post type es valido,
 function iconoNotificaciones()
 {

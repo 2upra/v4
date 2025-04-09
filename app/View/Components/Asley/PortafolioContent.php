@@ -1,5 +1,5 @@
-<?
-// Funcion asleyTab() movida a app/View/Components/AsleyTabs.php
+<?php
+// Funcion portafolio() movida desde app/Pages/asleyTabs.php
 
 function portafolio()
 {

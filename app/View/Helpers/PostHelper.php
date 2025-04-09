@@ -1,6 +1,70 @@
 <?php
-// Refactor(Org): Función opcionesPost() movida desde app/Content/Posts/View/opcionesPost.php
 
+// Refactor(Org): Función infoPost() movida desde app/Content/Posts/View/componentPost.php
+function infoPost($autId, $autAv, $autNom, $postF, $postId, $block, $colab)
+{
+    $postAut = get_post_meta($postId, 'postAut', true);
+    $ultEd = get_post_meta($postId, 'ultimoEdit', true);
+    $verif = get_post_meta($postId, 'Verificado', true);
+    $rec = get_post_meta($postId, 'recortado', true);
+    $usrAct = (int)get_current_user_id();
+    $autId = (int)$autId;
+    $esUsrAct = ($usrAct === $autId);
+
+    ob_start();
+?>
+    <div class="SOVHBY <? echo ($esUsrAct ? 'miContenido' : ''); ?>">
+        <div class="CBZNGK">
+            <a href="<? echo esc_url(get_author_posts_url($autId)); ?>"> </a>
+            <img src="<? echo esc_url($autAv); ?>">
+            <? echo botonseguir($autId); ?>
+        </div>
+        <div class="ZVJVZA">
+            <div class="JHVSFW">
+                <a href="<? echo esc_url(home_url('/perfil/' .  get_the_author_meta('user_nicename', $autId))); ?>" class="profile-link">
+                    <? echo esc_html($autNom); ?>
+                    <? if (get_user_meta($autId, 'pro', true) || user_can($autId, 'administrator') || get_user_meta($autId, 'Verificado', true)) : ?>
+                        <? echo $GLOBALS['verificado']; ?>
+                    <? endif; ?>
+                </a>
+            </div>
+            <div class="HQLXWD">
+                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
+                    <? echo esc_html($postF); ?>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="verificacionPost">
+        <? if ($verif == '1') : ?>
+            <? echo $GLOBALS['check']; ?>
+        <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+            <? echo $GLOBALS['robot']; ?>
+        <? endif; ?>
+    </div>
+
+    <div class="OFVWLS">
+        <? if ($rec) : ?>
+            <div><? echo "Preview"; ?></div>
+        <? endif; ?>
+        <? if ($block) : ?>
+            <div><? echo "Exclusivo"; ?></div>
+        <? elseif ($colab) : ?>
+            <div><? echo "Colab"; ?></div>
+        <? endif; ?>
+    </div>
+
+    <div class="spin"></div>
+
+    <div class="YBZGPB">
+        <? echo opcionesPost($postId, $autId); ?>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+// Refactor(Org): Función opcionesPost() movida desde app/View/Components/PostOptions.php
 function opcionesPost($postId, $autorId)
 {
     $usuarioActual = get_current_user_id();
@@ -66,7 +130,44 @@ function opcionesPost($postId, $autorId)
     return ob_get_clean();
 }
 
-// Refactor(Org): Función opcionesRola() movida desde app/Content/Posts/View/componentPost.php
+// Refactor(Org): Función nohayPost movida desde app/Content/Posts/View/renderPost.php
+function nohayPost($filtro, $is_ajax)
+{
+    if ($filtro === 'notas') {
+        return; 
+    }
+
+    $post_id = get_the_ID();
+    $vars = variablesPosts($post_id);
+    extract($vars);
+    $music = ($filtro === 'rola' || $filtro === 'likes');
+
+    if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
+        $filtro = 'rolastatus';
+    }
+
+    ob_start();
+    ?>
+
+        <? if ($filtro === 'momento' || $is_ajax): ?>
+            <div id="no-more-posts"></div>
+            <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
+        <? else: ?>
+            <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
+                <? echo $GLOBALS['emptystate']; ?>
+                <p>Ñoño aqui no han puesto nada aún</p>
+                <? if ($filtro === 'rolastatus'): ?>
+                    <p>Cuando publiques tu primera rola, aparecerá aquí</p>
+                <? endif; ?>
+                <button class="borde"><a href="https://2upra.com/">Volver al inicio</a></button>
+            </div>
+        <? endif; ?>
+
+    <?
+    return ob_get_clean();
+}
+
+// Refactor(Org): Mueve función opcionesRola() de PostOptions.php a PostHelper.php
 //OPCIONES EN LAS ROLAS 
 function opcionesRola($postId, $post_status, $audio_url)
 {

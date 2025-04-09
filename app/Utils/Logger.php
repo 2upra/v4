@@ -232,3 +232,23 @@ function logResumenDePuntos($userId, $resumenPuntos)
     }
     logAlgoritmo("Resumen de puntos - " . implode(', ', $resumen_formateado));
 }
+
+// Refactor: Moved login failure logging from Emergencias.php
+function registrar_intento_acceso_fallido($username) {
+    $log_file = ABSPATH . '/wp-content/uploads/access_logs.txt';
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $time = date('Y-m-d H:i:s');
+    $log_entry = "Intento fallido de acceso por usuario: $username, IP: $ip, Fecha: $time\n";
+    // Asegurarse de que el directorio exista y tenga permisos
+    $log_dir = dirname($log_file);
+    if (!is_dir($log_dir)) {
+        mkdir($log_dir, 0755, true);
+    }
+    // Intentar escribir en el archivo
+    if (is_writable($log_dir)) {
+        file_put_contents($log_file, $log_entry, FILE_APPEND);
+    } else {
+        error_log("Logger Error: No se puede escribir en el directorio de logs: " . $log_dir);
+    }
+}
+//add_action('wp_login_failed', 'registrar_intento_acceso_fallido');

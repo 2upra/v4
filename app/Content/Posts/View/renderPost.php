@@ -475,42 +475,10 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 
 // Refactor(Org): Función limpiarJSON movida a StringUtils.php
 
+// Refactor(Org): Función nohayPost movida a app/View/Helpers/PostHelper.php
 
-function nohayPost($filtro, $is_ajax)
-{
-    if ($filtro === 'notas') {
-        return; 
-    }
 
-    $post_id = get_the_ID();
-    $vars = variablesPosts($post_id);
-    extract($vars);
-    $music = ($filtro === 'rola' || $filtro === 'likes');
 
-    if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-        $filtro = 'rolastatus';
-    }
-
-    ob_start();
-    ?>
-
-        <? if ($filtro === 'momento' || $is_ajax): ?>
-            <div id="no-more-posts"></div>
-            <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
-        <? else: ?>
-            <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
-                <? echo $GLOBALS['emptystate']; ?>
-                <p>Ñoño aqui no han puesto nada aún</p>
-                <? if ($filtro === 'rolastatus'): ?>
-                    <p>Cuando publiques tu primera rola, aparecerá aquí</p>
-                <? endif; ?>
-                <button class="borde"><a href="https://2upra.com/">Volver al inicio</a></button>
-            </div>
-        <? endif; ?>
-
-    <?
-    return ob_get_clean();
-}
 
 
 

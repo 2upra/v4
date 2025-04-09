@@ -70,4 +70,21 @@ function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $p
     return $url;
 }
 
+// Refactor(Org): Función imagenArticulo movida desde app/View/Renderers/ArticleRenderer.php
+function imagenArticulo($postId)
+{
+    $imagenSize = 'large';
+    $quality = 60;
+    // Llama a la función imagenPost que ya está en este helper
+    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
+    // La función 'img' no está definida aquí, se asume global o se elimina si es redundante.
+    // Si 'img' era para optimización, imagenPost ya lo maneja (con Photon).
+    // Si 'img' hacía otra cosa, esa lógica debe revisarse.
+    // Por ahora, se mantiene la llamada original, asumiendo que 'img' está disponible.
+    // Si 'img' es redundante con Photon, se podría simplificar a: $imagenProcesada = $imagenUrl;
+    $imagenProcesada = function_exists('img') ? img($imagenUrl, $quality, 'all') : $imagenUrl; // Llamada condicional a img
+
+    return esc_url($imagenProcesada);
+}
+
 ?>

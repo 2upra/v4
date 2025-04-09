@@ -4,6 +4,8 @@ function perfilBanner($idUsuario) {
     $idUsuarioActual = get_current_user_id();
     $esMismoAutor = ($idUsuario === $idUsuarioActual);
 
+    // Asegurarse que la función obtener_seguidores_o_siguiendo está disponible
+    // (Ahora debería estar en app/Services/FollowService.php y cargada globalmente)
     $numSeguidores = count(obtener_seguidores_o_siguiendo($idUsuario, 'seguidores'));
     $numSiguiendo = count(obtener_seguidores_o_siguiendo($idUsuario, 'siguiendo'));
 

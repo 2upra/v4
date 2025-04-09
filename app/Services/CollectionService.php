@@ -631,7 +631,91 @@ function datosColeccion($postId)
     }
 }
 
+// Refactor(Org): Funcion variablesColec movida desde app/Content/Colecciones/View/renderPostColec.php
+function variablesColec($postId = null)
+{
+    // Si no se proporciona un postId, usa el ID del post global.
+    if ($postId === null) {
+        global $post;
+        $postId = $post->ID;
+    }
+
+    $usuarioActual = get_current_user_id();
+    $autorId = get_post_field('post_author', $postId);
+    $samplesMeta = get_post_meta($postId, 'samples', true);
+    $datosColeccion = get_post_meta($postId, 'datosColeccion', true);
+    $sampleCount = 0;
+    $sampleCountReal = 0; // Inicializar la variable
+
+    if (!empty($samplesMeta)) {
+        $samplesArray = maybe_unserialize_dos($samplesMeta);
+
+        if (is_array($samplesArray)) {
+            $sampleCount = count($samplesArray);
+
+            // Contar los samples no descargados
+            if ($usuarioActual) {
+                $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
+                $sampleCountReal = 0;
+
+                foreach ($samplesArray as $sampleId) {
+                    // Verificar si el sample actual NO ha sido descargado
+                    if (!isset($descargas_anteriores[$sampleId])) {
+                        $sampleCountReal++;
+                    }
+                }
+            } else {
+                // Si no hay usuario actual (no ha iniciado sesión), el costo es el total de samples
+                $sampleCountReal = $sampleCount;
+            }
+        }
+    }
+
+    return [
+        'fecha' => get_the_date('', $postId),
+        'colecStatus' => get_post_status($postId),
+        'autorId' => $autorId,
+        'samples' => $sampleCount . ' samples',
+        'datosColeccion' => $datosColeccion,
+        'sampleCount' => $sampleCountReal, // Usar el valor calculado
+    ];
+}
+
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
 add_action('wp_ajax_borrarColec', 'borrarColec');
 add_action('wp_ajax_guardarSampleEnColec', 'guardarSampleEnColec');
+
+// Refactor(Org): Funcion verificarSampleEnColec movida desde app/Content/Colecciones/View/renderModalColec.php
+add_action('wp_ajax_verificar_sample_en_colecciones', 'verificarSampleEnColec');
+
+function verificarSampleEnColec()
+{
+    $sample_id = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
+    $colecciones_con_sample = array();
+
+    if ($sample_id) {
+        // Obtener todas las colecciones del usuario actual
+        $current_user_id = get_current_user_id();
+        $args = array(
+            'post_type'      => 'colecciones',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'author'         => $current_user_id,
+        );
+
+        $colecciones = get_posts($args);
+
+        // Verificar cada colección
+        foreach ($colecciones as $coleccion) {
+            $samples = get_post_meta($coleccion->ID, 'samples', true);
+            if (is_array($samples) && in_array($sample_id, $samples)) {
+                $colecciones_con_sample[] = $coleccion->ID;
+            }
+        }
+    }
+
+    wp_send_json_success(array(
+        'colecciones' => $colecciones_con_sample
+    ));
+}
