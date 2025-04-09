@@ -26,7 +26,10 @@ function subidaRs()
     datosParaAlgoritmo($idPost); // Asegúrate de que algoritmoPosts.php esté incluido
     confirmarArchivos($idPost);
     procesarURLs($idPost);
-    asignarTags($idPost);
+    // Refactor(Org): Lógica de asignación de tags movida a PostContentService.php
+    // La función asignarTags() ahora reside en app/Services/Post/PostContentService.php
+    // Si es necesario, llamar a la función desde el contexto adecuado o incluir PostContentService.php
+    // asignarTags($idPost); // Llamada eliminada ya que la función fue movida
 
     wp_send_json_success(['message' => 'Post creado exitosamente']);
     
@@ -38,32 +41,7 @@ function subidaRs()
 
 add_action('wp_ajax_subidaRs', 'subidaRs');
 
-#Asigna tags a un post
-function asignarTags($idPost)
-{
-    if (!empty($_POST['tags'])) {
-        $tagsString = sanitize_text_field($_POST['tags']);
-        $tagsArreglo = array_map('trim', explode(',', $tagsString));
-        $tagsArreglo = array_filter($tagsArreglo);
-
-        if (!empty($tagsArreglo)) {
-            $resultado = wp_set_post_tags($idPost, $tagsArreglo, false);
-
-            if (is_wp_error($resultado)) {
-                $mensajeError = str_replace("\n", " | ", $resultado->get_error_message());
-                error_log("Error en asignarTags: Fallo al asignar tags para Post ID {$idPost}. Error: " . $mensajeError);
-            } elseif (empty($resultado)) {
-                error_log("Advertencia en asignarTags: wp_set_post_tags retornó vacío para Post ID {$idPost}. Tags: " . implode(', ', $tagsArreglo) . ".");
-            } else {
-                error_log("Tags asignados correctamente por asignarTags para Post ID {$idPost}: " . implode(', ', $tagsArreglo));
-            }
-        } else {
-            error_log("Info en asignarTags: No se proporcionaron tags válidos para Post ID {$idPost} en el campo 'tags'.");
-        }
-    } else {
-        error_log("Info en asignarTags: Campo 'tags' no presente o vacío para Post ID {$idPost}. No se asignaron tags.");
-    }
-}
+// Refactor(Org): Función asignarTags() movida a app/Services/Post/PostContentService.php
 
 
 #Actualiza los metadatos de un post
