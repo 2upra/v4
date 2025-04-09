@@ -520,4 +520,5 @@ function borrarTareasCompletadas()
     }
     wp_die();
 }
+//
 add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
