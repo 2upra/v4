@@ -15,7 +15,8 @@
 // Refactor(Org): Funcion archivarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 // La funcion archivarTarea() ya no se encuentra en este archivo, fue movida a TaskCrudService.php.
 
-// Refactor(Org): Funcion completarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php [COMPLETED]
+// Refactor(Org): Funcion completarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
+// La funcion completarTarea() y su hook ya no se encuentran en este archivo, fueron movidos a TaskCrudService.php.
 
 // Refactor(Org): Funcion actualizarOrdenTareas() y hook AJAX movidos a app/Services/Task/TaskOrderingService.php
 // Refactor(Org): Funciones helper (manejarSubtarea, esPadreUnaSubtarea, actualizarOrden, actualizarSesionEstado) movidas a app/Services/Task/TaskOrderingService.php
