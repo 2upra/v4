@@ -102,7 +102,6 @@ function crearTarea()
 
 add_action('wp_ajax_crearTarea', 'crearTarea');
 
-<<<<<<< HEAD
 // Refactor(Org): Funcion completarTarea() y hook AJAX movidos desde app/Services/TaskService.php
 function completarTarea()
 {
@@ -208,11 +207,6 @@ add_action('wp_ajax_cambiarPrioridad', 'cambiarPrioridad');
 // Refactor(Org): Funcion borrarTarea() y hook AJAX movidos desde app/Services/TaskService.php
 function borrarTarea()
 {
-=======
-// Refactor(Org): Funcion borrarTarea() y hook AJAX movidos desde app/Services/TaskService.php
-function borrarTarea()
-{
->>>>>>> parent of 15f80c0b (Refactor(Org): Retry moving modificarTarea() and hook from TaskService.php to Task/TaskCrudService.php)
     // Añadir verificacion de nonce
     if (!isset($_POST['nonce']) || empty($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'borrar_tarea_nonce')) {
         wp_send_json_error('Nonce invalido.');
@@ -257,7 +251,6 @@ function borrarTarea()
 }
 
 add_action('wp_ajax_borrarTarea', 'borrarTarea');
-<<<<<<< HEAD
 
 // Refactor(Org): Funcion modificarTarea() y hook AJAX movidos desde app/Services/TaskService.php
 function modificarTarea()
@@ -394,5 +387,3 @@ function archivarTarea()
 }
 
 add_action('wp_ajax_archivarTarea', 'archivarTarea');
-=======
->>>>>>> parent of 15f80c0b (Refactor(Org): Retry moving modificarTarea() and hook from TaskService.php to Task/TaskCrudService.php)
