@@ -494,7 +494,7 @@ function datosColeccion($postId)
         $samples = maybe_unserialize_dos($samples_serialized);
 
         if (!is_array($samples)) {
-            preg_match_all('/i:\\d+;i:(\\d+);/', $samples_serialized, $matches);
+            preg_match_all('/i:\d+;i:(\d+);/', $samples_serialized, $matches);
             if (isset($matches[1])) {
                 $samples = array_map('intval', $matches[1]);
             } else {
