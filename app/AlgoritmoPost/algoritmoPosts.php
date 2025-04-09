@@ -297,14 +297,12 @@ function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 function extractWordsFromContent($content)
 {
     $words = preg_split('/\s+/', strtolower($content), -1, PREG_SPLIT_NO_EMPTY);
+    // La funcion stemWord fue movida a app/Utils/StringUtils.php pero sigue disponible globalmente
     $stemmedWords = array_map('stemWord', $words);
     return $stemmedWords;
 }
 
-function stemWord($word)
-{
-    return preg_replace('/(s|ed|ing)$/', '', $word);
-}
+// Funcion stemWord movida a app/Utils/StringUtils.php
 
 
 #PASO 5

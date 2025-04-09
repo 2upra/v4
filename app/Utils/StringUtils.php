@@ -47,3 +47,9 @@ function limpiarJSON($json_data)
     return $json_data;
 }
 
+// Refactor(Org): Funcion stemWord movida desde app/AlgoritmoPost/algoritmoPosts.php
+function stemWord($word)
+{
+    return preg_replace('/(s|ed|ing)$/', '', $word);
+}
+

@@ -53,19 +53,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
 // Refactor(Org): Funciones agregar_soporte_jfif y extender_wp_check_filetype movidas a app/Setup/ThemeSetup.php
 
 
-
-
-/**
- * Ejecuta un script de shell para corregir permisos.
- */
-function ejecutarScriptPermisos()
-{
-    // Ejecutar el script de permisos y capturar la salida
-    $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
-
-    // Opcional: Puedes registrar el output para depuración
-    error_log('Script de permisos ejecutado: ' . $output);
-}
+// Refactor(Org): Función ejecutarScriptPermisos() movida a app/Utils/SystemUtils.php
 
 // Refactor(Org): Función infoPost() movida a app/View/Helpers/PostHelper.php
 
