@@ -38,12 +38,5 @@ add_action('admin_init', 'restringir_acceso_admin');
 add_filter('xmlrpc_enabled', '__return_false');
 */
 
+// Refactor: Moved function registrar_intento_acceso_fallido and its hook to app/Utils/Logger.php
 
-function registrar_intento_acceso_fallido($username) {
-    $log_file = ABSPATH . '/wp-content/uploads/access_logs.txt';
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $time = date('Y-m-d H:i:s');
-    $log_entry = "Intento fallido de acceso por usuario: $username, IP: $ip, Fecha: $time\n";
-    file_put_contents($log_file, $log_entry, FILE_APPEND);
-}
-//add_action('wp_login_failed', 'registrar_intento_acceso_fallido');
