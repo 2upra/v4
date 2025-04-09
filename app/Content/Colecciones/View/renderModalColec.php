@@ -4,38 +4,7 @@
 
 */
 
-add_action('wp_ajax_verificar_sample_en_colecciones', 'verificarSampleEnColec');
-
-function verificarSampleEnColec()
-{
-    $sample_id = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
-    $colecciones_con_sample = array();
-
-    if ($sample_id) {
-        // Obtener todas las colecciones del usuario actual
-        $current_user_id = get_current_user_id();
-        $args = array(
-            'post_type'      => 'colecciones',
-            'post_status'    => 'publish',
-            'posts_per_page' => -1,
-            'author'         => $current_user_id,
-        );
-
-        $colecciones = get_posts($args);
-
-        // Verificar cada colección
-        foreach ($colecciones as $coleccion) {
-            $samples = get_post_meta($coleccion->ID, 'samples', true);
-            if (is_array($samples) && in_array($sample_id, $samples)) {
-                $colecciones_con_sample[] = $coleccion->ID;
-            }
-        }
-    }
-
-    wp_send_json_success(array(
-        'colecciones' => $colecciones_con_sample
-    ));
-}
+// Refactor(Org): Funcion verificarSampleEnColec movida a app/Services/CollectionService.php
 
 // aqui puedes hacer que se ordene por ulima modificacion update_post_meta($collection_id, 'ultimaModificacion', current_time('mysql'));
 
