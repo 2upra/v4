@@ -1,11 +1,6 @@
 <?php
-<<<<<<< HEAD
 // Refactor(Org): Funcion crearTarea() y hook AJAX movidos desde app/Services/TaskService.php
-// La función crearTarea() y su hook AJAX ya se encuentran en este archivo.
-=======
->>>>>>> parent of 15f80c0b (Refactor(Org): Retry moving modificarTarea() and hook from TaskService.php to Task/TaskCrudService.php)
 
-// Refactor(Org): Funcion crearTarea() y hook AJAX movidos desde app/Services/TaskService.php
 //aqui necesito que cuando llega un padre, haga lo que hace crearSubtarea
 function crearTarea()
 {

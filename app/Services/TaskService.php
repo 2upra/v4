@@ -36,6 +36,7 @@ function modificarTarea()
             wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
         }
         wp_send_json_error('La creación de tareas (ID 0) debe manejarse a través de la acción AJAX crearTarea.');
+
         return;
     }
 
