@@ -203,3 +203,26 @@ function opcionesRola($postId, $post_status, $audio_url)
 <?
     return ob_get_clean();
 }
+
+// Refactor(Org): Mueve función renderPostControls() de renderPost.php a PostHelper.php
+function renderPostControls($post_id, $colab, $audio_id_lite = null)
+{
+
+    $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === '1';
+    ?>
+        <div class="QSORIW">
+
+
+            <? echo like($post_id); ?>
+            <? if ($mostrarBotonCompra): ?>
+                <? echo botonCompra($post_id); ?>
+            <? endif; ?>
+            <? echo botonComentar($post_id, $colab); ?>
+            <? if (!empty($audio_id_lite)) : ?>
+                <? echo botonDescarga($post_id); ?>
+                <? echo botonColab($post_id, $colab); ?>
+                <? echo botonColeccion($post_id); ?>
+            <? endif; ?>
+        </div>
+    <?
+}
