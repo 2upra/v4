@@ -510,6 +510,6 @@ function restringir_acceso_admin() {
         wp_die('Acceso denegado. Contacte al administrador.', 'Acceso Denegado', ['response' => 403]);
     }
 }
-add_action('admin_init', 'restringir_acceso_admin');
+# add_action('admin_init', 'restringir_acceso_admin');
 
 ?>

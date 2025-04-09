@@ -4,13 +4,144 @@
 // Este archivo se esta volviendo muy grande, hay que organizar mejor.
 
 // Refactor(Org): Funcion crearTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
-// La funcion crearTarea() ya no se encuentra en este archivo, fue movida a TaskCrudService.php.
 
+// Refactor(Org): Funcion borrarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
 // Refactor(Org): Funcion borrarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
-// La funcion borrarTarea() ya no se encuentra en este archivo, fue movida a TaskCrudService.php.
 
-// Refactor(Org): Funcion modificarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
-// La funcion modificarTarea() ya no se encuentra en este archivo, fue movida a TaskCrudService.php.
+// Refactor(Org): Funcion modificarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
+function modificarTarea()
+{
+    $log = '';
+    if (!current_user_can('edit_posts')) {
+        $log .= 'No tienes permisos.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
+
+    if (empty($tit)) {
+        $log .= 'Título vacío.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('Título vacío.');
+    }
+
+    if ($id === 0) {
+        $tareaId = crearTarea(); // Captura el ID devuelto por crearTarea()
+
+        if (is_wp_error($tareaId)) {
+            wp_send_json_error($tareaId->get_error_message());
+        } else {
+            wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
+        }
+        wp_send_json_error('La creación de tareas (ID 0) debe manejarse a través de la acción AJAX crearTarea.');
+        return;
+    }
+
+    $tarea = get_post($id);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        $log .= 'Tarea no encontrada.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    $args = array(
+        'ID' => $id,
+        'post_title' => $tit
+    );
+
+    $res = wp_update_post($args, true);
+
+    if (is_wp_error($res)) {
+        $msg = $res->get_error_message();
+        $log .= "Error al modificar tarea: $msg \n";
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error($msg);
+    }
+
+    $log .= "Tarea modificada con id $id";
+    guardarLog("modificarTarea: \n $log");
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_modificarTarea', 'modificarTarea');
+
+// Refactor(Org): Funcion archivarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
+//necesito que cuando se archive una tarea, deje ser una subtarea en caso de que lo hubiera sido, y si tenia tareas hijos, sus tareas hijos tambien se archiven
+function archivarTarea()
+{
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $tarea = get_post($id);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    $log = "Funcion archivarTarea(). \n  ID: $id. \n";
+
+    $usu = get_current_user_id();
+    $orden = get_user_meta($usu, 'ordenTareas', true);
+    $estadoActual = get_post_meta($id, 'estado', true);
+
+    $log .= "Estado inicial de la tarea: $estadoActual. \n";
+
+    if ($estadoActual == 'archivado') {
+        update_post_meta($id, 'estado', 'pendiente');
+        update_post_meta($id, 'sesion', 'General');
+        $log .= "Se cambio el estado de la tarea $id a pendiente y la sesion a General.";
+        // Eliminar la relación de subtarea si la tarea estaba archivada y se desarchiva
+        wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ));
+        delete_post_meta($id, 'subtarea');
+        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
+    } else {
+        if (is_array($orden) && in_array($id, $orden)) {
+            $pos = array_search($id, $orden);
+            unset($orden[$pos]);
+            $orden[] = $id;
+            update_user_meta($usu, 'ordenTareas', $orden);
+            $log .= "Se actualizo el orden de la tarea $id, moviendola al final. \n";
+        }
+
+        // Archivar subtareas (tareas hijas)
+        $args = array(
+            'post_parent' => $id,
+            'post_type'   => 'tarea',
+            'numberposts' => -1,
+            'post_status' => 'any'
+        );
+        $subtareas = get_children($args);
+
+        foreach ($subtareas as $subtarea) {
+            update_post_meta($subtarea->ID, 'estado', 'archivado');
+            $log .= ", \n  Se archivó la subtarea {$subtarea->ID}.";
+        }
+
+        // Eliminar la relación de subtarea si la tarea se está archivando
+        wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0
+        ));
+        delete_post_meta($id, 'subtarea');
+        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
+
+        update_post_meta($id, 'estado', 'archivado');
+        $log .= ", \n  Se cambió el estado de la tarea $id a archivado.";
+    }
+
+    guardarLog($log);
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_archivarTarea', 'archivarTarea');
 
 // Refactor(Org): Funcion archivarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 // La funcion archivarTarea() ya no se encuentra en este archivo, fue movida a TaskCrudService.php.
@@ -160,5 +291,4 @@ add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
 
 // Refactor(Org): Funcion ordenamientoTareas() movida a app/Services/Task/TaskOrderingService.php
 // Refactor(Org): Funciones ordenamientoTareas() y ordenamientoTareasPorPrioridad() movidas desde app/Content/Task/ordenamientoTareas.php
-
 // Refactor(Org): Funcion ordenamientoTareasPorPrioridad() movida a app/Services/Task/TaskOrderingService.php
