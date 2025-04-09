@@ -9,63 +9,6 @@
 // Refactor(Org): Funcion borrarTarea() y hook AJAX movidos a app/Services/Task/TaskCrudService.php
 
 // Refactor(Org): Funcion modificarTarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
-function modificarTarea()
-{
-    $log = '';
-    if (!current_user_can('edit_posts')) {
-        $log .= 'No tienes permisos.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('No tienes permisos.');
-    }
-
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
-
-    if (empty($tit)) {
-        $log .= 'Título vacío.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('Título vacío.');
-    }
-
-    if ($id === 0) {
-        $tareaId = crearTarea(); // Captura el ID devuelto por crearTarea()
-
-        if (is_wp_error($tareaId)) {
-            wp_send_json_error($tareaId->get_error_message());
-        } else {
-            wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
-        }
-        wp_send_json_error('La creación de tareas (ID 0) debe manejarse a través de la acción AJAX crearTarea.');
-
-        return;
-    }
-
-    $tarea = get_post($id);
-
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        $log .= 'Tarea no encontrada.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $args = array(
-        'ID' => $id,
-        'post_title' => $tit
-    );
-
-    $res = wp_update_post($args, true);
-
-    if (is_wp_error($res)) {
-        $msg = $res->get_error_message();
-        $log .= "Error al modificar tarea: $msg \n";
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error($msg);
-    }
-
-    $log .= "Tarea modificada con id $id";
-    guardarLog("modificarTarea: \n $log");
-    wp_send_json_success();
-}
 
 add_action('wp_ajax_modificarTarea', 'modificarTarea');
 
