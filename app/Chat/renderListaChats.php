@@ -4,16 +4,7 @@
 // Refactor: Función reiniciarChats() y su hook AJAX movidos a app/Services/ChatService.php
 
 
-
-function conversacionesUsuario($usuarioId)
-{
-    // Refactor: Función obtenerChats() movida a app/Services/ChatService.php
-    // Asegúrate de que ChatService.php esté incluido o autocargado
-    // si no lo está ya.
-    // Se asume que la función obtenerChats() está disponible globalmente o vía autoload
-    $conversaciones = obtenerChats($usuarioId);
-    return renderListaChats($conversaciones, $usuarioId);
-}
+// Refactor(Org): Funcion conversacionesUsuario() movida a app/Services/ChatService.php
 
 // Refactor: Función obtenerChats() movida a app/Services/ChatService.php
 // El código de la función obtenerChats() ha sido eliminado de este archivo.
