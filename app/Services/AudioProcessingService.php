@@ -7,15 +7,20 @@
  * Regenerates 'lite' (preview) MP3 files for posts that are missing them
  * or where the lite file is missing.
  */
-function regenerarLite() {
+function regenerarLite()
+{
     global $wpdb;
-    
-    $posts_con_audio = $wpdb->get_results("\n        SELECT post_id, meta_value as audio_id \n        FROM {$wpdb->postmeta} \n        WHERE meta_key = 'post_audio'\n    ");
+
+    $posts_con_audio = $wpdb->get_results("
+        SELECT post_id, meta_value as audio_id 
+        FROM {$wpdb->postmeta} 
+        WHERE meta_key = 'post_audio'
+    ");
 
     if (empty($posts_con_audio)) {
         // Assuming logAudio function is available globally or included elsewhere
         if (function_exists('logAudio')) {
-             logAudio("regenerarLite: No se encontraron posts con post_audio.");
+            logAudio("regenerarLite: No se encontraron posts con post_audio.");
         }
         return;
     }
@@ -30,14 +35,14 @@ function regenerarLite() {
     foreach ($posts_con_audio as $post) {
         $post_id = $post->post_id;
         $audio_id = $post->audio_id;
-        
+
         $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true);
         $wav_file = get_attached_file($audio_id);
-        
+
         if (!$wav_file || !file_exists($wav_file)) {
-             if (function_exists('logAudio')) {
+            if (function_exists('logAudio')) {
                 logAudio("regenerarLite: Archivo WAV no encontrado para post_id: $post_id, audio_id: $audio_id");
-             }
+            }
             continue;
         }
 
@@ -46,25 +51,27 @@ function regenerarLite() {
         $mp3_path = $audio_dir . $mp3_filename;
 
         $regenerar = false;
-        
+
         if (!$audio_lite_id) {
-             if (function_exists('logAudio')) {
+            if (function_exists('logAudio')) {
                 logAudio("regenerarLite: No existe post_audio_lite para post_id: $post_id. Se regenerará.");
-             }
+            }
             $regenerar = true;
         } else {
             $lite_file = get_attached_file($audio_lite_id);
             if (!$lite_file || !file_exists($lite_file)) {
-                 if (function_exists('logAudio')) {
+                if (function_exists('logAudio')) {
                     logAudio("regenerarLite: Archivo lite no encontrado para post_id: $post_id, audio_lite_id: $audio_lite_id. Se regenerará.");
-                 }
+                }
                 $regenerar = true;
             }
         }
 
         if ($regenerar) {
             // Ensure logAudio is available
-            $log_func = function_exists('logAudio') ? 'logAudio' : function($msg){ error_log($msg); };
+            $log_func = function_exists('logAudio') ? 'logAudio' : function ($msg) {
+                error_log($msg);
+            };
 
             // Ensure ffmpeg path is correct
             $ffmpeg_path = '/usr/bin/ffmpeg'; // Consider making this configurable
@@ -92,7 +99,7 @@ function regenerarLite() {
             require_once(ABSPATH . 'wp-admin/includes/image.php');
 
             $attach_id = wp_insert_attachment($attachment, $mp3_path, $post_id);
-            
+
             if (is_wp_error($attach_id)) {
                 $log_func("regenerarLite: Error al crear attachment para post_id: $post_id - " . $attach_id->get_error_message());
                 // Clean up generated file if attachment failed
@@ -115,7 +122,8 @@ function regenerarLite() {
  * @param array $schedules Existing cron schedules.
  * @return array Modified cron schedules.
  */
-function intervalo_cada_seis_horas($schedules) {
+function intervalo_cada_seis_horas($schedules)
+{
     $schedules['cada_seis_horas'] = array(
         'interval' => 21600, // 6 horas en segundos (6 * 60 * 60)
         'display' => __('Cada 6 Horas')
@@ -135,7 +143,7 @@ if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 // Refactor(Org): Moved from app/Functions/protegerAudio.php - Hook to prevent audio file deletion.
-add_filter('pre_delete_attachment', function($delete, $post) {
+add_filter('pre_delete_attachment', function ($delete, $post) {
     // Check if the file being deleted is within the '/audio/' directory
     $file_path = get_attached_file($post->ID); // Use $post->ID to get the attachment ID
     if ($file_path && strpos($file_path, '/audio/') !== false) {
@@ -151,7 +159,8 @@ add_filter('pre_delete_attachment', function($delete, $post) {
 // Refactor(Org): Moved audio optimization logic (cron, functions) from protegerAudio.php
 
 // Function to add a 55-minute interval
-function minutos55($schedules) {
+function minutos55($schedules)
+{
     // 55 minutes in seconds (55 * 60)
     $schedules['cada55'] = array(
         'interval' => 3300, // 55 minutes in seconds
@@ -167,7 +176,8 @@ function minutos55($schedules) {
  *
  * @param int $limite Maximum number of posts to process in one go.
  */
-function optimizar64kAudios($limite = 10000) {
+function optimizar64kAudios($limite = 10000)
+{
     // Get 'social_post' posts that haven't been optimized and don't have 'rola' meta set to 1
     $query = new WP_Query(array(
         'post_type' => 'social_post',
@@ -209,7 +219,8 @@ function optimizar64kAudios($limite = 10000) {
  *
  * @param int $post_id The ID of the post to process.
  */
-function optimizarAudioPost($post_id) {
+function optimizarAudioPost($post_id)
+{
     // Retrieve relevant post meta data
     $audio_id = get_post_meta($post_id, 'post_audio', true);
     $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true); // Current 'lite' audio ID
@@ -242,8 +253,8 @@ function optimizarAudioPost($post_id) {
             // Check if the file for audio_lite_id actually exists before moving
             $lite_file_path = get_attached_file($audio_lite_id);
             if ($lite_file_path && file_exists($lite_file_path)) {
-                 update_post_meta($post_id, 'post_audio_lite_128k', $audio_lite_id);
-                 logAudio("Movido ID $audio_lite_id a post_audio_lite_128k para post ID $post_id.");
+                update_post_meta($post_id, 'post_audio_lite_128k', $audio_lite_id);
+                logAudio("Movido ID $audio_lite_id a post_audio_lite_128k para post ID $post_id.");
             } else {
                 logAudio("Archivo para post_audio_lite ID $audio_lite_id no encontrado. No se movió a 128k. (Post ID: $post_id)");
                 // Decide if you want to delete the meta if the file doesn't exist
@@ -260,12 +271,12 @@ function optimizarAudioPost($post_id) {
 
         // Validate duration - should be a number
         if (!is_numeric($duracion_original) || $duracion_original <= 0) {
-             logAudio("No se pudo obtener la duración válida del audio original para post ID $post_id. Salida ffprobe: " . $duracion_original);
-             // Decide how to handle: skip, set default, mark error?
-             // Setting a flag might be useful
-             update_post_meta($post_id, 'audio_optimizado_error', 'No se pudo obtener duración');
-             // For now, let's try to proceed but log the issue. The comparison later might fail.
-             $duracion_original = 0; // Set to 0 to avoid PHP warnings, but indicates an issue
+            logAudio("No se pudo obtener la duración válida del audio original para post ID $post_id. Salida ffprobe: " . $duracion_original);
+            // Decide how to handle: skip, set default, mark error?
+            // Setting a flag might be useful
+            update_post_meta($post_id, 'audio_optimizado_error', 'No se pudo obtener duración');
+            // For now, let's try to proceed but log the issue. The comparison later might fail.
+            $duracion_original = 0; // Set to 0 to avoid PHP warnings, but indicates an issue
         } else {
             $duracion_original = floatval($duracion_original); // Convert to float for comparison
             update_post_meta($post_id, 'duracionAudio', $duracion_original);
@@ -277,7 +288,7 @@ function optimizarAudioPost($post_id) {
         $ruta_info = pathinfo($archivo_original);
         // Ensure directory exists and is writable
         $output_dir = $ruta_info['dirname'];
-         if (!is_writable($output_dir)) {
+        if (!is_writable($output_dir)) {
             logAudio("Directorio de salida no escribible: $output_dir para post ID $post_id");
             update_post_meta($post_id, 'audio_optimizado_error', 'Directorio no escribible');
             return;
@@ -288,13 +299,13 @@ function optimizarAudioPost($post_id) {
         // Ensure ffmpeg path is correct
         $ffmpeg_path = '/usr/bin/ffmpeg'; // Consider making this configurable
         $comando = $ffmpeg_path . " -i " . escapeshellarg($archivo_original) .
-                   " -vn" . // No video stream
-                   " -ar 44100" . // Audio sample rate
-                   " -ac 2" . // Audio channels (stereo) - adjust if needed
-                   " -b:a 64k" . // Audio bitrate
-                   " -t 20" . // Limit duration to 20 seconds
-                   " -af 'afade=t=out:st=15:d=5'" . // Apply fade-out: type=out, start_time=15s, duration=5s
-                   " " . escapeshellarg($ruta_optimizada) . " -y"; // Output path, -y overwrites without asking
+            " -vn" . // No video stream
+            " -ar 44100" . // Audio sample rate
+            " -ac 2" . // Audio channels (stereo) - adjust if needed
+            " -b:a 64k" . // Audio bitrate
+            " -t 20" . // Limit duration to 20 seconds
+            " -af 'afade=t=out:st=15:d=5'" . // Apply fade-out: type=out, start_time=15s, duration=5s
+            " " . escapeshellarg($ruta_optimizada) . " -y"; // Output path, -y overwrites without asking
         exec($comando, $output, $return_var);
 
         // Check FFmpeg execution result
@@ -322,7 +333,7 @@ function optimizarAudioPost($post_id) {
 
                 // Handle waveform removal if original audio was longer than 20s
                 if ($duracion_original > 20) {
-                     // Mark the post as having its audio trimmed
+                    // Mark the post as having its audio trimmed
                     update_post_meta($post_id, 'recortado', '1'); // Use '1' or true consistently
                     logAudio("Marcado como recortado para post ID $post_id (duración original: $duracion_original > 20s).");
 
@@ -340,12 +351,12 @@ function optimizarAudioPost($post_id) {
                         delete_post_meta($post_id, 'waveform_image_id');
                         delete_post_meta($post_id, 'waveform_image_url');
                     } else {
-                         logAudio("No se encontró waveform o meta asociada para eliminar en post ID $post_id (recortado).");
+                        logAudio("No se encontró waveform o meta asociada para eliminar en post ID $post_id (recortado).");
                     }
                 } else {
-                     // If duration <= 20, ensure 'recortado' meta is not present or is false
-                     delete_post_meta($post_id, 'recortado');
-                     logAudio("Audio no recortado para post ID $post_id (duración original: $duracion_original <= 20s).");
+                    // If duration <= 20, ensure 'recortado' meta is not present or is false
+                    delete_post_meta($post_id, 'recortado');
+                    logAudio("Audio no recortado para post ID $post_id (duración original: $duracion_original <= 20s).");
                 }
 
                 // Mark this post as successfully optimized to prevent re-processing
@@ -353,7 +364,6 @@ function optimizarAudioPost($post_id) {
                 // Clear any previous error flags
                 delete_post_meta($post_id, 'audio_optimizado_error');
                 logAudio("Optimización completada y marcada para post ID $post_id.");
-
             } else {
                 // Handle error during attachment insertion
                 $error_message = is_wp_error($nuevo_audio_id) ? $nuevo_audio_id->get_error_message() : 'ID de adjunto inválido';
@@ -373,10 +383,10 @@ function optimizarAudioPost($post_id) {
             $ffmpeg_output = implode("\n", $output); // Capture ffmpeg output for debugging
             logAudio("Error en FFmpeg al optimizar para post ID $post_id. $error_details Comando: $comando. Salida: $ffmpeg_output");
             update_post_meta($post_id, 'audio_optimizado_error', 'Error FFmpeg: ' . $error_details);
-             // Clean up potentially failed/empty output file
-             if (file_exists($ruta_optimizada)) {
-                 unlink($ruta_optimizada);
-             }
+            // Clean up potentially failed/empty output file
+            if (file_exists($ruta_optimizada)) {
+                unlink($ruta_optimizada);
+            }
         }
     } else {
         // Log if no 'post_audio' meta key was found
@@ -398,7 +408,8 @@ if (!wp_next_scheduled('minutos55_evento')) {
 add_action('minutos55_evento', 'optimizar64kAudios');
 
 // Refactor(Org): Moved function save_waveform_image() from app/Logic/waveform.php
-function save_waveform_image() {
+function save_waveform_image()
+{
     if (!isset($_FILES['image']) || !isset($_POST['post_id'])) {
         wp_send_json_error('Datos incompletos');
         return;
@@ -425,7 +436,7 @@ function save_waveform_image() {
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     require_once(ABSPATH . 'wp-admin/includes/file.php');
     require_once(ABSPATH . 'wp-admin/includes/media.php');
-    
+
     // Obtener el autor del post y asignar la imagen a él.
     $author_id = get_post_field('post_author', $post_id);
     $attachment_id = media_handle_upload('image', $post_id, array('post_author' => $author_id));
@@ -512,27 +523,28 @@ function reset_waveform_metas()
 }
 
 // Refactor(Org): Moved function procesarArchivoAudioPython() from app/Auto/python.php
-function procesarArchivoAudioPython($rutaArchivo) {
+function procesarArchivoAudioPython($rutaArchivo)
+{
     // Comando para ejecutar el script de Python
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py \"{$rutaArchivo}\"");
-    
+
     // Log de la ejecución
     iaLog("Ejecutando comando de Python: {$python_command}");
-    
+
     // Ejecutar el comando
     exec($python_command, $output, $return_var);
-    
+
     // Verificar si hubo un error al ejecutar el comando
     if ($return_var !== 0) {
         iaLog("Error al ejecutar el script de Python. Código de retorno: {$return_var}. Salida: " . implode("\n", $output));
         return null;
     }
-    
+
     // Ruta del archivo de resultados
     $resultados_path = "{$rutaArchivo}_resultados.json";
     $campos_esperados = ['bpm', 'pitch', 'emotion', 'key', 'scale', 'strength'];
     $resultados_data = [];
-    
+
     // Verificar si el archivo de resultados existe
     if (file_exists($resultados_path)) {
         $resultados = json_decode(file_get_contents($resultados_path), true);
@@ -541,7 +553,7 @@ function procesarArchivoAudioPython($rutaArchivo) {
         if ($resultados && is_array($resultados)) {
             foreach ($campos_esperados as $campo) {
                 if (isset($resultados[$campo])) {
-                    $resultados_data[$campo] = $resultados[$campo]; 
+                    $resultados_data[$campo] = $resultados[$campo];
                 } else {
                     iaLog("Campo '{$campo}' no encontrado en JSON.");
                 }

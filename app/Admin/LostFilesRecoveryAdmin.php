@@ -11,7 +11,7 @@
 // Acción realizada: Mover funciones de recuperación de archivos perdidos desde app/Misc/recuperar_perdidos.php
 
 function ra_add_admin_menu() {
-    add_menu_page('Recuperar Archivos', 'Recuperar Archivos', 'manage_options', 'recuperar-archivos', 'ra_admin_page');
+    # add_menu_page('Recuperar Archivos', 'Recuperar Archivos', 'manage_options', 'recuperar-archivos', 'ra_admin_page');
 }
 
 // Página de administración
@@ -163,6 +163,6 @@ function ra_recover_files($lost_files) {
 }
 
 // Hook para añadir el menú de administración
-add_action('admin_menu', 'ra_add_admin_menu');
+# add_action('admin_menu', 'ra_add_admin_menu');
 
 ?>
