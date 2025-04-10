@@ -26,8 +26,7 @@ function confirmarArchivos($postId)
     }
 }
 
-// Refactor(Org): Funciones de manejo de adjuntos y audio movidas desde app/Form/Manejar.php
-
+// Refactor(Org): Función procesarURLs() movida desde app/Services/PostService.php
 #Paso 5
 function procesarURLs($postId)
 {
@@ -60,6 +59,8 @@ function procesarURLs($postId)
         }
     }
 }
+
+// Refactor(Org): Funciones de manejo de adjuntos y audio movidas desde app/Form/Manejar.php
 
 
 #Paso 5.1 #Prepara para buscar la ID y actualizar la meta

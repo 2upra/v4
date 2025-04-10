@@ -25,7 +25,8 @@ function subidaRs()
     // Refactor(Org): Función datosParaAlgoritmo() movida a app/AlgoritmoPost/algoritmoPosts.php
     datosParaAlgoritmo($idPost); // Asegúrate de que algoritmoPosts.php esté incluido
     confirmarArchivos($idPost);
-    procesarURLs($idPost);
+    // Refactor(Org): Función procesarURLs() movida a app/Services/Post/PostAttachmentService.php
+    procesarURLs($idPost); // Asegúrate de que PostAttachmentService.php esté incluido o la función esté disponible globalmente
     // Refactor(Org): Lógica de asignación de tags movida a PostContentService.php
     // La función asignarTags() ahora reside en app/Services/Post/PostContentService.php
     // Si es necesario, llamar a la función desde el contexto adecuado o incluir PostContentService.php
@@ -161,4 +162,6 @@ function variablesPosts($idPost = null)
         'ultimoEdit' => get_post_meta($idPost, 'ultimoEdit', true),
     ];
 }
+
+// Refactor(Org): Función procesarURLs() movida a app/Services/Post/PostAttachmentService.php
 
