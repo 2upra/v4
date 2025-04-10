@@ -42,3 +42,28 @@ function htmlColab($filtro)
 <?
     return ob_get_clean();
 }
+
+// Refactor(Exec): Función tituloColab() movida desde app/Content/Colab/partColab.php
+function tituloColab($var)
+{
+    $post_id = $var['post_id'];
+    $imagenPostOp = $var['imagenPostOp'];
+    $postTitulo = $var['postTitulo'];
+    $colabFecha = $var['colabFecha'];
+
+    ob_start(); ?>
+
+    <div class="MJYQLF">
+        <div class="YXJIKK">
+            <img src="<? echo esc_url($imagenPostOp) ?>">
+        </div>
+        <div class="SNVKQC">
+            <p><? echo esc_html($postTitulo) ?></p>
+            <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
+                <? echo esc_html($colabFecha); ?>
+            </a>
+        </div>
+    </div>
+
+<?php return ob_get_clean();
+}
