@@ -11,36 +11,8 @@
 
 // Refactor(Org): Funcion variablesColec movida a app/Services/CollectionService.php
 
+// Refactor(Org): Funcion imagenColeccion movida a app/View/Helpers/CollectionHelper.php
 
-function imagenColeccion($postId)
-{
-    $imagenSize = 'large';
-    $quality = 60;
-    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
-    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-    $imagenProcesada = img($imagenUrl, $quality, 'all');
-    $postType = get_post_type($postId);
-
-    ob_start();
-?>
-    <div class="post-image-container">
-        <? if ($postType !== 'social_post') : ?>
-            <a href="<? echo esc_url(get_permalink($postId)); ?>" data-post-id="<? echo $postId; ?>" class="imagenColecS">
-            <? endif; ?>
-            <img class="imagenMusic" src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" data-post-id="<? echo $postId; ?>" />
-            <div class="KLYJBY">
-                <? echo audioPost($postId); ?>
-            </div>
-            <? if ($postType !== 'social_post') : ?>
-            </a>
-        <? endif; ?>
-    </div>
-<?
-
-    $output = ob_get_clean();
-
-    return $output;
-}
 
 // Refactor(Clean): Función imagenPost() movida a app/View/Helpers/ImageHelper.php
 
@@ -53,7 +25,7 @@ function singleColec($postId)
     ob_start()
 ?>
     <div class="AMORP">
-        <? echo imagenColeccion($postId); ?>
+        <? echo imagenColeccion($postId); // Llamada a la función movida a CollectionHelper.php ?>
         <div class="ORGDE">
 
             <div class="AGDEORF">
