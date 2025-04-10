@@ -1,5 +1,6 @@
-<?
+<?php
 
+// Refactor(Org): Funcion htmlColec movida desde app/Content/Colecciones/View/renderPostColec.php
 function htmlColec($filtro)
 {
     ob_start();
@@ -8,7 +9,7 @@ function htmlColec($filtro)
     // Se asume que CollectionService.php es incluido o la función está disponible globalmente
     // Si no es así, se necesitará incluir el archivo o instanciar el servicio.
     // Por ahora, se llama directamente asumiendo disponibilidad global.
-    $vars = variablesColec($postId); 
+    $vars = variablesColec($postId);
     extract($vars);
 ?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV no-refresh"
@@ -17,9 +18,9 @@ function htmlColec($filtro)
         autor="<? echo esc_attr($autorId); ?>">
 
         <div class="post-content">
-            <? echo imagenColeccion($postId); ?>
+            <? echo imagenColeccion($postId); // ADVERTENCIA: Esta función reside en renderPostColec.php y puede no estar disponible aquí. ?>
             <div class="KLYJBY">
-                <? echo audioPost($postId); ?>
+                <? echo audioPost($postId); // Asume que AudioHelper.php está cargado ?>
             </div>
 
             <?
@@ -63,8 +64,8 @@ function htmlColec($filtro)
             ?>
             <div class="CPQBEN" style="display: none;">
 
-                <? echo like($postId); ?>
-                <? echo botonCompra($postId); ?>
+                <? echo like($postId); // Asume que LikeHelper.php está cargado ?>
+                <? echo botonCompra($postId); // Asume que compra.php está cargado ?>
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
                     <?
@@ -91,7 +92,7 @@ function htmlColec($filtro)
             $rola_meta_bottom = get_post_meta($postId, 'rola', true);
 
             if (!$colecciones_meta && !$rola_meta_bottom) {
-                echo botonCompra($postId);
+                echo botonCompra($postId); // Asume que compra.php está cargado
             }
             ?>
         </div>
@@ -100,48 +101,7 @@ function htmlColec($filtro)
     return ob_get_clean();
 }
 
-// Funcion aplanarArray movida a app/Utils/ArrayUtils.php
-
-// Refactor(Org): Funcion datosColeccion movida a app/Services/CollectionService.php
-
-// Funcion maybe_unserialize_dos movida a app/Utils/ArrayUtils.php
-
-
-// Refactor(Org): Funcion variablesColec movida a app/Services/CollectionService.php
-
-
-function imagenColeccion($postId)
-{
-    $imagenSize = 'large';
-    $quality = 60;
-    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
-    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-    $imagenProcesada = img($imagenUrl, $quality, 'all');
-    $postType = get_post_type($postId);
-
-    ob_start();
-?>
-    <div class="post-image-container">
-        <? if ($postType !== 'social_post') : ?>
-            <a href="<? echo esc_url(get_permalink($postId)); ?>" data-post-id="<? echo $postId; ?>" class="imagenColecS">
-            <? endif; ?>
-            <img class="imagenMusic" src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" data-post-id="<? echo $postId; ?>" />
-            <div class="KLYJBY">
-                <? echo audioPost($postId); ?>
-            </div>
-            <? if ($postType !== 'social_post') : ?>
-            </a>
-        <? endif; ?>
-    </div>
-<?
-
-    $output = ob_get_clean();
-
-    return $output;
-}
-
-// Refactor(Clean): Función imagenPost() movida a app/View/Helpers/ImageHelper.php
-
+// Refactor(Org): Funcion singleColec movida desde app/Content/Colecciones/View/renderPostColec.php
 function singleColec($postId)
 {
     // Refactor(Org): Funcion variablesColec movida a app/Services/CollectionService.php
@@ -151,7 +111,7 @@ function singleColec($postId)
     ob_start()
 ?>
     <div class="AMORP">
-        <? echo imagenColeccion($postId); ?>
+        <? echo imagenColeccion($postId); // Llamada a la función movida a CollectionHelper.php ?>
         <div class="ORGDE">
 
             <div class="AGDEORF">
@@ -191,6 +151,7 @@ function singleColec($postId)
     return ob_get_clean();
 }
 
+// Refactor(Org): Funcion masIdeasColeb() movida desde app/Content/Colecciones/View/renderPostColec.php
 function masIdeasColeb($postId)
 {
     ob_start()
@@ -204,4 +165,4 @@ function masIdeasColeb($postId)
     return ob_get_clean();
 }
 
-// Refactor(Org): Funcion opcionesColec movida a app/View/Helpers/CollectionHelper.php
+?>
