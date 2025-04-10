@@ -35,7 +35,8 @@ function htmlPost($filtro)
             <? // Refactor(Exec): Llamada a función sampleListHtml() movida a este archivo
                sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
-            <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
+            <? // Refactor(Exec): Función fondoPost() movida desde app/Content/Posts/View/renderPost.php
+               echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
             <? if ($music || $momento): ?>
                 <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
             <? else: ?>
@@ -180,4 +181,31 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
         <? endif; ?>
     </div>
 <?
+}
+
+// Refactor(Exec): Función fondoPost() movida desde app/Content/Posts/View/renderPost.php
+function fondoPost($filtro, $block, $es_suscriptor, $post_id)
+{
+    $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
+    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+    $temporal_image_url = '';
+    if ($imagen_temporal_id) {
+        $temporal_image_url = wp_get_attachment_url($imagen_temporal_id);
+        $temporal_image_url = img($temporal_image_url, 40, 'all');
+    }
+
+    $style = '';
+    if (!empty($optimized_thumbnail_url)) {
+        $style = 'style="background-image: url(' . esc_url($optimized_thumbnail_url) . ');"';
+    } elseif (!empty($temporal_image_url)) {
+        $style = 'style="background-image: url(' . esc_url($temporal_image_url) . ');"';
+    }
+
+    $class = 'fondoPost';
+    if ($block && !$es_suscriptor) {
+        $class .= ' block';
+    }
+
+    return '<div class="' . $class . '" ' . $style . '></div>';
 }
