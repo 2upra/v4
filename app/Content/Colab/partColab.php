@@ -50,24 +50,7 @@ function variablesColab($post_id = null)
 
 
 
-function audioColab($post_id, $audio_id_lite)
-{
-    $wave = get_post_meta($post_id, 'waveform_image_url', true);
-    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite)
-?>
-    <div id="waveform-<? echo $post_id; ?>"
-        class="waveform-container without-image"
-        postIDWave="<? echo $post_id; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-        <div class="waveform-message"></div>
-        <div class="waveform-loading" style="display: none;">Cargando...</div>
-    </div>
-<?php
-}
-
+// Refactor(Exec): Función audioColab() movida a app/View/Helpers/AudioHelper.php
 
 // Refactor(Exec): Función contenidoColab() movida a app/View/Helpers/ColabHelper.php
 
