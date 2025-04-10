@@ -487,6 +487,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 
 
 
+
 //Banear usuario desde el post
 function handle_user_modification()
 {
