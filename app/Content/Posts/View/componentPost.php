@@ -10,41 +10,7 @@
 
 
 
-//MOSTRAR IMAGEN
-function imagenPostList($block, $es_suscriptor, $postId)
-{
-    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
-
-    if ($block && !$es_suscriptor) {
-        $image_size = 'thumbnail';
-        $quality = 20;
-    } else {
-        $image_size = 'thumbnail';
-        $quality = 20;
-    }
-
-    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
-    $image_url = imagenPost($postId, $image_size, $quality, 'all', ($block && !$es_suscriptor), true);
-
-    $processed_image_url = img($image_url, $quality, 'all');
-
-    ob_start();
-?>
-    <div class="post-image-container <?= esc_attr($blurred_class) ?>">
-        <a>
-            <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
-        </a>
-        <div class="botonesRep">
-            <div class="reproducirSL" id-post="<?php echo $postId; ?>"><?php echo $GLOBALS['play']; ?></div>
-            <div class="pausaSL" id-post="<?php echo $postId; ?>"><?php echo $GLOBALS['pause']; ?></div>
-        </div>
-    </div>
-<?php
-
-    $output = ob_get_clean();
-
-    return $output;
-}
+// Refactor(Org): Función imagenPostList() movida a app/View/Helpers/PostHelper.php
 
 // Refactor(Clean): Función imagenPost() movida a app/View/Helpers/ImageHelper.php
 
