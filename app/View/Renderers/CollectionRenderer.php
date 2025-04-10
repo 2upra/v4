@@ -151,4 +151,18 @@ function singleColec($postId)
     return ob_get_clean();
 }
 
+// Refactor(Org): Funcion masIdeasColeb() movida desde app/Content/Colecciones/View/renderPostColec.php
+function masIdeasColeb($postId)
+{
+    ob_start()
+?>
+
+    <div class="LISTCOLECSIN">
+        <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12, 'colec' => $postId, 'idea' => true]);  ?>
+    </div>
+
+<?
+    return ob_get_clean();
+}
+
 ?>
