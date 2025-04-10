@@ -206,7 +206,8 @@ function debeProcesarse($ruta_archivo, $file_hash)
 
         // Verificar similitud con hashes existentes y condición de carga antes de eliminar
         foreach ($hashes_existentes as $hash_existente) {
-            if (sonHashesSimilaresAut($file_hash, $hash_existente['file_hash'])) {
+            // Note: sonHashesSimilaresAut is now in FileHashService.php
+            if (function_exists('sonHashesSimilaresAut') && sonHashesSimilaresAut($file_hash, $hash_existente['file_hash'])) {
                 autLog("debeProcesarse: Se encontró un hash similar en la base de datos");
 
                 if ($hash_verificado && file_exists($ruta_archivo)) {
@@ -244,7 +245,7 @@ function obtenerHashesFiltrados($extensiones)
     $extensiones_regex = implode('|', array_map('preg_quote', $extensiones));
     $query = $wpdb->prepare(
         "SELECT file_hash FROM {$wpdb->prefix}file_hashes WHERE file_url REGEXP %s",
-        '\.(' . $extensiones_regex . ')$'
+        '\\.(' . $extensiones_regex . ')$'
     );
     return $wpdb->get_results($query, ARRAY_A);
 }
@@ -281,32 +282,7 @@ function verificarCargaArchivoPorHash($file_hash)
     }
 }
 
-function sonHashesSimilaresAut($hash1, $hash2, $umbral = 0.85)
-{
-    if (empty($hash1) || empty($hash2)) {
-        return false;
-    }
-
-    $valores1 = array_map('hexdec', str_split($hash1, 2));
-    $valores2 = array_map('hexdec', str_split($hash2, 2));
-
-    if (count($valores1) !== count($valores2)) {
-        return false;
-    }
-
-    $suma_diferencias_cuadradas = 0;
-    $max_diferencia = 255;
-
-    for ($i = 0; $i < count($valores1); $i++) {
-        $diferencia = abs($valores1[$i] - $valores2[$i]);
-        $suma_diferencias_cuadradas += pow($diferencia, 2);
-    }
-
-    $distancia = sqrt($suma_diferencias_cuadradas);
-    $similitud = 1 - ($distancia / (sqrt(count($valores1)) * $max_diferencia));
-
-    return $similitud >= $umbral;
-}
+// Refactor(Org): Moved function sonHashesSimilaresAut to app/Services/FileHashService.php
 
 // Refactor(Org): Moved function obtenerHash to app/Services/FileHashService.php
 
