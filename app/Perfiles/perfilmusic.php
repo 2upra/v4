@@ -101,16 +101,7 @@ function custom_user_profile_shortcode_music() {
 }
 add_shortcode('custom_user_profile_music', 'custom_user_profile_shortcode_music');
 
-function enqueue_scripts42() {
-    wp_enqueue_script('color-thief', 'https://cdn.jsdelivr.net/npm/colorthief/dist/color-thief.umd.js', array(), null, true);
-    if (!wp_script_is('colormusic', 'registered')) {
-        wp_register_script('colormusic', get_template_directory_uri() . '/js/colormusic.js', array('jquery', 'color-thief'), '1.0.3', true);
-    }
-    wp_enqueue_script('colormusic');
-}
-
-add_action('wp_enqueue_scripts', 'enqueue_scripts42');
-
+// Refactor(Org): Moved function enqueue_scripts42 and its hook to app/Setup/ScriptSetup.php
 
 
 
