@@ -45,7 +45,7 @@ function htmlPost($filtro)
             <? if ($music || $momento):
                 // Refactor(Org): Función renderPostControls() movida a app/View/Helpers/PostHelper.php
                  ?>
-                <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
+                <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); // Note: Function definition moved to PostRenderer.php ?>
             <? else: ?>
                 <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
             <? endif; ?>
@@ -62,94 +62,7 @@ function htmlPost($filtro)
 
 // Refactor(Exec): Función sampleListHtml() movida a app/View/Renderers/PostRenderer.php
 
-
-function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url)
-{
-    $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
-    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
-    $momento = get_post_meta($post_id, 'momento', true);
-    $esColeccion = get_post_meta($post_id, 'datosColeccion', true);
-    if (!$esColeccion) {
-        $esColeccion = get_post_meta($post_id, 'ultimaModificacion', true);
-    }
-    $permalink = get_permalink($post_id);
-
-?>
-    <? if (!empty($momento) || !empty($esColeccion)) : ?>
-        <a href="<? echo esc_url($permalink); ?>">
-        <? endif; ?>
-        <div class="post-content">
-            <div class="MFQOYC">
-                <? echo like($post_id); ?>
-                <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
-            </div>
-            <div class="KLYJBY">
-                <? echo audioPost($post_id); ?>
-            </div>
-
-            <? if (!empty($momento) || !empty($esColeccion)) : ?>
-                <div class="contentMoment">
-                    <?
-                    $content = get_the_content();
-                    if (!empty($content)) {
-                        echo $content;
-                    } else {
-                        echo '<p>' . get_the_title() . '</p>';
-                    }
-                    ?>
-                </div>
-            <? else : ?>
-                <div class="LRKHLC">
-                    <div class="XOKALG">
-                        <?
-                        $rola_meta = get_post_meta($post_id, 'rola', true);
-                        $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
-
-                        if ($rola_meta === '1') {
-                            $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                            if (empty($nombre_rola)) {
-                                $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                            }
-                            if (!empty($nombre_rola)) {
-                                $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
-                            }
-                        }
-                        $output = '<p>' . esc_html($author_name) . '</p>';
-                        $output .= '<p>-</p>';
-                        $output .= $nombre_rola_html;
-
-                        echo $output;
-                        ?>
-                    </div>
-                </div>
-            <? endif; ?>
-            <div class="CPQBEN" style="display: none;">
-                <div class="CPQBAU"><? echo $author_name; ?></div>
-                <div class="CPQBCO">
-                    <?
-                    $rola_meta = get_post_meta($post_id, 'rola', true);
-
-                    if ($rola_meta === '1') {
-                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                        if (empty($nombre_rola)) {
-                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                        }
-                        if (!empty($nombre_rola)) {
-                            echo "<p>" . esc_html($nombre_rola) . "</p>";
-                        } else {
-                        }
-                    } else {
-                    }
-                    ?>
-                </div>
-                <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
-            </div>
-        </div>
-        <? if (!empty($momento) || !empty($esColeccion)) : ?>
-        </a>
-    <? endif; ?>
-<?
-}
+// Refactor(Exec): Función renderMusicContent() movida a app/View/Renderers/PostRenderer.php
 
 
 function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite)
@@ -332,6 +245,616 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 // Refactor(Org): Función limpiarJSON movida a StringUtils.php
 
 // Refactor(Org): Función nohayPost movida a app/View/Helpers/PostHelper.php
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
