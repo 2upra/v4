@@ -266,73 +266,11 @@ EOD;
 
 add_action('wp_enqueue_scripts', 'innerHeight');
 
-// Refactor(Org): Mover hooks agregar_soporte_jfif y extender_wp_check_filetype aquí
-function agregar_soporte_jfif($mimes)
-{
-    $mimes['jfif'] = 'image/jpeg';
-    return $mimes;
-}
-add_filter('upload_mimes', 'agregar_soporte_jfif');
-
-// Extiende wp_check_filetype para reconocer .jfif
-function extender_wp_check_filetype($types, $filename, $mimes)
-{
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    if ($ext === 'jfif') {
-        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
-    }
-    return $types;
-}
-add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
-
-// Refactor(Org): Función mimesPermitidos movida desde app/Admin/Ajustes.php
-function mimesPermitidos($mimes)
-{
-    $mimes['flp'] = 'application/octet-stream';
-    $mimes['zip'] = 'application/zip';
-    $mimes['rar'] = 'application/x-rar-compressed';
-    $mimes['cubase'] = 'application/octet-stream';
-    $mimes['proj'] = 'application/octet-stream';
-    $mimes['aiff'] = 'audio/aiff';
-    $mimes['midi'] = 'audio/midi';
-    $mimes['ptx'] = 'application/octet-stream';
-    $mimes['sng'] = 'application/octet-stream';
-    $mimes['aup'] = 'application/octet-stream';
-    $mimes['omg'] = 'application/octet-stream';
-    $mimes['rpp'] = 'application/octet-stream';
-    $mimes['xpm'] = 'image/x-xpixmap';
-    $mimes['tst'] = 'application/octet-stream';
-
-    return $mimes;
-}
-add_filter('upload_mimes', 'mimesPermitidos');
+// Refactor(Org): Moved MIME type filters to app/Setup/MimeTypesSetup.php
 
 // Refactor(Org): Moved CPT and status registration to PostTypesSetup.php
 
 // Acción de refactorización: La función configurarMetadatosPaginaIdioma() ya se encontraba en este archivo. No se realizaron cambios.
-
-// Refactor(Org): Hooks de tipo MIME APK movidos desde app/Pages/Temporal.php
-function permitir_subir_apks($mime_types)
-{
-    $mime_types['apk'] = 'application/vnd.android.package-archive';
-    return $mime_types;
-}
-add_filter('upload_mimes', 'permitir_subir_apks');
-
-function verificar_subida_apk($data, $file, $filename, $mimes)
-{
-
-    if (substr($filename, -4) === '.apk') {
-        if (! current_user_can('manage_options')) {
-            $data['error'] = 'Lo siento, no tienes permisos para subir archivos APK.';
-        } else {
-            $data['type'] = 'application/vnd.android.package-archive';
-        }
-    }
-
-    return $data;
-}
-add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
 
 // Refactor(Org): Mover lógica de normalización de posts y hooks desde TagUtils.php
 // Funciones movidas desde app/Functions/normalizarTags.php (originalmente en app/Utils/TagUtils.php)
