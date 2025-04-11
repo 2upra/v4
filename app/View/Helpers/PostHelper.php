@@ -263,3 +263,23 @@ function imagenPostList($block, $es_suscriptor, $postId)
 
     return $output;
 }
+
+// Refactor(Org): Función fondoPost() movida desde app/Content/Posts/View/componentPost.php
+function fondoPost($filtro, $block, $es_suscriptor, $postId)
+{
+    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
+    $thumbnail_url = imagenPost($postId, 'full', 80, 'all', false, true); // Calidad 80 para fondo
+
+    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    // Optimización adicional para el fondo si es necesario
+    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+
+    ob_start();
+?>
+    <div class="post-background <?= $blurred_class ?>"
+        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
+    </div>
+<?php
+    $output = ob_get_clean();
+    return $output;
+}
