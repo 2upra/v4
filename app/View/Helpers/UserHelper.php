@@ -29,7 +29,7 @@ function obtenerDatosUsuarioCabecera() {
     $usuario = wp_get_current_user();
     $user_id = get_current_user_id();
     $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = imagenPerfil($usuario->ID);
+    $url_imagen_perfil = imagenPerfil($usuario->ID); // Asumiendo que imagenPerfil() existe globalmente o en este archivo/helper
     $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
 
     // Aplicar Jetpack Photon si está disponible
@@ -47,7 +47,7 @@ function obtenerDatosUsuarioCabecera() {
     ];
 }
 
-// Refactor(Org): Moved from app/Perfiles/perfiles.php
+// Refactor(Org): Moved function my_custom_avatar and its hook from app/Perfiles/perfiles.php
 function my_custom_avatar($avatar, $id_or_email, $size, $default, $alt) {
     $urlAvatarDefecto = 'https://i.pinimg.com/564x/d2/64/e3/d264e36c185da291cf7964ec3dfa37b8.jpg'; // URL por defecto
     $usuario = false;
