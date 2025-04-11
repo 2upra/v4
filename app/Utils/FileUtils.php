@@ -88,49 +88,7 @@ function nombreUnicoFile($dir, $name, $ext)
     return basename($name, $ext) . $ext;
 }
 
-// Refactor(Org): Función movida desde app/Content/Posts/View/componentPost.php
-function subirImagenALibreria($file_path, $postId)
-{
-    if (!file_exists($file_path)) {
-        return false;
-    }
-    $file_contents = file_get_contents($file_path);
-    if ($file_contents === false) {
-        return false;
-    }
-    $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
-    if ($file_ext === 'jfif') {
-        $file_ext = 'jpeg';
-        $new_file_name = pathinfo($file_path, PATHINFO_FILENAME) . '.jpeg';
-        $upload_file = wp_upload_bits($new_file_name, null, $file_contents);
-    } else {
-        $upload_file = wp_upload_bits(basename($file_path), null, $file_contents);
-    }
-
-    if ($upload_file['error']) {
-        return false;
-    }
-    $filetype = wp_check_filetype($upload_file['file'], null);
-    if (!$filetype['type']) {
-        return false;
-    }
-    $attachment = array(
-        'post_mime_type' => $filetype['type'],
-        'post_title'     => sanitize_file_name(pathinfo($upload_file['file'], PATHINFO_BASENAME)),
-        'post_content'   => '',
-        'post_status'    => 'inherit',
-        'post_parent'    => $postId,
-    );
-    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $postId);
-    if (!is_wp_error($attach_id)) {
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
-        wp_update_attachment_metadata($attach_id, $attach_data);
-
-        return $attach_id;
-    }
-    return false;
-}
+// Refactor(Org): Función subirImagenALibreria movida a app/Utils/ImageUtils.php
 
 // Refactor(Org): Función renombrar_archivo_adjunto movida desde app/Services/Post/PostAttachmentService.php
 #PASO 5.2
