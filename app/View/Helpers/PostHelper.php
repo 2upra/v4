@@ -11,7 +11,7 @@ function infoPost($autId, $autAv, $autNom, $postF, $postId, $block, $colab)
     $autId = (int)$autId;
     $esUsrAct = ($usrAct === $autId);
 
-    ob_start();
+ob_start();
 ?>
     <div class="SOVHBY <? echo ($esUsrAct ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
@@ -76,7 +76,7 @@ function opcionesPost($postId, $autorId)
     $esTarea = get_post_type($postId) === 'tarea';
     $esAutor = ($usuarioActual == $autorId);
 
-    ob_start();
+ob_start();
 ?>
     <button class="HR695R8" data-post-id="<? echo esc_attr($postId); ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
@@ -146,7 +146,7 @@ function nohayPost($filtro, $is_ajax)
         $filtro = 'rolastatus';
     }
 
-    ob_start();
+ob_start();
     ?>
 
         <? if ($filtro === 'momento' || $is_ajax): ?>
@@ -167,42 +167,42 @@ function nohayPost($filtro, $is_ajax)
     return ob_get_clean();
 }
 
-// Refactor(Org): Mueve función opcionesRola() de PostOptions.php a PostHelper.php
-//OPCIONES EN LAS ROLAS 
-function opcionesRola($postId, $post_status, $audio_url)
-{
-    ob_start();
-?>
-    <button class="HR695R7" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+// Refactor(Org): Mueve función opcionesRola() de PostAttachmentService.php a PostHelper.php
+// // OPCIONES EN LAS ROLAS 
+// function opcionesRola($postId, $post_status, $audio_url)
+// {
+//     ob_start();
+// ?>
+//     <button class="HR695R7" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
-    <div class="A1806241" id="opcionesrola-<? echo $postId; ?>">
-        <div class="A1806242">
-            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
-                <button class="toggle-status-rola" data-post-id="<? echo $postId; ?>">Cambiar estado</button>
-            <? } ?>
+//     <div class="A1806241" id="opcionesrola-<? echo $postId; ?>">
+//         <div class="A1806242">
+//             <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
+//                 <button class="toggle-status-rola" data-post-id="<? echo $postId; ?>">Cambiar estado</button>
+//             <? } ?>
 
-            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <button class="rechazar-rola" data-post-id="<? echo $postId; ?>">Rechazar rola</button>
-            <? } ?>
+//             <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+//                 <button class="rechazar-rola" data-post-id="<? echo $postId; ?>">Rechazar rola</button>
+//             <? } ?>
 
-            <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
+//             <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
 
-            <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <? if ($post_status == 'pending') { ?>
-                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Cancelar publicación</button>
-                <? } else { ?>
-                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Solicitar eliminación</button>
-                <? } ?>
-            <? } ?>
+//             <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+//                 <? if ($post_status == 'pending') { ?>
+//                     <button class="request-deletion" data-post-id="<? echo $postId; ?>">Cancelar publicación</button>
+//                 <? } else { ?>
+//                     <button class="request-deletion" data-post-id="<? echo $postId; ?>">Solicitar eliminación</button>
+//                 <? } ?>
+//             <? } ?>
 
-        </div>
-    </div>
+//         </div>
+//     </div>
 
-    <div id="modalBackground3" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
+//     <div id="modalBackground3" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
 
-<?
-    return ob_get_clean();
-}
+// <?
+//     return ob_get_clean();
+// }
 
 // Refactor(Org): Mueve función renderPostControls() de renderPost.php a PostHelper.php
 function renderPostControls($post_id, $colab, $audio_id_lite = null)
@@ -246,7 +246,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
 
     $processed_image_url = img($image_url, $quality, 'all');
 
-    ob_start();
+ob_start();
 ?>
     <div class="post-image-container <?= esc_attr($blurred_class) ?>">
         <a>
@@ -274,7 +274,7 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
     // Optimización adicional para el fondo si es necesario
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
-    ob_start();
+ob_start();
 ?>
     <div class="post-background <?= $blurred_class ?>"
         style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
@@ -282,4 +282,42 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
 <?php
     $output = ob_get_clean();
     return $output;
+}
+
+
+// Refactor(Exec): Función opcionesRola() movida desde app/Services/Post/PostAttachmentService.php a app/View/Helpers/PostHelper.php
+// // OPCIONES EN LAS ROLAS 
+function opcionesRola($postId, $post_status, $audio_url)
+{
+    ob_start();
+?>
+    <button class="HR695R7" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+
+    <div class="A1806241" id="opcionesrola-<? echo $postId; ?>">
+        <div class="A1806242">
+            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
+                <button class="toggle-status-rola" data-post-id="<? echo $postId; ?>">Cambiar estado</button>
+            <? } ?>
+
+            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+                <button class="rechazar-rola" data-post-id="<? echo $postId; ?>">Rechazar rola</button>
+            <? } ?>
+
+            <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
+
+            <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+                <? if ($post_status == 'pending') { ?>
+                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Cancelar publicación</button>
+                <? } else { ?>
+                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Solicitar eliminación</button>
+                <? } ?>
+            <? } ?>
+
+        </div>
+    </div>
+
+    <div id="modalBackground3" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
+
+<?
+    return ob_get_clean();
 }
