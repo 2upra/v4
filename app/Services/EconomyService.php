@@ -391,4 +391,47 @@ function sumaAcciones($mostrarTodos = false)
     return $resultado;
 }
 
+// Refactor(Org): Moved function calcularAccionPorUsuario from app/Finanza/Calculos.php
+function calcularAccionPorUsuario($mostrarTodos = true)
+{
+    global $wpdb;
+    $totalAcciones = 810000;
+    $valAcc = calc_ing(48, false)['valAcc'];
+    
+    // Obtener usuarios según la condición
+    if ($mostrarTodos) {
+        $usuarios = array_filter(get_users(), function ($user) {
+            return get_user_meta($user->ID, 'acciones', true);
+        });
+        usort($usuarios, function ($a, $b) {
+            return get_user_meta($b->ID, 'acciones', true) - get_user_meta($a->ID, 'acciones', true);
+        });
+        array_shift($usuarios); // Opcional, si quieres excluir al primer usuario
+    } else {
+        $usuarios = [wp_get_current_user()];
+        $acciones = get_user_meta($usuarios[0]->ID, 'acciones', true);
+        if (!$acciones) return 'No tienes acciones.';
+    }
+
+    // Iniciar la tabla
+    $output = '<table><thead><tr><th>Perfil</th><th>Usuario</th><th>Valor Total</th></tr></thead><tbody>';
+    
+    foreach ($usuarios as $user) {
+        $acciones = get_user_meta($user->ID, 'acciones', true);
+        $valorTotal = $acciones * $valAcc;
+        $imagen = imagenPerfil($user->ID);
+
+        // Generar la fila con perfil, nombre de usuario y valor total
+        $output .= sprintf(
+            '<tr><td><img src="%s" alt="%s" /></td><td>%s</td><td>$%s</td></tr>',
+            esc_url($imagen),
+            esc_attr($user->user_login),
+            esc_html($user->user_login),
+            number_format($valorTotal, 2, '.', '.')
+        );
+    }
+    
+    return $output . '</tbody></table>';
+}
+
 ?>
