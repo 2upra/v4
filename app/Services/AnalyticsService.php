@@ -185,3 +185,28 @@ add_action('wp_ajax_contarPostsFiltrados', 'contarPostsFiltrados');
 // Esto podría ser intencional para dar un mensaje de error específico,
 // o podría ser un remanente que debería eliminarse si la función es solo para logueados.
 add_action('wp_ajax_nopriv_contarPostsFiltrados', 'contarPostsFiltrados');
+
+// Refactor(Org): log_user_agent_callback() y su ruta REST movidos desde app/Authentication/Iniciar.php
+// Función callback para manejar la petición de log de User-Agent
+function log_user_agent_callback(WP_REST_Request $request)
+{
+    $params = $request->get_json_params();
+    $userAgent = isset($params['userAgent']) ? sanitize_text_field($params['userAgent']) : '';
+    $type = isset($params['type']) ? sanitize_text_field($params['type']) : '';
+
+    // Registra la información en el archivo de registro de errores de WordPress
+    error_log("UserAgent detectado ({$type}): " . $userAgent);
+
+    // También puedes guardar la información en una base de datos personalizada o enviarla por correo electrónico si lo prefieres
+
+    return new WP_REST_Response(array('message' => 'UserAgent registrado correctamente'), 200);
+}
+
+// Registra la ruta de la API REST para log de User-Agent
+add_action('rest_api_init', function () {
+    register_rest_route('myplugin/v1', '/log-user-agent', array(
+        'methods' => 'POST',
+        'callback' => 'log_user_agent_callback',
+        'permission_callback' => '__return_true', // Permite que cualquiera pueda acceder (ajusta según tus necesidades de seguridad)
+    ));
+});

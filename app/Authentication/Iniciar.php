@@ -2,29 +2,7 @@
 // Refactor(Org): Función iniciar_sesion() movida a app/View/Components/Auth/LoginForm.php
 
 
-// Registra la ruta de la API REST
-add_action('rest_api_init', function () {
-    register_rest_route('myplugin/v1', '/log-user-agent', array(
-        'methods' => 'POST',
-        'callback' => 'log_user_agent_callback',
-        'permission_callback' => '__return_true', // Permite que cualquiera pueda acceder (ajusta según tus necesidades de seguridad)
-    ));
-});
-
-// Función callback para manejar la petición
-function log_user_agent_callback(WP_REST_Request $request)
-{
-    $params = $request->get_json_params();
-    $userAgent = isset($params['userAgent']) ? sanitize_text_field($params['userAgent']) : '';
-    $type = isset($params['type']) ? sanitize_text_field($params['type']) : '';
-
-    // Registra la información en el archivo de registro de errores de WordPress
-    error_log("UserAgent detectado ({$type}): " . $userAgent);
-
-    // También puedes guardar la información en una base de datos personalizada o enviarla por correo electrónico si lo prefieres
-
-    return new WP_REST_Response(array('message' => 'UserAgent registrado correctamente'), 200);
-}
+// Refactor(Org): log_user_agent_callback() y su ruta REST movidos a app/Services/AnalyticsService.php
 
 
 function handle_google_callback()
