@@ -31,22 +31,7 @@ function colab()
 <? return ob_get_clean();
 }
 
-function colabTest()
-{
-    ob_start();
-?>
-    <div class="IBPDFF">
-        <div>
-            <div>Colab pendientes</div>
-            <? echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendiente', 'posts' => 20]); ?>
-        </div>
-        <div>
-            
-        </div>
-    </div>
-<?
-    return ob_get_clean();
-}
+// Refactor(Exec): Función colabTest() movida a app/Test/ColabTest.php
 
 // Refactor(Org): Función chatColab() movida a app/View/Renderers/ChatRenderer.php
 
