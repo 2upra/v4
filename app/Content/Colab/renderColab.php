@@ -16,20 +16,7 @@
 
 // Refactor(Org): Función htmlColab movida a app/View/Renderers/ColabRenderer.php
 
-function colab()
-{
-    ob_start() ?>
-
-    <div class="FLXVTQ">
-        <a href="https://2upra.com/">
-            <p>La funcionalidad de colaboración aún no esta disponible</p>
-            <button class="borde">Volver</button>
-        </a>
-    </div>
-
-
-<? return ob_get_clean();
-}
+// Refactor(Org): Función colab() movida a app/View/Renderers/ColabRenderer.php
 
 // Refactor(Exec): Función colabTest() movida a app/Test/ColabTest.php
 

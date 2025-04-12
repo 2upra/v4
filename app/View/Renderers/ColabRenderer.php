@@ -67,3 +67,19 @@ function tituloColab($var)
 
 <?php return ob_get_clean();
 }
+
+// Refactor(Org): Función colab() movida desde app/Content/Colab/renderColab.php
+function colab()
+{
+    ob_start() ?>
+
+    <div class="FLXVTQ">
+        <a href="https://2upra.com/">
+            <p>La funcionalidad de colaboración aún no esta disponible</p>
+            <button class="borde">Volver</button>
+        </a>
+    </div>
+
+
+<? return ob_get_clean();
+}
