@@ -296,8 +296,52 @@ function add_meta_tags() {
     <meta property="og:description" content="<? echo esc_attr(get_the_excerpt()); ?>">
     <meta property="og:image" content="<? echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'full')); // Usar 'full' o un tamaño específico ?>">
     <meta property="og:url" content="<? echo esc_url(get_permalink()); ?>">
-    <?
+    <?php
 }
 add_action('wp_head', 'add_meta_tags');
+
+// Refactor(Org): Moved function regenerate_colecciones_sitemap() and hook from indexGoogle.php
+/**
+ * Regenera el sitemap de colecciones cuando se guarda un post de tipo 'colecciones'.
+ *
+ * @param int     $post_ID ID del post que se guarda.
+ * @param WP_Post $post    Objeto del post que se guarda.
+ * @param bool    $update  Si es una actualización o una creación.
+ */
+function regenerate_colecciones_sitemap($post_ID, $post, $update) {
+    // Verifica si el post es del tipo 'colecciones' y está publicado
+    if ('colecciones' !== $post->post_type || 'publish' !== $post->post_status) {
+        return;
+    }
+
+    // Obtén la URL de la página del sitemap de colecciones
+    // Asegúrate de que el slug 'sitemapcolec' es correcto
+    $sitemap_page = get_page_by_path('sitemapcolec');
+    if (!$sitemap_page) {
+        // Opcional: Loggear un error si la página del sitemap no existe
+        error_log('SEOService: Página del sitemap de colecciones (sitemapcolec) no encontrada.');
+        return;
+    }
+    $sitemap_url = get_permalink($sitemap_page->ID);
+
+    // Si la URL es válida, haz una solicitud a ella para que se regenere
+    if ($sitemap_url) {
+        // Usar wp_remote_get para simular una visita y activar la generación del sitemap
+        // Añadir argumentos para mejorar la robustez (timeout, non-blocking)
+        wp_remote_get($sitemap_url, [
+            'timeout'   => 5,     // Tiempo de espera corto
+            'blocking'  => false, // No esperar la respuesta completa
+            'sslverify' => false  // Puede ser necesario en entornos locales/dev
+        ]);
+        // Opcional: Loggear la acción
+        // error_log('SEOService: Solicitud de regeneración del sitemap de colecciones enviada a: ' . $sitemap_url);
+    } else {
+         // Opcional: Loggear un error si no se pudo obtener la URL
+         error_log('SEOService: No se pudo obtener la URL para la página del sitemap de colecciones (sitemapcolec).');
+    }
+}
+// Hook para ejecutar la regeneración cuando se guarda un post
+add_action('save_post', 'regenerate_colecciones_sitemap', 10, 3);
+
 
 ?>
