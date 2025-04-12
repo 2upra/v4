@@ -218,3 +218,10 @@ function enqueue_scripts42() {
 }
 
 add_action('wp_enqueue_scripts', 'enqueue_scripts42');
+
+// Refactor(Org): Funcion config_user y su hook movidos desde app/Perfiles/perfiles.php
+function config_user() {
+    // Usamos '1.0.4' como ejemplo de versión incrementada tras refactorizar
+    wp_enqueue_script('config-user-script', get_template_directory_uri() . '/js/config-user.js', [], '1.0.4', true);
+}
+add_action('wp_enqueue_scripts', 'config_user');

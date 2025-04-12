@@ -2,7 +2,8 @@
 
 // Refactor(Org): Funcion empezarColab() y su hook movidos desde app/Content/Colab/logicColab.php
 
-function empezarColab() {
+function empezarColab()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
@@ -38,7 +39,7 @@ function empezarColab() {
     $collaborator_name = get_the_author_meta('display_name', $current_user_id);
 
     $newPostId = wp_insert_post([
-        'post_author' => $original_post->post_author, 
+        'post_author' => $original_post->post_author,
         'post_title' => "Colab entre $author_name y $collaborator_name",
         'post_type' => 'colab',
         'post_status' => 'pending',
@@ -56,7 +57,7 @@ function empezarColab() {
 
         global $wpdb;
         $tablaConversacion = $wpdb->prefix . 'conversacion';
-        $tipo_conversacion = 2; 
+        $tipo_conversacion = 2;
         $participantes_conversacion = json_encode([$original_post->post_author, $current_user_id]);
         $fecha_conversacion = current_time('mysql');
 
@@ -169,5 +170,3 @@ function variablesColab($post_id = null)
         'postTitulo' => $postTitulo, // Añadir el título del post
     ];
 }
-
-?>
