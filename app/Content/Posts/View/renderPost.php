@@ -1,4 +1,4 @@
-<?
+<?php
 
 
 // Refactor(Exec): Moved function sampleListHtml() to app/View/Renderers/PostRenderer.php
@@ -57,27 +57,7 @@ add_action('wp_ajax_handle_user_modification', 'handle_user_modification');
 
 
 
-add_action('wp_ajax_update_post_content', 'update_post_content_callback');
-
-function update_post_content_callback()
-{
-    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-    $content = isset($_POST['content']) ? $_POST['content'] : '';
-    $tags = isset($_POST['tags']) ? $_POST['tags'] : '';
-    if (!current_user_can('edit_post', $post_id)) {
-        wp_send_json_error(array('message' => 'No tienes permiso para editar este post.'));
-    }
-    $post_data = array(
-        'ID'           => $post_id,
-        'post_content' => $content
-    );
-    $updated = wp_update_post($post_data);
-    if (is_wp_error($updated)) {
-        wp_send_json_error(array('message' => 'Error al actualizar el post.'));
-    }
-    wp_set_post_tags($post_id, $tags);
-    wp_send_json_success(array('message' => 'Post y tags actualizados con éxito.'));
-}
+// Refactor(Exec): Moved function update_post_content_callback() and its hook to app/Services/Post/PostContentService.php
 
 function encolar_editar_post_script()
 {
