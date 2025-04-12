@@ -21,11 +21,7 @@ function mostrar_imagen_perfil_usuario() {
 
 // Refactor(Org): Funcion my_custom_avatar movida a app/View/Helpers/UserHelper.php
 
-function config_user() {
-    // Usamos '1.0.4' como ejemplo de versión incrementada tras refactorizar
-    wp_enqueue_script('config-user-script', get_template_directory_uri() . '/js/config-user.js', [], '1.0.4', true);
-}
-add_action('wp_enqueue_scripts', 'config_user');
+// Refactor(Org): Funcion config_user y su hook movidos a app/Setup/ScriptSetup.php
 
 // Refactor(Org): Funciones extra_user_profile_fields, save_extra_user_profile_fields y sus hooks movidos a app/Admin/UserProfileFields.php
 
