@@ -77,38 +77,6 @@ function htmlPost($filtro)
 
 // Refactor(Org): Función nohayPost movida a app/View/Helpers/PostHelper.php
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //Banear usuario desde el post
 function handle_user_modification()
 {

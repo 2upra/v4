@@ -1,5 +1,19 @@
 <?php
 
+/*
+    TituloColab: 
+    [ ] Que al dar click en la imagen se pueda elegir la imagen del proyecto
+    [ ] Establecer imagenes de proyecto por defecto 
+    [ ] Cambiar el titulo al dar click en el nombre 
+
+    participantesColab:
+    [ ] Que al dar click en el nombre se pueda ver la lista de participantes
+    [ ] Que al dar click en el nombre de un participante se pueda ver el chat
+    [ ] Poder añardir otros miembros
+    [ ] El autor puede eliminar miembros
+    
+*/
+
 // Refactor(Org): Función htmlColab movida desde app/Content/Colab/renderColab.php
 
 function htmlColab($filtro)
