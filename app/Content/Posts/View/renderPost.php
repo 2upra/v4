@@ -40,7 +40,8 @@ function htmlPost($filtro)
                  ?>
                 <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
             <? else: ?>
-                <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
+                <? // Refactor(Exec): Función renderNonMusicContent() movida a app/View/Renderers/PostRenderer.php
+                   renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
             <? endif; ?>
         <? endif; ?>
     </li>
@@ -276,68 +277,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
 <?
 }
 
-
-function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite)
-{
-?>
-    <div class="post-content">
-        <div class="JNUZCN">
-            <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])):
-                // Refactor(Org): Función limpiarJSON movida a StringUtils.php
-                 ?>
-                <? echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
-            <? else: ?>
-                <div class="XABLJI">
-                    <? echo esc_html($post_status); ?>
-                    <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
-                    <div class="CPQBEN" style="display: none;">
-                        <div class="CPQBAU"><? echo $author_name; ?></div>
-                        <div class="CPQBCO">
-
-                            <?
-                            $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
-                            $rola_meta = get_post_meta($post_id, 'rola', true);
-
-                            if ($rola_meta === '1') {
-                                $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                                if (empty($nombre_rola)) {
-                                    $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                                }
-                                if (!empty($nombre_rola)) {
-                                    echo "<p>" . esc_html($nombre_rola) . "</p>";
-                                } else {
-                                }
-                            } else {
-                                the_content();
-                                if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
-                                    <div class="post-thumbnail">
-                                        <? echo get_the_post_thumbnail($post_id, 'full'); ?>
-                                    </div>
-                            <? endif;
-                            }
-                            ?>
-
-                        </div>
-                    </div>
-                <? endif; ?>
-                </div>
-
-                <div class="YGWCKC">
-                    <? if ($block && !$es_suscriptor):
-                        // Refactor(Exec): Función renderSubscriptionPrompt movida a app/View/Renderers/PostRenderer.php
-                         ?>
-                        <? renderSubscriptionPrompt($author_name, $author_id); ?>
-                    <? else: ?>
-                        <? renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite); // Llamada a la función movida a PostRenderer.php ?>
-                    <? endif; ?>
-                </div>
-
-                <div class="IZXEPH">
-                    <? renderPostControls($post_id, $colab, $audio_id_lite); // Llamada a la función movida ?>
-                </div>
-        </div>
-    <?
-}
+// Refactor(Exec): Función renderNonMusicContent() movida a app/View/Renderers/PostRenderer.php
 
 
 // Refactor(Exec): Función renderSubscriptionPrompt movida a app/View/Renderers/PostRenderer.php
@@ -351,11 +291,6 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
 // Refactor(Org): Función limpiarJSON movida a StringUtils.php
 
 // Refactor(Org): Función nohayPost movida a app/View/Helpers/PostHelper.php
-
-
-
-
-
 
 
 
