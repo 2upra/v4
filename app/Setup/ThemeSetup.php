@@ -686,4 +686,16 @@ add_action('template_redirect', function () {
 
 // Refactor(Org): Moved function add_meta_tags() and hook to app/Services/SEOService.php
 
+// Refactor(Org): Mover función ocultarBarraAdmin() y hook desde app/Admin/Ajustes.php
+/**
+ * Oculta la barra de administración para usuarios que no son administradores.
+ */
+function ocultarBarraAdmin()
+{
+    if (!current_user_can('administrator')) {
+        add_filter('show_admin_bar', '__return_false');
+    }
+}
+add_action('after_setup_theme', 'ocultarBarraAdmin');
+
 ?>
