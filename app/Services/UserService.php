@@ -546,4 +546,35 @@ function infoUsuario() {
 
 add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
+// Refactor(Exec): Moved function handle_user_modification() and its hook from app/Content/Posts/View/renderPost.php
+//Banear usuario desde el post
+function handle_user_modification()
+{
+    if (current_user_can('administrator') && isset($_POST['author_id'])) {
+        $author_id = intval($_POST['author_id']);
+        if (!in_array('administrator', get_userdata($author_id)->roles)) {
+            // Obtener todos los tipos de publicaciones
+            $args = array(
+                'author'         => $author_id,
+                'posts_per_page' => -1,
+                'post_type'      => 'any', // 'any' incluye todos los tipos de publicaciones
+                'post_status'    => 'any'  // Incluye publicaciones en cualquier estado
+            );
+
+            $user_posts = get_posts($args);
+            foreach ($user_posts as $post) {
+                wp_delete_post($post->ID, true); // Borrado permanente
+            }
+
+            // Cambiar el rol del usuario a 'sin_acceso'
+            $user = new WP_User($author_id);
+            $user->set_role('sin_acceso');
+
+            wp_send_json_success('Publicaciones eliminadas y usuario desactivado.');
+        }
+    }
+    wp_send_json_error('No tienes permisos para realizar esta acción.');
+}
+add_action('wp_ajax_handle_user_modification', 'handle_user_modification');
+
 ?>
