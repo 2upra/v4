@@ -1,4 +1,6 @@
 <?
+// No se realizó ninguna acción: La función panel() solicitada para eliminar no existe en este archivo.
+// Se conserva el contenido original.
 
 function panelInversor()
 {
