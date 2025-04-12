@@ -1,28 +1,5 @@
-<? 
-
-function freelancer_pestanas() {
-    ob_start();
-    $user = wp_get_current_user();
-    $nombre_usuario = $user->display_name; 
-    $url_imagen_perfil = imagenPerfil($user->ID); 
-    ?>
-    <div class="tabs inicio">
-        <ul class="tab-links freelancer">
-            <li class="active"><a href="#sobremi">Sobre Mi</a></li>
-            <li><a href="#proyectos">Proyecto</a></li>
-            <li><a href="#servicios">Servicios</a></li>
-        </ul>
-
-        <div class="tab-content inicio freelancer" id="full">
-            <div id="tab1" class="tab active" data-post-id="id1">
-                <? echo do_shortcode('[html1]')?> 
-            </div>
-        </div>
-    </div>
-    <?
-    return ob_get_clean();
-}
-add_shortcode('freelancer_pestanas', 'freelancer_pestanas');
+<?php
+// Refactor(Org): Moved function freelancer_pestanas() and its shortcode to app/View/Components/Freelancer/FreelancerTabs.php
 
 function html1() {
     ob_start();
@@ -63,7 +40,7 @@ function html1() {
 	    </div>
     </div>
 
- <?
+ <?php
     return ob_get_clean();
 }
 add_shortcode('html1', 'html1');
@@ -75,3 +52,4 @@ function desactivar_scripts_en_asley() {
     $wp_scripts->queue = array();
   }
 }
+?>
