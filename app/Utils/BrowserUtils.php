@@ -35,4 +35,17 @@ function is_electron_app()
     return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
 }
 
+// Refactor(Org): Moved function chequearElectron from app/Sync/api.php
+// Función de permiso: valida la cabecera X-Electron-App
+function chequearElectron()
+{
+    //error_log("Iniciando chequearElectron...");
+    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
+        //error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
+        return true;
+    }
+    //error_log("Cabecera inválida o ausente.");
+    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
+}
+
 ?>
