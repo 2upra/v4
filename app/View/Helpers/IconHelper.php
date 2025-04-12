@@ -1,10 +1,11 @@
 <?php
-// Action: Created file app/View/Helpers/IconHelper.php
-// Purpose: Centralizes SVG icon rendering logic.
-// This helper will contain functions to render SVG icons,
-// replacing the global variables previously defined in app/Misc/iconos.php.
+// app/View/Helpers/IconHelper.php
+// Centraliza la lógica para renderizar iconos SVG, reemplazando variables globales.
 
 class IconHelper {
-    // TODO: Implement methods to load and render icons based on their names.
-    // Example: public function render($iconName, $options = []) { ... }
+
+    // Métodos para renderizar iconos SVG se añadirán aquí.
+
 }
+
+?>
