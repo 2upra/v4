@@ -4,7 +4,7 @@ add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)', array(
         'methods'  => 'GET',
         'callback' => 'obtenerAudiosUsuario',
-        'permission_callback' => 'chequearElectron',
+        'permission_callback' => 'chequearElectron', // Note: Function is now global from BrowserUtils.php
     ));
     register_rest_route('sync/v1', '/download/', array(
         'methods' => 'GET',
@@ -17,7 +17,7 @@ add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
         'methods'  => 'GET',
         'callback' => 'verificarCambiosAudios',
-        'permission_callback' => 'chequearElectron',
+        'permission_callback' => 'chequearElectron', // Note: Function is now global from BrowserUtils.php
     ));
     // Refactor(Org): Ruta /infoUsuario movida a app/Services/UserService.php
 });
@@ -25,17 +25,7 @@ add_action('rest_api_init', function () {
 
 // Refactor(Org): Función handle_info_usuario() movida a app/Services/UserService.php
 
-// Función de permiso: valida la cabecera X-Electron-App
-function chequearElectron()
-{
-    //error_log("Iniciando chequearElectron...");
-    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        //error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
-        return true;
-    }
-    //error_log("Cabecera inválida o ausente.");
-    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
-}
+// Refactor(Org): Function chequearElectron() moved to app/Utils/BrowserUtils.php
 
 function verificarCambiosAudios(WP_REST_Request $request)
 {

@@ -115,3 +115,5 @@ function registrarPrecios($idPost)
 
 // Refactor(Org): Función variablesPosts() movida a app/Services/Post/PostDataService.php
 
+// Refactor(Org): Funciones de consulta de posts (publicaciones, configuracionQueryArgs, preOrdenamiento, obtenerColeccionesParaMomento, ordenamientoColecciones, ordenamiento, aplicarFiltrosUsuario, prefiltrarIdentifier, procesarPublicaciones, obtenerUserId) movidas a app/Services/Post/PostQueryService.php
+

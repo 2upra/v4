@@ -30,3 +30,26 @@ function htmlNotas($filtro)
 <?
     return ob_get_clean();
 }
+
+// Función movida desde app/Content/Notas/renderNota.php
+function formNotasUL()
+{
+    $filtro = 'notas';
+
+    ob_start();
+?>
+    <ul class="social-post-list clase-notas">
+        <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
+            filtro="<? echo esc_attr($filtro); ?>">
+
+            <div class="contenidoNota agregarNuevaNota" id="agregarNuevaNota">
+                <p class="contenidoNotaP">Escribir una nueva nota</p>
+            </div>
+            <div class="botonesNotasGenerales">
+                <button><? echo $GLOBALS['borradorIcon']; ?></button>
+            </div>
+        </li>
+    </ul>
+<?
+    return ob_get_clean();
+}

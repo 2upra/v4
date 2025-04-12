@@ -61,13 +61,7 @@ function nonAdminRedirect()
 }
 add_action('admin_init', 'nonAdminRedirect');
 
-function ocultarBarraAdmin()
-{
-    if (!current_user_can('administrator')) {
-        add_filter('show_admin_bar', '__return_false');
-    }
-}
-add_action('after_setup_theme', 'ocultarBarraAdmin');
+// Refactor(Org): Función ocultarBarraAdmin() movida a app/Setup/ThemeSetup.php
 
 function remplazarFuncionObsoleta()
 {

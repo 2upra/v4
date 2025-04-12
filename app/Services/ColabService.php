@@ -1,9 +1,6 @@
-<?
+<?php
 
-// Refactor(Org): Funcion botonColab() movida a app/View/Helpers/UIHelper.php
-
-
-
+// Refactor(Org): Funcion empezarColab() y su hook movidos desde app/Content/Colab/logicColab.php
 
 function empezarColab() {
     if (!is_user_logged_in()) {
@@ -99,6 +96,7 @@ function empezarColab() {
         }
 
         // Asociar el archivo desde el URL si ya existe
+        // Note: Requires adjuntarArchivo() to be available globally or included.
         if (!empty($fileUrl)) {
             $attached = adjuntarArchivo($newPostId, $fileUrl);
             if (!$attached) {
@@ -107,6 +105,7 @@ function empezarColab() {
         }
 
         // Confirmar el archivo por ID si se proporciona
+        // Note: Requires confirmarHashId() to be available globally or included.
         if ($fileId) {
             confirmarHashId($fileId);
             guardarLog("Archivo $fileId confirmado");
@@ -121,30 +120,54 @@ function empezarColab() {
     wp_die();
 }
 
-
-
 add_action('wp_ajax_empezarColab', 'empezarColab');
 
-
-
-function actualizarEstadoColab($postId, $post_after, $post_before)
+// Refactor(Exec): Función variablesColab() movida desde app/Content/Colab/partColab.php
+function variablesColab($post_id = null)
 {
-    if ($post_after->post_type === 'colab') {
-        $post_origen_id = get_post_meta($postId, 'colabPostOrigen', true);
-        $colaborador_id = get_post_meta($postId, 'colabColaborador', true);
-
-        if ($post_after->post_status !== 'publish' && $post_after->post_status !== 'pending') {
-            $existing_colabs_meta = get_post_meta($post_origen_id, 'colabs', true);
-
-            if (($key = array_search($colaborador_id, $existing_colabs_meta)) !== false) {
-                unset($existing_colabs_meta[$key]);
-                $result = update_post_meta($post_origen_id, 'colabs', $existing_colabs_meta);
-                if (!$result) {
-                    guardarLog("Error al actualizar los metadatos de colaboración para el post origen ID: $post_origen_id");
-                }
-            }
-        }
+    if ($post_id === null) {
+        global $post;
+        $post_id = $post->ID;
     }
-}
-add_action('post_updated', 'actualizarEstadoColab', 10, 3);
 
+    $current_user_id = get_current_user_id();
+    $colabPostOrigen = get_post_meta($post_id, 'colabPostOrigen', true);
+    $colabAutor = get_post_meta($post_id, 'colabAutor', true);
+    $colabColaborador = get_post_meta($post_id, 'colabColaborador', true);
+    $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
+    $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
+    $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
+    $participantes = get_post_meta($post_id, 'participantes', true);
+    $conversacion_id = get_post_meta($post_id, 'conversacion_id', true);
+
+    $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
+    if (!$imagenPost) {
+        $imagenPost = 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/09/1ndoryu_1725478496.webp?quality=40&strip=all';
+    }
+    $imagenPostOp = img($imagenPost, 40, 'all');
+
+    $postTitulo = get_the_title($post_id);
+
+    return [
+        'post_id' => $post_id,
+        'conversacion_id' => $conversacion_id,
+        'participantes' => $participantes,
+        'post_audio_lite' => $post_audio_lite,
+        'current_user_id' => $current_user_id,
+        'colabPostOrigen' => $colabPostOrigen,
+        'colabAutor' => $colabAutor,
+        'colabColaborador' => $colabColaborador,
+        'colabMensaje' => $colabMensaje,
+        'colabFileUrl' => $colabFileUrl,
+        'colabAutorName' => get_the_author_meta('display_name', $colabAutor),
+        'colabColaboradorName' => get_the_author_meta('display_name', $colabColaborador),
+        'colabColaboradorAvatar' => imagenPerfil($colabColaborador),
+        'colabAutorAvatar' => imagenPerfil($colabAutor),
+        'colabFecha' => get_the_date('', $post_id),
+        'colab_status' => get_post_status($post_id),
+        'imagenPostOp' => $imagenPostOp,
+        'postTitulo' => $postTitulo, // Añadir el título del post
+    ];
+}
+
+?>

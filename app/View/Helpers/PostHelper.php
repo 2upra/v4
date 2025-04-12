@@ -58,173 +58,41 @@ function infoPost($autId, $autAv, $autNom, $postF, $postId, $block, $colab)
     <div class="spin"></div>
 
     <div class="YBZGPB">
-        <? echo opcionesPost($postId, $autId); ?>
+        <? // Refactor(Org): Función opcionesPost() movida a app/View/Components/Posts/PostOptions.php
+        // La llamada original se mantiene aquí, pero la función ahora reside en otro archivo.
+        // Es posible que se necesiten ajustes posteriores para que esta llamada funcione correctamente.
+        echo opcionesPost($postId, $autId); ?>
     </div>
 <?
     return ob_get_clean();
 }
 
-// Refactor(Org): Función opcionesPost() movida desde app/View/Components/PostOptions.php
-function opcionesPost($postId, $autorId)
-{
-    $usuarioActual = get_current_user_id();
-    $post_meta = get_post_meta($postId);
-    $audio_id_lite = isset($post_meta['post_audio_lite'][0]) ? intval($post_meta['post_audio_lite'][0]) : null;
-    $paraDescarga = isset($post_meta['paraDescarga'][0]) ? intval($post_meta['paraDescarga'][0]) : null;
-    $post_verificado = isset($post_meta['Verificado'][0]) && $post_meta['Verificado'][0] === '1';
-    $esAdmin = current_user_can('administrator');
-    $esTarea = get_post_type($postId) === 'tarea';
-    $esAutor = ($usuarioActual == $autorId);
-
-    ob_start();
-?>
-    <button class="HR695R8" data-post-id="<? echo esc_attr($postId); ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
-
-    <div class="A1806241" id="opcionespost-<? echo esc_attr($postId); ?>">
-        <div class="A1806242">
-
-
-            <? if ($esTarea) : ?>
-                <? if ($esAutor) : ?>
-                    <button class="eliminarPost" data-post-id="<? echo esc_attr($postId); ?>">Eliminar tarea</button>
-                <? endif; ?>
-            <? else : ?>
-                <button class="iralpost"><a ajaxUrl="<? echo esc_url(get_permalink($postId)); ?>">Ir al post</a></button>
-                <? if ($esAdmin) : ?>
-                    <button class="eliminarPost" data-post-id="<? echo esc_attr($postId); ?>">Eliminar</button>
-                    <? echo renderizarBotonDescarga($postId, $usuarioActual, $paraDescarga); ?>
-                    <? echo renderizarBotonSincronizar($postId, $usuarioActual, $paraDescarga); ?>
-                    <? if (!$post_verificado) : ?>
-                        <button class="verificarPost" data-post-id="<? echo esc_attr($postId); ?>">Verificar</button>
-                    <? endif; ?>
-                    <? if ($audio_id_lite !== 1) : ?>
-                        <button class="corregirTags" data-post-id="<? echo esc_attr($postId); ?>">Corrección inteligente</button>
-                    <? endif; ?>
-                    <button class="editarPost" data-post-id="<? echo esc_attr($postId); ?>">Editar</button>
-                    <button class="editarWordPress" data-post-id="<? echo esc_attr($postId); ?>">Editar en WordPress</button>
-                    <button class="banearUsuario" data-post-id="<? echo esc_attr($postId); ?>">Banear</button>
-                    <? if ($audio_id_lite && $paraDescarga !== 1) : ?>
-                        <button class="permitirDescarga" data-post-id="<? echo esc_attr($postId); ?>">Permitir descarga</button>
-                    <? endif; ?>
-                <? elseif ($esAutor) : ?>
-                    <? if ($audio_id_lite !== 1) : ?>
-                        <button class="corregirTags" data-post-id="<? echo esc_attr($postId); ?>">Corrección inteligente</button>
-                    <? endif; ?>
-                    <button class="editarPost" data-post-id="<? echo esc_attr($postId); ?>">Editar</button>
-                    <button class="eliminarPost" data-post-id="<? echo esc_attr($postId); ?>">Eliminar</button>
-                    <? if ($audio_id_lite && $paraDescarga !== 1) : ?>
-                        <button class="permitirDescarga" data-post-id="<? echo esc_attr($postId); ?>">Permitir descarga</button>
-                    <? endif; ?>
-                <? else : ?>
-                    <button class="reporte" data-post-id="<? echo esc_attr($postId); ?>" tipoContenido="social_post">Reportar</button>
-                    <button class="bloquear" data-post-id="<? echo esc_attr($postId); ?>">Bloquear</button>
-                    <? echo renderizarBotonDescarga($postId, $usuarioActual, $paraDescarga); ?>
-                    <? echo renderizarBotonSincronizar($postId, $usuarioActual, $paraDescarga); ?>
-                <? endif; ?>
-            <? endif; ?>
-        </div>
-    </div>
-
-    <div id="modalBackground4" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
-    <?
-    return ob_get_clean();
-}
+// Refactor(Org): Función opcionesPost() movida a app/View/Components/Posts/PostOptions.php
 
 // Refactor(Org): Función nohayPost movida desde app/Content/Posts/View/renderPost.php
-function nohayPost($filtro, $is_ajax)
-{
-    if ($filtro === 'notas') {
-        return; 
-    }
 
-    $post_id = get_the_ID();
-    $vars = variablesPosts($post_id);
-    extract($vars);
-    $music = ($filtro === 'rola' || $filtro === 'likes');
-
-    if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-        $filtro = 'rolastatus';
-    }
-
-    ob_start();
-    ?>
-
-        <? if ($filtro === 'momento' || $is_ajax): ?>
-            <div id="no-more-posts"></div>
-            <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
-        <? else: ?>
-            <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
-                <? echo $GLOBALS['emptystate']; ?>
-                <p>Ñoño aqui no han puesto nada aún</p>
-                <? if ($filtro === 'rolastatus'): ?>
-                    <p>Cuando publiques tu primera rola, aparecerá aquí</p>
-                <? endif; ?>
-                <button class="borde"><a href="https://2upra.com/">Volver al inicio</a></button>
-            </div>
-        <? endif; ?>
-
-    <?
-    return ob_get_clean();
-}
-
-// Refactor(Org): Mueve función opcionesRola() de PostOptions.php a PostHelper.php
-//OPCIONES EN LAS ROLAS 
-function opcionesRola($postId, $post_status, $audio_url)
-{
-    ob_start();
-?>
-    <button class="HR695R7" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
-
-    <div class="A1806241" id="opcionesrola-<? echo $postId; ?>">
-        <div class="A1806242">
-            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
-                <button class="toggle-status-rola" data-post-id="<? echo $postId; ?>">Cambiar estado</button>
-            <? } ?>
-
-            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <button class="rechazar-rola" data-post-id="<? echo $postId; ?>">Rechazar rola</button>
-            <? } ?>
-
-            <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
-
-            <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <? if ($post_status == 'pending') { ?>
-                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Cancelar publicación</button>
-                <? } else { ?>
-                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Solicitar eliminación</button>
-                <? } ?>
-            <? } ?>
-
-        </div>
-    </div>
-
-    <div id="modalBackground3" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
-
-<?
-    return ob_get_clean();
-}
 
 // Refactor(Org): Mueve función renderPostControls() de renderPost.php a PostHelper.php
 function renderPostControls($post_id, $colab, $audio_id_lite = null)
 {
 
     $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === '1';
-    ?>
-        <div class="QSORIW">
+?>
+    <div class="QSORIW">
 
 
-            <? echo like($post_id); ?>
-            <? if ($mostrarBotonCompra):
-                echo botonCompra($post_id); ?>
-            <? endif; ?>
-            <? echo botonComentar($post_id, $colab); ?>
-            <? if (!empty($audio_id_lite)) : ?>
-                <? echo botonDescarga($post_id); ?>
-                <? echo botonColab($post_id, $colab); ?>
-                <? echo botonColeccion($post_id); ?>
-            <? endif; ?>
-        </div>
-    <?
+        <? echo like($post_id); ?>
+        <? if ($mostrarBotonCompra):
+            echo botonCompra($post_id); ?>
+        <? endif; ?>
+        <? echo botonComentar($post_id, $colab); ?>
+        <? if (!empty($audio_id_lite)) : ?>
+            <? echo botonDescarga($post_id); ?>
+            <? echo botonColab($post_id, $colab); ?>
+            <? echo botonColeccion($post_id); ?>
+        <? endif; ?>
+    </div>
+<?
 }
 
 // Refactor(Org): Función imagenPostList() movida desde app/Content/Posts/View/componentPost.php
@@ -262,4 +130,62 @@ function imagenPostList($block, $es_suscriptor, $postId)
     $output = ob_get_clean();
 
     return $output;
+}
+
+// Refactor(Org): Función fondoPost() movida desde app/Content/Posts/View/componentPost.php
+function fondoPost($filtro, $block, $es_suscriptor, $postId)
+{
+    // Refactor(Clean): Usa la función centralizada imagenPost() de ImageHelper.php
+    $thumbnail_url = imagenPost($postId, 'full', 80, 'all', false, true); // Calidad 80 para fondo
+
+    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    // Optimización adicional para el fondo si es necesario
+    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+
+    ob_start();
+?>
+    <div class="post-background <?= $blurred_class ?>"
+        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
+    </div>
+<?php
+    $output = ob_get_clean();
+    return $output;
+}
+
+
+// Refactor(Exec): Función opcionesRola() movida desde app/Services/Post/PostAttachmentService.php a app/View/Helpers/PostHelper.php
+// // OPCIONES EN LAS ROLAS 
+function opcionesRola($postId, $post_status, $audio_url)
+{
+    ob_start();
+?>
+    <button class="HR695R7" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+
+    <div class="A1806241" id="opcionesrola-<? echo $postId; ?>">
+        <div class="A1806242">
+            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
+                <button class="toggle-status-rola" data-post-id="<? echo $postId; ?>">Cambiar estado</button>
+            <? } ?>
+
+            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+                <button class="rechazar-rola" data-post-id="<? echo $postId; ?>">Rechazar rola</button>
+            <? } ?>
+
+            <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
+
+            <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+                <? if ($post_status == 'pending') { ?>
+                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Cancelar publicación</button>
+                <? } else { ?>
+                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Solicitar eliminación</button>
+                <? } ?>
+            <? } ?>
+
+        </div>
+    </div>
+
+    <div id="modalBackground3" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
+
+<?
+    return ob_get_clean();
 }

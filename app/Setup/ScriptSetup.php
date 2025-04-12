@@ -175,3 +175,46 @@ function scriptsOrdenados()
     }
 }
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
+
+// Refactor(Org): Moved innerHeight function and hook from app/Setup/ThemeSetup.php
+//CALCULAR ALTURA CORRECTA CON SCRIPT
+function innerHeight()
+{
+    wp_register_script('script-base', '');
+    wp_enqueue_script('script-base');
+    $script_inline = <<<'EOD'
+    function setVHVariable() {
+        var vh;
+        if (window.visualViewport) {
+            vh = window.visualViewport.height * 0.01;
+        } else {
+            vh = window.innerHeight * 0.01;
+        }
+        document.documentElement.style.setProperty('--vh', vh + 'px');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setVHVariable();
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', setVHVariable);
+        } else {
+            window.addEventListener('resize', setVHVariable);
+        }
+    });
+EOD;
+    wp_add_inline_script('script-base', $script_inline);
+}
+
+add_action('wp_enqueue_scripts', 'innerHeight');
+
+// Refactor(Org): Moved function enqueue_scripts42 and its hook from app/Perfiles/perfilmusic.php
+function enqueue_scripts42() {
+    wp_enqueue_script('color-thief', 'https://cdn.jsdelivr.net/npm/colorthief/dist/color-thief.umd.js', array(), null, true);
+    if (!wp_script_is('colormusic', 'registered')) {
+        wp_register_script('colormusic', get_template_directory_uri() . '/js/colormusic.js', array('jquery', 'color-thief'), '1.0.3', true);
+    }
+    wp_enqueue_script('colormusic');
+}
+
+add_action('wp_enqueue_scripts', 'enqueue_scripts42');

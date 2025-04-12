@@ -235,104 +235,13 @@ function custom_site_icon($meta_tags)
 }
 add_filter('site_icon_meta_tags', 'custom_site_icon');
 
-//CALCULAR ALTURA CORRECTA CON SCRIPT
-function innerHeight()
-{
-    wp_register_script('script-base', '');
-    wp_enqueue_script('script-base');
-    $script_inline = <<<'EOD'
-    function setVHVariable() {
-        var vh;
-        if (window.visualViewport) {
-            vh = window.visualViewport.height * 0.01;
-        } else {
-            vh = window.innerHeight * 0.01;
-        }
-        document.documentElement.style.setProperty('--vh', vh + 'px');
-    }
+// Refactor(Org): Moved innerHeight function and hook to app/Setup/ScriptSetup.php
 
-    document.addEventListener('DOMContentLoaded', function() {
-        setVHVariable();
-
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', setVHVariable);
-        } else {
-            window.addEventListener('resize', setVHVariable);
-        }
-    });
-EOD;
-    wp_add_inline_script('script-base', $script_inline);
-}
-
-add_action('wp_enqueue_scripts', 'innerHeight');
-
-// Refactor(Org): Mover hooks agregar_soporte_jfif y extender_wp_check_filetype aquí
-function agregar_soporte_jfif($mimes)
-{
-    $mimes['jfif'] = 'image/jpeg';
-    return $mimes;
-}
-add_filter('upload_mimes', 'agregar_soporte_jfif');
-
-// Extiende wp_check_filetype para reconocer .jfif
-function extender_wp_check_filetype($types, $filename, $mimes)
-{
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    if ($ext === 'jfif') {
-        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
-    }
-    return $types;
-}
-add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
-
-// Refactor(Org): Función mimesPermitidos movida desde app/Admin/Ajustes.php
-function mimesPermitidos($mimes)
-{
-    $mimes['flp'] = 'application/octet-stream';
-    $mimes['zip'] = 'application/zip';
-    $mimes['rar'] = 'application/x-rar-compressed';
-    $mimes['cubase'] = 'application/octet-stream';
-    $mimes['proj'] = 'application/octet-stream';
-    $mimes['aiff'] = 'audio/aiff';
-    $mimes['midi'] = 'audio/midi';
-    $mimes['ptx'] = 'application/octet-stream';
-    $mimes['sng'] = 'application/octet-stream';
-    $mimes['aup'] = 'application/octet-stream';
-    $mimes['omg'] = 'application/octet-stream';
-    $mimes['rpp'] = 'application/octet-stream';
-    $mimes['xpm'] = 'image/x-xpixmap';
-    $mimes['tst'] = 'application/octet-stream';
-
-    return $mimes;
-}
-add_filter('upload_mimes', 'mimesPermitidos');
+// Refactor(Org): Moved MIME type filters to app/Setup/MimeTypesSetup.php
 
 // Refactor(Org): Moved CPT and status registration to PostTypesSetup.php
 
 // Acción de refactorización: La función configurarMetadatosPaginaIdioma() ya se encontraba en este archivo. No se realizaron cambios.
-
-// Refactor(Org): Hooks de tipo MIME APK movidos desde app/Pages/Temporal.php
-function permitir_subir_apks($mime_types)
-{
-    $mime_types['apk'] = 'application/vnd.android.package-archive';
-    return $mime_types;
-}
-add_filter('upload_mimes', 'permitir_subir_apks');
-
-function verificar_subida_apk($data, $file, $filename, $mimes)
-{
-
-    if (substr($filename, -4) === '.apk') {
-        if (! current_user_can('manage_options')) {
-            $data['error'] = 'Lo siento, no tienes permisos para subir archivos APK.';
-        } else {
-            $data['type'] = 'application/vnd.android.package-archive';
-        }
-    }
-
-    return $data;
-}
-add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
 
 // Refactor(Org): Mover lógica de normalización de posts y hooks desde TagUtils.php
 // Funciones movidas desde app/Functions/normalizarTags.php (originalmente en app/Utils/TagUtils.php)
@@ -774,5 +683,19 @@ add_action('template_redirect', function () {
         }
     }
 });
+
+// Refactor(Org): Moved function add_meta_tags() and hook to app/Services/SEOService.php
+
+// Refactor(Org): Mover función ocultarBarraAdmin() y hook desde app/Admin/Ajustes.php
+/**
+ * Oculta la barra de administración para usuarios que no son administradores.
+ */
+function ocultarBarraAdmin()
+{
+    if (!current_user_can('administrator')) {
+        add_filter('show_admin_bar', '__return_false');
+    }
+}
+add_action('after_setup_theme', 'ocultarBarraAdmin');
 
 ?>

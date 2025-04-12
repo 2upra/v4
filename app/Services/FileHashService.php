@@ -232,7 +232,8 @@ function actualizarUrlArchivo($file_id, $new_url)
 
 // Refactor(Org): Moved function subidaArchivo() and its hook from app/Utils/HashUtils.php
 //tengo una duda, en el caso de administrador, subo una imagen qeu se llama imagen.jpg, y la url de la imagen es asi https://2upra.com/wp-content/uploads/2024/12/imagen-1.jpg, y en guardo en la tabla de hash asi: https://2upra.com/wp-content/uploads/2024/12/imagen-1.jpg, o sea obviamente hay una diferencia entre imagen.jpg y imagen-1.jpg y a hay que averiguar si sucede en el caso de no administrador. Tambien he visto que en algunas opcaciones se borran las imagenes.
-function subidaArchivo() {
+function subidaArchivo()
+{
     $is_admin = current_user_can('administrator');
     $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
     $file = $_FILES['file'] ?? null;
@@ -245,10 +246,10 @@ function subidaArchivo() {
         wp_send_json_error('No se proporcionó archivo o hash');
         return;
     }
-    
+
     // Nota: La función obtenerHash() se llama aquí pero no fue movida a este archivo.
     // Asegúrate de que obtenerHash() esté disponible globalmente o ajústalo.
-    $existing_file = obtenerHash($file_hash); 
+    $existing_file = obtenerHash($file_hash);
 
     // Si el archivo ya existe en la base de datos
     if ($existing_file) {
@@ -269,7 +270,7 @@ function subidaArchivo() {
 
             // Filtro para establecer el directorio de subida personalizado solo si es chat
             if ($is_chat) {
-                add_filter('upload_dir', function($dirs) use ($custom_dir) {
+                add_filter('upload_dir', function ($dirs) use ($custom_dir) {
                     $dirs['path'] = $custom_dir;
                     $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
                     $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
@@ -331,7 +332,7 @@ function subidaArchivo() {
 
     // Filtro para establecer el directorio de subida personalizado solo si es chat
     if ($is_chat) {
-        add_filter('upload_dir', function($dirs) use ($custom_dir) {
+        add_filter('upload_dir', function ($dirs) use ($custom_dir) {
             $dirs['path'] = $custom_dir;
             $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
             $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
@@ -417,7 +418,7 @@ function limpiarArchivosPendientes()
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'file_hashes';
-    
+
     $archivos_pendientes = $wpdb->get_results(
         $wpdb->prepare(
             "SELECT * FROM $table_name WHERE status = 'pending' AND upload_date < %s",
@@ -490,4 +491,33 @@ function sonHashesSimilaresAut($hash1, $hash2, $umbral = 0.85)
     return $similitud >= $umbral;
 }
 
-?>
+// Refactor(Move): Moved function confirmarArchivos from app/Services/Post/PostAttachmentService.php
+function confirmarArchivos($postId)
+{
+    $tiposCampos = ['archivoId', 'audioId', 'imagenId'];
+    $maxCampos = 30;
+    foreach ($tiposCampos as $tipo) {
+        for ($i = 1; $i <= $maxCampos; $i++) {
+            $campo = $tipo . $i;
+            if (!empty($_POST[$campo])) {
+                $file_id = intval($_POST[$campo]);
+                if ($file_id > 0 && get_post_type($file_id) === 'attachment') {
+                    $meta_key = 'idHash_' . $campo;
+                    if (update_post_meta($postId, $meta_key, $file_id) === false) {
+                        error_log("Error en confirmarArchivos: Fallo al actualizar meta {$meta_key} para el post ID: {$postId}");
+                    }
+                    confirmarHashId($file_id);
+                } elseif ($file_id <= 0) {
+                    error_log("Error en confirmarArchivos: ID de archivo inválido recibido para el campo {$campo}. Valor: {$_POST[$campo]}");
+                } else {
+                    error_log("Error en confirmarArchivos: ID {$file_id} recibido para el campo {$campo} no es un adjunto válido.");
+                }
+            }
+        }
+    }
+}
+
+function nombreUnicoFile($dir, $name, $ext)
+{
+    return basename($name, $ext) . $ext;
+}
