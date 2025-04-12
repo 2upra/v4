@@ -2,7 +2,46 @@
 
 // Refactor(Org): Created PostQueryService.php
 // Contains functions related to building WP_Query arguments for retrieving posts
-// based on various criteria (filters, user type, search, etc.).
+function publicacionAjax()
+{
+    $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
+    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
+    $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
+    $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
+    $userId = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
+    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
+        ? array_map('intval', $_POST['cargadas'])
+        : array();
+    $similarTo = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
+    $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
+    $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
+    $id = isset($_POST['id']) ? intval($_POST['id']) : null;
+
+    //error_log("[publicacionAjax] Received identifier: " . $data_identifier);
+
+    publicaciones(
+        array(
+            'filtro' => $filtro,
+            'post_type' => $tipoPost,
+            'tab_id' => $tab_id,
+            'user_id' => $userId,
+            'identifier' => $data_identifier,
+            'exclude' => $publicacionesCargadas,
+            'similar_to' => $similarTo,
+            'colec' => $colec,
+            'idea' => $idea,
+            'id' => $id
+
+
+        ),
+        true,
+        $paged
+    );
+}
+
+add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
+add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
 // Refactor(Org): Funciones movidas desde app/Services/PostService.php para centralizar la lógica de consulta de posts.
 
@@ -650,7 +689,24 @@ function prefiltrarIdentifier($identifier, $queryArgs)
             $term_conditions = array();
             foreach ($normalized_positive_terms as $term) {
                 $like_term = '%' . $wpdb->esc_like($term) . '%';
-                $term_conditions[] = $wpdb->prepare("\n                    (\n                        {$wpdb->posts}.post_title LIKE %s OR\n                        {$wpdb->posts}.post_content LIKE %s OR\n                        EXISTS (\n                            SELECT 1 FROM {$wpdb->postmeta}\n                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID\n                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'\n                            AND {$wpdb->postmeta}.meta_value LIKE %s\n                        )\n                        OR EXISTS (\n                            SELECT 1 FROM {$wpdb->postmeta}\n                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID\n                            AND {$wpdb->postmeta}.meta_key = 'nombreOriginal'\n                            AND {$wpdb->postmeta}.meta_value LIKE %s\n                        )\n                    )\n                ", $like_term, $like_term, $like_term, $like_term);
+                $term_conditions[] = $wpdb->prepare("
+                (
+                    {$wpdb->posts}.post_title LIKE %s OR
+                    {$wpdb->posts}.post_content LIKE %s OR
+                    EXISTS (
+                        SELECT 1 FROM {$wpdb->postmeta}
+                        WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                        AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                        AND {$wpdb->postmeta}.meta_value LIKE %s
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM {$wpdb->postmeta}
+                        WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                        AND {$wpdb->postmeta}.meta_key = 'nombreOriginal'
+                        AND {$wpdb->postmeta}.meta_value LIKE %s
+                    )
+                )
+            ", $like_term, $like_term, $like_term, $like_term);
             }
             $search_conditions[] = '(' . implode(' OR ', $term_conditions) . ')';
         }
@@ -660,7 +716,24 @@ function prefiltrarIdentifier($identifier, $queryArgs)
             $term_conditions = array();
             foreach ($normalized_negative_terms as $term) {
                 $like_term = '%' . $wpdb->esc_like($term) . '%';
-                $term_conditions[] = $wpdb->prepare("\n                    (\n                        {$wpdb->posts}.post_title NOT LIKE %s AND\n                        {$wpdb->posts}.post_content NOT LIKE %s AND\n                        NOT EXISTS (\n                            SELECT 1 FROM {$wpdb->postmeta}\n                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID\n                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'\n                            AND {$wpdb->postmeta}.meta_value LIKE %s\n                        )\n                        AND NOT EXISTS (\n                            SELECT 1 FROM {$wpdb->postmeta}\n                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID\n                            AND {$wpdb->postmeta}.meta_key = 'nombreOriginal'\n                            AND {$wpdb->postmeta}.meta_value LIKE %s\n                        )\n                    )\n                ", $like_term, $like_term, $like_term, $like_term);
+                $term_conditions[] = $wpdb->prepare("
+                    (
+                        {$wpdb->posts}.post_title NOT LIKE %s AND
+                        {$wpdb->posts}.post_content NOT LIKE %s AND
+                        NOT EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta}
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta}
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                            AND {$wpdb->postmeta}.meta_key = 'nombreOriginal'
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
+                    )
+                ", $like_term, $like_term, $like_term, $like_term);
             }
             $search_conditions[] = '(' . implode(' AND ', $term_conditions) . ')';
         }
@@ -787,5 +860,3 @@ function obtenerUserId($is_ajax)
 
     return null;
 }
-
-?>
