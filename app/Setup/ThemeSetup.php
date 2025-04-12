@@ -684,25 +684,6 @@ add_action('template_redirect', function () {
     }
 });
 
-// Refactor(Org): Moved add_meta_tags function and hook from TemplateDev.php
-/**
- * Añade meta tags específicos para la página (descripción, keywords, Open Graph).
- * Se ejecuta en el hook 'wp_head'.
- */
-function add_meta_tags() {
-    // Solo ejecutar en páginas singulares para tener contexto de post/página
-    if (!is_singular()) {
-        return;
-    }
-    ?>
-    <meta name="description" content="<? echo esc_attr(get_the_excerpt()); ?>">
-    <meta name="keywords" content="<? echo esc_attr(get_post_meta(get_the_ID(), '_yoast_wpseo_focuskw', true)); ?>">
-    <meta property="og:title" content="<? echo esc_attr(get_the_title()); ?>">
-    <meta property="og:description" content="<? echo esc_attr(get_the_excerpt()); ?>">
-    <meta property="og:image" content="<? echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'full')); // Usar 'full' o un tamaño específico ?>">
-    <meta property="og:url" content="<? echo esc_url(get_permalink()); ?>">
-    <?
-}
-add_action('wp_head', 'add_meta_tags');
+// Refactor(Org): Moved function add_meta_tags() and hook to app/Services/SEOService.php
 
 ?>
