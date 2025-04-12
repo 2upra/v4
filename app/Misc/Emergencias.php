@@ -2,16 +2,7 @@
 
 // Refactor(Org): User blocking/restriction functions moved to app/Services/UserService.php
 
-
-function agregar_rol_restringido() {
-    add_role('restringido', 'Usuario Restringido', array(
-        'read' => true, // Solo puede leer
-        'edit_posts' => false, // No puede crear o editar publicaciones
-        'upload_files' => false, // No puede subir archivos
-        'delete_posts' => false, // No puede eliminar publicaciones
-    ));
-}
-//add_action('init', 'agregar_rol_restringido');
+// Refactor(Org): Moved function agregar_rol_restringido() and its hook to app/Admin/Permisos.php
 
 
 // Ejemplo de uso

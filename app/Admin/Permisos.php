@@ -18,3 +18,14 @@ function otorgar_capacidades_roles() {
 }
 
 add_action('init', 'otorgar_capacidades_roles'); */
+
+// Refactor(Org): Moved function agregar_rol_restringido() and its hook from app/Misc/Emergencias.php
+function agregar_rol_restringido() {
+    add_role('restringido', 'Usuario Restringido', array(
+        'read' => true, // Solo puede leer
+        'edit_posts' => false, // No puede crear o editar publicaciones
+        'upload_files' => false, // No puede subir archivos
+        'delete_posts' => false, // No puede eliminar publicaciones
+    ));
+}
+add_action('init', 'agregar_rol_restringido');
