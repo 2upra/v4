@@ -142,3 +142,20 @@ function contenidoColab($var)
 <?php
     return ob_get_clean();
 }
+
+// Refactor(Exec): Función participantesColab() movida desde app/Content/Colab/partColab.php
+function participantesColab($var)
+{
+    $post_id = $var['post_id'];
+    $colabColaboradorAvatar = $var['colabColaboradorAvatar'];
+    $colabAutorAvatar = $var['colabAutorAvatar'];
+
+    ob_start();
+?>
+    <div class="LIFVXC">
+        <img src="<? echo esc_url($colabColaboradorAvatar); ?>">
+        <img src="<? echo esc_url($colabAutorAvatar); ?>">
+    </div>
+<?php
+    return ob_get_clean();
+}
