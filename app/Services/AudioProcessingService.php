@@ -32,48 +32,6 @@ function minutos55($schedules)
     return $schedules;
 }
 
-/**
- * Optimizes audio files for 'social_post' type posts to 64k MP3,
- * limited to 20 seconds with a fade-out.
- * Processes a limited number of posts per run.
- *
- * @param int $limite Maximum number of posts to process in one go.
- */
-function optimizar64kAudios($limite = 10000)
-{
-    // Get 'social_post' posts that haven't been optimized and don't have 'rola' meta set to 1
-    $query = new WP_Query(array(
-        'post_type' => 'social_post',
-        'meta_query' => array(
-            'relation' => 'AND', // Ensure all conditions are met
-            array(
-                'key' => 'audio_optimizado',
-                'compare' => 'NOT EXISTS' // Only those without the 'audio_optimizado' meta
-            ),
-            array(
-                'key' => 'rola',
-                'value' => '1',
-                'compare' => '!=' // Exclude posts where 'rola' is 1
-                // If 'rola' might not exist, use a nested query or adjust logic
-                // For simplicity, assuming 'rola' != 1 covers non-existence too for this check's purpose.
-                // A more robust check might be needed depending on exact requirements.
-            )
-        ),
-        'posts_per_page' => $limite, // Limit posts per cycle
-        'fields' => 'ids', // Only get post IDs
-        'no_found_rows' => true, // Optimize query performance
-        'update_post_term_cache' => false, // Further optimization
-        'update_post_meta_cache' => false // Further optimization
-    ));
-
-    if ($query->have_posts()) {
-        foreach ($query->posts as $post_id) {
-            optimizarAudioPost($post_id);
-        }
-    }
-
-    wp_reset_postdata(); // Important after custom WP_Query loops
-}
 
 /**
  * Optimizes the audio for a single post.
