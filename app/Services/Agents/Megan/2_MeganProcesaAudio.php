@@ -1,10 +1,9 @@
 <?php
 
 
-#ESTA FUNCION ES PARTE DEL AGENTE MEGAN
-function autProcesarAudio($rutaOriginalOne)
+function meganProcesaUnAudio($rutaOriginalOne)
 {
-    autLog("autProcesarAudio start");
+    autLog("meganProcesaUnAudio start");
     $file_id = obtenerFileIDPorURL($rutaOriginalOne);
     if ($file_id === false) {
         eliminarHash($file_id);
@@ -118,6 +117,7 @@ function autProcesarAudio($rutaOriginalOne)
 
     chmod($rutaWpLiteOne, 0644);
 
-    autLog("autProcesarAudio end");
-    crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
+    autLog("meganProcesaUnAudio end");
+    meganCreaUnPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
+

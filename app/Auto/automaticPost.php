@@ -18,7 +18,7 @@
 
 // Refactor(Org): Función buscar_archivo_recursivo() movida a app/Utils/SystemUtils.php
 
-// Refactor(Org): Función crearAutPost() movida a app/Services/Post/PostCreationService.php
+// Refactor(Org): Función meganCreaUnPost() movida a app/Services/Post/PostCreationService.php
 
 /*
 function actualizar_metas_posts_social() {

@@ -1,7 +1,7 @@
 <? 
 
-#ETAPA FINAL DEL AGENTE MEGAN
-function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
+
+function meganCreaUnPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
 {
 
     if ($autor_id === null) {

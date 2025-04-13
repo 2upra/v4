@@ -31,7 +31,7 @@ function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraD
             $ruta_audio_lite = wp_get_attachment_url($audio_lite_id);
             $upload_dir = wp_upload_dir();
             $ruta_servidor = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_audio_lite);
-            $nuevoPost = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $postIdOriginal);
+            $nuevoPost = meganCreaUnPost('', $ruta_servidor, $audio_id_hash, $author_id, $postIdOriginal);
 
             if (! is_wp_error($nuevoPost) && $nuevoPost) {
                 $ids_nuevos_posts[] = $nuevoPost;
