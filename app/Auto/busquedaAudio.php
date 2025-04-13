@@ -200,6 +200,7 @@ function debeProcesarse($ruta_archivo, $file_hash)
         }
 
         // Filtrar hashes existentes solo para archivos WAV o MP3
+        // Note: obtenerHashesFiltrados is now in FileHashService.php
         $hashes_existentes = obtenerHashesFiltrados(['wav', 'mp3']);
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
         autLog("debeProcesarse: Hash verificado: " . ($hash_verificado ? "SI" : "NO") . " para hash: $file_hash");
@@ -238,17 +239,7 @@ function debeProcesarse($ruta_archivo, $file_hash)
     }
 }
 
-
-function obtenerHashesFiltrados($extensiones)
-{
-    global $wpdb;
-    $extensiones_regex = implode('|', array_map('preg_quote', $extensiones));
-    $query = $wpdb->prepare(
-        "SELECT file_hash FROM {$wpdb->prefix}file_hashes WHERE file_url REGEXP %s",
-        '\\.(' . $extensiones_regex . ')$'
-    );
-    return $wpdb->get_results($query, ARRAY_A);
-}
+// Refactor(Move): Moved function obtenerHashesFiltrados to app/Services/FileHashService.php
 
 //esto ya no se puede usar, pues los archivos ya no son accesibles desde la web, pero lo que puede hacer es ver si el archivo existe 
 function verificarCargaArchivoPorHash($file_hash)

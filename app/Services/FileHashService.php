@@ -104,6 +104,18 @@ function obtenerHash($file_hash)
     ), ARRAY_A);
 }
 
+// Refactor(Move): Moved function obtenerHashesFiltrados from app/Auto/busquedaAudio.php
+function obtenerHashesFiltrados($extensiones)
+{
+    global $wpdb;
+    $extensiones_regex = implode('|', array_map('preg_quote', $extensiones));
+    $query = $wpdb->prepare(
+        "SELECT file_hash FROM {$wpdb->prefix}file_hashes WHERE file_url REGEXP %s",
+        '\\.(' . $extensiones_regex . ')$'
+    );
+    return $wpdb->get_results($query, ARRAY_A);
+}
+
 // Refactor(Org): Moved function recalcularHash from app/Utils/HashUtils.php
 function recalcularHash($audio_file_path)
 {
