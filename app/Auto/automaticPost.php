@@ -151,24 +151,7 @@ function manejarArchivoFallido($rutaArchivo, $motivo)
 
 // Refactor(Org): Función adjuntarArchivoAut() movida a app/Services/Post/PostAttachmentService.php
 
-
-function buscar_archivo_recursivo($dir, $filename)
-{
-    $files = scandir($dir);
-    foreach ($files as $file) {
-        if ($file === '.' || $file === '..') continue;
-        $path = $dir . DIRECTORY_SEPARATOR . $file;
-        if (is_dir($path)) {
-            $result = buscar_archivo_recursivo($path, $filename);
-            if ($result !== false) {
-                return $result;
-            }
-        } elseif ($file === $filename) {
-            return $path;
-        }
-    }
-    return false;
-}
+// Refactor(Org): Función buscar_archivo_recursivo() movida a app/Utils/SystemUtils.php
 
 
 /*
