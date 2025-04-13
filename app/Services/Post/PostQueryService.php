@@ -1,7 +1,5 @@
 <?php
 
-// Refactor(Org): Created PostQueryService.php
-// Contains functions related to building WP_Query arguments for retrieving posts
 function publicacionAjax()
 {
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;

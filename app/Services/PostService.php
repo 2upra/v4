@@ -1,45 +1,5 @@
 <?php
 
-#Maneja la subida de un post
-function subidaRs()
-{
-    guardarLog("Contenido de \\$_POST en subidaRs: " . print_r($_POST, true));
-
-    if (!is_user_logged_in()) {
-        guardarLog('Error: Usuario no autorizado');
-        wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
-    }
-
-    // Refactor(Org): Función crearPost() movida a Post/PostCreationService.php
-    // La función crearPost() ahora se encuentra en app/Services/Post/PostCreationService.php
-    // Si necesitas usarla, asegúrate de que ese archivo esté incluido.
-    // Ejemplo de llamada (asumiendo que PostCreationService.php está incluido):
-    // $idPost = crearPost(); 
-
-    $idPost = crearPost(); // Asegúrate de que PostCreationService.php esté incluido donde se llame a subidaRs
-    if (is_wp_error($idPost)) {
-        guardarLog('Error al crear el post: ' . $idPost->get_error_message());
-        wp_send_json_error(['message' => 'Error al crear el post']);
-    }
-    actualizarMetaDatos($idPost);
-    // Prepara datos para el algoritmo (función en este mismo archivo)
-    datosParaAlgoritmo($idPost);
-    confirmarArchivos($idPost);
-    procesarURLs($idPost);
-    // Refactor(Org): Lógica de asignación de tags movida a PostContentService.php
-    // La función asignarTags() ahora reside en app/Services/Post/PostContentService.php
-    // Si es necesario, llamar a la función desde el contexto adecuado o incluir PostContentService.php
-    // asignarTags($idPost); // Llamada eliminada ya que la función fue movida
-
-    wp_send_json_success(['message' => 'Post creado exitosamente']);
-    
-    if (isset($_POST['multiple']) && $_POST['multiple'] == '1') {
-        multiplesPost($idPost);
-    }
-    wp_die();
-}
-
-add_action('wp_ajax_subidaRs', 'subidaRs');
 
 // Refactor(Org): Función asignarTags() movida a app/Services/Post/PostContentService.php
 

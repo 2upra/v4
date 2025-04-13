@@ -4,7 +4,7 @@ function manejarArchivoFallido($rutaArchivo, $motivo)
 {
     $directorioVerificar = "/home/asley01/MEGA/Waw/Verificar/";
     if (!file_exists($directorioVerificar)) {
-        mkdir($directorioVerificar, 0777, true); // Crear el directorio si no existe
+        mkdir($directorioVerificar, 0777, true); 
     }
 
     $nombreArchivo = basename($rutaArchivo);
@@ -17,4 +17,22 @@ function manejarArchivoFallido($rutaArchivo, $motivo)
     } else {
         autLog("Error al mover el archivo a $directorioVerificar");
     }
+}
+
+function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
+{
+    $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
+    foreach ($iterador as $archivo) {
+        $extension = strtolower($archivo->getExtension());
+        $nombre = $archivo->getFilename();
+
+        if (!in_array($extension, ['wav', 'mp3']) || strpos($nombre, '2upra') !== 0) {
+            continue;
+        }
+
+        if ($nombre === $nombre_archivo) {
+            return $archivo->getPath();
+        }
+    }
+    return false;
 }

@@ -1,7 +1,5 @@
 <?php
 
-// Refactor(Org): Función crearPost() movida desde PostService.php
-
 #Crea un post
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
