@@ -19,7 +19,7 @@ function autProcesarAudio($rutaOriginalOne)
     if ($fileSizeMB < 0.01) {
         $motivoFallo = "Archivo demasiado pequeño o inválido (menos de 0.01 MB)";
         autLog($motivoFallo . ": $rutaOriginalOne");
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo);
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php
         return;
     }
 
@@ -29,7 +29,7 @@ function autProcesarAudio($rutaOriginalOne)
         $motivoFallo = "Directorio inválido: {$path_parts['dirname']}";
         eliminarHash($file_id);
         autLog($motivoFallo);
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo);
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php
         return;
     }
 
@@ -44,7 +44,7 @@ function autProcesarAudio($rutaOriginalOne)
         eliminarHash($file_id);
         autLog($motivoFallo);
         $temp_path = $rutaOriginalOne;
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Movido aquí para manejar fallo de metadatos
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Movido aquí para manejar fallo de metadatos
     }
 
     if (!rename($temp_path, $rutaOriginalOne)) {
@@ -53,7 +53,7 @@ function autProcesarAudio($rutaOriginalOne)
         autLog($motivoFallo);
         if (!copy($temp_path, $rutaOriginalOne)) {
             autLog("Error al copiar archivo temporal, no se pudo reemplazar el original");
-            manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Movido aquí si falla la copia
+            manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Movido aquí si falla la copia
         } else {
             unlink($temp_path);
         }
@@ -67,14 +67,14 @@ function autProcesarAudio($rutaOriginalOne)
         $motivoFallo = "Error al crear versión lite: " . implode(" | ", $output_lite);
         eliminarHash($file_id);
         autLog($motivoFallo);
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Manejar fallo en la creación del lite
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Manejar fallo en la creación del lite
     }
 
     if (!file_exists($rutaWpLiteDos)) {
         $motivoFallo = "El archivo lite no se creó: $rutaWpLiteDos";
         eliminarHash($file_id);
         autLog($motivoFallo);
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Manejar si no se crea el lite
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Manejar si no se crea el lite
     }
 
     $uploads_dir = wp_upload_dir();
@@ -85,7 +85,7 @@ function autProcesarAudio($rutaOriginalOne)
             $motivoFallo = "No se pudo crear directorio audio/";
             eliminarHash($file_id);
             autLog($motivoFallo);
-            manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Manejar fallo en la creación del directorio
+            manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Manejar fallo en la creación del directorio
         }
     }
 
@@ -93,7 +93,7 @@ function autProcesarAudio($rutaOriginalOne)
         $motivoFallo = "Directorio audio/ sin permisos de escritura";
         eliminarHash($file_id);
         autLog($motivoFallo);
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Manejar falta de permisos
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Manejar falta de permisos
     }
 
     $rutaWpLiteOne = $target_dir_audio . "{$basename}_lite.mp3";
@@ -102,7 +102,7 @@ function autProcesarAudio($rutaOriginalOne)
         $motivoFallo = "Error al copiar archivo lite: " . error_get_last()['message'];
         eliminarHash($file_id);
         autLog($motivoFallo);
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Manejar error en la copia del lite
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Manejar error en la copia del lite
     }
 
     unlink($rutaWpLiteDos);
@@ -111,7 +111,7 @@ function autProcesarAudio($rutaOriginalOne)
         $motivoFallo = "Archivo lite no existe después de copiar: $rutaWpLiteOne";
         eliminarHash($file_id);
         autLog($motivoFallo);
-        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Manejar si el lite no existe después de copiar
+        manejarArchivoFallido($rutaOriginalOne, $motivoFallo); // Nota: Esta función ahora está en SystemUtils.php // Manejar si el lite no existe después de copiar
     }
 
     chmod($rutaWpLiteOne, 0644);
@@ -121,24 +121,7 @@ function autProcesarAudio($rutaOriginalOne)
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
 
-function manejarArchivoFallido($rutaArchivo, $motivo)
-{
-    $directorioVerificar = "/home/asley01/MEGA/Waw/Verificar/";
-    if (!file_exists($directorioVerificar)) {
-        mkdir($directorioVerificar, 0777, true); // Crear el directorio si no existe
-    }
-
-    $nombreArchivo = basename($rutaArchivo);
-    $nuevoDestino = $directorioVerificar . $nombreArchivo;
-
-    if (rename($rutaArchivo, $nuevoDestino)) {
-        // Crear un archivo de texto explicando el fallo
-        $archivoTexto = $directorioVerificar . $nombreArchivo . ".txt";
-        file_put_contents($archivoTexto, "Fallo al procesar el archivo: $nombreArchivo\nMotivo: $motivo");
-    } else {
-        autLog("Error al mover el archivo a $directorioVerificar");
-    }
-}
+// Refactor(Org): Función manejarArchivoFallido() movida a app/Utils/SystemUtils.php
 
 /*
 

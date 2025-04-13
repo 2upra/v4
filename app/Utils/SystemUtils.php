@@ -38,3 +38,28 @@ function buscar_archivo_recursivo($dir, $filename)
     }
     return false;
 }
+
+// Refactor(Org): Mueve función manejarArchivoFallido() de app/Auto/automaticPost.php a app/Utils/SystemUtils.php
+function manejarArchivoFallido($rutaArchivo, $motivo)
+{
+    $directorioVerificar = "/home/asley01/MEGA/Waw/Verificar/";
+    if (!file_exists($directorioVerificar)) {
+        mkdir($directorioVerificar, 0777, true); // Crear el directorio si no existe
+    }
+
+    $nombreArchivo = basename($rutaArchivo);
+    $nuevoDestino = $directorioVerificar . $nombreArchivo;
+
+    if (rename($rutaArchivo, $nuevoDestino)) {
+        // Crear un archivo de texto explicando el fallo
+        $archivoTexto = $directorioVerificar . $nombreArchivo . ".txt";
+        file_put_contents($archivoTexto, "Fallo al procesar el archivo: $nombreArchivo\nMotivo: $motivo");
+    } else {
+        // Asumiendo que autLog está disponible globalmente o será incluida donde se use SystemUtils
+        if (function_exists('autLog')) {
+             autLog("Error al mover el archivo a $directorioVerificar");
+        } else {
+             error_log("Error al mover el archivo a $directorioVerificar (autLog no disponible)");
+        }
+    }
+}
