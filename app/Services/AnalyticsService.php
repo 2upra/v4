@@ -67,6 +67,24 @@ function obtenerVistasPosts($userId)
     return $vistas_posts;
 }
 
+// Refactor(Exec): Moved function obtenerYProcesarVistasPosts from app/AlgoritmoPost/algoritmoPosts.php
+function obtenerYProcesarVistasPosts($userId)
+{
+    $vistas_posts = obtenerVistasPosts($userId);
+    $vistasPosts = [];
+
+    if (!empty($vistas_posts)) {
+        foreach ($vistas_posts as $postId => $view_data) {
+            $vistasPosts[$postId] = [
+                'count'     => $view_data['count'],
+                'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
+            ];
+        }
+    }
+
+    return $vistasPosts;
+}
+
 // Funcion limpiarVistasAntiguas() movida desde app/Utils/AnalyticsUtils.php
 /**
  * Filtra un array de vistas, eliminando aquellas cuya última vista ('last_view')

@@ -13,23 +13,6 @@
 // Funcion stemWord movida a app/Utils/StringUtils.php
 
 
-#PASO 5
-
-function obtenerYProcesarVistasPosts($userId)
-{
-    $vistas_posts = obtenerVistasPosts($userId);
-    $vistasPosts = [];
-
-    if (!empty($vistas_posts)) {
-        foreach ($vistas_posts as $postId => $view_data) {
-            $vistasPosts[$postId] = [
-                'count'     => $view_data['count'],
-                'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
-            ];
-        }
-    }
-
-    return $vistasPosts;
-}
+// Refactor(Exec): Funcion obtenerYProcesarVistasPosts movida a app/Services/AnalyticsService.php
 
 // Refactor(Org): Función datosParaAlgoritmo movida a app/Services/PostService.php
