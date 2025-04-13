@@ -3,7 +3,7 @@
 #Maneja la subida de un post
 function subidaRs()
 {
-    guardarLog("Contenido de \$_POST en subidaRs: " . print_r($_POST, true));
+    guardarLog("Contenido de \\$_POST en subidaRs: " . print_r($_POST, true));
 
     if (!is_user_logged_in()) {
         guardarLog('Error: Usuario no autorizado');
@@ -22,8 +22,8 @@ function subidaRs()
         wp_send_json_error(['message' => 'Error al crear el post']);
     }
     actualizarMetaDatos($idPost);
-    // Refactor(Org): Función datosParaAlgoritmo() movida a app/AlgoritmoPost/algoritmoPosts.php
-    datosParaAlgoritmo($idPost); // Asegúrate de que algoritmoPosts.php esté incluido
+    // Prepara datos para el algoritmo (función en este mismo archivo)
+    datosParaAlgoritmo($idPost);
     confirmarArchivos($idPost);
     procesarURLs($idPost);
     // Refactor(Org): Lógica de asignación de tags movida a PostContentService.php
@@ -117,3 +117,38 @@ function registrarPrecios($idPost)
 
 // Refactor(Org): Funciones de consulta de posts (publicaciones, configuracionQueryArgs, preOrdenamiento, obtenerColeccionesParaMomento, ordenamientoColecciones, ordenamiento, aplicarFiltrosUsuario, prefiltrarIdentifier, procesarPublicaciones, obtenerUserId) movidas a app/Services/Post/PostQueryService.php
 
+// Refactor(Org): Función movida desde app/AlgoritmoPost/algoritmoPosts.php
+#Prepara los datos para el algoritmo
+function datosParaAlgoritmo($idPost)
+{
+    $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
+    $tagsString = isset($_POST['tags']) ? sanitize_text_field($_POST['tags']) : '';
+    $tags = !empty($tagsString) ? array_map('trim', explode(',', $tagsString)) : [];
+
+    $idAutor = get_post_field('post_author', $idPost);
+    $datosAutor = get_userdata($idAutor);
+
+    $nombreUsuario = $datosAutor ? $datosAutor->user_login : 'desconocido';
+    $nombreMostrar = $datosAutor ? $datosAutor->display_name : 'Desconocido';
+
+    $datosAlgoritmo = [
+        'tags' => $tags,
+        'texto' => $textoNormal,
+        'autor' => [
+            'id' => $idAutor,
+            'usuario' => $nombreUsuario,
+            'nombre' => $nombreMostrar,
+        ],
+    ];
+
+    $datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE);
+
+    if ($datosAlgoritmoJson === false) {
+        $mensajeErrorJson = str_replace("\n", " | ", json_last_error_msg());
+        error_log("Error en datosParaAlgoritmo: Fallo al codificar JSON para el post ID: " . $idPost . ". Error: " . $mensajeErrorJson);
+    } else {
+        if (update_post_meta($idPost, 'datosAlgoritmo', $datosAlgoritmoJson) === false) {
+            error_log("Error en datosParaAlgoritmo: Fallo al actualizar meta datosAlgoritmo para el post ID " . $idPost);
+        }
+    }
+}
