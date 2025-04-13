@@ -30,4 +30,27 @@ class MomentosComponent
     }
 }
 
+// Refactor(Org): Moved functions momentos() and publicarMomento() from app/Content/Momentos/Momentos.php
+function momentos()
+{
+    ob_start();
+?>
+
+    <?php echo publicarMomento(); ?>
+    <?php echo publicaciones(['filtro' => 'momento', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+<?php
+    return ob_get_clean();
+}
+
+function publicarMomento()
+{
+    ob_start();
+?>
+    <div class="publicarMomento">
+        <?php echo $GLOBALS['momentoIcon']; ?>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
 ?>
