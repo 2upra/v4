@@ -117,6 +117,7 @@ function autProcesarAudio($rutaOriginalOne)
     chmod($rutaWpLiteOne, 0644);
 
     autLog("autProcesarAudio end");
+    // Se llama a la función desde su nueva ubicación en PostCreationService
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
 
@@ -153,6 +154,7 @@ function manejarArchivoFallido($rutaArchivo, $motivo)
 
 // Refactor(Org): Función buscar_archivo_recursivo() movida a app/Utils/SystemUtils.php
 
+// Refactor(Org): Función crearAutPost() movida a app/Services/Post/PostCreationService.php
 
 /*
 function actualizar_metas_posts_social() {
