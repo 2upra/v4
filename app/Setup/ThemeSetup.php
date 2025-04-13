@@ -389,4 +389,29 @@ function ocultarBarraAdmin()
 }
 add_action('after_setup_theme', 'ocultarBarraAdmin');
 
+// Refactor(Org): Funciones y hooks para reglas de reescritura de /sample/ movidas desde app/Admin/Ajustes.php
+function agregarReglaReescritura() {
+    add_rewrite_rule('^sample/([0-9]+)/?$', 'index.php?p=$matches[1]&post_type=social_post', 'top');
+}
+add_action('init', 'agregarReglaReescritura', 10, 0);
+
+function modificarConsultaPrincipal($consulta) {
+    if (!is_admin() && $consulta->is_main_query() && $consulta->get('p') && $consulta->get('post_type') === 'social_post') {
+        $consulta->set('name', '');
+    }
+}
+add_action('pre_get_posts', 'modificarConsultaPrincipal');
+
+function forzarPlantillaSocialPost($template) {
+    global $wp_query;
+    if (isset($wp_query->query_vars['post_type']) && $wp_query->query_vars['post_type'] === 'social_post' && isset($wp_query->query_vars['p'])) {
+        $plantilla = locate_template('single-social_post.php');
+        if ($plantilla) {
+            return $plantilla;
+        }
+    }
+    return $template;
+}
+add_filter('template_include', 'forzarPlantillaSocialPost');
+
 ?>
