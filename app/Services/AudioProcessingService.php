@@ -3,31 +3,7 @@
 
 
 
-/**
- * Adds a custom cron schedule interval of 6 hours.
- *
- * @param array $schedules Existing cron schedules.
- * @return array Modified cron schedules.
- */
-function intervalo_cada_seis_horas($schedules)
-{
-    $schedules['cada_seis_horas'] = array(
-        'interval' => 21600, // 6 horas en segundos (6 * 60 * 60)
-        'display' => __('Cada 6 Horas')
-    );
-    return $schedules;
-}
 
-// Add the custom cron schedule
-add_filter('cron_schedules', 'intervalo_cada_seis_horas');
-
-// Schedule the event if it's not already scheduled
-if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
-    wp_schedule_event(time(), 'cada_seis_horas', 'regenerar_audio_lite_evento');
-}
-
-// Hook the regeneration function to the scheduled event
-add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 // Refactor(Org): Moved from app/Functions/protegerAudio.php - Hook to prevent audio file deletion.
 add_filter('pre_delete_attachment', function ($delete, $post) {

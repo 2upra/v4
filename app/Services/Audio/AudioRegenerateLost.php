@@ -108,3 +108,21 @@ function regenerarLite()
         }
     }
 }
+
+
+function intervalo_cada_seis_horas($schedules)
+{
+    $schedules['cada_seis_horas'] = array(
+        'interval' => 21600,
+        'display' => __('Cada 6 Horas')
+    );
+    return $schedules;
+}
+
+add_filter('cron_schedules', 'intervalo_cada_seis_horas');
+
+if (!wp_next_scheduled('regenerarAudioLiteEvento')) {
+    wp_schedule_event(time(), 'cada_seis_horas', 'regenerarAudioLiteEvento');
+}
+
+add_action('regenerarAudioLiteEvento', 'regenerarLite');
