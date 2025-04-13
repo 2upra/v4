@@ -31,5 +31,5 @@
 
 // Refactor(Exec): Moved function update_post_content_callback() and its hook to app/Services/Post/PostContentService.php
 
-// Refactor(Org): Moved function encolar_editar_post_script() and its hook to app/Setup/ScriptSetup.php
+// Refactor(Exec): Moved function encolar_editar_post_script() and its hook to app/Setup/ScriptSetup.php
 

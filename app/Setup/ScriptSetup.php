@@ -226,7 +226,7 @@ function config_user() {
 }
 add_action('wp_enqueue_scripts', 'config_user');
 
-// Refactor(Org): Moved function encolar_editar_post_script() and its hook from app/Content/Posts/View/renderPost.php
+// Refactor(Exec): Moved function encolar_editar_post_script() and its hook from app/Content/Posts/View/renderPost.php
 function encolar_editar_post_script()
 {
     global $post;
