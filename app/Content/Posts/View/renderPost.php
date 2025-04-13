@@ -31,14 +31,5 @@
 
 // Refactor(Exec): Moved function update_post_content_callback() and its hook to app/Services/Post/PostContentService.php
 
-function encolar_editar_post_script()
-{
-    global $post;
-    wp_register_script('editar-post-js', get_template_directory_uri() . '/js/editarpost.js', array('jquery'), '1.0.16', true);
-    wp_localize_script('editar-post-js', 'ajax_params', array(
-        'ajax_url' => admin_url('admin-ajax.'),
-    ));
-    wp_enqueue_script('editar-post-js');
-}
+// Refactor(Org): Moved function encolar_editar_post_script() and its hook to app/Setup/ScriptSetup.php
 
-add_action('wp_enqueue_scripts', 'encolar_editar_post_script');

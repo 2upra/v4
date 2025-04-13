@@ -225,3 +225,16 @@ function config_user() {
     wp_enqueue_script('config-user-script', get_template_directory_uri() . '/js/config-user.js', [], '1.0.4', true);
 }
 add_action('wp_enqueue_scripts', 'config_user');
+
+// Refactor(Org): Moved function encolar_editar_post_script() and its hook from app/Content/Posts/View/renderPost.php
+function encolar_editar_post_script()
+{
+    global $post;
+    wp_register_script('editar-post-js', get_template_directory_uri() . '/js/editarpost.js', array('jquery'), '1.0.16', true);
+    wp_localize_script('editar-post-js', 'ajax_params', array(
+        'ajax_url' => admin_url('admin-ajax.'),
+    ));
+    wp_enqueue_script('editar-post-js');
+}
+
+add_action('wp_enqueue_scripts', 'encolar_editar_post_script');
