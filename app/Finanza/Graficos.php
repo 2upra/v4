@@ -10,17 +10,18 @@
 //     return $mysqli;
 // }
 
-// Función para limpiar datos históricos de una tabla
-function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
-    $mysqli->query("
-        DELETE t1 FROM $tabla t1
-        INNER JOIN (
-            SELECT DATE($columnaTiempo) as date, MAX($columnaTiempo) as max_time
-            FROM $tabla
-            GROUP BY DATE($columnaTiempo)
-        ) t2 ON DATE(t1.$columnaTiempo) = t2.date AND t1.$columnaTiempo < t2.max_time
-    ");
-}
+// Refactor(Org): Moved function limpiarDatosHistoricos to app/Utils/DatabaseUtils.php
+// // Función para limpiar datos históricos de una tabla
+// function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
+//     $mysqli->query("
+//         DELETE t1 FROM $tabla t1
+//         INNER JOIN (
+//             SELECT DATE($columnaTiempo) as date, MAX($columnaTiempo) as max_time
+//             FROM $tabla
+//             GROUP BY DATE($columnaTiempo)
+//         ) t2 ON DATE(t1.$columnaTiempo) = t2.date AND t1.$columnaTiempo < t2.max_time
+//     ");
+// }
 
 // Función para actualizar o insertar un valor en una tabla
 function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor, $valor) {
@@ -68,7 +69,7 @@ function capitalValores() {
 
     // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
     $mysqli = getDatabaseConnection();
-    limpiarDatosHistoricos($mysqli, 'capital', 'time1');
+    limpiarDatosHistoricos($mysqli, 'capital', 'time1'); // Asegúrate de que DatabaseUtils.php está incluido
     actualizarOInsertarValor($mysqli, 'capital', 'time1', 'value1', $valEmp);
     // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
     $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1');
@@ -84,7 +85,7 @@ function bolsavalores() {
 
     // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
     $mysqli = getDatabaseConnection();
-    limpiarDatosHistoricos($mysqli, 'bolsa', 'time');
+    limpiarDatosHistoricos($mysqli, 'bolsa', 'time'); // Asegúrate de que DatabaseUtils.php está incluido
     actualizarOInsertarValor($mysqli, 'bolsa', 'time', 'value', $valAcc);
     // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
     $datosJSON = obtenerDatosJSON('bolsa', 'time', 'value');

@@ -74,4 +74,20 @@ function getDatabaseConnection() {
     return $mysqli;
 }
 
+// Refactor(Org): Moved function limpiarDatosHistoricos from app/Finanza/Graficos.php
+// Función para limpiar datos históricos de una tabla (usa conexión mysqli)
+function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
+    // Asegurarse de que $tabla y $columnaTiempo son seguros (pueden requerir validación/escapado)
+    // Asumiendo que son seguros por ahora.
+    $mysqli->query("
+        DELETE t1 FROM `$tabla` t1
+        INNER JOIN (
+            SELECT DATE(`$columnaTiempo`) as date, MAX(`$columnaTiempo`) as max_time
+            FROM `$tabla`
+            GROUP BY DATE(`$columnaTiempo`)
+        ) t2 ON DATE(t1.`$columnaTiempo`) = t2.date AND t1.`$columnaTiempo` < t2.max_time
+    ");
+}
+
+
 ?>
