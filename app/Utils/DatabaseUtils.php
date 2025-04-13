@@ -89,5 +89,59 @@ function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
     ");
 }
 
+// Refactor(Org): Moved function actualizarOInsertarValor from app/Finanza/Graficos.php and adapted to use $wpdb
+/**
+ * Actualiza o inserta un valor en una tabla específica para la fecha actual.
+ * Solo actualiza si ha pasado un tiempo mínimo desde la última actualización del día.
+ *
+ * @param string $tabla Nombre de la tabla (sin prefijo WP).
+ * @param string $columnaTiempo Nombre de la columna de tiempo (DATETIME/TIMESTAMP).
+ * @param string $columnaValor Nombre de la columna de valor.
+ * @param float|int|string $valor El valor a insertar o actualizar.
+ * @param int $intervalo Intervalo mínimo en segundos para actualizar (default: 5).
+ */
+function actualizarOInsertarValor($tabla, $columnaTiempo, $columnaValor, $valor, $intervalo = 5) {
+    global $wpdb;
+    $tabla_completa = $wpdb->prefix . $tabla;
+    $current_time = time();
+    $current_date = date('Y-m-d');
+    $time = date('Y-m-d H:i:s');
+
+    // Buscar registro existente para la fecha actual
+    // Usamos backticks para los nombres de tabla y columna
+    $query = $wpdb->prepare(
+        "SELECT `{$columnaTiempo}` FROM `{$tabla_completa}` WHERE DATE(`{$columnaTiempo}`) = %s ORDER BY `{$columnaTiempo}` DESC LIMIT 1",
+        $current_date
+    );
+    $existing_row_time = $wpdb->get_var($query);
+
+    if ($existing_row_time) {
+        $last_time = strtotime($existing_row_time);
+        // Actualizar si ha pasado el intervalo especificado
+        if ($current_time - $last_time >= $intervalo) {
+            // Usar $wpdb->query con prepare para la cláusula WHERE con DATE()
+            $wpdb->query($wpdb->prepare(
+                "UPDATE `{$tabla_completa}` SET `{$columnaTiempo}` = %s, `{$columnaValor}` = %f WHERE DATE(`{$columnaTiempo}`) = %s",
+                $time, // %s - string
+                $valor, // %f - float
+                $current_date // %s - string
+            ));
+        }
+    } else {
+        // Insertar nuevo registro si no existe para la fecha actual
+        $wpdb->insert(
+            $tabla_completa,
+            [
+                $columnaTiempo => $time,
+                $columnaValor => $valor,
+            ],
+            [
+                '%s', // formato para columnaTiempo
+                '%f'  // formato para columnaValor (asumiendo float basado en mysqli bind_param 'd')
+            ]
+        );
+    }
+}
+
 
 ?>
