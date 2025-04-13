@@ -45,15 +45,16 @@ function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor
     }
 }
 
-// Función para obtener datos de una tabla y convertirlos a JSON
-function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor) {
-    $datos = [];
-    $result = $mysqli->query("SELECT * FROM $tabla ORDER BY $columnaTiempo DESC");
-    while ($row = $result->fetch_assoc()) {
-        $datos[] = ['time' => $row[$columnaTiempo], 'value' => $row[$columnaValor]];
-    }
-    return json_encode($datos);
-}
+// Refactor(Org): Moved function obtenerDatosJSON to app/Utils/DatabaseUtils.php
+// // Función para obtener datos de una tabla y convertirlos a JSON
+// function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor) {
+//     $datos = [];
+//     $result = $mysqli->query("SELECT * FROM $tabla ORDER BY $columnaTiempo DESC");
+//     while ($row = $result->fetch_assoc()) {
+//         $datos[] = ['time' => $row[$columnaTiempo], 'value' => $row[$columnaValor]];
+//     }
+//     return json_encode($datos);
+// }
 
 
 
@@ -67,7 +68,8 @@ function capitalValores() {
     $mysqli = getDatabaseConnection();
     limpiarDatosHistoricos($mysqli, 'capital', 'time1');
     actualizarOInsertarValor($mysqli, 'capital', 'time1', 'value1', $valEmp);
-    $datosJSON = obtenerDatosJSON($mysqli, 'capital', 'time1', 'value1');
+    // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
+    $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1');
     $mysqli->close();
 
     // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
@@ -81,7 +83,8 @@ function bolsavalores() {
     $mysqli = getDatabaseConnection();
     limpiarDatosHistoricos($mysqli, 'bolsa', 'time');
     actualizarOInsertarValor($mysqli, 'bolsa', 'time', 'value', $valAcc);
-    $datosJSON = obtenerDatosJSON($mysqli, 'bolsa', 'time', 'value');
+    // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
+    $datosJSON = obtenerDatosJSON('bolsa', 'time', 'value');
     $mysqli->close();
 
     // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
