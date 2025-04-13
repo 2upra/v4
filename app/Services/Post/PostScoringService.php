@@ -392,3 +392,25 @@ function calcularPuntosParaPost(
 
     return $pFinal;
 }
+
+// Refactor(Org): Funcion movida desde app/AlgoritmoPost/algoritmoPosts.php
+function calcularPuntosFinales($pUsuario, $pIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
+{
+
+    if ($esAdmin) {
+
+        if (!$metaVerificado && $metaPostAut) {
+            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
+        } elseif ($metaVerificado && !$metaPostAut) {
+            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
+        }
+    } else {
+        if ($metaVerificado && $metaPostAut) {
+            return ($pUsuario + $pIntereses + $puntosLikes) * 4;
+        } elseif (!$metaVerificado && $metaPostAut) {
+            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
+        }
+    }
+
+    return $pUsuario + $pIntereses + $puntosLikes;
+}

@@ -2,26 +2,7 @@
 
 // Refactor(Org): Funcion calcularPuntosIntereses movida a app/Services/Post/PostScoringService.php
 
-function calcularPuntosFinales($pUsuario, $pIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
-{
-
-    if ($esAdmin) {
-
-        if (!$metaVerificado && $metaPostAut) {
-            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
-        } elseif ($metaVerificado && !$metaPostAut) {
-            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
-        }
-    } else {
-        if ($metaVerificado && $metaPostAut) {
-            return ($pUsuario + $pIntereses + $puntosLikes) * 4;
-        } elseif (!$metaVerificado && $metaPostAut) {
-            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
-        }
-    }
-
-    return $pUsuario + $pIntereses + $puntosLikes;
-}
+// Refactor(Org): Funcion calcularPuntosFinales movida a app/Services/Post/PostScoringService.php
 
 // Funcion getDecayFactor movida a app/Utils/MathUtils.php
 
