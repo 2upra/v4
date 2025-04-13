@@ -110,19 +110,27 @@ function regenerarLite()
 }
 
 
-function intervalo_cada_seis_horas($schedules)
-{
-    $schedules['cada_seis_horas'] = array(
-        'interval' => 21600,
-        'display' => __('Cada 6 Horas')
-    );
-    return $schedules;
-}
+
 
 add_filter('cron_schedules', 'intervalo_cada_seis_horas');
+add_action('regenerarAudioLiteEvento', 'regenerarLite');
 
 if (!wp_next_scheduled('regenerarAudioLiteEvento')) {
     wp_schedule_event(time(), 'cada_seis_horas', 'regenerarAudioLiteEvento');
 }
 
-add_action('regenerarAudioLiteEvento', 'regenerarLite');
+add_filter('cron_schedules', 'minutos55');
+
+if (!wp_next_scheduled('minutos55_evento')) {
+    wp_schedule_event(time(), 'cada55', 'minutos55_evento');
+}
+add_action('minutos55_evento', 'optimizar64kAudios');
+
+add_filter('pre_delete_attachment', function ($delete, $post) {
+    $file_path = get_attached_file($post->ID);
+    if ($file_path && strpos($file_path, '/audio/') !== false) {
+        logAudio("Intento de eliminación PREVENIDO de archivo de audio protegido: " . $file_path . " (Post ID: " . $post->ID . ")");
+        return false; // Prevent deletion
+    }
+    return $delete;
+}, 10, 2);

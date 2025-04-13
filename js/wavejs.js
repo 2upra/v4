@@ -467,7 +467,7 @@ async function sendImageToServer(imageData, postId) {
     const blob = new Blob([ab], {type: mimeString});
 
     const formData = new FormData();
-    formData.append('action', 'save_waveform_image');
+    formData.append('action', 'guardarWaveImagen');
     formData.append('image', blob, 'waveform.png');
     formData.append('post_id', postId);
 
