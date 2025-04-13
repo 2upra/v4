@@ -35,28 +35,5 @@
 
 // Refactor(Org): Función audioPost() movida a app/View/Helpers/AudioHelper.php
 
-function audioPostList($postId)
-{
-    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
+// Refactor(Org): Función audioPostList() movida a app/View/Helpers/AudioHelper.php
 
-    if (empty($audio_id_lite)) {
-        return '';
-    }
-    $urlAudioSegura = audioUrlSegura($audio_id_lite);
-    $post_author_id = get_post_field('post_author', $postId);
-    if (is_wp_error($urlAudioSegura)) {
-        $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
-    }
-    ob_start();
-?>
-    <div id="audio-container-<?php echo $postId; ?>" class="audio-container" data-post-id="<?php echo $postId; ?>" artista-id="<?php echo $post_author_id; ?>">
-
-        <div class="play-pause-sobre-imagen">
-            <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
-        </div>
-
-        <audio id="audio-<?php echo $postId; ?>" src="<?php echo esc_url($urlAudioSegura); ?>"></audio>
-    </div>
-<?php
-    return ob_get_clean();
-}
