@@ -1,5 +1,12 @@
-<?php
+<?php  
 
+/* TO DO  
+
+- [ ] ManejarArchivoFallido no es lo suficientemente robusto y no dice claramente como fallo.
+
+*/
+
+# Esta funcion maneja los archivos que fallaron al procesar, moviéndolos a un directorio específico y creando un archivo de texto con el motivo del fallo. Función exclusiva para megan.
 function manejarArchivoFallido($rutaArchivo, $motivo)
 {
     $directorioVerificar = "/home/asley01/MEGA/Waw/Verificar/";
@@ -19,6 +26,7 @@ function manejarArchivoFallido($rutaArchivo, $motivo)
     }
 }
 
+# Esta funcion busca un archivo en subcarpetas de un directorio base y devuelve la ruta del archivo si lo encuentra. Función exclusiva para megan.
 function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
 {
     $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
