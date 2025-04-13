@@ -83,6 +83,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         if ($ruta_original && file_exists($ruta_original)) {
             $directorio_original = pathinfo($ruta_original, PATHINFO_DIRNAME);
         } else {
+            // Asumiendo que buscarArchivoEnSubcarpetas ahora está disponible globalmente (o incluida)
             $directorio_original = buscarArchivoEnSubcarpetas("/home/asley01/MEGA/Waw/X", basename($ruta_original));
         }
 
@@ -125,26 +126,6 @@ function rehacerNombreAudio($post_id, $archivo_audio)
     }
 }
 
-// Función auxiliar para buscar archivos en subcarpetas, filtrando solo archivos de audio válidos
-function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
-{
-    $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
-    foreach ($iterador as $archivo) {
-        // Obtener la extensión y el nombre del archivo
-        $extension = strtolower($archivo->getExtension());
-        $nombre = $archivo->getFilename();
-
-        // Ignorar archivos que no sean .wav o .mp3 y que no empiecen con "2upra"
-        if (!in_array($extension, ['wav', 'mp3']) || strpos($nombre, '2upra') !== 0) {
-            continue;
-        }
-
-        // Si el nombre coincide exactamente con el archivo buscado, devolver la ruta del directorio
-        if ($nombre === $nombre_archivo) {
-            return $archivo->getPath();
-        }
-    }
-    return false;
-}
+// Refactor(Org): Función buscarArchivoEnSubcarpetas() movida a app/Utils/SystemUtils.php
 
 // Refactor(Org): Función renombrar_archivo_adjunto() movida a app/Utils/SystemUtils.php

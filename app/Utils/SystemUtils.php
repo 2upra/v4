@@ -109,3 +109,26 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
 
     return true;
 }
+
+// Refactor(Org): Mueve función buscarArchivoEnSubcarpetas() de app/Auto/reEditarPost.php a app/Utils/SystemUtils.php
+// Función auxiliar para buscar archivos en subcarpetas, filtrando solo archivos de audio válidos
+function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
+{
+    $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
+    foreach ($iterador as $archivo) {
+        // Obtener la extensión y el nombre del archivo
+        $extension = strtolower($archivo->getExtension());
+        $nombre = $archivo->getFilename();
+
+        // Ignorar archivos que no sean .wav o .mp3 y que no empiecen con "2upra"
+        if (!in_array($extension, ['wav', 'mp3']) || strpos($nombre, '2upra') !== 0) {
+            continue;
+        }
+
+        // Si el nombre coincide exactamente con el archivo buscado, devolver la ruta del directorio
+        if ($nombre === $nombre_archivo) {
+            return $archivo->getPath();
+        }
+    }
+    return false;
+}
