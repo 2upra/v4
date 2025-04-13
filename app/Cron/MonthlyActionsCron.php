@@ -1,15 +1,35 @@
 <?php
-/**
- * Contiene el registro del hook cron y la función callback
- * para acciones mensuales (ej: cálculo de acciones para usuarios Pro).
- */
+// Refactor(Org): Moved monthly cron functions and hooks from app/Finanza/SumaMensual.php
 
-// TODO: Registrar el hook cron para la tarea mensual
-// add_action('my_monthly_cron_hook', 'execute_monthly_actions');
+// Registrar evento cron mensual
+function registrar_evento_mensual() {
+    if (!wp_next_scheduled('accion_mensual_user_pro')) {
+        wp_schedule_event(time(), 'monthly', 'accion_mensual_user_pro');
+    }
+}
+add_action('wp', 'registrar_evento_mensual');
 
-// TODO: Implementar la función callback para las acciones mensuales
-// function execute_monthly_actions() {
-//     // Lógica para calcular acciones Pro, etc.
-// }
+// Ejecutar cálculo mensual de acciones para usuarios Pro
+add_action('accion_mensual_user_pro', 'calcularAccionMensualUsuariosPro');
+function calcularAccionMensualUsuariosPro() {
+    // Note: sumaAcciones was moved to EconomyService.php
+    // This function relies on sumaAcciones being available globally or included.
+    // Ensure EconomyService.php is loaded before this hook runs.
+    if (function_exists('sumaAcciones')) {
+        sumaAcciones(true);
+    } else {
+        error_log('Error: La función sumaAcciones no está disponible en MonthlyActionsCron.php');
+    }
+}
 
-// Comentario de refactorización: Archivo creado para la lógica de cron mensual.
+// Añadir intervalo mensual a cron
+function agregar_intervalo_cron_mensual($schedules) {
+    $schedules['monthly'] = array(
+        'interval' => 30 * 24 * 60 * 60, // 30 días en segundos
+        'display'  => __('Una vez al mes'),
+    );
+    return $schedules;
+}
+add_filter('cron_schedules', 'agregar_intervalo_cron_mensual');
+
+?>
