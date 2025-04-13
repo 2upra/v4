@@ -35,7 +35,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     }
 
     //Automatic audio solo necesita la ruta lite para funcionar
-    $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
+    $datosAlgoritmo = generarJsonAudioIA($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     if (!$datosAlgoritmo) {
         eliminarHash($file_id);

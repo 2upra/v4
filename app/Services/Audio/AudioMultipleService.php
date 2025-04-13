@@ -1,5 +1,6 @@
 <?php
 
+
 function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento)
 {
     $multiples_audios_encontrados = false;

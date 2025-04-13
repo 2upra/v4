@@ -11,7 +11,7 @@
 
 */
 
-// Refactor(Org): Función automaticAudio() movida a app/Services/AudioProcessingService.php
+// Refactor(Org): Función generarJsonAudioIA() movida a app/Services/AudioProcessingService.php
 
 
 // Refactor(Org): Función adjuntarArchivoAut() movida a app/Services/Post/PostAttachmentService.php
