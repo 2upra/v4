@@ -65,13 +65,11 @@ function obtenerDatosJSON($tabla, $columnaTiempo, $columnaValor) {
 }
 
 // Refactor(Org): Moved function getDatabaseConnection from app/Finanza/Graficos.php
+// Refactor(WP-Standard): Use global $wpdb instead of mysqli connection.
 // Función para obtener la conexión a la base de datos
 function getDatabaseConnection() {
-    $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_NAME']);
-    if ($mysqli->connect_error) {
-        die('Error de Conexión (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
-    }
-    return $mysqli;
+    global $wpdb;
+    return $wpdb;
 }
 
 // Refactor(Org): Moved function limpiarDatosHistoricos from app/Finanza/Graficos.php
