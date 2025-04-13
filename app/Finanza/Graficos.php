@@ -1,13 +1,14 @@
 <?php
 
-// Función para obtener la conexión a la base de datos
-function getDatabaseConnection() {
-    $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_NAME']);
-    if ($mysqli->connect_error) {
-        die('Error de Conexión (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
-    }
-    return $mysqli;
-}
+// Refactor(Org): Moved function getDatabaseConnection to app/Utils/DatabaseUtils.php
+// // Función para obtener la conexión a la base de datos
+// function getDatabaseConnection() {
+//     $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_NAME']);
+//     if ($mysqli->connect_error) {
+//         die('Error de Conexión (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
+//     }
+//     return $mysqli;
+// }
 
 // Función para limpiar datos históricos de una tabla
 function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
@@ -65,6 +66,7 @@ function capitalValores() {
     $resultado = calc_ing(48, false);
     $valEmp = $resultado['valEmp'];
 
+    // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
     $mysqli = getDatabaseConnection();
     limpiarDatosHistoricos($mysqli, 'capital', 'time1');
     actualizarOInsertarValor($mysqli, 'capital', 'time1', 'value1', $valEmp);
@@ -80,6 +82,7 @@ function bolsavalores() {
     $resultado = calc_ing(48, false);
     $valAcc = $resultado['valAcc'];
 
+    // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
     $mysqli = getDatabaseConnection();
     limpiarDatosHistoricos($mysqli, 'bolsa', 'time');
     actualizarOInsertarValor($mysqli, 'bolsa', 'time', 'value', $valAcc);
