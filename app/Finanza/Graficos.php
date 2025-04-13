@@ -23,29 +23,30 @@
 //     ");
 // }
 
-// Función para actualizar o insertar un valor en una tabla
-function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor, $valor) {
-    $current_time = time();
-    $current_date = date('Y-m-d');
-
-    $result = $mysqli->query("SELECT * FROM $tabla WHERE DATE($columnaTiempo) = '$current_date'");
-    $existing_row = $result->fetch_assoc();
-
-    if ($existing_row) {
-        $last_time = strtotime($existing_row[$columnaTiempo]);
-        if ($current_time - $last_time >= 5) { // Actualizar si han pasado 10 minutos
-            $time = date('Y-m-d H:i:s');
-            $stmt = $mysqli->prepare("UPDATE $tabla SET $columnaTiempo = ?, $columnaValor = ? WHERE DATE($columnaTiempo) = ?");
-            $stmt->bind_param("sds", $time, $valor, $current_date);
-            $stmt->execute();
-        }
-    } else { // Insertar nuevo registro
-        $time = date('Y-m-d H:i:s');
-        $stmt = $mysqli->prepare("INSERT INTO $tabla ($columnaTiempo, $columnaValor) VALUES (?, ?)");
-        $stmt->bind_param("sd", $time, $valor);
-        $stmt->execute();
-    }
-}
+// Refactor(Org): Moved function actualizarOInsertarValor to app/Utils/DatabaseUtils.php
+// // Función para actualizar o insertar un valor en una tabla
+// function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor, $valor) {
+//     $current_time = time();
+//     $current_date = date('Y-m-d');
+//
+//     $result = $mysqli->query("SELECT * FROM $tabla WHERE DATE($columnaTiempo) = '$current_date'");
+//     $existing_row = $result->fetch_assoc();
+//
+//     if ($existing_row) {
+//         $last_time = strtotime($existing_row[$columnaTiempo]);
+//         if ($current_time - $last_time >= 5) { // Actualizar si han pasado 10 minutos
+//             $time = date('Y-m-d H:i:s');
+//             $stmt = $mysqli->prepare("UPDATE $tabla SET $columnaTiempo = ?, $columnaValor = ? WHERE DATE($columnaTiempo) = ?");
+//             $stmt->bind_param("sds", $time, $valor, $current_date);
+//             $stmt->execute();
+//         }
+//     } else { // Insertar nuevo registro
+//         $time = date('Y-m-d H:i:s');
+//         $stmt = $mysqli->prepare("INSERT INTO $tabla ($columnaTiempo, $columnaValor) VALUES (?, ?)");
+//         $stmt->bind_param("sd", $time, $valor);
+//         $stmt->execute();
+//     }
+// }
 
 // Refactor(Org): Moved function obtenerDatosJSON to app/Utils/DatabaseUtils.php
 // // Función para obtener datos de una tabla y convertirlos a JSON
@@ -68,15 +69,18 @@ function capitalValores() {
     $valEmp = $resultado['valEmp'];
 
     // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
-    $mysqli = getDatabaseConnection();
-    limpiarDatosHistoricos($mysqli, 'capital', 'time1'); // Asegúrate de que DatabaseUtils.php está incluido
+    $mysqli = getDatabaseConnection(); // Esta función ahora está en DatabaseUtils.php
+    limpiarDatosHistoricos($mysqli, 'capital', 'time1'); // Esta función ahora está en DatabaseUtils.php
+    // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
+    // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
     actualizarOInsertarValor($mysqli, 'capital', 'time1', 'value1', $valEmp);
     // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
-    $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1');
+    // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
+    $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1'); // Esta función ahora está en DatabaseUtils.php y usa $wpdb
     $mysqli->close();
 
     // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
-    return generarCodigoGrafico('myChart', $datosJSON);
+    return generarCodigoGrafico('myChart', $datosJSON); // Esta función ahora está en ChartHelper.php
 }
 
 function bolsavalores() {
@@ -84,15 +88,18 @@ function bolsavalores() {
     $valAcc = $resultado['valAcc'];
 
     // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
-    $mysqli = getDatabaseConnection();
-    limpiarDatosHistoricos($mysqli, 'bolsa', 'time'); // Asegúrate de que DatabaseUtils.php está incluido
+    $mysqli = getDatabaseConnection(); // Esta función ahora está en DatabaseUtils.php
+    limpiarDatosHistoricos($mysqli, 'bolsa', 'time'); // Esta función ahora está en DatabaseUtils.php
+    // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
+    // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
     actualizarOInsertarValor($mysqli, 'bolsa', 'time', 'value', $valAcc);
     // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
-    $datosJSON = obtenerDatosJSON('bolsa', 'time', 'value');
+    // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
+    $datosJSON = obtenerDatosJSON('bolsa', 'time', 'value'); // Esta función ahora está en DatabaseUtils.php y usa $wpdb
     $mysqli->close();
 
     // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
-    return generarCodigoGrafico('myChartBolsa', $datosJSON);
+    return generarCodigoGrafico('myChartBolsa', $datosJSON); // Esta función ahora está en ChartHelper.php
 }
 
 function graficoHistorialAcciones() {
@@ -104,7 +111,7 @@ function graficoHistorialAcciones() {
     $datosJSON = json_encode($datos);
 
     // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
-    return generarCodigoGrafico('myChartHistorial', $datosJSON);
+    return generarCodigoGrafico('myChartHistorial', $datosJSON); // Esta función ahora está en ChartHelper.php
 }
 
 ?>
