@@ -21,15 +21,19 @@ class BotonSponsor extends Component
     /**
      * Get the view / contents that represent the component.
      *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
+     * @return string
      */
-    public function render(): View
+    public function render(): string
     {
-        // Aquí se moverá la lógica de la función botonSponsor() original.
-        // Por ahora, retorna una vista placeholder o vacía.
-        // Se asumirá que la vista estará en: resources/views/components/finanza/sponsor/boton-sponsor.blade.php
-        // Nota: La vista real podría necesitar ser creada o ajustada.
-        return view('components.finanza.sponsor.boton-sponsor');
+        // Refactor(Org): Moved function body from app/Finanza/Sponsor/Boton.php
+        ob_start();
+        ?>
+
+        <button class="DZYBQD<? if (is_user_logged_in()) echo ' subpro'; ?><? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['iconoCorazon']; ?>Sponsor
+        </button>
+
+        <?php
+        return ob_get_clean();
     }
 
     // Aquí se podría añadir la lógica de la función botonSponsor() adaptada al componente.

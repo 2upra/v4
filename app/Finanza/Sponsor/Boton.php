@@ -1,12 +1,3 @@
-<?
-
-function botonSponsor()
-{
-    ob_start();
-    ?>
-
-    <button class="DZYBQD<? if (is_user_logged_in()) echo ' subpro'; ?><? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['iconoCorazon']; ?>Sponsor
-    </button>
-
-    <?
-}
+<?php
+// Refactor(Org): Moved function botonSponsor() to app/View/Components/Finanza/Sponsor/BotonSponsor.php
+// File is now empty and can potentially be removed if no longer referenced.
