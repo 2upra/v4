@@ -83,35 +83,6 @@
 //     return generarCodigoGrafico('myChart', $datosJSON); // Esta función ahora está en ChartHelper.php
 // }
 
-function bolsavalores() {
-    $resultado = calc_ing(48, false);
-    $valAcc = $resultado['valAcc'];
-
-    // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
-    $mysqli = getDatabaseConnection(); // Esta función ahora está en DatabaseUtils.php
-    limpiarDatosHistoricos($mysqli, 'bolsa', 'time'); // Esta función ahora está en DatabaseUtils.php
-    // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
-    // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
-    actualizarOInsertarValor($mysqli, 'bolsa', 'time', 'value', $valAcc);
-    // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
-    // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
-    $datosJSON = obtenerDatosJSON('bolsa', 'time', 'value'); // Esta función ahora está en DatabaseUtils.php y usa $wpdb
-    $mysqli->close();
-
-    // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
-    return generarCodigoGrafico('myChartBolsa', $datosJSON); // Esta función ahora está en ChartHelper.php
-}
-
-function graficoHistorialAcciones() {
-    $historial = obtenerHistorialAccionesUsuario();
-    $datos = [];
-    foreach ($historial as $registro) {
-        $datos[] = ['time' => $registro->fecha, 'value' => $registro->acciones]; 
-    }
-    $datosJSON = json_encode($datos);
-
-    // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
-    return generarCodigoGrafico('myChartHistorial', $datosJSON); // Esta función ahora está en ChartHelper.php
-}
+// Refactor(Org): Moved functions bolsavalores and graficoHistorialAcciones to app/View/Helpers/ChartHelper.php
 
 ?>

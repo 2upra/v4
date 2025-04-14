@@ -105,4 +105,37 @@ function capitalValores() {
     return generarCodigoGrafico('myChart', $datosJSON);
 }
 
+// Refactor(Org): Moved function bolsavalores from app/Finanza/Graficos.php
+function bolsavalores() {
+    $resultado = calc_ing(48, false); // Requires EconomyCalculationService.php
+    $valAcc = $resultado['valAcc'];
+
+    // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
+    $mysqli = getDatabaseConnection(); // Requires DatabaseUtils.php (Note: getDatabaseConnection now returns $wpdb)
+    limpiarDatosHistoricos($mysqli, 'bolsa', 'time'); // Requires DatabaseUtils.php (Note: This still expects mysqli, potential issue later)
+    // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
+    // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
+    actualizarOInsertarValor('bolsa', 'time', 'value', $valAcc); // Requires DatabaseUtils.php (adapted to $wpdb)
+    // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
+    // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
+    $datosJSON = obtenerDatosJSON('bolsa', 'time', 'value'); // Requires DatabaseUtils.php (adapted to $wpdb)
+    // $mysqli->close(); // No longer needed if using $wpdb, and $mysqli might be $wpdb now depending on getDatabaseConnection
+
+    // Llama a la función local generarCodigoGrafico
+    return generarCodigoGrafico('myChartBolsa', $datosJSON); // This function is now local
+}
+
+// Refactor(Org): Moved function graficoHistorialAcciones from app/Finanza/Graficos.php
+function graficoHistorialAcciones() {
+    $historial = obtenerHistorialAccionesUsuario(); // Requires EconomyCalculationService.php
+    $datos = [];
+    foreach ($historial as $registro) {
+        $datos[] = ['time' => $registro->fecha, 'value' => $registro->acciones]; 
+    }
+    $datosJSON = json_encode($datos);
+
+    // Llama a la función local generarCodigoGrafico
+    return generarCodigoGrafico('myChartHistorial', $datosJSON); // This function is now local
+}
+
 ?>
