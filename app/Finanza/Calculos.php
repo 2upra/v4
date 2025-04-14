@@ -1,4 +1,4 @@
-<?
+<?php
 
 // Refactor(Org): Moved function definir_acciones_usuario to app/Services/EconomyService.php
 
@@ -12,18 +12,7 @@ $usuarios_acciones = [
 ];
 
 
-function obtenerHistorialAccionesUsuario()
-{
-    global $wpdb;
-    $tablaHistorial = $wpdb->prefix . 'historial_acciones';
-    $user_id = get_current_user_id();
-    $resultados = $wpdb->get_results($wpdb->prepare(
-        "SELECT fecha, acciones FROM $tablaHistorial WHERE user_id = %d ORDER BY fecha ASC",
-        $user_id
-    ));
-
-    return $resultados;
-}
+// Refactor(Org): Moved function obtenerHistorialAccionesUsuario to app/Services/EconomyCalculationService.php
 
 // Refactor(Org): Moved function registrarHistorialAcciones to app/Cron/HourlyActionsCron.php
 

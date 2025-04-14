@@ -246,4 +246,18 @@ function calcularAccionPorUsuario($mostrarTodos = true)
     return $output . '</tbody></table>';
 }
 
+// Refactor(Org): Moved function obtenerHistorialAccionesUsuario from app/Finanza/Calculos.php
+function obtenerHistorialAccionesUsuario()
+{
+    global $wpdb;
+    $tablaHistorial = $wpdb->prefix . 'historial_acciones';
+    $user_id = get_current_user_id();
+    $resultados = $wpdb->get_results($wpdb->prepare(
+        "SELECT fecha, acciones FROM $tablaHistorial WHERE user_id = %d ORDER BY fecha ASC",
+        $user_id
+    ));
+
+    return $resultados;
+}
+
 ?>
