@@ -85,4 +85,24 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
     </script>';
 }
 
+// Refactor(Org): Moved function capitalValores from app/Finanza/Graficos.php
+function capitalValores() {
+    $resultado = calc_ing(48, false); // Requires EconomyCalculationService.php
+    $valEmp = $resultado['valEmp'];
+
+    // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
+    $mysqli = getDatabaseConnection(); // Requires DatabaseUtils.php
+    limpiarDatosHistoricos($mysqli, 'capital', 'time1'); // Requires DatabaseUtils.php
+    // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
+    // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
+    actualizarOInsertarValor('capital', 'time1', 'value1', $valEmp); // Requires DatabaseUtils.php (adapted to $wpdb)
+    // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
+    // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
+    $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1'); // Requires DatabaseUtils.php (adapted to $wpdb)
+    // $mysqli->close(); // No longer needed if using $wpdb
+
+    // Llama a la función local generarCodigoGrafico
+    return generarCodigoGrafico('myChart', $datosJSON);
+}
+
 ?>

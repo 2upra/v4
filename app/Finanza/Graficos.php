@@ -63,25 +63,25 @@
 
 // Función generarCodigoGrafico movida a app/View/Helpers/ChartHelper.php
 
-
-function capitalValores() {
-    $resultado = calc_ing(48, false);
-    $valEmp = $resultado['valEmp'];
-
-    // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
-    $mysqli = getDatabaseConnection(); // Esta función ahora está en DatabaseUtils.php
-    limpiarDatosHistoricos($mysqli, 'capital', 'time1'); // Esta función ahora está en DatabaseUtils.php
-    // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
-    // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
-    actualizarOInsertarValor($mysqli, 'capital', 'time1', 'value1', $valEmp);
-    // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
-    // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
-    $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1'); // Esta función ahora está en DatabaseUtils.php y usa $wpdb
-    $mysqli->close();
-
-    // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
-    return generarCodigoGrafico('myChart', $datosJSON); // Esta función ahora está en ChartHelper.php
-}
+// Refactor(Org): Moved function capitalValores to app/View/Helpers/ChartHelper.php
+// function capitalValores() {
+//     $resultado = calc_ing(48, false);
+//     $valEmp = $resultado['valEmp'];
+// 
+//     // Asegúrate de que DatabaseUtils.php se incluye donde se llama esta función
+//     $mysqli = getDatabaseConnection(); // Esta función ahora está en DatabaseUtils.php
+//     limpiarDatosHistoricos($mysqli, 'capital', 'time1'); // Esta función ahora está en DatabaseUtils.php
+//     // La siguiente llamada fallará porque actualizarOInsertarValor fue movida y modificada (ya no usa $mysqli)
+//     // Se necesitará refactorizar esta llamada para usar la nueva función de DatabaseUtils.php
+//     actualizarOInsertarValor($mysqli, 'capital', 'time1', 'value1', $valEmp);
+//     // Llama a la función movida (asegúrate de que DatabaseUtils.php esté incluido)
+//     // Esta llamada también necesita ser actualizada para no pasar $mysqli si se adapta obtenerDatosJSON a $wpdb
+//     $datosJSON = obtenerDatosJSON('capital', 'time1', 'value1'); // Esta función ahora está en DatabaseUtils.php y usa $wpdb
+//     $mysqli->close();
+// 
+//     // Asegúrate de que ChartHelper.php se incluye donde se llama esta función
+//     return generarCodigoGrafico('myChart', $datosJSON); // Esta función ahora está en ChartHelper.php
+// }
 
 function bolsavalores() {
     $resultado = calc_ing(48, false);
