@@ -1,15 +1,7 @@
-<?
+<?php
+// Refactor(Org): Moved function botonComprarAcciones to app/View/Components/Finanza/ComprarAcciones/BotonComprar.php
 
-function botonComprarAcciones($textoBoton = 'Donar')
-{
-    ob_start();
-    ?>
+// Este archivo ahora está vacío ya que la función fue movida.
+// Puede ser eliminado en un paso futuro si no se necesita más.
 
-    <button class="DZYBQD donar<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id="donarproyecto">
-        <? echo $GLOBALS['dolar']; ?><? echo $textoBoton; ?>
-    </button>
-
-    <?
-    return ob_get_clean();
-}
-
+?>
