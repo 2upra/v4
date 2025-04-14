@@ -32,4 +32,13 @@ function agregar_intervalo_cron_mensual($schedules) {
 }
 add_filter('cron_schedules', 'agregar_intervalo_cron_mensual');
 
+// Refactor(Org): Moved deactivation hook eliminar_evento_mensual() from app/Finanza/SumaMensual.php
+// Eliminar evento cron mensual al desactivar
+// Note: register_deactivation_hook using __FILE__ here might need adjustment
+// if this file isn't the main plugin file. Moved as per instruction.
+function eliminar_evento_mensual() {
+    wp_clear_scheduled_hook('accion_mensual_user_pro');
+}
+register_deactivation_hook(__FILE__, 'eliminar_evento_mensual');
+
 ?>
