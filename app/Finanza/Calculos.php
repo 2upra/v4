@@ -25,56 +25,8 @@ function obtenerHistorialAccionesUsuario()
     return $resultados;
 }
 
-function registrarHistorialAcciones()
-{
-    global $wpdb;
-    $tablaHistorial = $wpdb->prefix . 'historial_acciones';
-    $usuarios = get_users();
+// Refactor(Org): Moved function registrarHistorialAcciones to app/Cron/HourlyActionsCron.php
 
-    $valAcc = calc_ing(48, false)['valAcc'];
-    $fecha = date('Y-m-d');
-
-    foreach ($usuarios as $user) {
-        $acciones = get_user_meta($user->ID, 'acciones', true);
-
-        if ($acciones) {
-            $wpdb->delete(
-                $tablaHistorial,
-                [
-                    'user_id' => $user->ID,
-                    'fecha' => $fecha
-                ],
-                [
-                    '%d',
-                    '%s'
-                ]
-            );
-            // Insertar el nuevo registro
-            $wpdb->insert(
-                $tablaHistorial,
-                [
-                    'user_id' => $user->ID,
-                    'fecha' => $fecha,
-                    'acciones' => $acciones,
-                    'valor' => $acciones * $valAcc
-                ],
-                [
-                    '%d',
-                    '%s',
-                    '%d',
-                    '%f'
-                ]
-            );
-        }
-    }
-}
-
-function registrar_evento_cron_historial_acciones()
-{
-    if (!wp_next_scheduled('evento_cron_historial_acciones')) {
-        wp_schedule_event(time(), 'hourly', 'evento_cron_historial_acciones');
-    }
-}
-add_action('wp', 'registrar_evento_cron_historial_acciones');
+// Refactor(Org): Moved function registrar_evento_cron_historial_acciones and its hook to app/Cron/HourlyActionsCron.php
 
 // Refactor(Org): Moved function calcularAccionPorUsuario to app/Services/EconomyService.php
