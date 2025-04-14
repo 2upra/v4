@@ -7,17 +7,7 @@
 
 // Funcion editar_perfil_usuario_shortcode movida a app/View/Components/Profile/EditProfileForm.php
 
-function mostrar_imagen_perfil_usuario() {
-    if (!is_user_logged_in()) return;
-    $usuarioActual = wp_get_current_user();
-    $idImagen = get_user_meta($usuarioActual->ID, 'imagen_perfil_id', true);
-    if ($idImagen) {
-        $urlImagen = wp_get_attachment_url($idImagen);
-        echo '<img src="' . esc_url($urlImagen) . '" alt="Imagen de perfil">';
-    }
-    // Podrías agregar una imagen por defecto si no hay $idImagen
-    // else { echo '<img src="url_por_defecto.jpg" alt="Imagen de perfil por defecto">'; }
-}
+// Refactor(Org): Funcion mostrar_imagen_perfil_usuario movida a app/View/Helpers/UserHelper.php
 
 // Refactor(Org): Funcion my_custom_avatar movida a app/View/Helpers/UserHelper.php
 

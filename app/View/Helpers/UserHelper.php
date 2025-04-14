@@ -34,7 +34,7 @@ function obtenerDatosUsuarioCabecera() {
     $usuario = wp_get_current_user();
     $user_id = get_current_user_id();
     $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = imagenPerfil($usuario->ID);
+    $url_imagen_perfil = imagenPerfil($usuario->ID); // Asume que imagenPerfil() existe o será definida en otro lugar
     $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
 
     // Refactor(Org): Add is_admin, email, and description for header centralization
@@ -86,5 +86,18 @@ function my_custom_avatar($avatar, $id_or_email, $size, $default, $alt) {
     return $avatar;
 }
 add_filter('get_avatar', 'my_custom_avatar', 10, 5);
+
+// Refactor(Org): Moved function mostrar_imagen_perfil_usuario from app/Perfiles/perfiles.php
+function mostrar_imagen_perfil_usuario() {
+    if (!is_user_logged_in()) return;
+    $usuarioActual = wp_get_current_user();
+    $idImagen = get_user_meta($usuarioActual->ID, 'imagen_perfil_id', true);
+    if ($idImagen) {
+        $urlImagen = wp_get_attachment_url($idImagen);
+        echo '<img src="' . esc_url($urlImagen) . '" alt="Imagen de perfil">';
+    }
+    // Podrías agregar una imagen por defecto si no hay $idImagen
+    // else { echo '<img src="url_por_defecto.jpg" alt="Imagen de perfil por defecto">'; }
+}
 
 ?>
