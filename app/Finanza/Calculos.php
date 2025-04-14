@@ -1,15 +1,7 @@
 <?
 
-function definir_acciones_usuario($usuarios_acciones, $actualizar_si_existe = false)
-{
-    foreach ($usuarios_acciones as $user_id => $cantidad_acciones) {
-        if (get_user_meta($user_id, 'acciones', true) && $actualizar_si_existe) {
-            update_user_meta($user_id, 'acciones', $cantidad_acciones);
-        } else {
-            add_user_meta($user_id, 'acciones', $cantidad_acciones, true);
-        }
-    }
-}
+// Refactor(Org): Moved function definir_acciones_usuario to app/Services/EconomyService.php
+
 $usuarios_acciones = [
     1 => 420000,
     40 => 4000,
