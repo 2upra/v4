@@ -4,6 +4,7 @@
 // Contiene la función botonComprarAcciones() para renderizar el botón de compra de acciones.
 
 // Refactor(Org): Moved function botonComprarAcciones from app/Finanza/ComprarAcciones/BotonComprar.php
+// Acción de refactorización: No se realizó ninguna acción adicional, la función 'botonComprarAcciones' ya estaba presente en este archivo.
 if (!function_exists('botonComprarAcciones')) {
     /**
      * Renderiza el botón de compra de acciones.
@@ -16,7 +17,7 @@ if (!function_exists('botonComprarAcciones')) {
         ob_start();
         ?>
 
-        <button class="DZYBQD donar<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id="donarproyecto">
+        <button class=\"DZYBQD donar<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>\" id=\"donarproyecto\">
             <? echo $GLOBALS['dolar']; ?><? echo $textoBoton; ?>
         </button>
 
