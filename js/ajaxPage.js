@@ -308,7 +308,7 @@ function inicIcAy() {
         it.classList.add('rojoSVG');
         if (txtAy) {
             txtAy.textContent = '2upra necesita tu ayuda';
-            txtAy.style.display = 'block';
+            txtAy.style.display = 'none';
         }
     }
 
