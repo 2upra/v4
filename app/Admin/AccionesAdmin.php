@@ -1,34 +1,9 @@
-<?
-
-function agregar_acciones_unica_vez($user_id, $monto_pagado, $m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
-{
-    $transaccion_key = 'transaccion_' . md5($monto_pagado);
-    $transaccion_realizada = get_user_meta($user_id, $transaccion_key, true);
-
-    if ($transaccion_realizada) {
-        return [
-            'status' => 'error',
-            'message' => 'Esta transacción ya se ha realizado anteriormente.'
-        ];
-    }
-    $valores = calc_ing($m, $ingresosReales, $fechaInicio);
-    $valorAccion = $valores['valAcc'];
-    $numAcciones = $monto_pagado / $valorAccion;
-    $accionesActuales = (int) get_user_meta($user_id, 'acciones', true);
-    $nuevasAcciones = $accionesActuales + $numAcciones;
-    update_user_meta($user_id, 'acciones', $nuevasAcciones);
-    update_user_meta($user_id, $transaccion_key, true);
-
-    return [
-        'status' => 'success',
-        'user_id' => $user_id,
-        'acciones_compradas' => $numAcciones,
-        'acciones_totales' => $nuevasAcciones,
-        'valor_accion' => $valorAccion
-    ];
-}
+<?php
+// Refactor(Org): Se movió la función formCompraAcciones desde app/Finanza/AgergarAcciones.php
 
 function formCompraAcciones() {
+    // Asegurarse de que current_user_can y agregar_acciones_unica_vez estén disponibles en el contexto de ejecución.
+    // Podría ser necesario incluir 'app/Finanza/AgergarAcciones.php' o asegurar que WordPress cargue las funciones necesarias.
     if (!current_user_can('administrator')) {
         return '<p>No tienes permisos para ver este formulario.</p>';
     }
@@ -44,11 +19,13 @@ function formCompraAcciones() {
         
         <input type="submit" name="submit_acciones" value="Agregar Acciones">
     </form>
-    <?
+    <?php // Cambiado <? a <?php por consistencia
     if (isset($_POST['submit_acciones'])) {
         $user_id = intval($_POST['user_id']);
         $monto_pagado = floatval($_POST['monto_pagado']);
         
+        // Llamada a la función que ahora reside en app/Finanza/AgergarAcciones.php
+        // Asegurarse de que esta función esté cargada/incluida.
         $resultado = agregar_acciones_unica_vez($user_id, $monto_pagado);
         
         if ($resultado['status'] === 'success') {

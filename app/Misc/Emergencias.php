@@ -31,3 +31,4 @@ add_filter('xmlrpc_enabled', '__return_false');
 
 // Refactor: Moved function registrar_intento_acceso_fallido and its hook to app/Utils/Logger.php
 
+

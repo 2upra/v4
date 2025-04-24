@@ -1,5 +1,8 @@
-<?
+<?php
+// Archivo creado para el componente de vista del modal de compra de acciones.
+// Contendrá la función modalComprarAcciones() movida desde app/Finanza/ComprarAcciones/
 
+// Refactor(Exec): Moved function modalComprarAcciones from app/Finanza/ComprarAcciones/ModalComprar.php
 function modalComprarAcciones()
 {
 
@@ -21,3 +24,5 @@ function modalComprarAcciones()
         </div>
     <? return ob_get_clean();
 }
+
+?>

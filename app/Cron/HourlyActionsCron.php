@@ -1,44 +1,33 @@
-<?
+<?php
+/**
+ * app/Cron/HourlyActionsCron.php
+ *
+ * Contiene el registro de hooks cron horarios y sus funciones callback.
+ * Inicialmente, manejará el registro del historial de acciones.
+ *
+ * @package App\Cron
+ */
 
-function definir_acciones_usuario($usuarios_acciones, $actualizar_si_existe = false)
-{
-    foreach ($usuarios_acciones as $user_id => $cantidad_acciones) {
-        if (get_user_meta($user_id, 'acciones', true) && $actualizar_si_existe) {
-            update_user_meta($user_id, 'acciones', $cantidad_acciones);
-        } else {
-            add_user_meta($user_id, 'acciones', $cantidad_acciones, true);
-        }
-    }
-}
-$usuarios_acciones = [
-    1 => 420000,
-    40 => 4000,
-    41 => 12000,
-    45 => 9000, //HORACIO
-    49 => 5000,
-    51 => 6500
-];
+// Refactor(Org): Archivo creado para lógica de cron horaria
 
+// Aquí se registrarán los hooks y callbacks para tareas cron horarias.
+// Ejemplo: add_action('hourly_event_hook', 'callback_function');
 
-function obtenerHistorialAccionesUsuario()
-{
-    global $wpdb;
-    $tablaHistorial = $wpdb->prefix . 'historial_acciones';
-    $user_id = get_current_user_id();
-    $resultados = $wpdb->get_results($wpdb->prepare(
-        "SELECT fecha, acciones FROM $tablaHistorial WHERE user_id = %d ORDER BY fecha ASC",
-        $user_id
-    ));
+// Las funciones callback se moverán aquí desde otros archivos (ej: app/Finanza/Calculos.php).
 
-    return $resultados;
-}
-
+// Refactor(Org): Moved from app/Finanza/Calculos.php
 function registrarHistorialAcciones()
 {
     global $wpdb;
     $tablaHistorial = $wpdb->prefix . 'historial_acciones';
     $usuarios = get_users();
 
+    // Ensure calc_ing is available (defined in app/Services/EconomyCalculationService.php)
+    if (!function_exists('calc_ing')) {
+        // Log error or handle missing function appropriately
+        error_log('Error: Function calc_ing() not found in HourlyActionsCron.php');
+        return; 
+    }
     $valAcc = calc_ing(48, false)['valAcc'];
     $fecha = date('Y-m-d');
 
@@ -77,12 +66,18 @@ function registrarHistorialAcciones()
     }
 }
 
+// Refactor(Org): Moved from app/Finanza/Calculos.php
 function registrar_evento_cron_historial_acciones()
 {
     if (!wp_next_scheduled('evento_cron_historial_acciones')) {
         wp_schedule_event(time(), 'hourly', 'evento_cron_historial_acciones');
     }
 }
+
+// Refactor(Org): Moved hook from app/Finanza/Calculos.php
 add_action('wp', 'registrar_evento_cron_historial_acciones');
 
-// Refactor(Org): Moved function calcularAccionPorUsuario to app/Services/EconomyService.php
+// Refactor(Org): Added hook associated with registrarHistorialAcciones as per instruction
+add_action('evento_cron_historial_acciones', 'registrarHistorialAcciones');
+
+?>
