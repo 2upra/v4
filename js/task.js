@@ -49,14 +49,20 @@ function ocultarBotones() {
 }
 
 function enviarTarea() {
+    // Asumo que enviarTareaHandler y pegarTareaHandler son funciones ya definidas en otro lugar.
     const tit = document.getElementById('tituloTarea');
+
+    // Si estas seguro que esta funcion 'enviarTarea' solo se llama una vez
+    // para inicializar, podrias quitar los removeEventListener para simplificar.
+    // Si se puede llamar multiples veces, dejarlos previene duplicados.
     tit.removeEventListener('keyup', enviarTareaHandler);
     tit.addEventListener('keyup', enviarTareaHandler);
     tit.removeEventListener('paste', pegarTareaHandler);
     tit.addEventListener('paste', pegarTareaHandler);
+
     tit.addEventListener('input', () => {
-        tit.value = tit.value.replace(/[
-]+/g, '');
+        // Reemplaza uno o mas saltos de linea (\n) globalmente (g) por nada ('').
+        tit.value = tit.value.replace(/\n+/g, '');
     });
 }
 
@@ -65,8 +71,7 @@ function pegarTareaHandler(ev) {
     ev.preventDefault();
     const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
     const lineas = textoPegado
-        .split('
-')
+        .split('')
         .map(linea => linea.trim())
         .filter(linea => linea);
     const maxTareas = 30;
@@ -824,42 +829,64 @@ function borrarTareaVacia() {
     const tareas = document.querySelectorAll('.tituloTarea');
 
     tareas.forEach(tarea => {
-        let borrar = false;
+        let borrar = false; // Bandera especifica para cada tarea
 
         tarea.addEventListener('keydown', ev => {
-            if (ev.key === 'Backspace' && tarea.textContent.trim() === '') {
+            // Usar trim() para ignorar espacios en blanco al verificar si esta vacio
+            const estaVacio = tarea.textContent.trim() === '';
+
+            if (ev.key === 'Backspace' && estaVacio) {
                 if (borrar) {
+                    // Segunda vez consecutiva con Backspace en campo vacio: Borrar
                     const id = tarea.dataset.tarea;
-                    const tareaCompleta = tarea.closest('.POST-tarea');
+                    const tareaCompleta = tarea.closest('.POST-tarea'); // Mas robusto para encontrar el padre
 
-                    // Eliminar event listeners antes de remover la tarea
-                    tarea.removeEventListener('input', tarea.onInput);
-                    tarea.removeEventListener('blur', tarea.onBlur);
-                    tarea.removeEventListener('paste', tarea.onPaste);
+                    if (!tareaCompleta) {
+                        console.error(`borrarTareaVacia: No se encontró .POST-tarea para id ${id}`);
+                        return; // Evita errores si el contenedor no existe
+                    }
 
-                    tareaCompleta.remove();
+                    // Intentar remover listeners (asumiendo que estan como propiedades directas)
+                    // Considera si necesitas una forma mas robusta de guardar/remover listeners
+                    try {
+                        if (typeof tarea.onInput === 'function') tarea.removeEventListener('input', tarea.onInput);
+                        if (typeof tarea.onBlur === 'function') tarea.removeEventListener('blur', tarea.onBlur);
+                        if (typeof tarea.onPaste === 'function') tarea.removeEventListener('paste', tarea.onPaste);
+                    } catch (e) {
+                        console.warn(`borrarTareaVacia: Problema al remover listeners para id ${id}`, e);
+                    }
 
-                    let log = 'Se borro la tarea con ID: ' + id;
+                    tareaCompleta.remove(); // Eliminar elemento del DOM
 
-                    const data = {
+                    // Construir log inicial (una sola linea)
+                    let log = `borrarTareaVacia: Tarea ${id} borrada localmente, enviando AJAX.`;
+
+                    const datos = {
                         id: id,
-                        nonce: task_vars.borrar_tarea_nonce // AÃ±adir nonce
+                        nonce: task_vars.borrar_tarea_nonce // Asegurate que task_vars este definido globalmente
                     };
-                    enviarAjax('borrarTarea', data)
+
+                    // Asumo que enviarAjax devuelve una Promesa
+                    enviarAjax('borrarTarea', datos)
                         .then(resp => {
-                            log += ', 
-  Respuesta recibida: ' + resp;
+                            // Añadir al log existente, manteniendo una sola linea
+                            log += ` Respuesta AJAX: ${resp}`;
                             console.log(log);
                         })
                         .catch(error => {
-                            log += ', 
-  Error: ' + error;
+                            // Añadir al log existente, manteniendo una sola linea
+                            log += ` Error AJAX: ${error}`;
                             console.error(log);
                         });
+
+                    borrar = false; // Resetear bandera aunque el elemento ya no deberia recibir eventos
+
                 } else {
+                    // Primera vez con Backspace en campo vacio: Activar bandera
                     borrar = true;
                 }
             } else {
+                // Cualquier otra tecla, o si no esta vacio: Resetear bandera
                 borrar = false;
             }
         });
