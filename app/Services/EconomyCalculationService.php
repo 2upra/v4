@@ -2,67 +2,6 @@
 // Contains functions for calculating economic values like company valuation, share value, etc.
 // Refactor(Org): Moved financial calculation functions from app/Services/EconomyService.php
 
-// Refactor(Org): Moved financial calculation functions from app/Finanza/Algoritmo.php
-function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
-{
-    global $wpdb;
-
-    // Configuración inicial
-    $accTot = 810000;    // Total de acciones
-    $tDesc = 0.10;       // Tasa de descuento
-    $cGan = 0.05;        // Crecimiento de ganancias
-    $volatilidad = 0.01; // Volatilidad
-
-    // Definir ingresos reales si no se proporcionan
-
-    if (empty($ingresosReales)) {
-        $ingresosReales = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, /*1 año */];
-    }
-
-    // Validación de entradas
-    validarEntradas($m, $ingresosReales, $fechaInicio);
-
-    // Obtención de las acciones de los usuarios
-    $resultados = $wpdb->get_results(
-        $wpdb->prepare("\n            SELECT user_id, meta_value AS acciones\n            FROM {$wpdb->usermeta}\n            WHERE meta_key = %s AND user_id != %d\n        ", 'acciones', 1)
-    );
-    
-    // Calcular factor de escasez
-    $totalAccionesUsuarios = sumarAcciones($resultados);
-    $accionesDisponibles = $accTot - $totalAccionesUsuarios;
-    $factorEscasez = calcularFactorEscasez($totalAccionesUsuarios, $accTot);
-
-    // Generar ingresos estimados
-    $ingM = generarIngresosEstimados($m);
-
-    // Ajustar ingresos reales si se proporcionan
-    if (!empty($ingresosReales)) {
-        $ingM = ajustarIngresos($ingM, $ingresosReales, $fechaInicio);
-    }
-
-    // Aplicar volatilidad y factor de escasez
-    $ingM = array_map(function ($ing) use ($factorEscasez, $volatilidad) {
-        return aplicarVolatilidad($ing, $factorEscasez, $volatilidad);
-    }, $ingM);
-
-    // Limitar los ingresos a los meses especificados
-    $ingM = array_slice($ingM, 0, $m);
-
-    // Calcular métricas clave
-    $pIng = calcularPromedioIngresos($ingM);
-    $aumPM = calcularAumentoPromedioMensual($ingM);
-    $tIngE = estimarIngresosTotales($pIng, $aumPM, $m, $cGan);
-    $valEmp = calcularValorEmpresa($tIngE, $tDesc);
-    $valAcc = calcularValorAccion($valEmp, $accTot);
-
-    return [
-        'valEmp' => $valEmp,
-        'valAcc' => $valAcc,
-        'pIng' => $pIng,
-        'accionesDisponibles' => $accionesDisponibles
-    ];
-}
-
 // Función para obtener ingresos reales desde la base de datos
 function obtenerIngresosRealesDesdeDB($wpdb, $fechaInicio)
 {
