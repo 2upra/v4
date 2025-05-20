@@ -34,6 +34,7 @@ function scriptsOrdenados()
         'stripeCompra',
         'task',
         'notas',
+        'taskCal'
     ];
 
     $script_handles = [
@@ -83,6 +84,8 @@ function scriptsOrdenados()
         'icons'             => '1.0.1',
         'notas'             => '1.0.1',
         'filtros'           => '1.0.1',
+        'taskCal'           => '1.0.1',
+
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
