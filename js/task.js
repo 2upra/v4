@@ -10,6 +10,15 @@ let tipoTarea = {
     valor: 'una vez'
 };
 
+// NUEVA FUNCIÓN GLOBAL
+window.hideAllOpenTaskMenus = function() {
+    document.querySelectorAll('.opcionesPrioridad, .opcionesFrecuencia').forEach(menu => {
+        if (menu) {
+            menu.remove();
+        }
+    });
+};
+
 function initTareas() {
     const tit = document.getElementById('tituloTarea');
 
@@ -653,11 +662,21 @@ function manejarClicCompletar() {
     console.log(log + 'Fin manejarClicCompletar.');
 }
 function cambiarFrecuencia() {
-    const divs = document.querySelectorAll('.divFrecuencia');
-    divs.forEach(div => {
-        div.addEventListener('click', () => {
-            const id = div.dataset.tarea;
-            const li = document.querySelector(`.POST-tarea[id-post="${id}"]`);
+    document.querySelectorAll('.divFrecuencia').forEach(div => {
+        const listenerExistente = div.funcionListenerFrecuencia;
+        if (listenerExistente) {
+            div.removeEventListener('click', listenerExistente);
+        }
+
+        const nuevaFuncionListener = async function() { // Este es el manejador de clics
+            const divClicado = this;
+            const tareaId = divClicado.dataset.tarea;
+            const li = document.querySelector(`.POST-tarea[id-post="${tareaId}"]`);
+
+            if (!li) return;
+
+            window.hideAllOpenTaskMenus(); // MODIFICACIÓN: Ocultar todos los menús abiertos
+
             const ops = document.createElement('div');
             ops.classList.add('opcionesFrecuencia');
             ops.innerHTML = `
@@ -669,22 +688,18 @@ function cambiarFrecuencia() {
                     <button id="btnPersonalizar">${window.enviarMensaje}</button>
                 </div>
             `;
-            const menu = li.nextElementSibling;
-            if (menu && menu.classList.contains('opcionesFrecuencia')) {
-                menu.remove();
-            } else {
-                li.after(ops);
-            }
+            
+            li.after(ops); // Add the new menu after closing all others
 
             const ps = ops.querySelectorAll('p:not([data-frecuencia="personalizada"])');
             ps.forEach(p => {
                 p.addEventListener('click', () => {
                     const frec = p.dataset.frecuencia;
                     const data = {
-                        tareaId: id,
+                        tareaId: tareaId,
                         frecuencia: parseInt(frec)
                     };
-                    actualizarFrecuencia(data, div);
+                    actualizarFrecuencia(data, divClicado);
                     ops.remove();
                 });
             });
@@ -695,14 +710,17 @@ function cambiarFrecuencia() {
                 const dias = parseInt(input.value);
                 if (dias >= 2 && dias <= 365) {
                     const data = {
-                        tareaId: id,
+                        tareaId: tareaId,
                         frecuencia: dias
                     };
-                    actualizarFrecuencia(data, div);
+                    actualizarFrecuencia(data, divClicado);
                     ops.remove();
                 }
             });
-        });
+        };
+
+        div.addEventListener('click', nuevaFuncionListener);
+        div.funcionListenerFrecuencia = nuevaFuncionListener;
     });
 }
 
@@ -745,7 +763,8 @@ function manejarClicPrioridad() {
 
     if (!liOriginal) return;
 
-    document.querySelectorAll('.opcionesPrioridad').forEach(menu => menu.remove());
+    // document.querySelectorAll('.opcionesPrioridad').forEach(menu => menu.remove()); // Línea original eliminada
+    window.hideAllOpenTaskMenus(); // MODIFICACIÓN: Ocultar todos los menús abiertos
 
     const ops = document.createElement('div');
     ops.classList.add('opcionesPrioridad');

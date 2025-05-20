@@ -130,6 +130,12 @@ function inicializarVars(ev) {
         return false; // No inicializar para arrastre
     }
 
+    // MODIFICACIÓN: Si hemos llegado aquí, se va a iniciar un arrastre.
+    // Cerramos cualquier menú de opciones abierto.
+    if (typeof window.hideAllOpenTaskMenus === 'function') {
+        window.hideAllOpenTaskMenus();
+    }
+
     // Lógica original de inicializarVars para determinar el grupo a arrastrar
     let grupo;
     if (tareasSeleccionadas.includes(elemArrastrable.getAttribute('id-post'))) {
