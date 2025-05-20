@@ -1,243 +1,168 @@
-<?php
-// Archivo creado para contener funciones de ayuda para renderizar elementos de Tareas.
-// TODO: Mover funciones relevantes de app/Content/Task/View/renderTarea.php aquí.
-
-// Ejemplo de estructura de función (se añadirán las reales más tarde):
-/*
-function renderTaskElement($task) {
-    // Lógica para renderizar un elemento de tarea
-}
-*/
-
-// Refactor(Org): Funciones movidas desde app/Content/Task/View/renderTarea.php
+<?
 function htmlTareas($filtro)
 {
-    $tareaId = get_the_id();
-    $titulo = get_the_title($tareaId);
-    $imp = get_post_meta($tareaId, 'importancia', true);
-    $tipo = get_post_meta($tareaId, 'tipo', true);
-    $estado = get_post_meta($tareaId, 'estado', true);
-    $frecuencia = get_post_meta($tareaId, 'frecuencia', true);
-    $estado = $estado ? $estado : 'pendiente';
-    $autorId = get_post_field('post_author', $tareaId);
-    $proxima = get_post_meta($tareaId, 'fechaProxima', true);
-    $sesion = get_post_meta($tareaId, 'sesion', true);
-    $impnum = get_post_meta($tareaId, 'impnum', true);
+    $id = get_the_id();
+    $meta = get_post_meta($id);
 
-    if ($filtro === 'tareaPrioridad') {
-        $filtro = 'tarea';
-    }
+    $titulo = get_the_title($id);
+    $imp = $meta['importancia'][0] ?? 'media';
+    $tipo = $meta['tipo'][0] ?? 'una vez';
+    $estado = $meta['estado'][0] ?? 'pendiente';
+    $frec = (int)($meta['frecuencia'][0] ?? 1);
+    $autorId = get_post_field('post_author', $id);
+    $proxima = $meta['fechaProxima'][0] ?? date('Y-m-d');
+    $sesion = $meta['sesion'][0] ?? '';
+    $impnum = (int)($meta['impnum'][0] ?? 0);
 
-    $mostrarIcono = get_user_meta($autorId, 'mostrarIconoTareas', true);
-    $mostrarIcono = ($mostrarIcono === '') ? true : (bool)$mostrarIcono;
+    $filtroHtml = ($filtro === 'tareaPrioridad') ? 'tarea' : $filtro;
+
+    $mostrarIcono = filter_var(get_user_meta($autorId, 'mostrarIconoTareas', true) ?: true, FILTER_VALIDATE_BOOLEAN);
 
     $impIcono = obtenerIconoImportancia($imp, $mostrarIcono);
     $tipoIcono = obtenerIconoTipo($tipo, $mostrarIcono);
 
-    return generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion, $impnum);
+    return generarHtmlTarea($id, $filtroHtml, $titulo, $impIcono, $imp, $tipoIcono, $frec, $estado, $autorId, $tipo, $proxima, $sesion, $impnum);
 }
-
 
 function obtenerIconoImportancia($imp, $mostrarIcono)
 {
-    $log = "obtenerIconoImportancia: ";
-    if (!$mostrarIcono) {
-        $log .= "Se retorna el texto de importancia: $imp";
-        // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
-        return $imp;
-    }
-
-    switch ($imp) {
-        case 'baja':
-            $icono = $GLOBALS['baja'] ?? 'B'; // Usar Null coalescing operator por si GLOBALS no está definido
-            break;
-        case 'media':
-            $icono = $GLOBALS['media'] ?? 'M';
-            break;
-        case 'alta':
-            $icono = $GLOBALS['alta'] ?? 'A';
-            break;
-        case 'importante':
-            $icono = $GLOBALS['importante'] ?? 'I';
-            break;
-        default:
-            $icono = '';
-            $log .= "Importancia no reconocida: $imp, ";
-    }
-    $log .= "Se retorna el icono de importancia: $icono";
-    // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
-    return $icono;
+    if (!$mostrarIcono) return $imp;
+    $iconos = [
+        'baja' => $GLOBALS['baja'] ?? 'B',
+        'media' => $GLOBALS['media'] ?? 'M',
+        'alta' => $GLOBALS['alta'] ?? 'A',
+        'importante' => $GLOBALS['importante'] ?? 'I'
+    ];
+    return $iconos[$imp] ?? '';
 }
 
 function obtenerIconoTipo($tipo, $mostrarIcono)
 {
-    $log = "obtenerIconoTipo: ";
-    if (!$mostrarIcono) {
-        $log .= "Se retorna el texto de tipo: $tipo";
-        // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
-        return $tipo;
-    }
-
-    switch ($tipo) {
-        case 'una vez':
-            $icono = $GLOBALS['unavez'] ?? '1'; // Usar Null coalescing operator
-            break;
-        case 'habito':
-        case 'habito rigido':
-        case 'habito flexible':
-            $icono = $GLOBALS['habito'] ?? 'H';
-            break;
-        case 'meta':
-            $icono = $GLOBALS['meta'] ?? 'G';
-            break;
-        default:
-            $icono = '';
-            $log .= "Tipo no reconocido: $tipo, ";
-    }
-
-    $log .= "Se retorna el icono de tipo: $icono";
-    // guardarLog($log); // Comentado para evitar side-effects no deseados en Helper
-    return $icono;
+    if (!$mostrarIcono) return $tipo;
+    $iconos = [
+        'una vez' => $GLOBALS['unavez'] ?? '1',
+        'habito' => $GLOBALS['habito'] ?? 'H',
+        'habito rigido' => $GLOBALS['habito'] ?? 'H',
+        'habito flexible' => $GLOBALS['habito'] ?? 'H',
+        'meta' => $GLOBALS['meta'] ?? 'G'
+    ];
+    return $iconos[$tipo] ?? '';
 }
 
-function obtenerFrecuenciaTexto($frecuencia)
+function obtenerFrecuenciaTexto($frec)
 {
-    if ($frecuencia == 1) {
-        return 'diaria';
-    } elseif ($frecuencia == 7) {
-        return 'semanal';
-    } elseif ($frecuencia >= 27 && $frecuencia <= 32) {
-        return 'mensual';
-    } elseif ($frecuencia == 365) {
-        return 'anual';
-    } else {
-        return "{$frecuencia}d";
-    }
+    return match (true) {
+        $frec == 1 => 'diaria',
+        $frec == 7 => 'semanal',
+        $frec >= 27 && $frec <= 32 => 'mensual',
+        $frec == 365 => 'anual',
+        default => "{$frec}d",
+    };
 }
 
-
-function botonesHabitos($tareaId, $frecuencia, $proxima)
+function botonesHabitos($id, $frec, $proxima)
 {
-    $frecuenciaTexto = obtenerFrecuenciaTexto($frecuencia);
+    $frecTxt = obtenerFrecuenciaTexto($frec);
     $hoy = date('Y-m-d');
-    $dif = floor((strtotime($proxima) - strtotime($hoy)) / (60 * 60 * 24));
+    $dif = (strtotime($proxima) - strtotime($hoy)) / (60 * 60 * 24);
     $txt = '';
     $simbolo = '';
-    $claseNegativo = '';
+    $claseNeg = '';
 
-    if ($dif == 0) {
-        $txt = 'Hoy';
-    } elseif ($dif == 1) {
-        $txt = 'Mañana';
-    } elseif ($dif == -1) {
+    if ($dif == 0) $txt = 'Hoy';
+    elseif ($dif == 1) $txt = 'Mañana';
+    elseif ($dif == -1) {
         $txt = 'Ayer';
-        $claseNegativo = 'diaNegativo';
-    } elseif ($dif > 1) {
-        $txt = $dif . 'd';
-    } elseif ($dif < -1) {
+        $claseNeg = 'diaNegativo';
+    } elseif ($dif > 1) $txt = $dif . 'd';
+    elseif ($dif < -1) {
         $txt = abs($dif) . 'd';
         $simbolo = '-';
-        $claseNegativo = 'diaNegativo';
+        $claseNeg = 'diaNegativo';
     }
 
     ob_start();
 ?>
-    <div class="divProxima" data-tarea="<? echo $tareaId; ?>" style="cursor: pointer;">
+    <div class="divProxima" data-tarea="<? echo $id; ?>" style="cursor: pointer;">
         <p class="proximaTarea svgtask">
-            <span class="textoProxima <? echo $claseNegativo; ?>"><? echo $simbolo . $txt; ?></span>
+            <span class="textoProxima <? echo $claseNeg; ?>"><? echo $simbolo . $txt; ?></span>
         </p>
     </div>
-    <div class="divFrecuencia" data-tarea="<? echo $tareaId; ?>" style="cursor: pointer;">
+    <div class="divFrecuencia" data-tarea="<? echo $id; ?>" style="cursor: pointer;">
         <p class="frecuenciaTarea svgtask">
-            <span class="tituloFrecuencia"><? echo $frecuenciaTexto; ?></span>
+            <span class="tituloFrecuencia"><? echo $frecTxt; ?></span>
         </p>
     </div>
 <?
     return ob_get_clean();
 }
 
-function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion, $impnum)
+function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frec, $est, $autorId, $tipo, $proxima, $sesion, $impnum)
 {
-    $clase = ($estado === 'completada') ? 'completada' : '';
-    $estilo = ($estado === 'completada') ? 'style="text-decoration: line-through;"' : '';
+    $esCompletada = ($est === 'completada');
     $esHabito = ($tipo === 'habito' || $tipo === 'habito rigido');
+    $esSubtarea = get_post_meta($id, 'subtarea', true);
+    $mostrarIcono = filter_var(get_user_meta($autorId, 'mostrarIconoTareas', true) ?: false, FILTER_VALIDATE_BOOLEAN);
+    $difDias = floor((strtotime($proxima) - strtotime(date('Y-m-d'))) / (60 * 60 * 24));
+    $sesionHtml = esc_attr(empty($sesion) ? ($est === 'archivado' ? 'archivado' : 'general') : $sesion);
 
-    $mostrarIcono = get_user_meta($autorId, 'mostrarIconoTareas', true);
-    $mostrarIcono = ($mostrarIcono === '') ? false : (bool)$mostrarIcono; // Nota: Originalmente era true por defecto, aquí se cambió a false si está vacío.
-    $esSubtarea = get_post_meta($tareaId, 'subtarea', true);
-    $hoy = date('Y-m-d');
-    $dif = floor((strtotime($proxima) - strtotime($hoy)) / (60 * 60 * 24));
     ob_start();
 ?>
-
-    <li
-        class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $tareaId; ?> <? echo $clase; ?> draggable-element <? echo $estado; ?> <? if ($esSubtarea) echo 'subtarea';?>"
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $id; ?> <? echo $esCompletada ? 'completada' : ''; ?> draggable-element <? echo esc_attr($est); ?> <? echo $esSubtarea ? 'subtarea' : ''; ?>"
         filtro="<? echo esc_attr($filtro); ?>"
         tipo-tarea="<? echo esc_attr($tipo); ?>"
-        id-post="<? echo $tareaId; ?>"
+        id-post="<? echo $id; ?>"
         autor="<? echo esc_attr($autorId); ?>"
-        draggable="true" <? echo $estilo; ?>
-        sesion="<? echo esc_attr(empty($sesion) ? ($estado === 'archivado' ? 'archivado' : 'general') : $sesion); ?>"
-        estado="<? echo esc_attr($estado) ?>"
+        draggable="true" <? echo $esCompletada ? 'style="text-decoration: line-through;"' : ''; ?>
+        sesion="<? echo $sesionHtml; ?>"
+        estado="<? echo esc_attr($est) ?>"
         impnum="<? echo esc_attr($impnum) ?>"
         importancia="<? echo esc_attr($imp) ?>"
-        subtarea="<? if ($esSubtarea) echo 'true'; else echo 'false'; ?>"
-        padre="<? echo esc_attr($esSubtarea) ?>"
-        dif="<? echo esc_attr($dif) ?>"
-        >
+        subtarea="<? echo $esSubtarea ? 'true' : 'false'; ?>"
+        padre="<? echo esc_attr($esSubtarea ?: '0'); ?>"
+        dif="<? echo esc_attr($difDias); ?>">
 
-        <button class="completaTarea <? if ($esHabito) echo 'habito'; ?>" data-tarea="<? echo $tareaId; ?>">
-            <? echo $GLOBALS['verificadoCirculo'] ?? '[ ]'; // Usar Null coalescing operator ?>
+        <button class="completaTarea <? echo $esHabito ? 'habito' : ''; ?>" data-tarea="<? echo $id; ?>">
+            <? echo $GLOBALS['verificadoCirculo'] ?? '[ ]'; ?>
         </button>
 
-        <p class="tituloTarea" data-tarea="<? echo $tareaId; ?>">
-            <? echo $titulo; ?>
+        <p class="tituloTarea" data-tarea="<? echo $id; ?>">
+            <? echo esc_html($titulo); ?>
         </p>
 
         <p class="idtarea" style="display: none; font-size: 11px;">
-            <? echo $tareaId ?>
+            <? echo $id; ?>
         </p>
 
-        <? if ($esHabito) {
-            echo botonesHabitos($tareaId, $frecuencia, $proxima);
-        } ?>
+        <? if ($esHabito) echo botonesHabitos($id, $frec, $proxima); ?>
 
-        <div class="divSesion" data-tarea="<? echo $tareaId; ?>" style="display: none; cursor: pointer;">
+        <div class="divSesion" data-tarea="<? echo $id; ?>" style="display: none; cursor: pointer;">
             <p class="sesionTarea">
-                <? echo $GLOBALS['carpetaIcon'] ?>
+                <? echo $GLOBALS['carpetaIcon'] ?? ''; // Icono de carpeta por defecto 
+                ?>
             </p>
         </div>
 
-        <div class="divImportancia" data-tarea="<? echo $tareaId; ?>">
-            <p class="importanciaTarea <? if ($mostrarIcono) echo 'svgtask'; ?>">
-                <? if ($mostrarIcono) : ?>
-                    <? echo $impIcono; ?>
-                <? else : ?>
-                    <span class="tituloImportancia"><? echo $imp; ?></span>
-                <? endif; ?>
+        <div class="divImportancia" data-tarea="<? echo $id; ?>">
+            <p class="importanciaTarea <? echo $mostrarIcono ? 'svgtask' : ''; ?>">
+                <? echo $mostrarIcono ? $impIcono : "<span class=\"tituloImportancia\">" . esc_html($imp) . "</span>"; ?>
             </p>
         </div>
 
         <p class="tipoTarea svgtask" style="display: none;"><? echo $tipoIcono; ?></p>
-        <p class="estadoTarea" style="display: none;"><? echo $estado; ?></p>
-        <? 
-        // Asegúrate de que la función opcionesPost esté disponible globalmente o inclúyela donde sea necesario.
-        if (function_exists('opcionesPost')) {
-            echo opcionesPost($tareaId, $autorId);
-        } else {
-            // Opcional: Muestra un marcador de posición o registra un error si la función no existe.
-            echo '<!-- opcionesPost no disponible -->';
-        }
+        <p class="estadoTarea" style="display: none;"><? echo esc_html($est); ?></p>
+
+        <? if (function_exists('opcionesPost')) echo opcionesPost($id, $autorId);
+        else echo '<!-- Fn:opcionesPost Indisponible -->';
         ?>
 
-        <div class="divArchivado ocultadoAutomatico" data-tarea="<? echo $tareaId; ?>" style="display: none;">
+        <div class="divArchivado ocultadoAutomatico" data-tarea="<? echo $id; ?>" style="display: none;">
             <p class="archivadoTarea" style="cursor: pointer;">
-                <? echo $GLOBALS['archivadoIcon'] ?? '[A]'; // Usar Null coalescing operator ?>
+                <? echo $GLOBALS['archivadoIcon'] ?? '[A]'; ?>
             </p>
         </div>
     </li>
 <?
     return ob_get_clean();
 }
-
 ?>

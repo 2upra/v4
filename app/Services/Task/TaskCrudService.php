@@ -1,6 +1,4 @@
 <?
-// Asegúrate de que esta función exista y esté configurada correctamente.
-// function guardarLog($mensaje) { /* ... tu implementación ... */ }
 
 function jsonTask($exito, $datosOError, $logDetalles, $nombreFunc)
 {
