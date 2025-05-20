@@ -74,7 +74,7 @@ function moverTarea() {
             // (como el icono de prioridad, archivar, etc.), no queremos iniciar un arrastre.
             // Dejamos que el evento 'click' en ese control se maneje.
             // La función 'inicializarVars' se encargará de esto también.
-            if (inicializarVars(ev)) {
+            if (inicializarVars(ev)) { // inicializarVars ya llama a hideAllOpenTaskMenus
                 // inicializarVars ahora también debería verificar esto
                 listaMov.addEventListener('mousemove', manejarMov);
                 listaMov.addEventListener('mouseup', finalizarArrastre);
@@ -83,6 +83,12 @@ function moverTarea() {
             // Mousedown ocurrió FUERA de un draggable-element Y NO en un menú de opciones (ya cubierto arriba).
             // Esto implica un clic en el espacio vacío de la lista. Deseleccionar todo.
             deseleccionarTareas();
+            // También cerramos menús por si acaso, aunque inicializarVars lo haría al arrastrar.
+            // Y los listeners de clic fuera de los menús también deberían actuar.
+            // Esta llamada es una salvaguarda adicional.
+            if (typeof window.hideAllOpenTaskMenus === 'function') {
+                window.hideAllOpenTaskMenus();
+            }
         }
     });
 
@@ -90,12 +96,25 @@ function moverTarea() {
     listaMov.addEventListener('dragstart', ev => ev.preventDefault());
 
     document.addEventListener('click', ev => {
-        if (ev.target.closest('.opcionesPrioridad, .opcionesFrecuencia')) {
+        const esEnControlInternoOmenu = ev.target.closest(
+            '.opcionesPrioridad, .opcionesFrecuencia, .divImportancia, .divFrecuencia, .divArchivado, .completaTarea'
+        );
+
+        if (esEnControlInternoOmenu) {
+            // Si el clic es en un menú, su botón de activación, u otro control interno de la tarea,
+            // dejar que sus manejadores específicos actúen.
             return;
         }
+
+        // Si el clic es fuera de la lista de tareas principal
         if (listaMov && !listaMov.contains(ev.target)) {
             deseleccionarTareas();
+            if (typeof window.hideAllOpenTaskMenus === 'function') {
+                window.hideAllOpenTaskMenus(); // Cerrar todos los menús abiertos
+            }
         }
+        // Nota: El clic en el espacio vacío DENTRO de listaMov (pero no en una tarea)
+        // ya es manejado por el 'mousedown' listener de listaMov para deseleccionar tareas.
     });
 }
 

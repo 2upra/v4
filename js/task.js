@@ -10,13 +10,22 @@ let tipoTarea = {
     valor: 'una vez'
 };
 
-// NUEVA FUNCIÓN GLOBAL
+// NUEVA FUNCIÓN GLOBAL (MODIFICADA)
 window.hideAllOpenTaskMenus = function() {
     document.querySelectorAll('.opcionesPrioridad, .opcionesFrecuencia').forEach(menu => {
         if (menu) {
             menu.remove();
         }
     });
+    // Limpiar listeners globales de clic para cerrar menús
+    if (window.cerrarMenuSiClicFueraPrioridadHandler) {
+        document.removeEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
+        window.cerrarMenuSiClicFueraPrioridadHandler = null;
+    }
+    if (window.cerrarMenuSiClicFueraFrecuenciaHandler) {
+        document.removeEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
+        window.cerrarMenuSiClicFueraFrecuenciaHandler = null;
+    }
 };
 
 function initTareas() {
@@ -668,44 +677,80 @@ function cambiarFrecuencia() {
             div.removeEventListener('click', listenerExistente);
         }
 
-        const nuevaFuncionListener = async function() { // Este es el manejador de clics
+        const nuevaFuncionListener = async function (event) {
+            event.stopPropagation(); // Evita que el listener del documento cierre el menú inmediatamente
+
             const divClicado = this;
             const tareaId = divClicado.dataset.tarea;
             const li = document.querySelector(`.POST-tarea[id-post="${tareaId}"]`);
 
             if (!li) return;
 
-            window.hideAllOpenTaskMenus(); // MODIFICACIÓN: Ocultar todos los menús abiertos
+            // Verificar si ya hay un menú de frecuencia abierto PARA ESTA TAREA
+            const menuExistente = li.nextElementSibling;
+            if (menuExistente && menuExistente.classList.contains('opcionesFrecuencia') && menuExistente.dataset.tareaMenuId === tareaId) {
+                menuExistente.remove();
+                if (window.cerrarMenuSiClicFueraFrecuenciaHandler) {
+                    document.removeEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
+                    window.cerrarMenuSiClicFueraFrecuenciaHandler = null;
+                }
+                return; // Menú estaba abierto, ahora cerrado (toggle)
+            }
+
+            // Si no hay menú para esta tarea, o si hay otro menú abierto, cerrar todos los menús primero
+            window.hideAllOpenTaskMenus();
 
             const ops = document.createElement('div');
             ops.classList.add('opcionesFrecuencia');
+            ops.dataset.tareaMenuId = tareaId; // Marcar el menú con el ID de la tarea
             ops.innerHTML = `
                 <p data-frecuencia="1">diaria</p>
                 <p data-frecuencia="7">semanal</p>
                 <p data-frecuencia="30">mensual</p>
                 <div class="frecuenciaPersonalizada">
                     <input type="number" id="diasPersonalizados" min="2" max="365" placeholder="Cada X dias">
-                    <button id="btnPersonalizar">${window.enviarMensaje}</button>
+                    <button id="btnPersonalizar">${window.enviarMensaje || 'Enviar'}</button>
                 </div>
             `;
-            
-            li.after(ops); // Add the new menu after closing all others
+
+            li.after(ops);
+
+            // Definir y guardar el manejador para poder removerlo
+            window.cerrarMenuSiClicFueraFrecuenciaHandler = (e) => {
+                if (!ops.contains(e.target) && !divClicado.contains(e.target)) {
+                    ops.remove();
+                    if (window.cerrarMenuSiClicFueraFrecuenciaHandler) {
+                        document.removeEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
+                        window.cerrarMenuSiClicFueraFrecuenciaHandler = null;
+                    }
+                }
+            };
+
+            setTimeout(() => { // Añadir listener después del ciclo de evento actual
+                document.addEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
+            }, 0);
 
             const ps = ops.querySelectorAll('p:not([data-frecuencia="personalizada"])');
             ps.forEach(p => {
-                p.addEventListener('click', () => {
+                p.addEventListener('click', (evP) => {
+                    evP.stopPropagation();
                     const frec = p.dataset.frecuencia;
                     const data = {
                         tareaId: tareaId,
                         frecuencia: parseInt(frec)
                     };
-                    actualizarFrecuencia(data, divClicado);
+                    actualizarFrecuencia(data, divClicado); // Asumiendo que actualizarFrecuencia existe
                     ops.remove();
+                    if (window.cerrarMenuSiClicFueraFrecuenciaHandler) {
+                        document.removeEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
+                        window.cerrarMenuSiClicFueraFrecuenciaHandler = null;
+                    }
                 });
             });
 
             const btn = ops.querySelector('#btnPersonalizar');
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (evBtn) => {
+                evBtn.stopPropagation();
                 const input = ops.querySelector('#diasPersonalizados');
                 const dias = parseInt(input.value);
                 if (dias >= 2 && dias <= 365) {
@@ -713,8 +758,12 @@ function cambiarFrecuencia() {
                         tareaId: tareaId,
                         frecuencia: dias
                     };
-                    actualizarFrecuencia(data, divClicado);
+                    actualizarFrecuencia(data, divClicado); // Asumiendo que actualizarFrecuencia existe
                     ops.remove();
+                    if (window.cerrarMenuSiClicFueraFrecuenciaHandler) {
+                        document.removeEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
+                        window.cerrarMenuSiClicFueraFrecuenciaHandler = null;
+                    }
                 }
             });
         };
@@ -756,48 +805,67 @@ function cambiarPrioridad() {
     });
 }
 
-function manejarClicPrioridad() {
+async function manejarClicPrioridad(event) {
+    // Este es el listener para el click en .divImportancia
+    event.stopPropagation(); //Añadido para que el listener global no lo cierre al instante
+
     const divPrioridadOriginal = this;
     const idOriginal = divPrioridadOriginal.dataset.tarea;
     const liOriginal = document.querySelector(`.POST-tarea[id-post="${idOriginal}"]`);
 
     if (!liOriginal) return;
 
-    // document.querySelectorAll('.opcionesPrioridad').forEach(menu => menu.remove()); // Línea original eliminada
-    window.hideAllOpenTaskMenus(); // MODIFICACIÓN: Ocultar todos los menús abiertos
+    // Lógica de Toggle: Buscar si ya hay un menú de prioridad abierto PARA ESTA TAREA
+    const menuExistente = liOriginal.nextElementSibling;
+    if (menuExistente && menuExistente.classList.contains('opcionesPrioridad') && menuExistente.dataset.tareaMenuId === idOriginal) {
+        menuExistente.remove();
+        if (window.cerrarMenuSiClicFueraPrioridadHandler) {
+            document.removeEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
+            window.cerrarMenuSiClicFueraPrioridadHandler = null;
+        }
+        return; // Menú estaba abierto, ahora cerrado (toggle)
+    }
+
+    // Si no hay menú para esta tarea, o si hay otro menú abierto, cerramos cualquier otro menú de prioridad/frecuencia que esté abierto
+    window.hideAllOpenTaskMenus();
 
     const ops = document.createElement('div');
     ops.classList.add('opcionesPrioridad');
+    ops.dataset.tareaMenuId = idOriginal; // Marcar el menú con el ID de la tarea
     ops.innerHTML = `
         <p data-prioridad="baja">${window.iconbaja || 'B'} baja</p>
         <p data-prioridad="media">${window.iconMedia || 'M'} media</p>
         <p data-prioridad="alta">${window.iconAlta || 'A'} alta</p>
         <p data-prioridad="importante">${window.iconimportante || 'I'} importante</p>
       `;
-    liOriginal.after(ops);
+    liOriginal.after(ops); // Insertar el menú después del elemento de la tarea
 
-    const cerrarMenuSiClicFuera = event => {
-        if (ops.contains(event.target) || (divPrioridadOriginal && divPrioridadOriginal.contains(event.target))) {
-            return;
+    // Definir y guardar el manejador para poder removerlo
+    window.cerrarMenuSiClicFueraPrioridadHandler = (e) => {
+        // Si el clic NO es dentro del menú Y NO es en el botón que lo abrió
+        if (!ops.contains(e.target) && !divPrioridadOriginal.contains(e.target)) {
+            ops.remove();
+            if (window.cerrarMenuSiClicFueraPrioridadHandler) {
+                document.removeEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
+                window.cerrarMenuSiClicFueraPrioridadHandler = null;
+            }
         }
-        ops.remove();
-        document.removeEventListener('click', cerrarMenuSiClicFuera);
     };
 
-    setTimeout(() => {
-        document.addEventListener('click', cerrarMenuSiClicFuera);
+    setTimeout(() => { // Añadir listener después del ciclo de evento actual
+        document.addEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
     }, 0);
+
 
     const ps = ops.querySelectorAll('p');
     ps.forEach(p => {
-        p.addEventListener('click', async event => {
-            // <--- **Añadido 'async' aquí**
-            event.stopPropagation();
+        p.addEventListener('click', async (evP) => { // Renombrado event a evP
+            evP.stopPropagation(); // Detener la propagación para clics en items del menú
 
             const prioSeleccionada = p.dataset.prioridad;
-            const tareasSelActuales = tareasSeleccionadas || [];
+            const tareasSelActuales = tareasSeleccionadas || []; // Asegurarse que tareasSeleccionadas existe
 
-            console.log(`DEBUG cambiarPrioridad (CON stopPropagation): idOriginal: "${idOriginal}", Prio: ${prioSeleccionada}, tareasSelActuales: ${JSON.stringify(tareasSelActuales)}, incluyeOriginal: ${tareasSelActuales.includes(idOriginal)}, longitud > 1: ${tareasSelActuales.length > 1}`);
+            // console.log(`DEBUG cambiarPrioridad: idOriginal: "${idOriginal}", Prio: ${prioSeleccionada}, tareasSelActuales: ${JSON.stringify(tareasSelActuales)}, incluyeOriginal: ${tareasSelActuales.includes(idOriginal)}, longitud > 1: ${tareasSelActuales.length > 1}`);
 
             let logs = `cambiarPrioridad: Opción '${prioSeleccionada}' seleccionada para tarea original ${idOriginal}. `;
 
@@ -809,20 +877,23 @@ function manejarClicPrioridad() {
                 logs += `Accion individual. `;
             }
 
+            // Cerrar menú y remover listener de clic fuera
             ops.remove();
-            document.removeEventListener('click', cerrarMenuSiClicFuera);
+            if (window.cerrarMenuSiClicFueraPrioridadHandler) {
+                document.removeEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
+                window.cerrarMenuSiClicFueraPrioridadHandler = null;
+            }
+
 
             let logsFinales = logs;
 
-            // Función asíncrona para procesar cada tarea secuencialmente
             async function procesarUnaTarea(id, prio) {
                 const data = {tareaId: id, prioridad: prio};
                 try {
                     const rta = await enviarAjax('cambiarPrioridad', data);
                     if (rta.success) {
                         logsFinales += `Éxito AJAX para ${id}. Reiniciando post. `;
-                        // Llamar a reiniciarPost
-                        window.reiniciarPost(id, 'tarea'); // Asumiendo que reiniciarPost no devuelve una promesa que necesitemos 'await'
+                        window.reiniciarPost(id, 'tarea');
                     } else {
                         let m = `Error AJAX para ${id}.`;
                         if (rta.data) m += ' Detalles: ' + rta.data;
@@ -833,16 +904,11 @@ function manejarClicPrioridad() {
                 }
             }
 
-            // Bucle para procesar todas las tareas seleccionadas
             for (let i = 0; i < idsParaProcesar.length; i++) {
                 const id = idsParaProcesar[i];
                 await procesarUnaTarea(id, prioSeleccionada);
-
-                // Esperar un corto tiempo entre reinicios si hay múltiples tareas,
-                // para evitar el mensaje "La función ya está en ejecución."
-                // Ajusta el tiempo (en milisegundos) si es necesario.
                 if (idsParaProcesar.length > 1 && i < idsParaProcesar.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 300)); // Espera 300ms
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 }
             }
             console.log(logsFinales + 'Fin cambiarPrioridad.');
