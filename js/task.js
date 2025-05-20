@@ -11,25 +11,34 @@ let tipoTarea = {
 };
 
 let fechaLimite = {
-    // Nueva variable global
     selector: null,
-    valor: null // Por defecto sin fecha
+    valor: null
 };
 
-// --- INICIO: Nuevas variables y funciones para el calendario ---
-let calMes; // Mes actual visualizado en el calendario (0-11)
-let calAnio; // Año actual visualizado en el calendario
+let calMes;
+let calAnio;
 const calNombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const calDiasSemanaCabecera = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
 
-// NUEVA FUNCIÓN GLOBAL (MODIFICADA)
+let contextoCalendario = {
+    esParaTareaEspecifica: false,
+    idTarea: null,
+    elementoSpanTexto: null,
+    elementoLiTarea: null,
+    elementoDisparador: null,
+    tipoFecha: null // Nuevo: 'limite' o 'proxima'
+};
+
 window.hideAllOpenTaskMenus = function () {
     document.querySelectorAll('.opcionesPrioridad, .opcionesFrecuencia').forEach(menu => {
-        if (menu) {
-            menu.remove();
-        }
+        if (menu) menu.remove();
     });
-    // Limpiar listeners globales de clic para cerrar menús
+
+    const cal = document.getElementById('calCont');
+    if (cal && cal.style.display === 'block') {
+        ocultarCal(); // Llama a tu función para ocultar el calendario
+    }
+
     if (window.cerrarMenuSiClicFueraPrioridadHandler) {
         document.removeEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
         window.cerrarMenuSiClicFueraPrioridadHandler = null;
@@ -38,6 +47,7 @@ window.hideAllOpenTaskMenus = function () {
         document.removeEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
         window.cerrarMenuSiClicFueraFrecuenciaHandler = null;
     }
+    // El listener para cerrar el calendario si se hace clic fuera ya se maneja en initCal y se limpia en ocultarCal.
 };
 
 function initTareas() {
@@ -56,6 +66,9 @@ function initTareas() {
         ocultarBotones();
         borrarTareaVacia();
 
+        iniciarManejadoresFechaLimiteMeta();
+        iniciarManejadoresFechaProximaHabito(); // NUEVA LLAMADA
+
         subTarea();
         window.initCal();
         window.initNotas();
@@ -66,18 +79,44 @@ function initTareas() {
 }
 
 function ocultarBotones() {
-    const elementosLi = document.querySelectorAll('.draggable-element');
+    const elementosLi = document.querySelectorAll('.draggable-element'); // Asumo que esta es la clase de tus <li> o contenedores de tarea
 
     elementosLi.forEach(li => {
-        const elementOculto = li.querySelector('.ocultadoAutomatico');
+        // Evita añadir listeners múltiples veces al mismo elemento li
+        if (li.dataset.botonesOcultosInicializados) {
+            // Si los elementos ocultos pudieran cambiar dinámicamente DESPUÉS de esta inicialización,
+            // se necesitaría una lógica más compleja para actualizar los listeners o los elementos cacheados.
+            // Por ahora, asumimos que una vez que un li es procesado, sus hijos 'ocultadoAutomatico' no cambian.
+            return;
+        }
 
-        li.addEventListener('mouseover', () => {
-            elementOculto.style.display = 'block';
-        });
+        const elementosOcultos = li.querySelectorAll('.ocultadoAutomatico'); // Clave: seleccionar TODOS
 
-        li.addEventListener('mouseout', () => {
-            elementOculto.style.display = 'none';
-        });
+        if (elementosOcultos.length > 0) {
+            const manejadorMouseOver = () => {
+                elementosOcultos.forEach(eo => {
+                    // La condición "solo aparecera cuando la tarea no tenga fecha limite"
+                    // la maneja tu PHP al no generar el div si ya hay fecha, o no dándole la clase 'ocultadoAutomatico'.
+                    // Por lo tanto, si el elemento está aquí y tiene 'ocultadoAutomatico', debe mostrarse.
+                    eo.style.display = 'block';
+                });
+            };
+
+            const manejadorMouseOut = () => {
+                elementosOcultos.forEach(eo => {
+                    eo.style.display = 'none';
+                });
+            };
+
+            li.addEventListener('mouseover', manejadorMouseOver);
+            li.addEventListener('mouseout', manejadorMouseOut);
+
+            // Guardar referencias a los manejadores si necesitaras removerlos específicamente después
+            // li._manejadorMouseOverBotonesOcultos = manejadorMouseOver;
+            // li._manejadorMouseOutBotonesOcultos = manejadorMouseOut;
+
+            li.dataset.botonesOcultosInicializados = 'true'; // Marcar como inicializado
+        }
     });
 }
 
@@ -105,88 +144,110 @@ function pegarTareaHandler(ev) {
     const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
     const lineas = textoPegado
         .split('\n')
-        .map(linea => linea.trim())
-        .filter(linea => linea);
-
-    if (lineas.length === 0) {
-        return;
-    }
+        .map(l => l.trim())
+        .filter(l => l);
+    if (lineas.length === 0) return;
 
     const maxTareas = 30;
     const lineasProcesadas = lineas.slice(0, maxTareas);
-
-    if (lineasProcesadas.some(linea => linea.length > 300)) {
+    if (lineasProcesadas.some(l => l.length > 300)) {
         alert('Ningun titulo puede superar los 300 caracteres.');
         return;
     }
 
     const tit = document.getElementById('tituloTarea');
     const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
-
     const promesas = lineasProcesadas.map(titulo => {
         return enviarAjax('crearTarea', {
             titulo: titulo,
             importancia: importancia.valor,
             tipo: tipoTarea.valor,
-            fechaLimite: fechaLimite.valor // Añadir fechaLimite
+            // MODIFICACIÓN AQUÍ:
+            fechaLimite: tipoTarea.valor === 'meta' ? fechaLimite.valor : null
         });
     });
 
     Promise.all(promesas)
         .then(async respuestas => {
-            let tareasCreadasAPI = 0;
-            let tareasAgregadasUI = 0;
-            let erroresDetallados = [];
-
-            if (tit) {
-                tit.value = '';
-            }
+            let creadasAPI = 0,
+                agregadasUI = 0,
+                errs = [];
+            if (tit) tit.value = '';
 
             for (let i = 0; i < respuestas.length; i++) {
-                const rta = respuestas[i];
-                const tituloOriginal = lineasProcesadas[i];
-
-                if (rta.success) {
-                    tareasCreadasAPI++;
-                    if (rta.data && rta.data.tareaId) {
-                        try {
-                            const tareaNuevaHtml = await window.reiniciarPost(rta.data.tareaId, 'tarea');
-                            if (tareaNuevaHtml && listaTareas) {
-                                const primerDivisor = listaTareas.querySelector('.divisorTarea');
-                                if (primerDivisor) {
-                                    primerDivisor.insertAdjacentHTML('afterend', tareaNuevaHtml);
-                                } else {
-                                    listaTareas.insertAdjacentHTML('afterbegin', tareaNuevaHtml);
-                                }
-                                tareasAgregadasUI++;
-                            } else {
-                                erroresDetallados.push(`UI(ID:${rta.data.tareaId},NoHTMLoLista)`);
-                            }
-                        } catch (e) {
-                            erroresDetallados.push(`UI(ID:${rta.data.tareaId},ExcepReiniciarPost:${e.message || e})`);
-                        }
-                    } else {
-                        erroresDetallados.push(`API(Titulo:${tituloOriginal},NoID)`);
+                const rta = respuestas[i],
+                    titOrig = lineasProcesadas[i];
+                if (rta.success && rta.data?.tareaId) {
+                    creadasAPI++;
+                    try {
+                        const html = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+                        if (html && listaTareas) {
+                            const div = listaTareas.querySelector('.divisorTarea');
+                            div ? div.insertAdjacentHTML('afterend', html) : listaTareas.insertAdjacentHTML('afterbegin', html);
+                            agregadasUI++;
+                        } else errs.push(`UI(ID:${rta.data.tareaId},NoHTMLoLista)`);
+                    } catch (e) {
+                        errs.push(`UI(ID:${rta.data.tareaId},Excep:${e.message || e})`);
                     }
-                } else {
-                    erroresDetallados.push(`API(Titulo:${tituloOriginal},${rta.data || 'Fallo'})`);
-                }
+                } else errs.push(`API(Tit:${titOrig},${rta.data || 'Fallo'})`);
             }
-
-            let logMsg = `pegarTareaHandler: Procesadas ${lineasProcesadas.length}. API OK: ${tareasCreadasAPI}. UI OK: ${tareasAgregadasUI}.`;
-            if (erroresDetallados.length > 0) {
-                logMsg += ` Errores: [${erroresDetallados.join('; ')}]`;
-            }
-            console.log(logMsg);
-
-            if (tareasAgregadasUI > 0) {
+            let log = `pegarTareaHandler: Proc ${lineasProcesadas.length}. API OK:${creadasAPI}. UI OK:${agregadasUI}.`;
+            if (errs.length) log += ` Errs:[${errs.join('; ')}]`;
+            console.log(log);
+            if (agregadasUI > 0) {
                 initTareas();
                 window.guardarOrden();
             }
         })
-        .catch(err => {
-            console.error(`pegarTareaHandler: Error crítico: ${err.message || err}`);
-        });
+        .catch(err => console.error(`pegarTareaHandler: Error crítico: ${err.message || err}`));
+}
+
+function enviarTareaHandler(ev) {
+    const tit = document.getElementById('tituloTarea');
+    const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
+
+    if (ev.key === 'Enter') {
+        ev.preventDefault();
+        setTimeout(() => {
+            if (tit.value.trim().length === 0) return;
+            if (tit.value.length > 300) {
+                alert('El titulo no puede superar los 300 caracteres.');
+                return;
+            }
+
+            const data = {
+                titulo: tit.value,
+                importancia: importancia.valor,
+                tipo: tipoTarea.valor,
+                // MODIFICACIÓN AQUÍ:
+                fechaLimite: tipoTarea.valor === 'meta' ? fechaLimite.valor : null
+            };
+            const tituloParaEnviar = tit.value;
+            tit.value = '';
+
+            enviarAjax('crearTarea', {...data, titulo: tituloParaEnviar})
+                .then(async rta => {
+                    if (rta.success && rta.data?.tareaId) {
+                        // alert('Tarea creada.'); // Opcional
+                        const tareaNueva = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+                        if (tareaNueva && listaTareas) {
+                            const primerDivisor = listaTareas.querySelector('.divisorTarea');
+                            primerDivisor ? primerDivisor.insertAdjacentHTML('afterend', tareaNueva) : listaTareas.insertAdjacentHTML('afterbegin', tareaNueva);
+                            initTareas();
+                            window.guardarOrden();
+                        } else {
+                            console.error(`enviarTareaHandler: No HTML o lista. tareaNueva=${tareaNueva}, listaTareas=${listaTareas}`);
+                        }
+                    } else {
+                        alert(`enviarTareaHandler: Error al crear. ${rta.data ? 'Detalles: ' + rta.data : ''}`);
+                    }
+                })
+                .catch(err => {
+                    console.error('enviarTareaHandler: Error al crear tarea.', err);
+                    alert('Error al crear. Revisa la consola.');
+                });
+        }, 0);
+    }
 }
 
 //te dejo un ejemplo correcto
@@ -1185,3 +1246,163 @@ function borrarTareaVacia() {
     });
 }
 
+function iniciarManejadoresFechaLimiteMeta() {
+    document.querySelectorAll('.divFechaLimite[data-tarea]').forEach(div => {
+        const listenerExistente = div._manejadorClicFechaLimiteMeta;
+        if (listenerExistente) div.removeEventListener('click', listenerExistente);
+
+        div._manejadorClicFechaLimiteMeta = function (event) {
+            event.stopPropagation();
+            window.hideAllOpenTaskMenus();
+
+            const tareaId = this.dataset.tarea;
+            const liTarea = this.closest('.POST-tarea');
+            const fechaActual = liTarea ? liTarea.dataset.fechalimite : null;
+            const spanTexto = this.querySelector('.textoFechaLimite');
+
+            contextoCalendario = {
+                esParaTareaEspecifica: true,
+                idTarea: tareaId,
+                elementoSpanTexto: spanTexto,
+                elementoLiTarea: liTarea,
+                elementoDisparador: this,
+                tipoFecha: 'limite' // Especificamos que es para fechaLimite
+            };
+
+            mostrarCal(this, fechaActual || null);
+        };
+
+        div.addEventListener('click', div._manejadorClicFechaLimiteMeta);
+    });
+}
+
+async function actualizarFechaLimiteTareaServidorUI(idTarea, nuevaFechaISO, spanDelIconoDisparador, liTarea) {
+    // spanDelIconoDisparador y liTarea no se usarán activamente si reinicias el post,
+    // pero los mantenemos por si alguna lógica futura los necesita o para consistencia.
+    const datos = {tareaId: idTarea, fechaLimite: nuevaFechaISO};
+    let logBase = `actualizarFechaLimiteTareaServidorUI: Tarea ${idTarea}, `;
+    logBase += nuevaFechaISO ? `FechaNueva "${nuevaFechaISO}"` : "Fecha Borrada";
+
+    try {
+        const rta = await enviarAjax('modificarFechaLimiteTarea', datos);
+        let logDetalles = "";
+
+        if (rta.success) {
+            logDetalles += "Servidor OK. ";
+            
+            // No necesitamos actualizar el dataset del liTarea o el atributo 'dif' manualmente aquí,
+            // porque reiniciarPost() obtendrá la información más reciente del servidor.
+            // Tampoco necesitamos tocar el spanDelIconoDisparador ni el display de fecha real.
+
+            // Llamamos a reiniciarPost para actualizar toda la tarea.
+            // Asumimos que 'idTarea' es el mismo que se necesita para reiniciarPost.
+            // Si window.reiniciarPost es asíncrono, puedes usar await.
+            // Si es síncrono o no devuelve una promesa que necesitemos esperar, no hace falta await.
+            await window.reiniciarPost(idTarea, 'tarea');
+            logDetalles += `Se llamó a reiniciarPost(${idTarea}, 'tarea') para actualizar UI.`;
+            
+            console.log(logBase + ". " + logDetalles);
+        } else {
+            logDetalles = `Error Servidor: ${rta.data || 'Desconocido'}`;
+            console.error(logBase + ". " + logDetalles);
+            // Considera si quieres mostrar un alert aquí, ya que reiniciarPost no se llamará.
+            alert('Error al actualizar fecha límite en servidor: ' + (rta.data || 'Error desconocido'));
+        }
+    } catch (error) {
+        const logError = `Excepción AJAX. Error: ${error.message || error}`;
+        console.error(logBase + ". " + logError);
+        alert('Error de conexión al actualizar fecha límite.');
+    }
+}
+
+// NUEVA FUNCIÓN (JS): Equivalente a tu calcularTextoTiempo de PHP
+function calcularTextoTiempoJS(fechaReferenciaISO) {
+    // YYYY-MM-DD o null
+    if (!fechaReferenciaISO) return {txt: '', simbolo: '', claseNeg: ''};
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // Normalizar a medianoche
+
+    // Crear fechaReferencia también a medianoche para comparación correcta de días
+    const [anio, mes, dia] = fechaReferenciaISO.split('-').map(Number);
+    const fechaRef = new Date(anio, mes - 1, dia, 0, 0, 0, 0);
+
+    const difMs = fechaRef.getTime() - hoy.getTime();
+    const difDias = Math.round(difMs / (1000 * 60 * 60 * 24));
+
+    let txt = '',
+        simbolo = '',
+        claseNeg = '';
+    if (difDias === 0) txt = 'Hoy';
+    else if (difDias === 1) txt = 'Mañana';
+    else if (difDias === -1) {
+        txt = 'Ayer';
+        claseNeg = 'diaNegativo';
+    } else if (difDias > 1) txt = difDias + 'd';
+    else if (difDias < -1) {
+        txt = Math.abs(difDias) + 'd';
+        simbolo = '-';
+        claseNeg = 'diaNegativo';
+    }
+
+    return {txt: txt, simbolo: simbolo, claseNeg: claseNeg};
+}
+
+function iniciarManejadoresFechaProximaHabito() {
+    document.querySelectorAll('.divProxima[data-tarea]').forEach(div => {
+        const listenerExistente = div._manejadorClicFechaProximaHabito;
+        if (listenerExistente) div.removeEventListener('click', listenerExistente);
+
+        div._manejadorClicFechaProximaHabito = function (event) {
+            event.stopPropagation();
+            window.hideAllOpenTaskMenus();
+
+            const tareaId = this.dataset.tarea;
+            const liTarea = this.closest('.POST-tarea');
+            const fechaActual = liTarea ? liTarea.dataset.proxima : null;
+            const spanTexto = this.querySelector('.textoProxima');
+
+            contextoCalendario = {
+                esParaTareaEspecifica: true,
+                idTarea: tareaId,
+                elementoSpanTexto: spanTexto,
+                elementoLiTarea: liTarea,
+                elementoDisparador: this,
+                tipoFecha: 'proxima'
+            };
+
+            mostrarCal(this, fechaActual || null);
+        };
+
+        div.addEventListener('click', div._manejadorClicFechaProximaHabito);
+    });
+}
+
+async function actualizarFechaProximaHabitoServidorUI(idTarea, nuevaFechaISO, spanTexto, liTarea) {
+    const datos = {tareaId: idTarea, fechaProxima: nuevaFechaISO};
+    console.log(`actualizarFechaProximaHabitoServidorUI: Enviando AJAX para tarea ${idTarea}, fecha próxima: ${nuevaFechaISO}`);
+
+    try {
+        // Asumimos que tendrás un endpoint PHP llamado 'modificarFechaProximaHabito'
+        const rta = await enviarAjax('modificarFechaProximaHabito', datos);
+        if (rta.success) {
+            const tiempo = calcularTextoTiempoJS(nuevaFechaISO);
+            if (spanTexto) {
+                spanTexto.textContent = tiempo.simbolo + tiempo.txt;
+                spanTexto.className = 'textoProxima ' + tiempo.claseNeg; // Asegúrate que la clase base es correcta
+            }
+            if (liTarea) {
+                liTarea.dataset.proxima = nuevaFechaISO || '';
+                const difDias = nuevaFechaISO ? Math.round((new Date(nuevaFechaISO + 'T00:00:00').getTime() - new Date(new Date().setHours(0, 0, 0, 0)).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+                liTarea.setAttribute('dif', difDias);
+            }
+            console.log(`actualizarFechaProximaHabitoServidorUI: Tarea ${idTarea} (próxima) actualizada a ${nuevaFechaISO || 'ninguna'}.`);
+        } else {
+            alert('Error al actualizar fecha próxima en servidor: ' + (rta.data || 'Error desconocido'));
+            console.error(`actualizarFechaProximaHabitoServidorUI: Error AJAX para ${idTarea}`, rta);
+        }
+    } catch (error) {
+        alert('Error de conexión al actualizar fecha próxima.');
+        console.error(`actualizarFechaProximaHabitoServidorUI: Excepción AJAX para ${idTarea}`, error);
+    }
+}

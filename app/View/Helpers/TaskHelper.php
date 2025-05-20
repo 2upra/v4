@@ -1,4 +1,6 @@
 <?
+// app/View/Helpers/TaskHelper.php
+
 function htmlTareas($filtro)
 {
     $id = get_the_id();
@@ -10,7 +12,8 @@ function htmlTareas($filtro)
     $estado = $meta['estado'][0] ?? 'pendiente';
     $frec = (int)($meta['frecuencia'][0] ?? 1);
     $autorId = get_post_field('post_author', $id);
-    $proxima = $meta['fechaProxima'][0] ?? date('Y-m-d');
+    $proxima = $meta['fechaProxima'][0] ?? null; // Mantener null si no existe
+    $fechaLimite = $meta['fechaLimite'][0] ?? null;
     $sesion = $meta['sesion'][0] ?? '';
     $impnum = (int)($meta['impnum'][0] ?? 0);
 
@@ -21,7 +24,7 @@ function htmlTareas($filtro)
     $impIcono = obtenerIconoImportancia($imp, $mostrarIcono);
     $tipoIcono = obtenerIconoTipo($tipo, $mostrarIcono);
 
-    return generarHtmlTarea($id, $filtroHtml, $titulo, $impIcono, $imp, $tipoIcono, $frec, $estado, $autorId, $tipo, $proxima, $sesion, $impnum);
+    return generarHtmlTarea($id, $filtroHtml, $titulo, $impIcono, $imp, $tipoIcono, $frec, $estado, $autorId, $tipo, $proxima, $fechaLimite, $sesion, $impnum);
 }
 
 function obtenerIconoImportancia($imp, $mostrarIcono)
@@ -60,32 +63,54 @@ function obtenerFrecuenciaTexto($frec)
     };
 }
 
-function botonesHabitos($id, $frec, $proxima)
+function calcularTextoTiempo($fechaReferencia)
 {
-    $frecTxt = obtenerFrecuenciaTexto($frec);
-    $hoy = date('Y-m-d');
-    $dif = (strtotime($proxima) - strtotime($hoy)) / (60 * 60 * 24);
+    $valRetDefecto = ['txt' => '', 'simbolo' => '', 'claseNeg' => '', 'diasDif' => 0];
+
+    if (empty($fechaReferencia)) {
+        return $valRetDefecto;
+    }
+    
+    $tsReferencia = strtotime($fechaReferencia);
+
+    // Si strtotime falla o la fecha es anterior a epoch (ej. '0000-00-00' puede dar ts negativo)
+    if ($tsReferencia === false || $tsReferencia < 0) { 
+        return $valRetDefecto;
+    }
+
+    $tsHoy = strtotime(date('Y-m-d')); // Medianoche de hoy
+    $difDias = floor(($tsReferencia - $tsHoy) / (60 * 60 * 24));
+
     $txt = '';
     $simbolo = '';
     $claseNeg = '';
 
-    if ($dif == 0) $txt = 'Hoy';
-    elseif ($dif == 1) $txt = 'Mañana';
-    elseif ($dif == -1) {
+    if ($difDias == 0) $txt = 'Hoy';
+    elseif ($difDias == 1) $txt = 'Mañana';
+    elseif ($difDias == -1) {
         $txt = 'Ayer';
         $claseNeg = 'diaNegativo';
-    } elseif ($dif > 1) $txt = $dif . 'd';
-    elseif ($dif < -1) {
-        $txt = abs($dif) . 'd';
+    } elseif ($difDias > 1) $txt = $difDias . 'd';
+    elseif ($difDias < -1) {
+        $txt = abs($difDias) . 'd';
         $simbolo = '-';
         $claseNeg = 'diaNegativo';
     }
+    return ['txt' => $txt, 'simbolo' => $simbolo, 'claseNeg' => $claseNeg, 'diasDif' => $difDias];
+}
 
+function botonesHabitos($id, $frec, $proxima)
+{
+    $frecTxt = obtenerFrecuenciaTexto($frec);
+    $tiempo = calcularTextoTiempo($proxima); // $proxima puede ser null
+    
+    // Si $proxima era null o inválida, $tiempo['txt'] estará vacío.
+    // No se mostrará texto de tiempo, lo cual es correcto.
     ob_start();
 ?>
     <div class="divProxima" data-tarea="<? echo $id; ?>" style="cursor: pointer;">
         <p class="proximaTarea svgtask">
-            <span class="textoProxima <? echo $claseNeg; ?>"><? echo $simbolo . $txt; ?></span>
+            <span class="textoProxima <? echo $tiempo['claseNeg']; ?>"><? echo $tiempo['simbolo'] . $tiempo['txt']; ?></span>
         </p>
     </div>
     <div class="divFrecuencia" data-tarea="<? echo $id; ?>" style="cursor: pointer;">
@@ -97,13 +122,43 @@ function botonesHabitos($id, $frec, $proxima)
     return ob_get_clean();
 }
 
-function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frec, $est, $autorId, $tipo, $proxima, $sesion, $impnum)
+function botonesMeta($id, $fechaLimite)
+{
+    $tiempo = calcularTextoTiempo($fechaLimite);
+
+    if (empty($tiempo['txt'])) { // Si no hay texto, no mostrar nada.
+        return '';
+    }
+
+    ob_start();
+?>
+    <div class="divFechaLimite" data-tarea="<? echo $id; ?>" style="cursor: pointer;">
+        <p class="fechaLimiteMeta svgtask">
+            <span class="textoFechaLimite <? echo $tiempo['claseNeg']; ?>"><? echo $tiempo['simbolo'] . $tiempo['txt']; ?></span>
+        </p>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frec, $est, $autorId, $tipo, $proxima, $fechaLimite, $sesion, $impnum)
 {
     $esCompletada = ($est === 'completada');
-    $esHabito = ($tipo === 'habito' || $tipo === 'habito rigido');
+    $esHabito = ($tipo === 'habito' || $tipo === 'habito rigido' || $tipo === 'habito flexible');
+    $esMeta = ($tipo === 'meta');
     $esSubtarea = get_post_meta($id, 'subtarea', true);
     $mostrarIcono = filter_var(get_user_meta($autorId, 'mostrarIconoTareas', true) ?: false, FILTER_VALIDATE_BOOLEAN);
-    $difDias = floor((strtotime($proxima) - strtotime(date('Y-m-d'))) / (60 * 60 * 24));
+
+    $tiempoProxima = calcularTextoTiempo($proxima);
+    $difDiasHabito = ($esHabito && !empty($tiempoProxima['txt'])) ? $tiempoProxima['diasDif'] : 0;
+
+    $tiempoLimite = calcularTextoTiempo($fechaLimite);
+    $difDiasMeta = ($esMeta && !empty($tiempoLimite['txt'])) ? $tiempoLimite['diasDif'] : 0;
+    
+    $limiteTieneTextoValido = !empty($tiempoLimite['txt']);
+
+    $difDiasActivo = $esHabito ? $difDiasHabito : ($esMeta ? $difDiasMeta : 0);
+
     $sesionHtml = esc_attr(empty($sesion) ? ($est === 'archivado' ? 'archivado' : 'general') : $sesion);
 
     ob_start();
@@ -120,9 +175,11 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
         importancia="<? echo esc_attr($imp) ?>"
         subtarea="<? echo $esSubtarea ? 'true' : 'false'; ?>"
         padre="<? echo esc_attr($esSubtarea ?: '0'); ?>"
-        dif="<? echo esc_attr($difDias); ?>">
+        dif="<? echo esc_attr($difDiasActivo); ?>"
+        data-fechalimite="<? echo esc_attr($fechaLimite ?? ''); ?>"
+        data-proxima="<? echo esc_attr($proxima ?? ''); ?>">
 
-        <button class="completaTarea <? echo $esHabito ? 'habito' : ''; ?>" data-tarea="<? echo $id; ?>">
+        <button class="completaTarea <? echo ($esHabito && $tipo !== 'habito rigido') ? 'habito' : ''; ?> <? echo ($tipo === 'habito flexible') ? 'habitoFlexible' : ''; ?>" data-tarea="<? echo $id; ?>">
             <? echo $GLOBALS['verificadoCirculo'] ?? '[ ]'; ?>
         </button>
 
@@ -134,12 +191,17 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
             <? echo $id; ?>
         </p>
 
-        <? if ($esHabito) echo botonesHabitos($id, $frec, $proxima); ?>
+        <?
+        if ($esHabito) {
+            echo botonesHabitos($id, $frec, $proxima);
+        } elseif ($esMeta && $limiteTieneTextoValido) { // Solo mostrar si es Meta y fechaLimite es válida y parseable
+            echo botonesMeta($id, $fechaLimite);
+        }
+        ?>
 
         <div class="divSesion" data-tarea="<? echo $id; ?>" style="display: none; cursor: pointer;">
             <p class="sesionTarea">
-                <? echo $GLOBALS['carpetaIcon'] ?? ''; // Icono de carpeta por defecto 
-                ?>
+                <? echo $GLOBALS['carpetaIcon'] ?? ''; ?>
             </p>
         </div>
 
@@ -161,6 +223,19 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
                 <? echo $GLOBALS['archivadoIcon'] ?? '[A]'; ?>
             </p>
         </div>
+        
+        <? // El divFechaLimite con el icono de calendario (para añadir/editar fecha)
+           // Solo se muestra si NO es un hábito Y NO tiene ya una fecha límite válida.
+        if (!$esHabito && !$limiteTieneTextoValido) : ?>
+            <div class="divFechaLimite ocultadoAutomatico" data-tarea="<? echo $id; ?>" style="display: none; cursor: pointer;">
+                <p>
+                    <span class="textoFechaLimite">
+                        <? echo $GLOBALS['calendario'] ?? '[F]'; ?>
+                    </span>
+                </p>
+            </div>
+        <? endif; ?>
+
     </li>
 <?
     return ob_get_clean();

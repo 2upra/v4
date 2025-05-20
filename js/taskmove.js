@@ -74,7 +74,7 @@ function moverTarea() {
             // (como el icono de prioridad, archivar, etc.), no queremos iniciar un arrastre.
             // Dejamos que el evento 'click' en ese control se maneje.
             // La función 'inicializarVars' se encargará de esto también.
-            if (inicializarVars(ev)) { // inicializarVars ya llama a hideAllOpenTaskMenus
+            if (inicializarVars(ev)) { // inicializarVars ya llama a ocultarMenuesAbiertos
                 // inicializarVars ahora también debería verificar esto
                 listaMov.addEventListener('mousemove', manejarMov);
                 listaMov.addEventListener('mouseup', finalizarArrastre);
@@ -86,8 +86,8 @@ function moverTarea() {
             // También cerramos menús por si acaso, aunque inicializarVars lo haría al arrastrar.
             // Y los listeners de clic fuera de los menús también deberían actuar.
             // Esta llamada es una salvaguarda adicional.
-            if (typeof window.hideAllOpenTaskMenus === 'function') {
-                window.hideAllOpenTaskMenus();
+            if (typeof window.ocultarMenuesAbiertos === 'function') {
+                window.ocultarMenuesAbiertos();
             }
         }
     });
@@ -109,8 +109,8 @@ function moverTarea() {
         // Si el clic es fuera de la lista de tareas principal
         if (listaMov && !listaMov.contains(ev.target)) {
             deseleccionarTareas();
-            if (typeof window.hideAllOpenTaskMenus === 'function') {
-                window.hideAllOpenTaskMenus(); // Cerrar todos los menús abiertos
+            if (typeof window.ocultarMenuesAbiertos === 'function') {
+                window.ocultarMenuesAbiertos(); // Cerrar todos los menús abiertos
             }
         }
         // Nota: El clic en el espacio vacío DENTRO de listaMov (pero no en una tarea)
@@ -151,8 +151,8 @@ function inicializarVars(ev) {
 
     // MODIFICACIÓN: Si hemos llegado aquí, se va a iniciar un arrastre.
     // Cerramos cualquier menú de opciones abierto.
-    if (typeof window.hideAllOpenTaskMenus === 'function') {
-        window.hideAllOpenTaskMenus();
+    if (typeof window.ocultarMenuesAbiertos === 'function') {
+        window.ocultarMenuesAbiertos();
     }
 
     // Lógica original de inicializarVars para determinar el grupo a arrastrar

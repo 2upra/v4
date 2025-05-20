@@ -5,7 +5,7 @@
 function formTareaEstilo()
 {
     ob_start();
-    ?>
+?>
     <style>
         span.icono p {
             font-size: 12px;
@@ -202,7 +202,11 @@ function formTareaEstilo()
             display: flex;
             justify-content: space-around;
         }
+
+        .textoFechaLimite svg {
+            height: 13px !important;
+        }
     </style>
-    <?
+<?
     return ob_get_clean();
 }

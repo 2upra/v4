@@ -1,4 +1,5 @@
 <?
+// app/Services/Task/TaskCrudService.php
 
 function jsonTask($exito, $datosOError, $logDetalles, $nombreFunc)
 {
@@ -322,3 +323,110 @@ function borrarTareasCompletadas()
     jsonTask(true, $msg, "Borradas: $borradas, Errores: $errores.", $func);
 }
 add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
+
+function modificarFechaLimiteTarea()
+{
+    $func = 'modificarFechaLimiteTarea';
+    if (!current_user_can('edit_posts')) {
+        jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
+    }
+
+    $idTarea = (int) ($_POST['tareaId'] ?? 0);
+    // La fecha puede ser una cadena 'YYYY-MM-DD' o null si se está borrando.
+    // Si se envía null desde JS, $_POST['fechaLimite'] podría no existir o ser una cadena vacía.
+    // Si $_POST['fechaLimite'] es una cadena vacía, la trataremos como borrar la fecha.
+    $fechaLimiteRaw = $_POST['fechaLimite'] ?? null;
+
+    $logDet = "ID: $idTarea.";
+
+    if ($idTarea <= 0) {
+        jsonTask(false, 'ID de tarea inválido.', 'ID tarea inválido.', $func);
+    }
+
+    $tarea = get_post($idTarea);
+    if (!$tarea || $tarea->post_type !== 'tarea') {
+        jsonTask(false, 'Tarea no encontrada.', "ID $idTarea no encontrado o no es tarea.", $func);
+    }
+
+    if (empty($fechaLimiteRaw) || $fechaLimiteRaw === 'null') { // 'null' como cadena si JS envía null así
+        // Borrar la fecha límite
+        delete_post_meta($idTarea, 'fechaLimite');
+        $logDet .= " Fecha límite eliminada.";
+        jsonTask(true, ['mensaje' => 'Fecha límite eliminada.'], $logDet, $func);
+    } else {
+        // Validar formato de fecha YYYY-MM-DD
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaLimiteRaw)) {
+            jsonTask(false, 'Formato de fecha inválido. Use YYYY-MM-DD.', "Fecha '$fechaLimiteRaw' formato inválido.", $func);
+        }
+
+        // Validar que la fecha sea una fecha real
+        $d = DateTime::createFromFormat('Y-m-d', $fechaLimiteRaw);
+        if (!$d || $d->format('Y-m-d') !== $fechaLimiteRaw) {
+            jsonTask(false, 'Fecha inválida.', "Fecha '$fechaLimiteRaw' no es válida.", $func);
+        }
+
+        $fechaLimiteSanitizada = sanitize_text_field($fechaLimiteRaw);
+        update_post_meta($idTarea, 'fechaLimite', $fechaLimiteSanitizada);
+        $logDet .= " Fecha límite actualizada a $fechaLimiteSanitizada.";
+        jsonTask(true, ['mensaje' => 'Fecha límite actualizada.'], $logDet, $func);
+    }
+}
+add_action('wp_ajax_modificarFechaLimiteTarea', 'modificarFechaLimiteTarea');
+
+function modificarFechaProximaHabito()
+{
+    $func = 'modificarFechaProximaHabito';
+    if (!current_user_can('edit_posts')) {
+        jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
+    }
+
+    $idTarea = (int) ($_POST['tareaId'] ?? 0);
+    // La fecha puede ser una cadena 'YYYY-MM-DD' o null si se está borrando.
+    // Si JS envía null, $_POST['fechaProxima'] podría no existir o ser una cadena vacía.
+    // Trataremos cadena vacía como borrar la fecha.
+    $fechaProximaRaw = $_POST['fechaProxima'] ?? null;
+
+    $logDet = "ID: $idTarea.";
+
+    if ($idTarea <= 0) {
+        jsonTask(false, 'ID de tarea inválido.', 'ID tarea inválido.', $func);
+    }
+
+    $tarea = get_post($idTarea);
+    if (!$tarea || $tarea->post_type !== 'tarea') {
+        jsonTask(false, 'Tarea no encontrada.', "ID $idTarea no encontrado o no es tarea.", $func);
+    }
+
+    // Verificar si la tarea es un hábito (puedes ajustar los tipos si es necesario)
+    $tipoTarea = get_post_meta($idTarea, 'tipo', true);
+    if (!in_array($tipoTarea, ['habito', 'habito rigido', 'habito flexible'])) {
+        jsonTask(false, 'Esta acción solo es para hábitos.', "ID $idTarea no es tipo hábito (es '$tipoTarea').", $func);
+    }
+
+
+    if (empty($fechaProximaRaw) || $fechaProximaRaw === 'null') { // 'null' como cadena si JS envía null así
+        // Si decides permitir borrar la fechaProxima para un hábito (lo cual podría ser raro, usualmente se recalcula)
+        // delete_post_meta($idTarea, 'fechaProxima');
+        // $logDet .= " Fecha próxima eliminada.";
+        // jsonTask(true, ['mensaje' => 'Fecha próxima eliminada.'], $logDet, $func);
+        // O, más probablemente, no permitir borrarla y enviar un error o no hacer nada:
+        jsonTask(false, 'No se puede eliminar la fecha próxima de un hábito directamente. Se recalcula al completar.', "Intento de eliminar fechaProxima para hábito ID $idTarea.", $func);
+    } else {
+        // Validar formato de fecha YYYY-MM-DD
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaProximaRaw)) {
+            jsonTask(false, 'Formato de fecha inválido. Use YYYY-MM-DD.', "Fecha '$fechaProximaRaw' formato inválido.", $func);
+        }
+
+        // Validar que la fecha sea una fecha real
+        $d = DateTime::createFromFormat('Y-m-d', $fechaProximaRaw);
+        if (!$d || $d->format('Y-m-d') !== $fechaProximaRaw) {
+            jsonTask(false, 'Fecha inválida.', "Fecha '$fechaProximaRaw' no es válida.", $func);
+        }
+
+        $fechaProximaSanitizada = sanitize_text_field($fechaProximaRaw);
+        update_post_meta($idTarea, 'fechaProxima', $fechaProximaSanitizada);
+        $logDet .= " Fecha próxima actualizada a $fechaProximaSanitizada.";
+        jsonTask(true, ['mensaje' => 'Fecha próxima actualizada.'], $logDet, $func);
+    }
+}
+add_action('wp_ajax_modificarFechaProximaHabito', 'modificarFechaProximaHabito');
