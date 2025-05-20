@@ -1,525 +1,326 @@
-<?php
-// Refactor(Org): Funcion crearTarea() y hook AJAX movidos desde app/Services/TaskService.php
+<?
+// Asegúrate de que esta función exista y esté configurada correctamente.
+// function guardarLog($mensaje) { /* ... tu implementación ... */ }
 
-//aqui necesito que cuando llega un padre, haga lo que hace crearSubtarea
+function jsonTask($exito, $datosOError, $logDetalles, $nombreFunc)
+{
+    $logFinal = "$nombreFunc: $logDetalles";
+    if (!$exito && is_string($datosOError)) $logFinal .= " ErrorMsg: $datosOError";
+    # guardarLog($logFinal);
+
+    if ($exito) wp_send_json_success($datosOError);
+    else wp_send_json_error($datosOError);
+}
+
 function crearTarea()
 {
-    $log = '';
-    if (!current_user_can('edit_posts')) {
-        $log = 'No tienes permisos.';
-        guardarLog("crearTarea: $log");
-        wp_send_json_error($log);
-    }
+    $func = 'crearTarea';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
-    $imp = isset($_POST['importancia']) ? sanitize_text_field($_POST['importancia']) : 'media';
-    $tip = isset($_POST['tipo']) ? sanitize_text_field($_POST['tipo']) : 'una vez';
-    $frec = isset($_POST['frecuencia']) ? (int) sanitize_text_field($_POST['frecuencia']) : 1;
-    $ses = isset($_POST['sesion']) ? sanitize_text_field($_POST['sesion']) : '';
-    $est = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
-    $pad = isset($_POST['padre']) ? (int) sanitize_text_field($_POST['padre']) : 0;
-    $fecLim = isset($_POST['fechaLimite']) ? sanitize_text_field($_POST['fechaLimite']) : null; // Nueva variable
+    $tit = sanitize_text_field($_POST['titulo'] ?? '');
+    if (empty($tit)) jsonTask(false, 'Título vacío.', 'Título vacío.', $func);
 
-    if (empty($tit)) {
-        $log = 'Título vacío.';
-        guardarLog("crearTarea: $log");
-        wp_send_json_error($log);
-    }
+    $imp = sanitize_text_field($_POST['importancia'] ?? 'media');
+    $tip = sanitize_text_field($_POST['tipo'] ?? 'una vez');
+    $frec = (int) ($_POST['frecuencia'] ?? 1);
+    $ses = sanitize_text_field($_POST['sesion'] ?? '');
+    $est = sanitize_text_field($_POST['estado'] ?? 'pendiente');
+    $pad = (int) ($_POST['padre'] ?? 0);
+    $fecLim = sanitize_text_field($_POST['fechaLimite'] ?? null);
 
-    $impnum = 0;
-    if ($imp === 'importante') {
-        $impnum = 4;
-    } elseif ($imp === 'alta') {
-        $impnum = 3;
-    } elseif ($imp === 'media') {
-        $impnum = 2;
-    } elseif ($imp === 'baja') {
-        $impnum = 1;
-    }
+    $mapaImp = ['importante' => 4, 'alta' => 3, 'media' => 2, 'baja' => 1];
+    $impnum = $mapaImp[$imp] ?? 2;
+    $mapaTip = ['una vez' => 1, 'habito' => 2, 'meta' => 3, 'habito rigido' => 4];
+    $tipnum = $mapaTip[$tip] ?? 1;
 
-    $tipnum = 0;
-    if ($tip === 'una vez') {
-        $tipnum = 1;
-    } elseif ($tip === 'habito') {
-        $tipnum = 2;
-    } elseif ($tip === 'meta') {
-        $tipnum = 3;
-    } elseif ($tip === 'habito rigido') {
-        $tipnum = 4;
-    }
-
-    $fec = date('Y-m-d');
-    $fecprox = date('Y-m-d', strtotime("+{$frec} days"));
-
-    $metaInput = array(
+    $metaInput = [
         'importancia' => $imp,
         'impnum' => $impnum,
         'tipo' => $tip,
         'tipnum' => $tipnum,
         'estado' => $est,
         'frecuencia' => $frec,
-        'fecha' => $fec,
-        'fechaProxima' => $fecprox,
+        'fecha' => date('Y-m-d'),
+        'fechaProxima' => date('Y-m-d', strtotime("+$frec days")),
         'sesion' => $ses
-    );
+    ];
+    if (!empty($fecLim)) $metaInput['fechaLimite'] = $fecLim;
 
-    if (!empty($fecLim)) {
-        // Validar el formato de fecha YYYY-MM-DD si es necesario
-        // Por ahora, asumimos que llega en el formato correcto o es null
-        $metaInput['fechaLimite'] = $fecLim;
-    }
-
-    $args = array(
+    $args = [
         'post_title' => $tit,
         'post_type' => 'tarea',
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
-        'meta_input' => $metaInput,
-    );
+        'meta_input' => $metaInput
+    ];
 
-    // Si se recibe un padre, se crea como subtarea
-    if ($pad) {
-        $tareaPadre = get_post($pad);
-        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
-            $msg = 'Tarea padre no encontrada.';
-            guardarLog("crearTarea: $msg");
-            wp_send_json_error($msg);
+    if ($pad > 0) {
+        $pPost = get_post($pad);
+        if (!$pPost || $pPost->post_type !== 'tarea') {
+            jsonTask(false, 'Tarea padre no encontrada.', "Padre ID $pad no válido.", $func);
         }
         $args['post_parent'] = $pad;
     }
 
-    $tareaId = wp_insert_post($args);
+    $idTarea = wp_insert_post($args, true);
 
-    if (is_wp_error($tareaId)) {
-        $msg = $tareaId->get_error_message();
-        $log .= "Error al crear tarea: $msg";
-        guardarLog("crearTarea: $log");
-        wp_send_json_error($msg);
+    if (is_wp_error($idTarea)) {
+        jsonTask(false, $idTarea->get_error_message(), "Error WP: " . $idTarea->get_error_message(), $func);
     }
 
-    // Si es una subtarea, se actualiza el meta 'subtarea'
-    if ($pad) {
-        update_post_meta($tareaId, 'subtarea', $pad);
-        $log .= "Subtarea creada con id $tareaId, tarea padre $pad, sesion $ses, estado $est";
-    } else {
-        $log .= "Tarea creada con id $tareaId, sesion $ses, estado $est";
-    }
+    $logMsg = $pad > 0 ? "Subtarea $idTarea (padre $pad)" : "Tarea $idTarea";
+    if ($pad > 0) update_post_meta($idTarea, 'subtarea', $pad);
 
-    guardarLog("crearTarea: $log");
-    wp_send_json_success(array('tareaId' => $tareaId));
+    jsonTask(true, ['tareaId' => $idTarea], "$logMsg creada. Sesion: $ses, Est: $est.", $func);
 }
-
 add_action('wp_ajax_crearTarea', 'crearTarea');
 
-// Refactor(Org): Funcion completarTarea() y hook AJAX movidos desde app/Services/TaskService.php
 function completarTarea()
 {
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
-    }
+    $func = 'completarTarea';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $estado = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
+    $id = (int) ($_POST['id'] ?? 0);
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
 
     $tarea = get_post($id);
+    if (!$tarea || $tarea->post_type !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        wp_send_json_error('Tarea no encontrada.');
-    }
+    $tip = get_post_meta($id, 'tipo', true);
+    $logDet = "ID: $id, Tipo: $tip";
 
-    $tipo = get_post_meta($id, 'tipo', true);
-    $log = "Funcion completarTarea(). \n ID: $id, tipo: $tipo. \n";
-
-    if ($tipo == 'una vez') {
-        $log .= "Se actualizo el estado de la tarea a $estado \n";
-        update_post_meta($id, 'estado', $estado);
-    } else if ($tipo == 'habito' || $tipo == 'habito rigido') {
-        $fecha = get_post_meta($id, 'fecha', true);
-        $fechaProxima = get_post_meta($id, 'fechaProxima', true);
-        $frecuencia = intval(get_post_meta($id, 'frecuencia', true));
+    if ($tip === 'una vez') {
+        $est = sanitize_text_field($_POST['estado'] ?? 'completada');
+        update_post_meta($id, 'estado', $est);
+        $logDet .= ". Estado -> $est.";
+    } elseif ($tip === 'habito' || $tip === 'habito rigido') {
+        $fecProAnt = get_post_meta($id, 'fechaProxima', true);
+        $frec = (int) get_post_meta($id, 'frecuencia', true);
         $hoy = date('Y-m-d');
 
+        $vecesComp = (int) get_post_meta($id, 'vecesCompletado', true) + 1;
+        $fechasComp = get_post_meta($id, 'fechasCompletado', true);
+        if (!is_array($fechasComp)) $fechasComp = [];
+        $fechasComp[] = $hoy;
 
-        $vecesCompletado = get_post_meta($id, 'vecesCompletado', true);
-        if (empty($vecesCompletado)) {
-            add_post_meta($id, 'vecesCompletado', 0, true);
-            $vecesCompletado = 0;
-        }
-        $vecesCompletado++;
+        update_post_meta($id, 'vecesCompletado', $vecesComp);
+        update_post_meta($id, 'fechasCompletado', $fechasComp);
 
-        // Manejar el registro de fechas de completado
-        $fechasCompletado = get_post_meta($id, 'fechasCompletado', true);
-        if (empty($fechasCompletado)) {
-            $fechasCompletado = array();
-        }
+        $baseFec = ($tip === 'habito') ? $hoy : $fecProAnt;
+        $nvaFecPro = date('Y-m-d', strtotime("$baseFec +$frec days"));
+        update_post_meta($id, 'fechaProxima', $nvaFecPro);
 
-        // Agregar la fecha actual al array de fechas de completado
-        $fechasCompletado[] = $hoy;
-
-        update_post_meta($id, 'vecesCompletado', $vecesCompletado);
-        update_post_meta($id, 'fechasCompletado', $fechasCompletado);
-
-        if ($tipo == 'habito') {
-            $nuevaFechaProxima = date('Y-m-d', strtotime($hoy . " + $frecuencia days"));
-        } elseif ($tipo == 'habito rigido') {
-            $nuevaFechaProxima = date('Y-m-d', strtotime($fechaProxima . " + $frecuencia days"));
-        }
-
-        $log .= "Se actualizo fechaProxima de $fechaProxima a $nuevaFechaProxima, y se agrego +1 a vecesCompletado (actualmente en $vecesCompletado), ademas se registraron las fechas de completado \n";
-        update_post_meta($id, 'fechaProxima', $nuevaFechaProxima);
+        $logDet .= ". Comp: $vecesComp. FecProx: $fecProAnt -> $nvaFecPro.";
+    } else {
+        $logDet .= ". Sin acción especial de completado.";
     }
-    guardarLog($log);
-    wp_send_json_success();
-}
 
+    jsonTask(true, ['mensaje' => 'Tarea procesada.'], $logDet, $func);
+}
 add_action('wp_ajax_completarTarea', 'completarTarea');
 
-// Refactor(Org): Funcion cambiarPrioridad() y hook AJAX movidos desde app/Services/TaskService.php
 function cambiarPrioridad()
 {
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
-    }
+    $func = 'cambiarPrioridad';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $tareaId = isset($_POST['tareaId']) ? intval($_POST['tareaId']) : 0;
-    $prioridad = isset($_POST['prioridad']) ? sanitize_text_field($_POST['prioridad']) : '';
+    $id = (int) ($_POST['tareaId'] ?? 0);
+    $prio = sanitize_text_field($_POST['prioridad'] ?? '');
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
 
-    $tarea = get_post($tareaId);
+    if (!get_post($id) || get_post_type($id) !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        wp_send_json_error('Tarea no encontrada.');
-    }
+    $mapaPrio = ['importante' => 4, 'alta' => 3, 'media' => 2, 'baja' => 1];
+    if (!isset($mapaPrio[$prio])) jsonTask(false, 'Prioridad inválida.', "Prio '$prio' no válida.", $func);
 
-    if (!in_array($prioridad, ['baja', 'media', 'alta', 'importante'])) {
-        wp_send_json_error('Prioridad inválida.');
-    }
+    update_post_meta($id, 'importancia', $prio);
+    update_post_meta($id, 'impnum', $mapaPrio[$prio]);
 
-    $impnum = 0;
-    if ($prioridad === 'importante') {
-        $impnum = 4;
-    } elseif ($prioridad === 'alta') {
-        $impnum = 3;
-    } elseif ($prioridad === 'media') {
-        $impnum = 2;
-    } elseif ($prioridad === 'baja') {
-        $impnum = 1;
-    }
-
-    update_post_meta($tareaId, 'importancia', $prioridad);
-    update_post_meta($tareaId, 'impnum', $impnum); // Guarda el valor numérico
-
-    wp_send_json_success();
+    jsonTask(true, ['mensaje' => 'Prioridad actualizada.'], "ID: $id. Prio: $prio ({$mapaPrio[$prio]}).", $func);
 }
-
 add_action('wp_ajax_cambiarPrioridad', 'cambiarPrioridad');
 
-// Refactor(Org): Funcion borrarTarea() y hook AJAX movidos desde app/Services/TaskService.php
 function borrarTarea()
 {
-    // Añadir verificacion de nonce
-    if (!isset($_POST['nonce']) || empty($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'borrar_tarea_nonce')) {
-        wp_send_json_error('Nonce invalido.');
-        // wp_die(); // wp_send_json_error ya incluye wp_die()
+    $func = 'borrarTarea';
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'borrar_tarea_nonce')) {
+        guardarLog("$func: Nonce inválido.");
+        wp_send_json_error('Nonce inválido.'); // No usar jsonTask para fallos de nonce
     }
 
-    $log = '';
-    if (!current_user_can('edit_posts')) {
-        $log .= 'No tienes permisos.';
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error('No tienes permisos.');
-    }
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $id = (int) ($_POST['id'] ?? 0);
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
+    if (!get_post($id) || get_post_type($id) !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
-    if ($id === 0) {
-        $log .= 'ID de tarea inválido.';
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error('ID de tarea inválido.');
-    }
+    if (!wp_delete_post($id, true)) jsonTask(false, 'Error al borrar.', "Error WP borrando ID $id.", $func);
 
-    $tarea = get_post($id);
-
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        $log .= 'Tarea no encontrada.';
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $res = wp_delete_post($id, true);
-
-    if (is_wp_error($res)) {
-        $msg = $res->get_error_message();
-        $log .= "Error al borrar tarea: $msg";
-        guardarLog("borrarTarea: \n $log");
-        wp_send_json_error($msg);
-    }
-
-    $log .= "Tarea con ID $id borrada exitosamente.";
-    guardarLog("borrarTarea: \n $log");
-    wp_send_json_success();
+    jsonTask(true, ['mensaje' => 'Tarea borrada.'], "ID $id borrada.", $func);
 }
-
 add_action('wp_ajax_borrarTarea', 'borrarTarea');
 
-// Refactor(Org): Funcion modificarTarea() y hook AJAX movidos desde app/Services/TaskService.php
 function modificarTarea()
 {
-    $log = '';
-    if (!current_user_can('edit_posts')) {
-        $log .= 'No tienes permisos.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('No tienes permisos.');
-    }
+    $func = 'modificarTarea';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
+    $id = (int) ($_POST['id'] ?? 0);
+    $tit = sanitize_text_field($_POST['titulo'] ?? '');
 
-    if (empty($tit)) {
-        $log .= 'Título vacío.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('Título vacío.');
-    }
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
+    if (empty($tit)) jsonTask(false, 'Título vacío.', 'Título vacío.', $func);
+    if (!get_post($id) || get_post_type($id) !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
-    if ($id === 0) {
-        wp_send_json_error('La creación de nuevas tareas debe usar la acción AJAX crearTarea.');
-        return;
-    }
+    $res = wp_update_post(['ID' => $id, 'post_title' => $tit], true);
+    if (is_wp_error($res)) jsonTask(false, $res->get_error_message(), "Error WP: " . $res->get_error_message(), $func);
 
-    $tarea = get_post($id);
-
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        $log .= 'Tarea no encontrada.';
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $args = array(
-        'ID' => $id,
-        'post_title' => $tit
-    );
-
-    $res = wp_update_post($args, true);
-
-    if (is_wp_error($res)) {
-        $msg = $res->get_error_message();
-        $log .= "Error al modificar tarea: $msg \n";
-        guardarLog("modificarTarea: \n $log");
-        wp_send_json_error($msg);
-    }
-
-    $log .= "Tarea modificada con id $id";
-    guardarLog("modificarTarea: \n $log");
-    wp_send_json_success();
+    jsonTask(true, ['mensaje' => 'Tarea modificada.'], "ID $id modificada. Título: '$tit'.", $func);
 }
-
 add_action('wp_ajax_modificarTarea', 'modificarTarea');
 
-// Refactor(Org): Funcion archivarTarea() y hook AJAX movidos desde app/Services/TaskService.php
-//necesito que cuando se archive una tarea, deje ser una subtarea en caso de que lo hubiera sido, y si tenia tareas hijos, sus tareas hijos tambien se archiven
 function archivarTarea()
 {
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
-    }
+    $func = 'archivarTarea';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $tarea = get_post($id);
+    $id = (int) ($_POST['id'] ?? 0);
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
+    if (!get_post($id) || get_post_type($id) !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $log = "Funcion archivarTarea(). \n  ID: $id. \n";
-
+    $estAct = get_post_meta($id, 'estado', true);
+    $logDet = "ID: $id. Est.Actual: $estAct.";
     $usu = get_current_user_id();
-    $orden = get_user_meta($usu, 'ordenTareas', true);
-    $estadoActual = get_post_meta($id, 'estado', true);
 
-    $log .= "Estado inicial de la tarea: $estadoActual. \n";
-
-    if ($estadoActual == 'archivado') {
+    if ($estAct === 'archivado') { // Desarchivar
         update_post_meta($id, 'estado', 'pendiente');
         update_post_meta($id, 'sesion', 'General');
-        $log .= "Se cambio el estado de la tarea $id a pendiente y la sesion a General.";
-        // Eliminar la relación de subtarea si la tarea estaba archivada y se desarchiva
-        wp_update_post(array(
-            'ID' => $id,
-            'post_parent' => 0
-        ));
+        wp_update_post(['ID' => $id, 'post_parent' => 0]);
         delete_post_meta($id, 'subtarea');
-        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
-    } else {
-        if (is_array($orden) && in_array($id, $orden)) {
-            $pos = array_search($id, $orden);
-            unset($orden[$pos]);
+        $logDet .= " Desarchivada -> pendiente, Sesion General, padre 0.";
+    } else { // Archivar
+        $orden = get_user_meta($usu, 'ordenTareas', true);
+        if (is_array($orden)) {
+            if (($pos = array_search($id, $orden)) !== false) unset($orden[$pos]);
             $orden[] = $id;
             update_user_meta($usu, 'ordenTareas', $orden);
-            $log .= "Se actualizo el orden de la tarea $id, moviendola al final. \n";
+            $logDet .= " Orden actualizado.";
         }
 
-        // Archivar subtareas (tareas hijas)
-        $args = array(
-            'post_parent' => $id,
-            'post_type'   => 'tarea',
-            'numberposts' => -1,
-            'post_status' => 'any'
-        );
-        $subtareas = get_children($args);
-
-        foreach ($subtareas as $subtarea) {
-            update_post_meta($subtarea->ID, 'estado', 'archivado');
-            $log .= ", \n  Se archivó la subtarea {$subtarea->ID}.";
+        $subtareas = get_children(['post_parent' => $id, 'post_type' => 'tarea', 'fields' => 'ids']);
+        foreach ($subtareas as $subId) {
+            update_post_meta($subId, 'estado', 'archivado');
+            // Opcional: wp_update_post(['ID' => $subId, 'post_parent' => 0]); delete_post_meta($subId, 'subtarea');
+            $logDet .= " Subtarea $subId archivada.";
         }
 
-        // Eliminar la relación de subtarea si la tarea se está archivando
-        wp_update_post(array(
-            'ID' => $id,
-            'post_parent' => 0
-        ));
+        wp_update_post(['ID' => $id, 'post_parent' => 0]);
         delete_post_meta($id, 'subtarea');
-        $log .= ", \n  Se eliminó la relación de subtarea para la tarea $id.";
-
         update_post_meta($id, 'estado', 'archivado');
-        $log .= ", \n  Se cambió el estado de la tarea $id a archivado.";
+        $logDet .= " Archivada (padre 0).";
     }
 
-    guardarLog($log);
-    wp_send_json_success();
+    jsonTask(true, ['mensaje' => 'Estado de archivo actualizado.'], $logDet, $func);
 }
-
 add_action('wp_ajax_archivarTarea', 'archivarTarea');
 
 function cambiarFrecuencia()
 {
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
-    }
+    $func = 'cambiarFrecuencia';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $tareaId = isset($_POST['tareaId']) ? intval($_POST['tareaId']) : 0;
-    $frec = isset($_POST['frecuencia']) ? intval($_POST['frecuencia']) : 0;
+    $id = (int) ($_POST['tareaId'] ?? 0);
+    $frec = (int) ($_POST['frecuencia'] ?? 0);
 
-    $tarea = get_post($tareaId);
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
+    if (!get_post($id) || get_post_type($id) !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
+    if ($frec < 1 || $frec > 365) jsonTask(false, 'Frecuencia inválida.', "Frec $frec fuera rango (1-365).", $func);
 
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        wp_send_json_error('Tarea no encontrada.');
-    }
+    $fecprox = date('Y-m-d', strtotime("+$frec days"));
+    update_post_meta($id, 'frecuencia', $frec);
+    update_post_meta($id, 'fechaProxima', $fecprox);
 
-    if ($frec < 1 || $frec > 365) {
-        wp_send_json_error('Frecuencia inválida.');
-    }
-
-    $fec = date('Y-m-d');
-    $fecprox = date('Y-m-d', strtotime("+{$frec} days"));
-
-    update_post_meta($tareaId, 'frecuencia', $frec);
-    update_post_meta($tareaId, 'fechaProxima', $fecprox);
-
-    $log = "Frecuencia de tarea actualizada correctamente. ID: $tareaId, Frecuencia: $frec \n Fecha proxima: $fecprox";
-    guardarLog("cambiarFrecuencia:  \n $log");
-    wp_send_json_success();
+    jsonTask(true, ['mensaje' => 'Frecuencia actualizada.'], "ID: $id. Frec: $frec, Prox: $fecprox.", $func);
 }
-
 add_action('wp_ajax_cambiarFrecuencia', 'cambiarFrecuencia');
 
-// Refactor(Org): Funcion crearSubtarea() y hook AJAX movidos desde app/Content/Task/logicTareas.php
 function crearSubtarea()
 {
-    if (!current_user_can('edit_posts')) {
-        $msg = 'No tienes permisos.';
-        guardarLog("crearSubtarea: $msg");
-        wp_send_json_error($msg);
-    }
+    $func = 'crearSubtarea'; // Renombrar a 'gestionarSubtarea' podría ser más claro.
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $esSubtarea = isset($_POST['subtarea']) ? $_POST['subtarea'] === 'true' : false;
-    $idPadre = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
-    $log = '';
+    $id = (int) ($_POST['id'] ?? 0);
+    $esSub = ($_POST['subtarea'] ?? 'false') === 'true';
+    $idPad = (int) ($_POST['padre'] ?? 0);
 
-    if (!$esSubtarea) {
-        $res = wp_update_post(array(
-            'ID' => $id,
-            'post_parent' => 0
-        ), true);
+    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', "ID tarea $id inválido.", $func);
+    $tareaMod = get_post($id);
+    if (!$tareaMod || $tareaMod->post_type !== 'tarea') jsonTask(false, 'Tarea a modificar no encontrada.', "ID $id no encontrado.", $func);
 
-        if (is_wp_error($res)) {
-            $msg = $res->get_error_message();
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
+    $logDet = "ID: $id.";
+
+    if (!$esSub) {
+        if (is_wp_error(wp_update_post(['ID' => $id, 'post_parent' => 0], true))) {
+            jsonTask(false, 'Error al quitar padre.', "Error WP quitando padre de $id", $func);
         }
-
         delete_post_meta($id, 'subtarea');
-        $log .= "Se eliminó la subtarea $id. ";
-        guardarLog("crearSubtarea: $log");
-        wp_send_json_success();
+        $logDet .= " Relación subtarea eliminada.";
+        jsonTask(true, ['mensaje' => 'Relación subtarea eliminada.'], $logDet, $func);
+        return;
     }
 
-    if ($idPadre) {
-        $tareaPadre = get_post($idPadre);
-        if (empty($tareaPadre) || $tareaPadre->post_type != 'tarea') {
-            $msg = 'Tarea padre no encontrada.';
-            guardarLog("crearSubtarea: $msg");
-            wp_send_json_error($msg);
-        }
+    if ($idPad <= 0) jsonTask(false, 'ID padre inválido.', "ID padre $idPad inválido.", $func);
+    if ($id === $idPad) jsonTask(false, 'No puede ser subtarea de sí misma.', "ID $id y Padre $idPad iguales.", $func);
 
-        $subtareaExistente = get_post_meta($id, 'subtarea', true);
+    $tareaPad = get_post($idPad);
+    if (!$tareaPad || $tareaPad->post_type !== 'tarea') jsonTask(false, 'Tarea padre no encontrada.', "Padre $idPad no encontrado.", $func);
 
-        if (empty($subtareaExistente)) {
-            $res = wp_update_post(array(
-                'ID' => $id,
-                'post_parent' => $idPadre
-            ), true);
-
-            if (is_wp_error($res)) {
-                $msg = $res->get_error_message();
-                guardarLog("crearSubtarea: $msg");
-                wp_send_json_error($msg);
-            }
-
-            update_post_meta($id, 'subtarea', $idPadre);
-            $log .= "Se creó la subtarea $id, tarea padre $idPadre. ";
-        } else {
-            $log .= "La subtarea $id ya existía como subtarea de $idPadre. No se realizaron cambios. ";
-        }
+    if ((int)get_post_meta($id, 'subtarea', true) === $idPad && (int)$tareaMod->post_parent === $idPad) {
+        $logDet .= " Ya es subtarea de $idPad.";
+        jsonTask(true, ['mensaje' => 'Ya es subtarea del padre especificado.'], $logDet, $func);
+        return;
     }
 
-    guardarLog("crearSubtarea: $log");
-    wp_send_json_success();
+    if (is_wp_error(wp_update_post(['ID' => $id, 'post_parent' => $idPad], true))) {
+        jsonTask(false, 'Error al asignar padre.', "Error WP asignando padre $idPad a $id", $func);
+    }
+    update_post_meta($id, 'subtarea', $idPad);
+    $logDet .= " Asignada como subtarea de $idPad.";
+
+    jsonTask(true, ['mensaje' => 'Relación subtarea actualizada.'], $logDet, $func);
 }
-
 add_action('wp_ajax_crearSubtarea', 'crearSubtarea');
 
-// Refactor(Org): Funcion borrarTareasCompletadas() y hook AJAX movidos desde app/Content/Task/logicTareas.php
 function borrarTareasCompletadas()
 {
-    if (isset($_POST['limpiar']) && $_POST['limpiar'] === 'true') {
-        $usuarioActual = get_current_user_id();
+    $func = 'borrarTareasCompletadas';
+    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-        $args = array(
-            'post_type'      => 'tarea',
-            'author'         => $usuarioActual,
-            'meta_query'     => array(
-                array(
-                    'key'   => 'estado',
-                    'value' => 'completada',
-                ),
-            ),
-            'posts_per_page' => -1,
-        );
-
-        $tareas = get_posts($args);
-
-        if (empty($tareas)) {
-            wp_send_json_error('No hay tareas completadas');
-        } else {
-            foreach ($tareas as $tarea) {
-                wp_delete_post($tarea->ID, true);
-            }
-            wp_send_json_success('Tareas completadas borradas exitosamente');
-        }
-    } else {
-        wp_send_json_error('No se solicitó limpiar');
+    if (($_POST['limpiar'] ?? 'false') !== 'true') {
+        jsonTask(false, 'No se solicitó limpiar.', 'limpiar no es true.', $func);
     }
-    wp_die();
+
+    $idsTareas = get_posts([
+        'post_type' => 'tarea',
+        'author' => get_current_user_id(),
+        'meta_query' => [['key' => 'estado', 'value' => 'completada']],
+        'posts_per_page' => -1,
+        'fields' => 'ids'
+    ]);
+
+    if (empty($idsTareas)) {
+        jsonTask(true, 'No hay tareas completadas para borrar.', 'Sin tareas completadas.', $func);
+    }
+
+    $borradas = 0;
+    $errores = 0;
+    foreach ($idsTareas as $id) {
+        if (wp_delete_post($id, true)) $borradas++;
+        else $errores++;
+    }
+
+    $msg = "$borradas tareas borradas.";
+    if ($errores > 0) $msg .= " $errores errores.";
+    jsonTask(true, $msg, "Borradas: $borradas, Errores: $errores.", $func);
 }
-//
 add_action('wp_ajax_borrarTareasCompletadas', 'borrarTareasCompletadas');
