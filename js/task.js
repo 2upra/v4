@@ -10,8 +10,20 @@ let tipoTarea = {
     valor: 'una vez'
 };
 
+let fechaLimite = {
+    // Nueva variable global
+    selector: null,
+    valor: null // Por defecto sin fecha
+};
+
+// --- INICIO: Nuevas variables y funciones para el calendario ---
+let calMes; // Mes actual visualizado en el calendario (0-11)
+let calAnio; // Año actual visualizado en el calendario
+const calNombresMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const calDiasSemanaCabecera = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'];
+
 // NUEVA FUNCIÓN GLOBAL (MODIFICADA)
-window.hideAllOpenTaskMenus = function() {
+window.hideAllOpenTaskMenus = function () {
     document.querySelectorAll('.opcionesPrioridad, .opcionesFrecuencia').forEach(menu => {
         if (menu) {
             menu.remove();
@@ -43,6 +55,7 @@ function initTareas() {
         archivarTarea();
         ocultarBotones();
         borrarTareaVacia();
+        cfgCal();
 
         subTarea();
         window.initNotas();
@@ -114,7 +127,8 @@ function pegarTareaHandler(ev) {
         return enviarAjax('crearTarea', {
             titulo: titulo,
             importancia: importancia.valor,
-            tipo: tipoTarea.valor
+            tipo: tipoTarea.valor,
+            fechaLimite: fechaLimite.valor // Añadir fechaLimite
         });
     });
 
@@ -194,7 +208,8 @@ function enviarTareaHandler(ev) {
             const data = {
                 titulo: tit.value,
                 importancia: importancia.valor,
-                tipo: tipoTarea.valor
+                tipo: tipoTarea.valor,
+                fechaLimite: fechaLimite.valor // Añadir fechaLimite
             };
 
             const tituloParaEnviar = tit.value;
@@ -239,39 +254,73 @@ function enviarTareaHandler(ev) {
     }
 }
 
+function actSel(obj, val, txtPredeterminado = '') {
+    // Por defecto, no hay texto predeterminado
+    let ico = obj.selector.querySelector('span.icono');
+
+    // Limpiar contenido previo (texto) del span.icono, dejando el SVG/ícono base
+    while (ico.childNodes.length > 1 && (ico.lastChild.nodeType === Node.TEXT_NODE || ico.lastChild.tagName === 'P')) {
+        ico.removeChild(ico.lastChild);
+    }
+
+    let textoAMostrar = '';
+    if (val) {
+        if (obj === fechaLimite) {
+            // Formatear fecha si es el selector de fecha
+            const partesFecha = val.split('-'); // val es YYYY-MM-DD
+            // Formato corto: DD/MM
+            textoAMostrar = `${partesFecha[2]}/${partesFecha[1]}`;
+            // Formato más completo: DD NombreMesCorto (ej: 25 Jul)
+            // const fechaObj = new Date(parseInt(partesFecha[0]), parseInt(partesFecha[1]) - 1, parseInt(partesFecha[2]));
+            // textoAMostrar = `${partesFecha[2]} ${calNombresMeses[fechaObj.getMonth()]}`;
+        } else {
+            textoAMostrar = val;
+        }
+    } else if (txtPredeterminado) {
+        // Solo si se proporciona explícitamente un texto predeterminado
+        textoAMostrar = txtPredeterminado;
+    }
+
+    if (textoAMostrar) {
+        // Solo añadir el <p> si hay algo que mostrar
+        let txtElem = document.createElement('p');
+        txtElem.textContent = textoAMostrar;
+        ico.appendChild(txtElem);
+    }
+    obj.valor = val;
+}
+
 function selectorTipoTarea() {
     importancia.selector = document.getElementById('sImportancia');
     tipoTarea.selector = document.getElementById('sTipo');
+    fechaLimite.selector = document.getElementById('sFechaLimite');
+    // La función actSel ya está definida globalmente
+
     const impContenedor = document.querySelector('#sImportancia-sImportancia .A1806242');
     const tipoContenedor = document.querySelector('#sTipo-sTipo .A1806242');
 
-    function actSel(obj, val) {
-        let ico = obj.selector.querySelector('span.icono');
-        let txt = document.createElement('p');
-        txt.textContent = val;
-        if (ico.childNodes.length > 1) {
-            ico.removeChild(ico.lastChild);
-        }
-        ico.appendChild(txt);
-        obj.valor = val;
+    if (impContenedor) {
+        impContenedor.addEventListener('click', event => {
+            if (event.target.tagName === 'BUTTON') {
+                actSel(importancia, event.target.value);
+                window.hideAllSubmenus();
+            }
+        });
     }
 
-    impContenedor.addEventListener('click', event => {
-        if (event.target.tagName === 'BUTTON') {
-            actSel(importancia, event.target.value);
-            window.hideAllSubmenus();
-        }
-    });
+    if (tipoContenedor) {
+        tipoContenedor.addEventListener('click', event => {
+            if (event.target.tagName === 'BUTTON') {
+                actSel(tipoTarea, event.target.value);
+                window.hideAllSubmenus();
+            }
+        });
+    }
 
-    tipoContenedor.addEventListener('click', event => {
-        if (event.target.tagName === 'BUTTON') {
-            actSel(tipoTarea, event.target.value);
-            window.hideAllSubmenus();
-        }
-    });
-
+    // Valores iniciales
     actSel(importancia, 'media');
     actSel(tipoTarea, 'una vez');
+    actSel(fechaLimite, null); // No pasamos 'Sin fecha', actSel lo maneja
 }
 
 function editarTarea() {
@@ -716,7 +765,7 @@ function cambiarFrecuencia() {
             li.after(ops);
 
             // Definir y guardar el manejador para poder removerlo
-            window.cerrarMenuSiClicFueraFrecuenciaHandler = (e) => {
+            window.cerrarMenuSiClicFueraFrecuenciaHandler = e => {
                 if (!ops.contains(e.target) && !divClicado.contains(e.target)) {
                     ops.remove();
                     if (window.cerrarMenuSiClicFueraFrecuenciaHandler) {
@@ -726,13 +775,14 @@ function cambiarFrecuencia() {
                 }
             };
 
-            setTimeout(() => { // Añadir listener después del ciclo de evento actual
+            setTimeout(() => {
+                // Añadir listener después del ciclo de evento actual
                 document.addEventListener('click', window.cerrarMenuSiClicFueraFrecuenciaHandler);
             }, 0);
 
             const ps = ops.querySelectorAll('p:not([data-frecuencia="personalizada"])');
             ps.forEach(p => {
-                p.addEventListener('click', (evP) => {
+                p.addEventListener('click', evP => {
                     evP.stopPropagation();
                     const frec = p.dataset.frecuencia;
                     const data = {
@@ -749,7 +799,7 @@ function cambiarFrecuencia() {
             });
 
             const btn = ops.querySelector('#btnPersonalizar');
-            btn.addEventListener('click', (evBtn) => {
+            btn.addEventListener('click', evBtn => {
                 evBtn.stopPropagation();
                 const input = ops.querySelector('#diasPersonalizados');
                 const dias = parseInt(input.value);
@@ -841,7 +891,7 @@ async function manejarClicPrioridad(event) {
     liOriginal.after(ops); // Insertar el menú después del elemento de la tarea
 
     // Definir y guardar el manejador para poder removerlo
-    window.cerrarMenuSiClicFueraPrioridadHandler = (e) => {
+    window.cerrarMenuSiClicFueraPrioridadHandler = e => {
         // Si el clic NO es dentro del menú Y NO es en el botón que lo abrió
         if (!ops.contains(e.target) && !divPrioridadOriginal.contains(e.target)) {
             ops.remove();
@@ -852,14 +902,15 @@ async function manejarClicPrioridad(event) {
         }
     };
 
-    setTimeout(() => { // Añadir listener después del ciclo de evento actual
+    setTimeout(() => {
+        // Añadir listener después del ciclo de evento actual
         document.addEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
     }, 0);
 
-
     const ps = ops.querySelectorAll('p');
     ps.forEach(p => {
-        p.addEventListener('click', async (evP) => { // Renombrado event a evP
+        p.addEventListener('click', async evP => {
+            // Renombrado event a evP
             evP.stopPropagation(); // Detener la propagación para clics en items del menú
 
             const prioSeleccionada = p.dataset.prioridad;
@@ -883,7 +934,6 @@ async function manejarClicPrioridad(event) {
                 document.removeEventListener('click', window.cerrarMenuSiClicFueraPrioridadHandler);
                 window.cerrarMenuSiClicFueraPrioridadHandler = null;
             }
-
 
             let logsFinales = logs;
 
@@ -1133,4 +1183,174 @@ function borrarTareaVacia() {
             }
         });
     });
+}
+
+// Esta función se llamará una vez para configurar los listeners del calendario
+function cfgCal() {
+    const sfl = document.getElementById('sFechaLimite');
+    const cal = document.getElementById('calCont');
+    const calPrevBtn = document.getElementById('calPrev');
+    const calNextBtn = document.getElementById('calNext');
+    const calHoyBtn = document.getElementById('calHoyBtn');
+    const calBorrarBtn = document.getElementById('calBorrarBtn');
+    const inputFechaOculto = document.getElementById('inputFechaLimite');
+
+    if (!sfl || !cal || !calPrevBtn || !calNextBtn || !calHoyBtn || !calBorrarBtn || !inputFechaOculto) {
+        console.error('cfgCal: Faltan elementos del calendario en el DOM.');
+        return;
+    }
+
+    const trDiasSemana = document.getElementById('calDiasSemana');
+    trDiasSemana.innerHTML = '';
+    calDiasSemanaCabecera.forEach(dia => {
+        const th = document.createElement('th');
+        th.textContent = dia;
+        trDiasSemana.appendChild(th);
+    });
+
+    sfl.addEventListener('click', e => {
+        e.stopPropagation();
+        if (cal.style.display === 'block') {
+            ocultarCal();
+        } else {
+            mostrarCal();
+        }
+    });
+
+    calPrevBtn.addEventListener('click', () => {
+        calMes--;
+        if (calMes < 0) {
+            calMes = 11;
+            calAnio--;
+        }
+        renderCal();
+    });
+
+    calNextBtn.addEventListener('click', () => {
+        calMes++;
+        if (calMes > 11) {
+            calMes = 0;
+            calAnio++;
+        }
+        renderCal();
+    });
+
+    calHoyBtn.addEventListener('click', () => {
+        const hoy = new Date();
+        fechaLimite.valor = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        inputFechaOculto.value = fechaLimite.valor;
+        actSel(fechaLimite, fechaLimite.valor); // Ya no pasamos 'Sin fecha'
+        calMes = hoy.getMonth();
+        calAnio = hoy.getFullYear();
+        renderCal();
+        // ocultarCal(); // Descomentar si quieres que se cierre tras seleccionar "Hoy"
+    });
+
+    calBorrarBtn.addEventListener('click', () => {
+        fechaLimite.valor = null;
+        inputFechaOculto.value = '';
+        actSel(fechaLimite, null); // No pasar 'Sin fecha', la función actSel ya lo maneja
+        renderCal();
+        ocultarCal();
+    });
+
+    document.addEventListener('click', event => {
+        if (cal.style.display === 'block' && !cal.contains(event.target) && !sfl.contains(event.target)) {
+            ocultarCal();
+        }
+    });
+}
+
+function mostrarCal() {
+    const sfl = document.getElementById('sFechaLimite');
+    const cal = document.getElementById('calCont');
+
+    const rect = sfl.getBoundingClientRect();
+    cal.style.top = rect.bottom + window.scrollY + 5 + 'px';
+    cal.style.left = rect.left + window.scrollX + 'px';
+
+    if (fechaLimite.valor) {
+        const partes = fechaLimite.valor.split('-');
+        calAnio = parseInt(partes[0]);
+        calMes = parseInt(partes[1]) - 1;
+    } else {
+        const hoy = new Date();
+        calAnio = hoy.getFullYear();
+        calMes = hoy.getMonth();
+    }
+
+    cal.style.display = 'block';
+    renderCal();
+}
+
+function ocultarCal() {
+    const cal = document.getElementById('calCont');
+    cal.style.display = 'none';
+}
+
+function renderCal() {
+    const calMesAnioEl = document.getElementById('calMesAnio');
+    const calBodyEl = document.getElementById('calBody');
+    const inputFechaOculto = document.getElementById('inputFechaLimite');
+
+    calMesAnioEl.textContent = `${calNombresMeses[calMes]} ${calAnio}`;
+    calBodyEl.innerHTML = '';
+
+    const primerDiaMes = new Date(calAnio, calMes, 1);
+    const ultimoDiaMes = new Date(calAnio, calMes + 1, 0);
+    const diasEnMes = ultimoDiaMes.getDate();
+
+    let diaSemanaPrimerDia = primerDiaMes.getDay();
+    if (diaSemanaPrimerDia === 0) diaSemanaPrimerDia = 6;
+    else diaSemanaPrimerDia--;
+
+    const hoy = new Date();
+    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+
+    let fechaActual = 1;
+    for (let i = 0; i < 6; i++) {
+        const fila = document.createElement('tr');
+        for (let j = 0; j < 7; j++) {
+            const celda = document.createElement('td');
+            const divDia = document.createElement('div');
+            divDia.classList.add('cal-dia');
+
+            if (i === 0 && j < diaSemanaPrimerDia) {
+                divDia.classList.add('cal-dia-fuera');
+            } else if (fechaActual > diasEnMes) {
+                divDia.classList.add('cal-dia-fuera');
+            } else {
+                const spanNum = document.createElement('span');
+                spanNum.classList.add('cal-dia-num');
+                spanNum.textContent = fechaActual;
+                divDia.appendChild(spanNum);
+
+                const fechaCompletaStr = `${calAnio}-${String(calMes + 1).padStart(2, '0')}-${String(fechaActual).padStart(2, '0')}`;
+                celda.dataset.fecha = fechaCompletaStr;
+
+                if (fechaCompletaStr === hoyStr) {
+                    divDia.classList.add('cal-dia-hoy');
+                }
+                if (fechaLimite.valor === fechaCompletaStr) {
+                    divDia.classList.add('cal-dia-sel');
+                }
+
+                celda.addEventListener('click', e => {
+                    // Esta es la línea que mencionaste (aprox)
+                    const fechaSel = e.currentTarget.dataset.fecha;
+                    fechaLimite.valor = fechaSel;
+                    inputFechaOculto.value = fechaSel;
+                    inputFechaOculto.dispatchEvent(new Event('change'));
+
+                    actSel(fechaLimite, fechaSel); // ¡Ahora actSel es global!
+                    ocultarCal();
+                });
+                fechaActual++;
+            }
+            celda.appendChild(divDia);
+            fila.appendChild(celda);
+        }
+        calBodyEl.appendChild(fila);
+        if (fechaActual > diasEnMes && i >= Math.floor((diaSemanaPrimerDia + diasEnMes - 1) / 7)) break;
+    }
 }

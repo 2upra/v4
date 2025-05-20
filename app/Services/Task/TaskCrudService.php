@@ -18,6 +18,7 @@ function crearTarea()
     $ses = isset($_POST['sesion']) ? sanitize_text_field($_POST['sesion']) : '';
     $est = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
     $pad = isset($_POST['padre']) ? (int) sanitize_text_field($_POST['padre']) : 0;
+    $fecLim = isset($_POST['fechaLimite']) ? sanitize_text_field($_POST['fechaLimite']) : null; // Nueva variable
 
     if (empty($tit)) {
         $log = 'Título vacío.';
@@ -50,22 +51,30 @@ function crearTarea()
     $fec = date('Y-m-d');
     $fecprox = date('Y-m-d', strtotime("+{$frec} days"));
 
+    $metaInput = array(
+        'importancia' => $imp,
+        'impnum' => $impnum,
+        'tipo' => $tip,
+        'tipnum' => $tipnum,
+        'estado' => $est,
+        'frecuencia' => $frec,
+        'fecha' => $fec,
+        'fechaProxima' => $fecprox,
+        'sesion' => $ses
+    );
+
+    if (!empty($fecLim)) {
+        // Validar el formato de fecha YYYY-MM-DD si es necesario
+        // Por ahora, asumimos que llega en el formato correcto o es null
+        $metaInput['fechaLimite'] = $fecLim;
+    }
+
     $args = array(
         'post_title' => $tit,
         'post_type' => 'tarea',
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
-        'meta_input' => array(
-            'importancia' => $imp,
-            'impnum' => $impnum,
-            'tipo' => $tip,
-            'tipnum' => $tipnum,
-            'estado' => $est,
-            'frecuencia' => $frec,
-            'fecha' => $fec,
-            'fechaProxima' => $fecprox,
-            'sesion' => $ses
-        ),
+        'meta_input' => $metaInput,
     );
 
     // Si se recibe un padre, se crea como subtarea
