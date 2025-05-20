@@ -1,4 +1,6 @@
 <?php
+# app/Services/Task/TaskOrderingService.php
+
 // Refactor(Org): Funcion ordenamientoTareas() movida desde app/Services/TaskService.php
 function ordenamientoTareas($queryArgs, $usu, $args, $prioridad = false)
 {
@@ -33,7 +35,7 @@ function ordenamientoTareas($queryArgs, $usu, $args, $prioridad = false)
 
         // Reordenar subtareas debajo de sus padres respetando el orden existente
         $ordenFinalReordenado = [];
-        $subtareasOrdenadas = []; 
+        $subtareasOrdenadas = [];
 
         foreach ($ordenFinal as $tareaId) {
             $tarea = get_post($tareaId);
@@ -47,7 +49,7 @@ function ordenamientoTareas($queryArgs, $usu, $args, $prioridad = false)
                     'post_type'   => 'tarea',
                     'fields'      => 'ids'
                 ]);
-                
+
                 if (!empty($subtareas)) {
                     $log .= "Subtareas encontradas para la tarea $tareaId: " . implode(', ', $subtareas) . ".\n";
 
@@ -55,21 +57,20 @@ function ordenamientoTareas($queryArgs, $usu, $args, $prioridad = false)
                     $log .= "Subtareas existentes para la tarea $tareaId: " . implode(', ', $subtareasExistentes) . ".\n";
 
                     foreach ($subtareasExistentes as $subtareaId) {
-                         $ordenFinalReordenado[] = $subtareaId;
-                         $subtareasOrdenadas[] = $subtareaId;
-                         $log .= "Subtarea $subtareaId agregada al orden después de la tarea padre $tareaId.\n";
+                        $ordenFinalReordenado[] = $subtareaId;
+                        $subtareasOrdenadas[] = $subtareaId;
+                        $log .= "Subtarea $subtareaId agregada al orden después de la tarea padre $tareaId.\n";
                     }
 
                     $subtareasFaltantes = array_diff($subtareas, $subtareasExistentes); //Subtareas nuevas o que no estan el orden actual
                     $log .= "Subtareas nuevas para la tarea $tareaId: " . implode(', ', $subtareasFaltantes) . ".\n";
 
-                    foreach($subtareasFaltantes as $subtareaId){
-                         $ordenFinalReordenado[] = $subtareaId;
-                         $log .= "Subtarea nueva $subtareaId agregada al orden después de la tarea padre $tareaId.\n";
+                    foreach ($subtareasFaltantes as $subtareaId) {
+                        $ordenFinalReordenado[] = $subtareaId;
+                        $log .= "Subtarea nueva $subtareaId agregada al orden después de la tarea padre $tareaId.\n";
                     }
-
                 }
-            } else if (!in_array($tareaId, $subtareasOrdenadas)) { 
+            } else if (!in_array($tareaId, $subtareasOrdenadas)) {
                 $log .= "Tarea $tareaId es una subtarea huerfana. \n";
                 $ordenFinalReordenado[] = $tareaId;
             }
@@ -167,7 +168,6 @@ function ordenamientoTareasPorPrioridad($queryArgs, $usu)
 // Refactor(Org): Funcion actualizarOrdenTareas() y hook AJAX movidos desde app/Services/TaskService.php
 // Refactor(Org): Funciones helper (manejarSubtarea, esPadreUnaSubtarea, actualizarOrden, actualizarSesionEstado) movidas desde app/Services/TaskService.php
 
-//aqui hay que ajustar algo, hay un error, a veces las tareas padres se vuelven subtareas de sus propios hijos, hay que evitar eso, supongo que  es facil de evitar
 function manejarSubtarea($id, $idPadre)
 {
     $log = '';
@@ -241,7 +241,7 @@ function actualizarOrden($ordenTar, $ordenNue)
     return $ordenNue;
 }
 
-//esto funciona bien, solo necesito que si una tarea padre si archiva, sus hijas tambien, o si desarchiva, sus hijas tambien, y si una hijo es archivado, entonces, deja de ser una subtarea, asi de simple. Por rendimiento, esto obviamente debe suceder si se trata de una subtarea o un tarea padre con hijas
+
 function actualizarSesionEstado($tareaMov, $sesionArr)
 {
     $log = "actualizarSesionEstado: ";
@@ -342,6 +342,79 @@ function actualizarSesionEstado($tareaMov, $sesionArr)
 
     guardarLog($log);
 }
+
+function actualizarOrdenTareasGrupo()
+{
+    $usu = get_current_user_id();
+    $log = "actualizarOrdenTareasGrupo: \n  Usuario ID: $usu";
+
+    // Log crudo de $_POST para diagnóstico exhaustivo
+    $log .= ", \n  Contenido CRUDO de \$_POST: " . print_r($_POST, true);
+
+    $tareasMovIdsInput = isset($_POST['tareasMovidas']) ? $_POST['tareasMovidas'] : null;
+    $ordenNueInput = isset($_POST['ordenNuevo']) ? $_POST['ordenNuevo'] : null;
+
+    $log .= ", \n  tareasMovidas (input crudo desde \$_POST): " . var_export($tareasMovIdsInput, true);
+    $log .= ", \n  ordenNuevo (input crudo desde \$_POST): " . var_export($ordenNueInput, true);
+
+    $tareasMovIds = [];
+    if (is_array($tareasMovIdsInput)) {
+        // Si jQuery.ajax o similar ya lo convirtió a un array PHP
+        $tareasMovIds = array_map('intval', $tareasMovIdsInput);
+        $log .= ", \n  tareasMovidasInput era array, procesado como tal.";
+    } elseif (is_string($tareasMovIdsInput) && !empty($tareasMovIdsInput)) {
+        // Si llegó como un string, ej: "724,725,726"
+        // O si llegó como un string de un solo número: "724"
+        $tareasMovIds = array_map('intval', explode(',', $tareasMovIdsInput));
+        $log .= ", \n  tareasMovidasInput era string, procesado con explode y intval.";
+    }
+
+    $ordenNue = [];
+    if (is_array($ordenNueInput)) {
+        $ordenNue = array_map('intval', $ordenNueInput);
+        $log .= ", \n  ordenNueInput era array, procesado como tal.";
+    } elseif (is_string($ordenNueInput) && !empty($ordenNueInput)) {
+        $ordenNue = array_map('intval', explode(',', $ordenNueInput));
+        $log .= ", \n  ordenNueInput era string, procesado con explode y intval.";
+    }
+
+    $log .= ", \n  Tareas movidas IDs (procesado FINAL): " . implode(',', $tareasMovIds);
+    $log .= ", \n  Nuevo orden IDs (procesado FINAL): " . implode(',', $ordenNue);
+
+    if (empty($tareasMovIds) || empty($ordenNue)) {
+        $log .= ", \n  Error: Datos insuficientes después del procesamiento. tareasMovidas o ordenNuevo están vacíos.";
+        guardarLog($log);
+        wp_send_json_error(['error' => 'Datos insuficientes para actualizar el orden del grupo.'], 400);
+        return;
+    }
+
+    // Es VITAL que $ordenNue sea el array COMPLETO de IDs de TODAS las tareas visibles para el usuario,
+    // en el nuevo orden deseado. El JS parece estar haciendo esto correctamente:
+    // const ordenNuevo = Array.from(listaMov.querySelectorAll('.draggable-element')).map(t => t.getAttribute('id-post'));
+
+    $ordenTarMetaAnterior = get_user_meta($usu, 'ordenTareas', true) ?: [];
+    $log .= ", \n  Orden en user_meta ANTES de actualizar: " . implode(',', $ordenTarMetaAnterior);
+
+    actualizarOrden([], $ordenNue); // actualizarOrden actualiza el user_meta 'ordenTareas' con $ordenNue
+
+    $ordenTarMetaPosterior = get_user_meta($usu, 'ordenTareas', true) ?: [];
+    $log .= ", \n  Orden en user_meta DESPUÉS de actualizar: " . implode(',', $ordenTarMetaPosterior);
+
+    if ($ordenTarMetaAnterior === $ordenTarMetaPosterior && count($ordenNue) > 1) {
+        $log .= ", \n  ADVERTENCIA: El orden en user_meta no cambió después de la actualización, pero debería haberlo hecho si el orden nuevo era diferente.";
+    } elseif (count($ordenTarMetaPosterior) !== count($ordenNue) && !empty($ordenNue)) {
+        $log .= ", \n  ADVERTENCIA: La cantidad de elementos en el orden guardado (" . count($ordenTarMetaPosterior) . ") no coincide con la cantidad de elementos en el nuevo orden enviado (" . count($ordenNue) . ").";
+    }
+
+
+    $log .= ", \n  Llamada a actualizarOrden completada. Orden de tareas (user_meta) debería estar actualizado para el usuario $usu.";
+    guardarLog($log);
+
+    wp_send_json_success(['mensaje' => 'Orden de grupo de tareas actualizado correctamente.', 'ordenGuardado' => $ordenNue]);
+}
+
+
+add_action('wp_ajax_actualizarOrdenTareasGrupo', 'actualizarOrdenTareasGrupo');
 
 function actualizarOrdenTareas()
 {

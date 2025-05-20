@@ -272,14 +272,6 @@ function modificarTarea()
     }
 
     if ($id === 0) {
-        // Refactor: Llamada a la función crearTarea que ahora está en TaskCrudService
-        // Asegúrate de que TaskCrudService.php esté incluido donde sea necesario.
-        // $tareaId = crearTarea(); // Esta llamada fallará si el archivo no está incluido o la función no es global.
-        // Por ahora, asumimos que está disponible globalmente o se manejará la inclusión.
-        // Si crearTarea() ya no está disponible globalmente, esta lógica necesita ajustarse.
-        // Dado que crearTarea() ahora está en TaskCrudService.php y usa wp_send_json_*, no devolverá el ID directamente aquí.
-        // La lógica original que dependía de crearTarea() devolviendo un ID necesita ser revisada.
-        // Por ahora, comentamos la llamada directa y enviamos un error indicando que la creación debe manejarse por separado.
         wp_send_json_error('La creación de nuevas tareas debe usar la acción AJAX crearTarea.');
         return;
     }

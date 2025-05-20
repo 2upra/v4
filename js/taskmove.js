@@ -1,3 +1,4 @@
+//taskmove.js
 
 window.initMoverTarea = () => {
     const tit = document.getElementById('tituloTarea');
@@ -5,18 +6,37 @@ window.initMoverTarea = () => {
 };
 
 function manejarSeleccionTarea(ev) {
-    const tarea = ev.target.closest('.draggable-element');
-    if (!tarea) return;
-    const id = tarea.getAttribute('id-post');
+    const tareaElem = ev.target.closest('.draggable-element');
+    if (!tareaElem) return;
+
+    // Si el clic fue en un control DENTRO de la tarea (ej: icono de prioridad, archivar, completar)
+    // y NO se usó Ctrl, NO queremos modificar la selección actual.
+    // La acción del control específico se encargará, y podría necesitar la selección múltiple.
+    if (!ev.ctrlKey && ev.target.closest('.divImportancia, .divArchivado, .completaTarea, .divFrecuencia')) {
+        //Añade aquí otros selectores de controles internos si los tienes
+        return; // No modificar la selección, dejar que el control específico actúe.
+    }
+
+    const id = tareaElem.getAttribute('id-post');
 
     if (ev.ctrlKey) {
+        // Lógica de selección/deselección con Ctrl (sin cambios)
         if (tareasSeleccionadas.includes(id)) {
             tareasSeleccionadas = tareasSeleccionadas.filter(selId => selId !== id);
-            tarea.classList.remove('seleccionado');
+            tareaElem.classList.remove('seleccionado');
         } else {
             tareasSeleccionadas.push(id);
-            tarea.classList.add('seleccionado');
+            tareaElem.classList.add('seleccionado');
         }
+    } else {
+        // Clic simple (sin Ctrl) directamente en una tarea (no en un control específico dentro de ella)
+        // Deseleccionar otras y seleccionar solo esta.
+        if (!tareasSeleccionadas.includes(id) || tareasSeleccionadas.length > 1) {
+            deseleccionarTareas(); // Limpia selecciones previas
+            tareasSeleccionadas.push(id); // Selecciona la actual
+            tareaElem.classList.add('seleccionado');
+        }
+        // Si se hace clic en una tarea que ya es la única seleccionada, no hace nada.
     }
 }
 
@@ -33,30 +53,49 @@ function moverTarea() {
     if (!listaMov || listaMov.listenersAdded) return;
     listaMov.listenersAdded = true;
 
-    const iniciarArrastre = ev => {
-        if (inicializarVars(ev)) {
-            listaMov.addEventListener('mousemove', manejarMov);
-            listaMov.addEventListener('mouseup', finalizarArrastre);
-        }
-    };
+    // La función 'inicializarVars' y otras relacionadas con el arrastre no cambian para esta solución.
 
     listaMov.addEventListener('mousedown', ev => {
+        // ****** INICIO DE LA MODIFICACIÓN CLAVE ******
+        // Verificar si el mousedown ocurrió dentro de un menú de opciones.
+        const esEnMenuOpciones = ev.target.closest('.opcionesPrioridad, .opcionesFrecuencia');
+
+        if (esEnMenuOpciones) {
+            // Si el mousedown es en un menú, no hacer nada aquí.
+            // Específicamente, NO deseleccionar y NO intentar iniciar un arrastre.
+            // La interacción la manejará el listener de 'click' del propio menú.
+            return;
+        }
+        // ****** FIN DE LA MODIFICACIÓN CLAVE ******
+
         const elem = ev.target.closest('.draggable-element');
         if (elem) {
-            // Solo se deselecciona si no hay ninguna tarea previamente seleccionada
-            if (!ev.ctrlKey && tareasSeleccionadas.length === 0) {
-                deseleccionarTareas();
+            // Si el mousedown fue en un control DENTRO de la tarea que tiene su propia acción
+            // (como el icono de prioridad, archivar, etc.), no queremos iniciar un arrastre.
+            // Dejamos que el evento 'click' en ese control se maneje.
+            // La función 'inicializarVars' se encargará de esto también.
+            if (inicializarVars(ev)) {
+                // inicializarVars ahora también debería verificar esto
+                listaMov.addEventListener('mousemove', manejarMov);
+                listaMov.addEventListener('mouseup', finalizarArrastre);
             }
-            iniciarArrastre(ev);
         } else {
+            // Mousedown ocurrió FUERA de un draggable-element Y NO en un menú de opciones (ya cubierto arriba).
+            // Esto implica un clic en el espacio vacío de la lista. Deseleccionar todo.
             deseleccionarTareas();
         }
     });
 
     listaMov.addEventListener('click', manejarSeleccionTarea);
     listaMov.addEventListener('dragstart', ev => ev.preventDefault());
+
     document.addEventListener('click', ev => {
-        if (!listaMov.contains(ev.target)) deseleccionarTareas();
+        if (ev.target.closest('.opcionesPrioridad, .opcionesFrecuencia')) {
+            return;
+        }
+        if (listaMov && !listaMov.contains(ev.target)) {
+            deseleccionarTareas();
+        }
     });
 }
 
@@ -76,35 +115,46 @@ let listaMov,
 
 const tolerancia = 10;
 
-/* INICIALIZACIÓN DE VARIABLES AL INICIAR EL ARRASTRE */
+// Ajuste sugerido para inicializarVars para que no inicie arrastre
+// si el clic es en un control interno que tiene su propia acción.
 function inicializarVars(ev) {
-    // Se obtiene el elemento clickeado
-    const target = ev.target.closest('.draggable-element');
-    if (!target) return false;
+    const targetOriginal = ev.target; // El elemento exacto donde ocurrió el mousedown
+    const elemArrastrable = targetOriginal.closest('.draggable-element');
 
+    if (!elemArrastrable) return false; // No es un elemento arrastrable
+
+    // Si el mousedown fue directamente en un control DENTRO de la tarea que NO debe iniciar arrastre
+    if (targetOriginal.closest('.divImportancia, .divArchivado, .completaTarea, .divFrecuencia')) {
+        // Estos elementos tienen sus propios listeners de 'click' para acciones.
+        // No queremos que un mousedown en ellos inicie un arrastre.
+        return false; // No inicializar para arrastre
+    }
+
+    // Lógica original de inicializarVars para determinar el grupo a arrastrar
     let grupo;
-    // Si el elemento está en la lista de seleccionadas, se arrastrará el grupo completo
-    if (tareasSeleccionadas.includes(target.getAttribute('id-post'))) {
+    if (tareasSeleccionadas.includes(elemArrastrable.getAttribute('id-post'))) {
         grupo = Array.from(listaMov.querySelectorAll('.draggable-element')).filter(el => tareasSeleccionadas.includes(el.getAttribute('id-post')));
+        if (grupo.length === 0) {
+            // Fallback si la tarea seleccionada no se encontró bien
+            grupo = [elemArrastrable];
+        }
     } else {
-        grupo = [target];
+        grupo = [elemArrastrable];
     }
     arrastrandoElems = grupo;
 
-    // Si se arrastra una única tarea, se usan las variables originales para conservar la lógica de “subtareas”
+    // Resto de la lógica de inicializarVars (asignación a arrastrandoElem, esSubtarea, etc.)
     if (grupo.length === 1) {
         arrastrandoElem = grupo[0];
         esSubtarea = arrastrandoElem.getAttribute('subtarea') === 'true';
         idTarea = arrastrandoElem.getAttribute('id-post');
         ordenViejo = Array.from(listaMov.querySelectorAll('.draggable-element')).map(t => t.getAttribute('id-post'));
-        // Para arrastrar subtareas: si la tarea arrastrada no es subtarea, se obtienen las tareas que cuelgan de ella
         if (!esSubtarea) {
             subtareasArrastradas = Array.from(listaMov.querySelectorAll(`.draggable-element[padre="${idTarea}"]`));
         } else {
             subtareasArrastradas = [];
         }
     } else {
-        // En modo grupo se ignoran las variables individuales; se conserva solo el grupo.
         arrastrandoElem = null;
         subtareasArrastradas = [];
         esSubtarea = false;
@@ -115,10 +165,9 @@ function inicializarVars(ev) {
     posInicialY = ev.clientY;
     movRealizado = false;
 
-    // Se agrega la clase de arrastre a todos los elementos del grupo
     arrastrandoElems.forEach(el => el.classList.add('dragging'));
     document.body.classList.add('dragging-active');
-    return true;
+    return true; // Inicialización exitosa, se puede proceder a añadir listeners de mousemove/mouseup
 }
 
 /* MANEJO DEL MOVIMIENTO */

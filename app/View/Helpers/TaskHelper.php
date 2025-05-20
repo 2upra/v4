@@ -204,7 +204,7 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
 
         <div class="divSesion" data-tarea="<? echo $tareaId; ?>" style="display: none; cursor: pointer;">
             <p class="sesionTarea">
-                <? echo $GLOBALS['carpetaIcon'] ?? '[S]'; // Usar Null coalescing operator ?>
+                <? echo $GLOBALS['carpetaIcon'] ?>
             </p>
         </div>
 

@@ -1,3 +1,5 @@
+// task.js
+
 let importancia = {
     selector: null,
     valor: 'media'
@@ -71,18 +73,24 @@ function pegarTareaHandler(ev) {
     ev.preventDefault();
     const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
     const lineas = textoPegado
-        .split('')
+        .split('\n')
         .map(linea => linea.trim())
         .filter(linea => linea);
-    const maxTareas = 30;
-    const lineasProcesadas = lineas.slice(0, maxTareas);
-    const tit = document.getElementById('tituloTarea');
-    const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
 
-    if (lineasProcesadas.some(linea => linea.length > 140)) {
-        alert('Ningun titulo puede superar los 140 caracteres.');
+    if (lineas.length === 0) {
         return;
     }
+
+    const maxTareas = 30;
+    const lineasProcesadas = lineas.slice(0, maxTareas);
+
+    if (lineasProcesadas.some(linea => linea.length > 300)) {
+        alert('Ningun titulo puede superar los 300 caracteres.');
+        return;
+    }
+
+    const tit = document.getElementById('tituloTarea');
+    const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
 
     const promesas = lineasProcesadas.map(titulo => {
         return enviarAjax('crearTarea', {
@@ -94,47 +102,58 @@ function pegarTareaHandler(ev) {
 
     Promise.all(promesas)
         .then(async respuestas => {
-            let todasExitosas = respuestas.every(rta => rta.success);
-            let log = 'pegarTareaHandler: ';
+            let tareasCreadasAPI = 0;
+            let tareasAgregadasUI = 0;
+            let erroresDetallados = [];
 
-            if (todasExitosas) {
-                log += `Tareas creadas exitosamente. Se procesaron ${lineasProcesadas.length} tareas.`;
+            if (tit) {
                 tit.value = '';
+            }
 
-                for (const rta of respuestas) {
+            for (let i = 0; i < respuestas.length; i++) {
+                const rta = respuestas[i];
+                const tituloOriginal = lineasProcesadas[i];
+
+                if (rta.success) {
+                    tareasCreadasAPI++;
                     if (rta.data && rta.data.tareaId) {
-                        const tareaNueva = await window.reiniciarPost(rta.data.tareaId, 'tarea');
-
-                        if (tareaNueva && listaTareas) {
-                            const primerDivisor = listaTareas.querySelector('.divisorTarea');
-
-                            if (primerDivisor) {
-                                primerDivisor.insertAdjacentHTML('afterend', tareaNueva);
+                        try {
+                            const tareaNuevaHtml = await window.reiniciarPost(rta.data.tareaId, 'tarea');
+                            if (tareaNuevaHtml && listaTareas) {
+                                const primerDivisor = listaTareas.querySelector('.divisorTarea');
+                                if (primerDivisor) {
+                                    primerDivisor.insertAdjacentHTML('afterend', tareaNuevaHtml);
+                                } else {
+                                    listaTareas.insertAdjacentHTML('afterbegin', tareaNuevaHtml);
+                                }
+                                tareasAgregadasUI++;
                             } else {
-                                listaTareas.insertAdjacentHTML('afterbegin', tareaNueva);
+                                erroresDetallados.push(`UI(ID:${rta.data.tareaId},NoHTMLoLista)`);
                             }
-                        } else {
-                            log += `
- No se pudo agregar la tarea con ID ${rta.data.tareaId} a la lista.`;
+                        } catch (e) {
+                            erroresDetallados.push(`UI(ID:${rta.data.tareaId},ExcepReiniciarPost:${e.message || e})`);
                         }
+                    } else {
+                        erroresDetallados.push(`API(Titulo:${tituloOriginal},NoID)`);
                     }
+                } else {
+                    erroresDetallados.push(`API(Titulo:${tituloOriginal},${rta.data || 'Fallo'})`);
                 }
+            }
 
+            let logMsg = `pegarTareaHandler: Procesadas ${lineasProcesadas.length}. API OK: ${tareasCreadasAPI}. UI OK: ${tareasAgregadasUI}.`;
+            if (erroresDetallados.length > 0) {
+                logMsg += ` Errores: [${erroresDetallados.join('; ')}]`;
+            }
+            console.log(logMsg);
+
+            if (tareasAgregadasUI > 0) {
                 initTareas();
                 window.guardarOrden();
-            } else {
-                respuestas.forEach((rta, index) => {
-                    if (!rta.success) {
-                        log += `
- Error al crear la tarea "${lineasProcesadas[index]}". Detalles: ${rta.data || 'Sin detalles'}`;
-                    }
-                });
             }
-            console.log(log);
         })
         .catch(err => {
-            console.error('pegarTareaHandler: Error al crear tareas:', err);
-            alert('Error al crear tareas. Revisa la consola.');
+            console.error(`pegarTareaHandler: Error crítico: ${err.message || err}`);
         });
 }
 
@@ -149,8 +168,8 @@ function enviarTareaHandler(ev) {
         setTimeout(() => {
             if (tit.value.trim().length === 0) return;
 
-            if (tit.value.length > 140) {
-                alert('El titulo no puede superar los 140 caracteres.');
+            if (tit.value.length > 300) {
+                alert('El titulo no puede superar los 300 caracteres.');
                 return;
             }
 
@@ -262,8 +281,8 @@ function manejarEditarTarea(ev) {
     setCursorPos(tarea, off);
 
     const salirEdicion = () => {
-        if (tarea.textContent.trim().length > 180) {
-            alert('El titulo no puede superar los 180 caracteres.');
+        if (tarea.textContent.trim().length > 300) {
+            alert('El titulo no puede superar los 300 caracteres.');
             tarea.textContent = valorAnt;
         } else if (tarea.textContent.trim() !== '' && tarea.textContent.trim() !== valorAnt) {
             guardarEdicion(tarea, id, valorAnt);
@@ -277,7 +296,7 @@ function manejarEditarTarea(ev) {
     const manejarPegado = ev => {
         ev.preventDefault();
         const texto = ev.clipboardData.getData('text/plain').trim();
-        const nuevoTexto = texto.substring(0, 180 - tarea.textContent.trim().length);
+        const nuevoTexto = texto.substring(0, 300 - tarea.textContent.trim().length);
         document.execCommand('insertText', false, nuevoTexto);
     };
 
@@ -351,13 +370,6 @@ function setCursorPos(el, off) {
     sel.removeAllRanges();
     sel.addRange(rango);
 }
-
-/*
-las tareas tienen un dif, y es importante tomarlo en cuenta cuando el tipo-tarea es habito o habito rigido, 
-<li class="POST-tarea EDYQHV 472  draggable-element pendiente " filtro="tarea" tipo-tarea="habito rigido" id-post="472" autor="1" draggable="true" sesion="general" estado="pendiente" impnum="4" importancia="importante" subtarea="false" padre="" dif="-1" data-submenu-initialized="true" data-seccion="General">
-
-prioridadTarea funciona muy bien pero tiene que tener en cuenta el dif, el dif simplemente es el tiempo que se tiene para completar una tarea, mientras menor sea el numero (tambien hay negativo), mas arriba, asi que, si, tiene que mantenerse la prioridad por el impnum pero dentro de los impnum, si es un habito, primero van los que tienen menor dif
-*/
 
 function prioridadTarea() {
     const boton = document.querySelector('.prioridadTareas');
@@ -465,105 +477,181 @@ function prioridadTarea() {
 
 function archivarTarea() {
     document.querySelectorAll('.divArchivado').forEach(div => {
-        div.addEventListener('click', async function () {
+        // Remover listener anterior si existe para evitar duplicados
+        const listenerExistente = div.funcionListenerArchivo; // Necesitamos guardar una referencia
+        if (listenerExistente) {
+            div.removeEventListener('click', listenerExistente);
+        }
+
+        // Definimos la función listener para poder referenciarla y removerla
+        const nuevaFuncionListener = async function () {
             const divClicado = this;
-            const tarea = divClicado.closest('.draggable-element');
-            const tareaId = divClicado.dataset.tarea;
+            const tareaElementoOriginal = divClicado.closest('.draggable-element');
+            const tareaIdOriginal = divClicado.dataset.tarea;
+            const desarchivarOriginal = tareaElementoOriginal.classList.contains('archivado'); // true si YA está archivado (queremos desarchivar)
+            let logs = `archivarTarea: Iniciando para tarea ${tareaIdOriginal}. Accion deseada: ${desarchivarOriginal ? 'desarchivar' : 'archivar'}. `;
+
+            // Determinar a qué tareas aplicar la acción
+            let idsParaProcesar = [tareaIdOriginal];
+            if (tareasSeleccionadas.length > 1 && tareasSeleccionadas.includes(tareaIdOriginal)) {
+                idsParaProcesar = [...tareasSeleccionadas];
+                logs += `Detectada seleccion multiple (${idsParaProcesar.length} tareas). `;
+            } else {
+                logs += `Accion individual. `;
+            }
+
             const ul = document.querySelector('.social-post-list.clase-tarea');
             const pGeneral = document.querySelector('p.divisorTarea.General');
-            let data = {id: tareaId};
-            let logs = '';
 
-            if (tarea.classList.contains('archivado')) {
-                data.desarchivar = true;
-                logs += `Tarea ${tareaId} estaba archivada. Se va a desarchivar. `;
-            }
-
-            try {
-                const respuesta = await enviarAjax('archivarTarea', data);
-                if (respuesta.success) {
-                    if (data.desarchivar) {
-                        tarea.classList.remove('archivado');
-                        tarea.setAttribute('estado', '');
-                        if (pGeneral) {
-                            pGeneral.after(tarea);
-                        }
-                        logs += `Tarea ${tareaId} desarchivada y movida. `;
-                    } else {
-                        tarea.classList.add('archivado');
-                        tarea.setAttribute('estado', 'archivado');
-                        if (ul) {
-                            ul.appendChild(tarea);
-                        }
-                        logs += `Tarea ${tareaId} archivada y movida al final del ul. `;
-                    }
-                    console.log(logs);
-                } else {
-                    let mensaje = 'Error al archivar la tarea.';
-                    if (respuesta.data) mensaje += ' Detalles: ' + respuesta.data;
-                    console.error(mensaje);
-                    alert(mensaje);
+            for (const id of idsParaProcesar) {
+                const tareaActualElem = document.querySelector(`.draggable-element[id-post="${id}"]`);
+                if (!tareaActualElem) {
+                    logs += `Tarea ${id} no encontrada en DOM, omitiendo. `;
+                    continue; // Saltar al siguiente id
                 }
-            } catch (error) {
-                console.error('Error al archivar la tarea:', error);
-                alert('Error al archivar la tarea.');
+                // La acción (archivar/desarchivar) es la misma para todas, basada en el estado original clicado
+                const data = {id: id, desarchivar: desarchivarOriginal};
+                logs += `Procesando ${id}. `;
+
+                try {
+                    const respuesta = await enviarAjax('archivarTarea', data);
+                    if (respuesta.success) {
+                        logs += `Éxito AJAX para ${id}. `;
+                        if (data.desarchivar) {
+                            tareaActualElem.classList.remove('archivado');
+                            tareaActualElem.setAttribute('estado', '');
+                            if (pGeneral) {
+                                pGeneral.after(tareaActualElem); // Mover después del divisor General
+                            } else {
+                                ul.prepend(tareaActualElem); // O mover al principio si no hay General
+                            }
+                            logs += `Tarea ${id} desarchivada y movida. `;
+                        } else {
+                            // Archivando
+                            tareaActualElem.classList.add('archivado');
+                            tareaActualElem.setAttribute('estado', 'archivado');
+                            if (ul) {
+                                ul.appendChild(tareaActualElem); // Mover al final
+                            }
+                            logs += `Tarea ${id} archivada y movida al final. `;
+                        }
+                    } else {
+                        let mensaje = `Error AJAX para ${id}.`;
+                        if (respuesta.data) mensaje += ' Detalles: ' + respuesta.data;
+                        logs += mensaje;
+                        // Considera no mostrar alert() para cada error en un lote
+                        // alert(mensaje);
+                    }
+                } catch (error) {
+                    logs += `Excepcion AJAX para ${id}: ${error}. `;
+                    // alert('Error al archivar la tarea ' + id);
+                }
             }
-        });
+            // Log general después del bucle
+            console.log(logs + 'Fin archivarTarea.');
+            // Opcional: guardar orden si el movimiento afecta
+            // window.guardarOrden();
+        };
+
+        // Asignar la nueva función y guardar referencia
+        div.addEventListener('click', nuevaFuncionListener);
+        div.funcionListenerArchivo = nuevaFuncionListener;
     });
 }
 
 //se que esto oculta la tarea cuando el filtro esta activado pero, no la tiene que ocultar, sino eliminar del dom
 function completarTarea() {
     document.querySelectorAll('.completaTarea').forEach(boton => {
-        if (!boton.dataset.eventoAgregado) {
-            boton.addEventListener('click', manejarClicCompletar);
-            boton.dataset.eventoAgregado = 'true';
-        }
+        // Remover listener anterior para evitar duplicados si se llama multiples veces
+        boton.removeEventListener('click', manejarClicCompletar);
+        // Agregar el nuevo listener
+        boton.addEventListener('click', manejarClicCompletar);
+        // No es necesario el dataset de eventoAgregado si siempre removemos y agregamos
     });
 }
 
 function manejarClicCompletar() {
-    let log = '';
     const botonClicado = this;
-    const tarea = botonClicado.closest('.draggable-element');
-    const tareaId = botonClicado.dataset.tarea;
-    const dat = {id: tareaId};
-    const estado = tarea.classList.contains('completada') ? 'pendiente' : 'completada';
-    dat.estado = estado;
-    const esHabito = botonClicado.classList.contains('habito');
-    const esHabitoFlexible = botonClicado.classList.contains('habitoFlexible');
+    const tareaElemento = botonClicado.closest('.draggable-element');
+    const tareaIdOriginal = botonClicado.dataset.tarea;
+    const estadoOriginal = tareaElemento.classList.contains('completada') ? 'pendiente' : 'completada';
+    const esHabitoOriginal = botonClicado.classList.contains('habito');
+    const esHabitoFlexibleOriginal = botonClicado.classList.contains('habitoFlexible');
+    let log = `manejarClicCompletar: Iniciando para tarea ${tareaIdOriginal}. Estado deseado: ${estadoOriginal}. `;
 
-    enviarAjax('completarTarea', dat)
-        .then(rta => {
-            if (rta.success) {
-                if (estado === 'completada') {
-                    if (!esHabito && !esHabitoFlexible) {
-                        tarea.classList.add('completada');
-                        tarea.style.textDecoration = 'line-through';
-                    }
+    // Determinar a qué tareas aplicar la acción
+    let idsParaProcesar = [tareaIdOriginal];
+    if (tareasSeleccionadas.length > 1 && tareasSeleccionadas.includes(tareaIdOriginal)) {
+        idsParaProcesar = [...tareasSeleccionadas]; // Clonar para no modificar el original accidentalmente
+        log += `Detectada seleccion multiple (${idsParaProcesar.length} tareas). `;
+    } else {
+        log += `Accion individual. `;
+    }
 
-                    if (window.filtrosGlobales && window.filtrosGlobales.includes('ocultarCompletadas') && !esHabito) {
-                        tarea.remove();
-                    } else if (esHabito || esHabitoFlexible) {
-                        log += 'Reinicio de tarea porque es habito o habito flexible';
-                        window.reiniciarPost(tareaId, 'tarea');
+    // Procesar cada tarea necesaria
+    idsParaProcesar.forEach(id => {
+        const tareaActualElem = document.querySelector(`.draggable-element[id-post="${id}"]`);
+        // Es posible que algún elemento seleccionado ya no exista si se eliminó previamente
+        if (!tareaActualElem) {
+            log += `Tarea ${id} no encontrada en el DOM, omitiendo. `;
+            return; // Saltar a la siguiente iteración
+        }
+        // Necesitamos obtener las propiedades específicas de CADA tarea en el bucle
+        const botonActual = tareaActualElem.querySelector('.completaTarea');
+        const esHabitoActual = botonActual ? botonActual.classList.contains('habito') : false;
+        const esHabitoFlexibleActual = botonActual ? botonActual.classList.contains('habitoFlexible') : false;
+        const estadoActual = tareaActualElem.classList.contains('completada') ? 'pendiente' : 'completada';
+        // Importante: Usar el estado deseado consistentemente para todas las tareas del grupo
+        const estadoDeseado = estadoOriginal;
+
+        const dat = {id: id, estado: estadoDeseado};
+        log += `Procesando ${id}. `;
+
+        enviarAjax('completarTarea', dat)
+            .then(rta => {
+                if (rta.success) {
+                    log += `Éxito AJAX para ${id}. `;
+                    if (estadoDeseado === 'completada') {
+                        // Aplicar estilos solo si no es hábito (los hábitos se reinician)
+                        if (!esHabitoActual && !esHabitoFlexibleActual) {
+                            tareaActualElem.classList.add('completada');
+                            tareaActualElem.style.textDecoration = 'line-through';
+                        }
+
+                        // Ocultar/Eliminar si filtro activo y no es hábito
+                        if (window.filtrosGlobales && window.filtrosGlobales.includes('ocultarCompletadas') && !esHabitoActual && !esHabitoFlexibleActual) {
+                            tareaActualElem.remove();
+                            log += `Tarea ${id} eliminada del DOM (filtro activo). `;
+                        } else if (esHabitoActual || esHabitoFlexibleActual) {
+                            // Reiniciar hábito individualmente
+                            log += `Tarea ${id} es habito/flexible, reiniciando post. `;
+                            window.reiniciarPost(id, 'tarea');
+                        }
+                    } else {
+                        // estado deseado es 'pendiente'
+                        tareaActualElem.classList.remove('completada');
+                        tareaActualElem.style.textDecoration = 'none';
+                        tareaActualElem.style.display = ''; // Asegurar que sea visible
+                        log += `Tarea ${id} marcada como pendiente. `;
                     }
                 } else {
-                    tarea.classList.remove('completada');
-                    tarea.style.textDecoration = 'none';
-                    tarea.style.display = '';
+                    let m = `Error AJAX para ${id}.`;
+                    if (rta.data) m += ' Detalles: ' + rta.data;
+                    log += m;
+                    // Considera no mostrar alert() para cada error en un lote
+                    // alert(m);
                 }
-            } else {
-                let m = 'Error al cambiar el estado de la tarea.';
-                if (rta.data) m += ' Detalles: ' + rta.data;
-                alert(m);
-            }
-        })
-        .catch(err => {
-            alert('Error al completar la tarea.');
-        });
+                // Imprimir log al final del procesamiento de esta tarea específica
+                // console.log(log); // Opcional: log por tarea
+            })
+            .catch(err => {
+                log += `Excepcion AJAX para ${id}: ${err}. `;
+                // alert('Error al completar la tarea ' + id);
+            });
+    });
+    // Imprimir log general después de intentar procesar todas
+    console.log(log + 'Fin manejarClicCompletar.');
 }
-
 function cambiarFrecuencia() {
     const divs = document.querySelectorAll('.divFrecuencia');
     divs.forEach(div => {
@@ -639,58 +727,106 @@ function actualizarFrecuencia(data, div) {
 }
 
 function cambiarPrioridad() {
-    const divs = document.querySelectorAll('.divImportancia');
-    divs.forEach(div => {
-        // Verifica si el div ya tiene un event listener agregado
-        if (!div.dataset.eventoAgregado) {
-            div.addEventListener('click', manejarClicPrioridad);
-            div.dataset.eventoAgregado = 'true';
+    document.querySelectorAll('.divImportancia').forEach(div => {
+        const listenerExistente = div.funcionListenerPrioridad;
+        if (listenerExistente) {
+            div.removeEventListener('click', listenerExistente);
         }
+        const nuevaFuncionListener = manejarClicPrioridad;
+        div.addEventListener('click', nuevaFuncionListener);
+        div.funcionListenerPrioridad = nuevaFuncionListener;
     });
 }
 
 function manejarClicPrioridad() {
-    const div = this;
-    const id = div.dataset.tarea;
-    const li = document.querySelector(`.POST-tarea[id-post="${id}"]`);
+    const divPrioridadOriginal = this;
+    const idOriginal = divPrioridadOriginal.dataset.tarea;
+    const liOriginal = document.querySelector(`.POST-tarea[id-post="${idOriginal}"]`);
+
+    if (!liOriginal) return;
+
+    document.querySelectorAll('.opcionesPrioridad').forEach(menu => menu.remove());
+
     const ops = document.createElement('div');
     ops.classList.add('opcionesPrioridad');
     ops.innerHTML = `
-    <p data-prioridad="baja">${window.iconbaja} baja</p>
-    <p data-prioridad="media">${window.iconMedia} media</p>
-    <p data-prioridad="alta">${window.iconAlta} alta</p>
-    <p data-prioridad="importante">${window.iconimportante} importante</p>
-  `;
-    const menu = li.nextElementSibling;
-    if (menu && menu.classList.contains('opcionesPrioridad')) {
-        menu.remove();
-    } else {
-        li.after(ops);
-    }
+        <p data-prioridad="baja">${window.iconbaja || 'B'} baja</p>
+        <p data-prioridad="media">${window.iconMedia || 'M'} media</p>
+        <p data-prioridad="alta">${window.iconAlta || 'A'} alta</p>
+        <p data-prioridad="importante">${window.iconimportante || 'I'} importante</p>
+      `;
+    liOriginal.after(ops);
+
+    const cerrarMenuSiClicFuera = event => {
+        if (ops.contains(event.target) || (divPrioridadOriginal && divPrioridadOriginal.contains(event.target))) {
+            return;
+        }
+        ops.remove();
+        document.removeEventListener('click', cerrarMenuSiClicFuera);
+    };
+
+    setTimeout(() => {
+        document.addEventListener('click', cerrarMenuSiClicFuera);
+    }, 0);
 
     const ps = ops.querySelectorAll('p');
     ps.forEach(p => {
-        p.addEventListener('click', () => {
-            const prio = p.dataset.prioridad;
-            const data = {
-                tareaId: id,
-                prioridad: prio
-            };
+        p.addEventListener('click', async event => {
+            // <--- **Añadido 'async' aquí**
+            event.stopPropagation();
 
-            enviarAjax('cambiarPrioridad', data)
-                .then(rta => {
+            const prioSeleccionada = p.dataset.prioridad;
+            const tareasSelActuales = tareasSeleccionadas || [];
+
+            console.log(`DEBUG cambiarPrioridad (CON stopPropagation): idOriginal: "${idOriginal}", Prio: ${prioSeleccionada}, tareasSelActuales: ${JSON.stringify(tareasSelActuales)}, incluyeOriginal: ${tareasSelActuales.includes(idOriginal)}, longitud > 1: ${tareasSelActuales.length > 1}`);
+
+            let logs = `cambiarPrioridad: Opción '${prioSeleccionada}' seleccionada para tarea original ${idOriginal}. `;
+
+            let idsParaProcesar = [idOriginal];
+            if (tareasSelActuales.length > 1 && tareasSelActuales.includes(idOriginal)) {
+                idsParaProcesar = [...tareasSelActuales];
+                logs += `Detectada seleccion multiple (${idsParaProcesar.length} tareas). `;
+            } else {
+                logs += `Accion individual. `;
+            }
+
+            ops.remove();
+            document.removeEventListener('click', cerrarMenuSiClicFuera);
+
+            let logsFinales = logs;
+
+            // Función asíncrona para procesar cada tarea secuencialmente
+            async function procesarUnaTarea(id, prio) {
+                const data = {tareaId: id, prioridad: prio};
+                try {
+                    const rta = await enviarAjax('cambiarPrioridad', data);
                     if (rta.success) {
-                        ops.remove();
-                        window.reiniciarPost(id, 'tarea');
+                        logsFinales += `Éxito AJAX para ${id}. Reiniciando post. `;
+                        // Llamar a reiniciarPost
+                        window.reiniciarPost(id, 'tarea'); // Asumiendo que reiniciarPost no devuelve una promesa que necesitemos 'await'
                     } else {
-                        let m = 'Error al cambiar la prioridad de la tarea.';
+                        let m = `Error AJAX para ${id}.`;
                         if (rta.data) m += ' Detalles: ' + rta.data;
-                        alert(m);
+                        logsFinales += m + ' ';
                     }
-                })
-                .catch(err => {
-                    alert('Error al cambiar la prioridad.');
-                });
+                } catch (err) {
+                    logsFinales += `Excepcion AJAX para ${id}: ${err}. `;
+                }
+            }
+
+            // Bucle para procesar todas las tareas seleccionadas
+            for (let i = 0; i < idsParaProcesar.length; i++) {
+                const id = idsParaProcesar[i];
+                await procesarUnaTarea(id, prioSeleccionada);
+
+                // Esperar un corto tiempo entre reinicios si hay múltiples tareas,
+                // para evitar el mensaje "La función ya está en ejecución."
+                // Ajusta el tiempo (en milisegundos) si es necesario.
+                if (idsParaProcesar.length > 1 && i < idsParaProcesar.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 300)); // Espera 300ms
+                }
+            }
+            console.log(logsFinales + 'Fin cambiarPrioridad.');
         });
     });
 }
@@ -700,7 +836,7 @@ async function borrarTareasCompletadas() {
     let limpiar = true;
 
     async function handleClick() {
-        const confirmado = await confirm('Â¿Estas seguro de que quieres borrar todas las tareas completadas?');
+        const confirmado = await confirm('¿Estas seguro de que quieres borrar todas las tareas completadas?');
 
         if (confirmado) {
             const data = {
@@ -769,60 +905,82 @@ window.guardarOrden = function () {
     });
 };
 
+let subTareaListenerAgregado = false;
+
 function subTarea() {
-    const listaTareas = document.querySelector('.clase-tarea');
+    const lista = document.querySelector('.clase-tarea');
+    if (!lista) {
+        // console.log('subTarea: Lista de tareas no encontrada.'); // Log opcional para desarrollo
+        return;
+    }
 
-    listaTareas.addEventListener('keydown', event => {
-        const elementoActual = document.activeElement;
+    if (subTareaListenerAgregado) {
+        return;
+    }
 
-        if (elementoActual.classList.contains('tituloTarea') && elementoActual.isContentEditable) {
-            const tareaActual = elementoActual.closest('.POST-tarea');
-            const idTareaActual = tareaActual.getAttribute('id-post');
+    lista.addEventListener('keydown', ev => {
+        const elActual = document.activeElement;
 
-            if (event.shiftKey && event.key === 'Tab') {
-                event.preventDefault();
+        if (elActual.classList.contains('tituloTarea') && elActual.isContentEditable) {
+            const tareaActual = elActual.closest('.POST-tarea');
+            if (!tareaActual) return;
+
+            const idActual = tareaActual.getAttribute('id-post');
+
+            if (ev.shiftKey && ev.key === 'Tab') {
+                ev.preventDefault();
                 if (tareaActual.classList.contains('subtarea')) {
                     tareaActual.classList.remove('subtarea');
+                    tareaActual.removeAttribute('padre');
 
-                    const data = {
-                        id: idTareaActual,
-                        subtarea: false
-                    };
-
-                    enviarAjax('crearSubtarea', data)
-                        .then(res => {
-                            console.log('Subtarea eliminada exitosamente');
+                    const datos = {id: idActual, subtarea: false};
+                    enviarAjax('crearSubtarea', datos)
+                        .then(rta => {
+                            let log = `subTarea Shift+Tab: ID ${idActual} -> ya no es subtarea. RTA ${rta.success}`;
+                            if (!rta.success && rta.data) log += `. Error: ${rta.data}`;
+                            console.log(log);
+                            if (!rta.success) {
+                                tareaActual.classList.add('subtarea');
+                                // Si guardabas el id del padre anterior, deberías restaurarlo aquí.
+                            }
                         })
-                        .catch(error => {
-                            console.error('Error al eliminar subtarea:', error);
+                        .catch(err => {
+                            console.error(`subTarea Shift+Tab: ID ${idActual}. Excepcion: ${err}`);
+                            tareaActual.classList.add('subtarea');
                         });
                 }
-            } else if (event.key === 'Tab') {
-                event.preventDefault();
-
+            } else if (ev.key === 'Tab' && !ev.shiftKey && !ev.ctrlKey && !ev.altKey) {
+                ev.preventDefault();
                 const tareaAnterior = tareaActual.previousElementSibling;
-                if (tareaAnterior && tareaAnterior.classList.contains('POST-tarea')) {
+
+                if (tareaAnterior && tareaAnterior.classList.contains('POST-tarea') && tareaAnterior !== tareaActual) {
                     tareaActual.classList.add('subtarea');
+                    const idAnterior = tareaAnterior.getAttribute('id-post');
+                    tareaActual.setAttribute('padre', idAnterior);
 
-                    const idTareaAnterior = tareaAnterior.getAttribute('id-post');
-
-                    const data = {
-                        id: idTareaActual,
-                        padre: idTareaAnterior,
-                        subtarea: true
-                    };
-
-                    enviarAjax('crearSubtarea', data)
-                        .then(res => {
-                            console.log('Subtarea creada exitosamente');
+                    const datos = {id: idActual, padre: idAnterior, subtarea: true};
+                    enviarAjax('crearSubtarea', datos)
+                        .then(rta => {
+                            let log = `subTarea Tab: ID ${idActual} -> subtarea de ${idAnterior}. RTA ${rta.success}`;
+                            if (!rta.success && rta.data) log += `. Error: ${rta.data}`;
+                            console.log(log);
+                            if (!rta.success) {
+                                tareaActual.classList.remove('subtarea');
+                                tareaActual.removeAttribute('padre');
+                            }
                         })
-                        .catch(error => {
-                            console.error('Error al crear subtarea:', error);
+                        .catch(err => {
+                            console.error(`subTarea Tab: ID ${idActual} subtarea de ${idAnterior}. Excepcion: ${err}`);
+                            tareaActual.classList.remove('subtarea');
+                            tareaActual.removeAttribute('padre');
                         });
                 }
             }
         }
     });
+
+    subTareaListenerAgregado = true;
+    // console.log('subTarea: Listener inicializado.'); // Log opcional para desarrollo
 }
 
 function borrarTareaVacia() {
@@ -880,7 +1038,6 @@ function borrarTareaVacia() {
                         });
 
                     borrar = false; // Resetear bandera aunque el elemento ya no deberia recibir eventos
-
                 } else {
                     // Primera vez con Backspace en campo vacio: Activar bandera
                     borrar = true;

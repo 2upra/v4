@@ -3,7 +3,7 @@
 function scriptsOrdenados()
 {
     $global_version = '0.2.386';
-    $dev_mode = defined('LOCAL') && LOCAL;
+    $dev_mode = true;
     //$error_log = [];
 
     // Refactor(Org): Enqueue custom fonts CSS

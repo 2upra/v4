@@ -20,6 +20,7 @@ window.inicializarAlerta = function () {
             contentDiv.className = 'notification-content';
             contentDiv.textContent = message;
             notificationDiv.appendChild(contentDiv);
+            
 
             const modalBackground = document.getElementById('modalBackground2');
             if (modalBackground && type === 'confirm') {
