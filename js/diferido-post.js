@@ -7,7 +7,7 @@
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
-    log('Carga reactivada en diferido start');
+    //log('Carga reactivada en diferido start');
     let hayMasContenido = true;
     let paginaActual = 2;
     const publicacionesCargadas = new Set();
@@ -19,11 +19,11 @@
     let loadingCount = 0;
 
     function reiniciarCargaDiferida() {
-        log('Reiniciando carga diferida');
+        //log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScrollGlobal);
         window.removeEventListener('scroll', manejarScrollLista);
         estaCargando = false;
-        log('Carga reactivada ecn reiniciarCargaDiferida');
+        //log('Carga reactivada ecn reiniciarCargaDiferida');
         hayMasContenido = true;
         paginaActual = 2;
         publicacionesCargadas.clear();
@@ -67,13 +67,15 @@
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
                 window.idUsuarioActual = idUsuario;
             } else {
+                //log('El atributo data-iduser está vacío o no es válido.');
             }
         } else {
+            //log('No se encontró el div.X522YA.FRRVBB con el atributo data-iduser.');
         }
     }
 
     function habilitarCargaPorScroll() {
-        log('Configurando evento de scroll');
+        //log('Configurando evento de scroll');
         window.addEventListener('scroll', manejarScrollGlobal);
 
         const listas = document.querySelectorAll('.social-post-list');
@@ -190,7 +192,7 @@
 
         if (!listas || listas.length === 0) {
             log += ' No se encontró la lista.';
-            console.error(log);
+            //console.error(log);
             return null;
         }
 
@@ -246,7 +248,7 @@
 
         if (estaCargando) {
             log += 'La función ya está en ejecución.\n';
-            console.log(log);
+            //console.log(log);
             return null;
         }
 
@@ -278,7 +280,7 @@
         if (!listaPublicaciones) {
             log += 'No se encontró listaPublicaciones después de varios intentos.\n';
             estaCargando = false;
-            console.log(log);
+            //console.log(log);
             return null;
         }
 
@@ -323,7 +325,7 @@
         } finally {
             estaCargando = false;
             log += 'La función ha finalizado.\n';
-            console.log(log);
+            //console.log(log);
         }
 
         return respuestaCompleta;
@@ -335,7 +337,7 @@
         if (!doc) {
             log += 'Respuesta no válida o error en la validación.\n';
             eliminarMarcadorCarga(listaPublicaciones);
-            console.log(log);
+            //console.log(log);
             return;
         }
 
@@ -355,7 +357,7 @@
 
         eliminarMarcadorCarga(listaPublicaciones);
         log += 'Marcador de carga eliminado.\n';
-        console.log(log);
+        //console.log(log);
     }
 
     function manejarContenido(publiValidas, listaPubli, arriba = false, id = null) {
@@ -398,7 +400,7 @@
             detenerCarga();
         }
 
-        console.log('manejarContenido:', log);
+        //console.log('manejarContenido:', log);
     }
 
     function configurarEventoBusqueda() {
@@ -426,7 +428,7 @@
 
         if (!esEnter && !esBoton) {
             log += `Evento no manejado: ${e.type}`;
-            console.log(log);
+            //console.log(log);
             return;
         }
 
@@ -461,7 +463,7 @@
 
         if (identificador === '') {
             log += 'Campo vacío.';
-            console.log(log);
+            //console.log(log);
             return;
         }
 
@@ -658,7 +660,7 @@
                 identificador = input.value.trim();
         
                 if (identificador === '') {
-                    console.log(log);
+                    //console.log(log);
                     return;
                 }
 
@@ -674,7 +676,7 @@
     function resetearCarga() {
         paginaActual = 1;
         publicacionesCargadas.clear();
-        window.scrollTo(0, 0);
+        // window.scrollTo(0, 0);
     }
 
     window.detenerCarga = function () {
@@ -779,10 +781,13 @@ if ('IntersectionObserver' in window) {
                             div.innerHTML = svg; // Inserta el SVG en el div
                             div.removeAttribute('data-src'); // Limpia el data-src
                         })
-                        .catch(err => {});
+                        .catch(err => {
+                            //console.error('Error cargando SVG:', err);
+                        });
 
                     observer.unobserve(div); // Deja de observar el elemento
                 } else {
+                    //console.warn('Elemento .lazy-svg sin data-src:', div);
                 }
             }
         });
@@ -795,6 +800,22 @@ if ('IntersectionObserver' in window) {
         observer.observe(div);
     });
 } else {
+    // Fallback para navegadores que no soportan IntersectionObserver
+    //console.warn('IntersectionObserver no soportado. Cargando todos los SVGs inmediatamente.');
+    document.querySelectorAll('.lazy-svg').forEach(div => {
+        const src = div.getAttribute('data-src');
+        if (src) {
+            fetch(src)
+                .then(response => response.text())
+                .then(svg => {
+                    div.innerHTML = svg;
+                    div.removeAttribute('data-src');
+                })
+                .catch(err => {
+                    //console.error('Error cargando SVG (fallback):', err);
+                });
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {

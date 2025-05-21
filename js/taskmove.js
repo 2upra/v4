@@ -3,6 +3,7 @@
 window.initMoverTarea = () => {
     const tit = document.getElementById('tituloTarea');
     if (tit) moverTarea();
+    //setTimeout(dibujarLineasSubtareas, 150); 
 };
 
 function manejarSeleccionTarea(ev) {
@@ -369,6 +370,7 @@ function guardarOrdenTareas({idTarea, nuevaPos, ordenNuevo, sesionArriba, dataAr
         .then(res => {
             if (res && res.success) {
                 window.reiniciarPost(idTarea, 'tarea');
+                //dibujarLineasSubtareas();
             } else {
                 console.error('Hubo un error en la respuesta del servidor:', res);
             }
@@ -390,6 +392,7 @@ function guardarOrdenTareasGrupo({tareasMovidas, nuevaPos, ordenNuevo}) {
             if (res && res.success) {
                 // Opcional: reiniciar cada tarea del grupo
                 tareasMovidas.forEach(id => window.reiniciarPost(id, 'tarea'));
+                //dibujarLineasSubtareas();
             } else {
                 console.error('Hubo un error en la respuesta del servidor:', res);
             }
@@ -397,4 +400,57 @@ function guardarOrdenTareasGrupo({tareasMovidas, nuevaPos, ordenNuevo}) {
         .catch(err => {
             console.error('Error en la petición AJAX:', err);
         });
+}
+
+function dibujarLineasSubtareas() {
+    const listaElem = document.querySelector('ul.clase-tarea');
+    if (!listaElem) {
+        // console.log('dibujarLineasSubtareas: ul.clase-tarea no encontrado.');
+        return;
+    }
+
+    const svgCont = listaElem.querySelector('#svgLineasConexion');
+    if (!svgCont) {
+        // console.log('dibujarLineasSubtareas: #svgLineasConexion no encontrado como hijo de ul.clase-tarea.');
+        return;
+    }
+
+    svgCont.style.width = listaElem.scrollWidth + 'px';
+    svgCont.style.height = listaElem.scrollHeight + 'px';
+    svgCont.innerHTML = ''; // Limpiar líneas previas
+
+    const todasTareasElems = listaElem.querySelectorAll('li.draggable-element');
+    const tareasMap = new Map();
+    todasTareasElems.forEach(tElem => tareasMap.set(tElem.getAttribute('id-post'), tElem));
+
+    const colX = 15; // Coordenada X (desde el borde izq. de la lista) para la línea vertical principal
+    const offsetXTexto = 25; // Distancia horizontal desde el borde izq. del LI al punto de conexión de texto
+
+    tareasMap.forEach(tareaElem => {
+        if (tareaElem.classList.contains('subtarea')) {
+            const idPadre = tareaElem.getAttribute('padre');
+            if (!idPadre) return;
+            
+            const padreElem = tareasMap.get(idPadre);
+
+            if (padreElem) {
+                const pSalidaX = padreElem.offsetLeft + offsetXTexto;
+                const pY = padreElem.offsetTop + (padreElem.offsetHeight / 2);
+
+                const sEntradaX = tareaElem.offsetLeft + offsetXTexto -5; // -5 para que la linea termine un poco antes del texto de la subtarea
+                const sY = tareaElem.offsetTop + (tareaElem.offsetHeight / 2);
+
+                const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                
+                const puntos = `${pSalidaX},${pY} ${colX},${pY} ${colX},${sY} ${sEntradaX},${sY}`;
+                
+                polyline.setAttribute('points', puntos);
+                polyline.setAttribute('stroke', '#a0a0a0'); // Un gris suave
+                polyline.setAttribute('stroke-width', '1.5');
+                polyline.setAttribute('fill', 'none');
+                svgCont.appendChild(polyline);
+            }
+        }
+    });
+    // console.log('dibujarLineasSubtareas: Líneas actualizadas.');
 }

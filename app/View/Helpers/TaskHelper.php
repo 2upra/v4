@@ -132,8 +132,41 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
     $esHabito = in_array($tipo, ['habito', 'habito rigido', 'habito flexible']);
     $esMeta = ($tipo === 'meta');
 
-    // $idPadre contendrá el ID del post padre si es una subtarea, o un string vacío/false si no lo es.
     $idPadre = get_post_meta($id, 'subtarea', true); 
+
+    // --- INICIO: Información de depuración para el título ---
+    $tituloOriginal = $titulo;
+    $infoDepuracionTitulo = "(ID: " . $id . ")";
+
+    if ($idPadre) {
+        $infoDepuracionTitulo .= " (Padre: " . esc_html($idPadre) . ")";
+    } else {
+        // Es una tarea principal, buscar sus subtareas
+        $postTypeActual = get_post_type($id) ?: 'post'; // Usar el post_type de la tarea actual
+        
+        $argsSubtareas = [
+            'post_type' => $postTypeActual,
+            'post_status' => 'any', // Considera todos los estados, ajusta si es necesario
+            'meta_query' => [
+                [
+                    'key' => 'subtarea',
+                    'value' => $id,
+                    'compare' => '=',
+                ],
+            ],
+            'fields' => 'ids', // Solo obtener los IDs
+            'posts_per_page' => -1, // Todas las subtareas
+            'orderby' => 'menu_order', // O el orden que uses
+            'order' => 'ASC',
+        ];
+        $idsSubtareas = get_posts($argsSubtareas);
+
+        if (!empty($idsSubtareas)) {
+            $infoDepuracionTitulo .= " (SubT: " . implode(', ', $idsSubtareas) . ")";
+        }
+    }
+    // --- FIN: Información de depuración para el título ---
+
 
     $tiempoProxima = calcularTextoTiempo($proxima);
     $difDiasHabito = ($esHabito && !empty($tiempoProxima['txt'])) ? $tiempoProxima['diasDif'] : 0;
@@ -144,10 +177,8 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
 
     $difDiasActivo = $esHabito ? $difDiasHabito : ($esMeta ? $difDiasMeta : 0);
 
-    // Ajuste para capitalización de sesión para que coincida con "General", "Archivado"
-    $sesionPredeterminada = ($est === 'archivado' ? 'Archivado' : 'General'); // Con mayúscula inicial
+    $sesionPredeterminada = ($est === 'archivado' ? 'Archivado' : 'General');
     $sesionValor = empty($sesion) ? $sesionPredeterminada : $sesion;
-    // Asegurar que "general" o "archivado" (potencialmente de $sesion) se capitalicen
     if (in_array(strtolower($sesionValor), ['general', 'archivado', 'archivada'])) {
         $sesionValor = ucfirst(str_replace('archivada', 'archivado', strtolower($sesionValor)));
     }
@@ -155,18 +186,18 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
 
     ob_start();
 ?>
-    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $id; ?> <? echo $esCompletada ? 'completada' : ''; ?> draggable-element <? echo esc_attr($est); ?> <? echo $idPadre ? 'subtarea' : ''; // Añade clase 'subtarea' si $idPadre tiene valor (es un ID) ?>"
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $id; ?> <? echo $esCompletada ? 'completada' : ''; ?> draggable-element <? echo esc_attr($est); ?> <? echo $idPadre ? 'subtarea' : ''; ?>"
         filtro="<? echo esc_attr($filtro); ?>"
         tipo-tarea="<? echo esc_attr($tipo); ?>"
         id-post="<? echo $id; ?>"
         autor="<? echo esc_attr($autorId); ?>"
         draggable="true" <? echo $esCompletada ? 'style="text-decoration: line-through;"' : ''; ?>
-        data-sesion="<? echo $sesionHtml; // CAMBIO: 'sesion' a 'data-sesion' y capitalización ajustada ?>"
+        data-sesion="<? echo $sesionHtml; ?>"
         estado="<? echo esc_attr($est); ?>"
         impnum="<? echo esc_attr($impnum); ?>"
         importancia="<? echo esc_attr($imp); ?>"
-        subtarea="<? echo $idPadre ? 'true' : 'false'; // Atributo informativo 'subtarea' ?>"
-        padre="<? echo esc_attr($idPadre ?: ''); // CAMBIO CRÍTICO: si $idPadre es vacío/false, imprime '', no '0' ?>"
+        subtarea="<? echo $idPadre ? 'true' : 'false'; ?>"
+        padre="<? echo esc_attr($idPadre ?: ''); ?>"
         dif="<? echo esc_attr($difDiasActivo); ?>"
         data-fechalimite="<? echo esc_attr($fechaLimite ?? ''); ?>"
         data-proxima="<? echo esc_attr($proxima ?? ''); ?>">
@@ -176,7 +207,8 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
         </button>
 
         <p class="tituloTarea" data-tarea="<? echo $id; ?>">
-            <? echo esc_html($titulo); ?>
+            <? echo esc_html($tituloOriginal); ?>
+            <span class="info-ids-depuracion" style="font-size:0.75em; color: #666; margin-left: 8px; font-weight:normal;"><? echo esc_html($infoDepuracionTitulo); ?></span>
         </p>
 
         <p class="idtarea" style="display: none; font-size: 11px;">
@@ -216,7 +248,7 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
             </p>
         </div>
         
-        <? if (!$esHabito && !$limiteTieneTextoValido) : // Icono calendario si no es hábito y no tiene fecha límite válida ?>
+        <? if (!$esHabito && !$limiteTieneTextoValido) : ?>
             <div class="divFechaLimite ocultadoAutomatico" data-tarea="<? echo $id; ?>" style="display: none; cursor: pointer;">
                 <p>
                     <span class="textoFechaLimite">
@@ -229,5 +261,4 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
 <?
     return ob_get_clean();
 }
-
 ?>

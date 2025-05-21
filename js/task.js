@@ -1136,7 +1136,7 @@ function subTarea() {
                             if (!rta.success && rta.data) log += `. Error: ${rta.data}`;
                             console.log(log);
                             if (!rta.success) {
-                                tareaActual.classList.add('subtarea');
+                                window.reiniciarPost(idActual, 'tarea');
                                 // Si guardabas el id del padre anterior, deberías restaurarlo aquí.
                             }
                         })
@@ -1157,12 +1157,12 @@ function subTarea() {
                     const datos = {id: idActual, padre: idAnterior, subtarea: true};
                     enviarAjax('crearSubtarea', datos)
                         .then(rta => {
+                            
                             let log = `subTarea Tab: ID ${idActual} -> subtarea de ${idAnterior}. RTA ${rta.success}`;
                             if (!rta.success && rta.data) log += `. Error: ${rta.data}`;
                             console.log(log);
                             if (!rta.success) {
-                                tareaActual.classList.remove('subtarea');
-                                tareaActual.removeAttribute('padre');
+                                window.reiniciarPost(idActual, 'tarea');
                             }
                         })
                         .catch(err => {

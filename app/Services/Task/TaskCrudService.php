@@ -243,52 +243,9 @@ function cambiarFrecuencia()
 }
 add_action('wp_ajax_cambiarFrecuencia', 'cambiarFrecuencia');
 
-function crearSubtarea()
-{
-    $func = 'crearSubtarea'; // Renombrar a 'gestionarSubtarea' podría ser más claro.
-    if (!current_user_can('edit_posts')) jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
 
-    $id = (int) ($_POST['id'] ?? 0);
-    $esSub = ($_POST['subtarea'] ?? 'false') === 'true';
-    $idPad = (int) ($_POST['padre'] ?? 0);
 
-    if ($id <= 0) jsonTask(false, 'ID tarea inválido.', "ID tarea $id inválido.", $func);
-    $tareaMod = get_post($id);
-    if (!$tareaMod || $tareaMod->post_type !== 'tarea') jsonTask(false, 'Tarea a modificar no encontrada.', "ID $id no encontrado.", $func);
 
-    $logDet = "ID: $id.";
-
-    if (!$esSub) {
-        if (is_wp_error(wp_update_post(['ID' => $id, 'post_parent' => 0], true))) {
-            jsonTask(false, 'Error al quitar padre.', "Error WP quitando padre de $id", $func);
-        }
-        delete_post_meta($id, 'subtarea');
-        $logDet .= " Relación subtarea eliminada.";
-        jsonTask(true, ['mensaje' => 'Relación subtarea eliminada.'], $logDet, $func);
-        return;
-    }
-
-    if ($idPad <= 0) jsonTask(false, 'ID padre inválido.', "ID padre $idPad inválido.", $func);
-    if ($id === $idPad) jsonTask(false, 'No puede ser subtarea de sí misma.', "ID $id y Padre $idPad iguales.", $func);
-
-    $tareaPad = get_post($idPad);
-    if (!$tareaPad || $tareaPad->post_type !== 'tarea') jsonTask(false, 'Tarea padre no encontrada.', "Padre $idPad no encontrado.", $func);
-
-    if ((int)get_post_meta($id, 'subtarea', true) === $idPad && (int)$tareaMod->post_parent === $idPad) {
-        $logDet .= " Ya es subtarea de $idPad.";
-        jsonTask(true, ['mensaje' => 'Ya es subtarea del padre especificado.'], $logDet, $func);
-        return;
-    }
-
-    if (is_wp_error(wp_update_post(['ID' => $id, 'post_parent' => $idPad], true))) {
-        jsonTask(false, 'Error al asignar padre.', "Error WP asignando padre $idPad a $id", $func);
-    }
-    update_post_meta($id, 'subtarea', $idPad);
-    $logDet .= " Asignada como subtarea de $idPad.";
-
-    jsonTask(true, ['mensaje' => 'Relación subtarea actualizada.'], $logDet, $func);
-}
-add_action('wp_ajax_crearSubtarea', 'crearSubtarea');
 
 function borrarTareasCompletadas()
 {
@@ -430,3 +387,188 @@ function modificarFechaProximaHabito()
     }
 }
 add_action('wp_ajax_modificarFechaProximaHabito', 'modificarFechaProximaHabito');
+
+function crearSubtarea()
+{
+    $nombreFunc = 'crearSubtarea';
+    $logAcumulado = "";
+
+    if (!current_user_can('edit_posts')) {
+        jsonTask(false, 'Sin permisos.', "$nombreFunc: Acceso denegado por falta de permisos.", $nombreFunc);
+    }
+
+    $idTar = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $esSubAccion = (isset($_POST['subtarea']) && $_POST['subtarea'] === 'true');
+    $idPadProp = isset($_POST['padre']) ? intval($_POST['padre']) : 0;
+
+    $logAcumulado = "$nombreFunc: idTar:$idTar, esSubAccion:$esSubAccion, idPadProp:$idPadProp.";
+
+    if ($idTar <= 0) {
+        jsonTask(false, 'ID de tarea inválido.', $logAcumulado . " ID tarea $idTar inválido.", $nombreFunc);
+    }
+
+    $tarMod = get_post($idTar);
+    if (!$tarMod || $tarMod->post_type !== 'tarea') {
+        jsonTask(false, 'Tarea a modificar no encontrada.', $logAcumulado . " Tarea a modificar $idTar no encontrada o no es tipo 'tarea'.", $nombreFunc);
+    }
+
+    $resManejo = '';
+
+    if ($esSubAccion) {
+        if ($idPadProp <= 0) {
+            jsonTask(false, 'ID de tarea padre inválido.', $logAcumulado . " ID padre $idPadProp inválido para establecer subtarea.", $nombreFunc);
+        }
+        if ($idTar === $idPadProp) {
+            jsonTask(false, 'Una tarea no puede ser subtarea de sí misma.', $logAcumulado . " Intento de hacer $idTar subtarea de sí misma.", $nombreFunc);
+        }
+
+        $resManejo = manejarSubtarea($idTar, $idPadProp);
+        // El log de manejarSubtarea ya se guarda internamente en esa función.
+        // Aquí concatenamos para el log general de crearSubtarea si jsonTask lo necesita.
+        $logAcumulado .= " Resultado manejarSubtarea(establecer): [ver log de manejarSubtarea para $idTar,$idPadProp]";
+
+
+        if (strpos($resManejo, 'Error:') === 0) {
+            $msjUsr = substr($resManejo, strlen('Error: '));
+            jsonTask(false, $msjUsr, $logAcumulado, $nombreFunc);
+        } else {
+            $msjUsrExito = 'Relación de subtarea actualizada correctamente.';
+            if (strpos($resManejo, 'tareaYaEsSubtareaCorrectaDe') !== false) {
+                $msjUsrExito = 'La tarea ya era subtarea del padre especificado. No se realizaron cambios.';
+            }
+            jsonTask(true, ['mensaje' => $msjUsrExito], $logAcumulado, $nombreFunc);
+        }
+    } else {
+        $resManejo = manejarSubtarea($idTar, 0);
+        $logAcumulado .= " Resultado manejarSubtarea(quitar): [ver log de manejarSubtarea para $idTar,0]";
+
+        if (strpos($resManejo, 'Error:') === 0) {
+            $msjUsr = substr($resManejo, strlen('Error: '));
+            jsonTask(false, $msjUsr, $logAcumulado, $nombreFunc);
+        } else {
+            $msjUsrExito = 'Tarea convertida a principal correctamente.';
+            if (strpos($resManejo, 'tareaYaEsPrincipal') !== false) {
+                $msjUsrExito = 'La tarea ya era principal. No se realizaron cambios.';
+            }
+            jsonTask(true, ['mensaje' => $msjUsrExito], $logAcumulado, $nombreFunc);
+        }
+    }
+}
+add_action('wp_ajax_crearSubtarea', 'crearSubtarea');
+
+function manejarSubtarea($id, $idPadrePropuesto)
+{
+    $log = "manejarSubtarea id:$id, idPadrePropuesto:$idPadrePropuesto";
+    $idPadreFinal = 0; // Por defecto, si no hay padre, se convierte en tarea principal.
+
+    if ($idPadrePropuesto) {
+        if ($id == $idPadrePropuesto) {
+            $log .= ", error: tareaNoPuedeSerSuPropioPadre";
+            guardarLog($log);
+            return 'Error: Una tarea no puede ser su propia padre.';
+        }
+
+        $tareaPadrePotencial = get_post($idPadrePropuesto);
+        if (empty($tareaPadrePotencial) || $tareaPadrePotencial->post_type != 'tarea') {
+            $log .= ", error: padrePropuestoNoEncontradoONoEsTarea";
+            guardarLog($log);
+            return 'Error: Tarea padre propuesta no encontrada o no es una tarea.';
+        }
+
+        // REGLA CLAVE: Si el padre propuesto es una subtarea, usar el padre de ESE padre (el "abuelo").
+        if ($tareaPadrePotencial->post_parent != 0) {
+            $idPadreFinal = $tareaPadrePotencial->post_parent;
+            $log .= ", padrePropuestoEsSubtarea, padreFinalReal:$idPadreFinal";
+        } else {
+            $idPadreFinal = $idPadrePropuesto; // El padre propuesto es una tarea principal.
+            $log .= ", padrePropuestoEsPrincipal, padreFinalReal:$idPadreFinal";
+        }
+
+        // Si después de la lógica anterior, el idPadreFinal es el mismo que el id de la tarea, error.
+        if ($id == $idPadreFinal) {
+            $log .= ", error: tareaNoPuedeSerSuPropioPadre (despues de resolver padre real)";
+            guardarLog($log);
+            return 'Error: Una tarea no puede ser su propia padre (después de resolver jerarquía).';
+        }
+
+        // Prevenir ciclos: $id no puede ser padre de $idPadreFinal.
+        if (esPadreUnaSubtarea($idPadreFinal, $id)) {
+            $log .= ", error: cicloDetectado ($idPadreFinal es descendiente de $id)";
+            guardarLog($log);
+            return 'Error: No se puede convertir la tarea en subtarea de una de sus propias subtareas (ciclo detectado).';
+        }
+
+        $tareaActual = get_post($id);
+        // Si ya es subtarea del padre final correcto, no hacer nada.
+        if ($tareaActual && $tareaActual->post_parent == $idPadreFinal && get_post_meta($id, 'subtarea', true) == $idPadreFinal) {
+            $log .= ", tareaYaEsSubtareaCorrectaDe:$idPadreFinal";
+            guardarLog($log);
+            return $log; // O un mensaje más específico.
+        }
+
+        $res = wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => $idPadreFinal
+        ), true);
+
+        if (is_wp_error($res)) {
+            $log .= ", errorWpUpdatePost:" . $res->get_error_message();
+            guardarLog($log);
+            return 'Error al actualizar post_parent para subtarea: ' . $res->get_error_message();
+        }
+
+        update_post_meta($id, 'subtarea', $idPadreFinal);
+        $log .= ", exito: tarea $id asignada como subtarea de $idPadreFinal";
+    } else { // $idPadrePropuesto es 0 o nulo: convertir $id en tarea principal.
+        $tareaActual = get_post($id);
+        if ($tareaActual && $tareaActual->post_parent == 0 && !get_post_meta($id, 'subtarea', true)) {
+            $log .= ", tareaYaEsPrincipal";
+            guardarLog($log);
+            return $log; // Ya es tarea principal, no se necesita acción.
+        }
+
+        $res = wp_update_post(array(
+            'ID' => $id,
+            'post_parent' => 0 // Convertir en tarea principal
+        ), true);
+
+        if (is_wp_error($res)) {
+            $log .= ", errorWpUpdatePostAlEliminarSubtarea:" . $res->get_error_message();
+            guardarLog($log);
+            return 'Error al eliminar la relación de subtarea (actualizar post_parent a 0): ' . $res->get_error_message();
+        }
+
+        delete_post_meta($id, 'subtarea');
+        $log .= ", exito: tarea $id convertidaAPrincipal";
+    }
+    guardarLog($log);
+    return $log; // Devolver el log puede ser útil para el llamador.
+}
+
+function esPadreUnaSubtarea($idPosiblePadre, $idTareaQueSeMueve)
+{
+    // Verifica si $idPosiblePadre es un DESCENDIENTE de $idTareaQueSeMueve.
+    // Si es así, $idTareaQueSeMueve no puede ser asignada como subtarea de $idPosiblePadre (crearía un ciclo).
+    // Ejemplo: T1 es padre de T2. No podemos hacer T1 subtarea de T2.
+    // Aquí, $idPosiblePadre sería T2, $idTareaQueSeMueve sería T1.
+    // La función debe retornar true si T2 es descendiente de T1.
+
+    if (empty($idPosiblePadre) || empty($idTareaQueSeMueve) || $idPosiblePadre == $idTareaQueSeMueve) {
+        return false; // No hay ciclo si no hay padre, o si son la misma tarea (esto se maneja en manejarSubtarea).
+    }
+
+    $ancestro = get_post($idPosiblePadre);
+    if (!$ancestro) return false; // $idPosiblePadre no es válido.
+
+    $idAncestroActual = $ancestro->post_parent;
+
+    while ($idAncestroActual != 0) { // Recorrer hacia arriba la jerarquía de $idPosiblePadre
+        if ($idAncestroActual == $idTareaQueSeMueve) {
+            return true; // $idTareaQueSeMueve es un ancestro de $idPosiblePadre, ergo $idPosiblePadre es su descendiente.
+        }
+        $ancestroPost = get_post($idAncestroActual);
+        if (!$ancestroPost) break; // Cadena rota o ID de padre incorrecto.
+        $idAncestroActual = $ancestroPost->post_parent;
+    }
+    return false; // No se encontró $idTareaQueSeMueve en los ancestros de $idPosiblePadre.
+}
