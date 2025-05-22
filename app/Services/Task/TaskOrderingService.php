@@ -188,87 +188,6 @@ function actualizarOrden($ordenTar, $ordenNue) // $ordenTar (anterior) no se usa
 }
 
 
-function actualizarSesionEstado($tareaMov, $sesionArr)
-{
-    $log = "actualizarSesionEstado tarea:$tareaMov";
-
-    $sesionParaActualizar = ($sesionArr === 'null' || is_null($sesionArr) || $sesionArr === '') ? "General" : $sesionArr;
-    $log .= ", sesionRecibida:'$sesionArr', sesionAUsar:'$sesionParaActualizar'";
-
-    $estadoAct = strtolower(get_post_meta($tareaMov, 'estado', true));
-    $sesionTareaAct = get_post_meta($tareaMov, 'sesion', true);
-    if (empty($sesionTareaAct) || $sesionTareaAct === 'null') { // Normalizar sesión actual para comparación
-        $sesionTareaAct = "General";
-    }
-    $log .= ", estadoActual:'$estadoAct', sesionActual:'$sesionTareaAct'";
-
-    $tarea = get_post($tareaMov);
-    if(!$tarea) {
-        $log .= ", error:tareaNoEncontrada";
-        guardarLog($log);
-        return;
-    }
-    $esSubtarea = !empty($tarea->post_parent);
-    $hijas = [];
-    if (!$esSubtarea) { // Solo las tareas principales pueden tener hijas según la nueva lógica
-        $hijas = get_children(array(
-            'post_parent' => $tareaMov, 'post_type' => 'tarea', 'fields' => 'ids', 'posts_per_page' => -1
-        ));
-    }
-    $tieneSubtareas = !empty($hijas);
-    $log .= ", esSubtarea:" . ($esSubtarea?'si':'no') . ", tieneSubtareas:" . ($tieneSubtareas?'si':'no');
-
-    if (strtolower($sesionParaActualizar) !== 'general') {
-        if (strtolower($sesionParaActualizar) === 'archivado' && $estadoAct !== 'archivado') {
-            update_post_meta($tareaMov, 'estado', 'Archivado');
-            $log .= ", estadoActualizadoA:Archivado";
-            if ($tieneSubtareas) {
-                foreach ($hijas as $hijaId) {
-                    update_post_meta($hijaId, 'estado', 'Archivado');
-                }
-                $log .= ", subtareasTambiénArchivadas:" . count($hijas);
-            }
-        } elseif (strtolower($sesionParaActualizar) !== 'archivado' && $estadoAct === 'archivado') {
-            update_post_meta($tareaMov, 'estado', 'Pendiente');
-            $log .= ", estadoActualizadoA:Pendiente";
-            if ($tieneSubtareas) {
-                foreach ($hijas as $hijaId) {
-                    update_post_meta($hijaId, 'estado', 'Pendiente');
-                }
-                $log .= ", subtareasTambiénPendientes:" . count($hijas);
-            }
-        } else {
-            $log .= ", estadoNoRequirioCambio";
-        }
-    } else { // Sesión es 'General'
-        // Si el estado era 'Archivado' y la sesión se mueve a 'General', ¿debería cambiar a 'Pendiente'?
-        // Actualmente no lo hace si la $sesionParaActualizar es 'General'. Esto parece correcto.
-        $log .= ", sesionEsGeneral, estadoNoCambiadoPorSesion";
-    }
-
-    // Si es una subtarea y se archiva, desvincularla (convertirla en tarea principal archivada).
-    if ($esSubtarea && strtolower($sesionParaActualizar) === 'archivado') {
-        wp_update_post(array('ID' => $tareaMov, 'post_parent' => 0));
-        delete_post_meta($tareaMov, 'subtarea'); // Sincronizar con post_parent
-        $log .= ", subtareaArchivadaYDesvinculada";
-    }
-
-    if ($sesionParaActualizar !== $sesionTareaAct) {
-        update_post_meta($tareaMov, 'sesion', $sesionParaActualizar);
-        $log .= ", sesionActualizadaA:'$sesionParaActualizar'";
-    } else {
-        $log .= ", sesionNoRequirioCambio";
-    }
-
-    $estadoFin = strtolower(get_post_meta($tareaMov, 'estado', true));
-    $sesionFin = get_post_meta($tareaMov, 'sesion', true);
-    if (empty($sesionFin) || $sesionFin === 'null') { // Re-normalizar por si acaso
-        $sesionFin = "General";
-        update_post_meta($tareaMov, 'sesion', $sesionFin); // Corregir si es necesario
-    }
-    $log .= ", estadoFinal:'$estadoFin', sesionFinal:'$sesionFin'";
-    guardarLog($log);
-}
 
 function actualizarOrdenTareasGrupo()
 {
@@ -353,7 +272,7 @@ function actualizarOrdenTareas()
         $log .= ", manejoSubtareaLog:'$logManejoSubtarea'";
         
         $ordenTarActualizado = actualizarOrden($ordenTarAnt, $ordenNue);
-        actualizarSesionEstado($tareaMov, $sesionArr);
+        actualizarSeccionEstado($tareaMov, $sesionArr);
         
         $log .= ", ordenActualizadoExitoso";
         guardarLog($log);

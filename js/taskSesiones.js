@@ -1,10 +1,12 @@
 let mapa = {general: [], archivado: []};
 
+//No borrar este comentario: Se escribio mal "seccion", cuando se dice "sesion" se refiere a "seccion", es decir, grupo de tareas.
+
 window.dividirTarea = async function () {
     const listaSec = document.querySelector('.social-post-list.clase-tarea');
     if (!listaSec) return;
     organizarSecciones();
-    crearSesionFront();
+    crearSeccionFront();
     hacerDivisoresEditables();
     window.addEventListener('reiniciar', organizarSecciones);
 };
@@ -18,7 +20,7 @@ function actualizarMapa() {
     log = `actualizarMapa: Tareas encontradas: ${items.length}. `;
     items.forEach(item => {
         const est = item.getAttribute('estado')?.toLowerCase();
-        const sesion = item.getAttribute('sesion')?.toLowerCase();
+        const sesion = item.getAttribute('data-sesion')?.toLowerCase(); // MODIFICADO AQUÍ
         const idPost = item.getAttribute('id-post');
         log += `Tarea ID: ${idPost}, Estado: ${est}, Sesión: ${sesion}. `;
 
@@ -48,14 +50,15 @@ function alternarVisibilidadSeccion(divisor) {
     let log = `alternarVisibilidadSeccion: Alternando visibilidad de la sección ${valorDivisor}. `;
 
     items.forEach(item => {
-        if (item.dataset.seccion === valorDivisorCodificado) { // Usar el nombre codificado
+        if (item.dataset.seccion === valorDivisorCodificado) {
+            // Usar el nombre codificado
             item.style.display = visible ? '' : 'none';
             log += `Tarea ID: ${item.getAttribute('id-post')}, Visibilidad: ${visible ? 'visible' : 'oculta'}. `;
         }
     });
 
     const flecha = divisor.querySelector('span:last-child');
-    flecha.innerHTML = visible ? (window.fechaabajo || '↓') : (window.fechaallado || '↑');
+    flecha.innerHTML = visible ? window.fechaabajo || '↓' : window.fechaallado || '↑';
     localStorage.setItem(`seccion-${valorDivisorCodificado}`, visible ? 'visible' : 'oculto');
     //console.log(log);
 }
@@ -179,7 +182,7 @@ function generarLogFinal() {
 
 */
 
-function crearSesionFront() {
+function crearSeccionFront() {
     const botonPlus = document.querySelector('.iconoPlus');
     const listaSecTareas = document.querySelector('.clase-tarea');
 
@@ -216,44 +219,323 @@ function hacerDivisoresEditables() {
     const divisores = document.querySelectorAll('.divisorTarea');
 
     divisores.forEach(divisor => {
-        const valor = divisor.dataset.valor;
-        const clase = divisor.classList;
+        const nombreOriginalDecodificado = decodeURIComponent(divisor.dataset.valor);
 
-        if (valor !== 'General' && valor !== 'Archivado') {
+        if (nombreOriginalDecodificado !== 'General' && nombreOriginalDecodificado !== 'Archivado') {
             divisor.contentEditable = true;
 
-            let valorOriginal = valor; 
+            let valorAlEnfocar = nombreOriginalDecodificado; // Guardar el valor al obtener el foco
+
+            divisor.addEventListener('focus', () => {
+                valorAlEnfocar = decodeURIComponent(divisor.dataset.valor); // Actualizar por si cambió externamente
+                // Opcional: remover temporalmente la flecha para una edición más limpia
+                const flecha = divisor.querySelector('span:last-child');
+                if (flecha) flecha.style.display = 'none';
+                divisor.textContent = valorAlEnfocar; // Mostrar solo el nombre para editar
+            });
 
             divisor.addEventListener('blur', async () => {
-                let textoEditado = divisor.textContent;
-                
-                if (textoEditado === '') {
-                    textoEditado = valorOriginal;
-                    divisor.textContent = textoEditado;
+                const flecha = divisor.querySelector('span:last-child');
+                if (flecha) flecha.style.display = ''; // Restaurar flecha
+
+                let textoEditadoDecodificado = divisor.textContent.trim();
+
+                if (textoEditadoDecodificado === '') {
+                    textoEditadoDecodificado = valorAlEnfocar; // Restaurar si está vacío
                 }
-                
-                divisor.dataset.valor = textoEditado;
-                
-                if (textoEditado !== valorOriginal) {
+
+                // Actualizar visualmente el divisor con el nombre y la flecha
+                divisor.textContent = textoEditadoDecodificado;
+                if (flecha) divisor.appendChild(flecha); // Re-adjuntar la flecha al final
+
+                const valorCodificadoOriginalEditor = encodeURIComponent(valorAlEnfocar);
+                const nuevoValorCodificadoEditor = encodeURIComponent(textoEditadoDecodificado);
+
+                if (textoEditadoDecodificado !== valorAlEnfocar) {
+                    let conflicto = false;
+                    document.querySelectorAll('.divisorTarea').forEach(d => {
+                        if (d !== divisor && decodeURIComponent(d.dataset.valor).toLowerCase() === textoEditadoDecodificado.toLowerCase()) {
+                            conflicto = true;
+                        }
+                    });
+
+                    if (conflicto) {
+                        alert(`La sección "${textoEditadoDecodificado}" ya existe.`);
+                        divisor.textContent = valorAlEnfocar; // Restaurar texto visual
+                        if (flecha) divisor.appendChild(flecha);
+                        // No es necesario tocar dataset.valor si no se envió AJAX
+                        return;
+                    }
+
                     let datos = {
-                        valorOriginal: valorOriginal,
-                        valorNuevo: textoEditado
+                        valorOriginal: valorAlEnfocar,
+                        valorNuevo: textoEditadoDecodificado
                     };
                     try {
-                        await enviarAjax('actualizarSesion', datos);
-                        
-                        valorOriginal = textoEditado;
-                        //console.log('Sesión actualizada y tareas reasignadas');
+                        await enviarAjax('actualizarSeccion', datos);
+
+                        divisor.dataset.valor = nuevoValorCodificadoEditor;
+                        // Actualizar clases si se usan para estilizar basado en el nombre codificado
+                        // divisor.classList.remove(valorCodificadoOriginalEditor);
+                        // divisor.classList.add(nuevoValorCodificadoEditor);
+
+                        const tareasAfectadas = document.querySelectorAll(`.POST-tarea[data-seccion="${valorCodificadoOriginalEditor}"]`);
+                        tareasAfectadas.forEach(tarea => {
+                            tarea.setAttribute('data-seccion', nuevoValorCodificadoEditor);
+                        });
+
+                        // Opcional: Forzar reorganización visual si es necesario inmediatamente
+                        // if (window.dividirTarea) await window.dividirTarea();
+
+                        console.log('Sesión actualizada y tareas reasignadas en el frontend.');
                     } catch (error) {
-                        //console.error('Error al actualizar sesión:', error);
-                        divisor.textContent = valorOriginal;
-                        divisor.dataset.valor = valorOriginal;
+                        console.error('Error al actualizar sesión:', error);
+                        divisor.textContent = valorAlEnfocar; // Restaurar texto visual
+                        if (flecha) divisor.appendChild(flecha);
+                        // dataset.valor no se cambió, así que no necesita restauración
                     }
                 } else {
-                    //console.log('El nombre de la sesión no ha cambiado');
+                    // Aunque el texto no haya cambiado, asegurar que el dataset.valor es el correcto (codificado)
+                    divisor.dataset.valor = nuevoValorCodificadoEditor;
+                }
+                // Re-asegurar contentEditable después del blur
+                if (decodeURIComponent(divisor.dataset.valor) !== 'General' && decodeURIComponent(divisor.dataset.valor) !== 'Archivado') {
+                    divisor.contentEditable = true;
+                } else {
+                    divisor.contentEditable = false;
                 }
             });
+
+            divisor.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    divisor.blur();
+                } else if (e.key === 'Escape') {
+                    divisor.textContent = decodeURIComponent(divisor.dataset.valor); // Restaurar al valor original del dataset
+                    const flecha = divisor.querySelector('span:last-child');
+                    if (flecha) divisor.appendChild(flecha);
+                    divisor.blur();
+                }
+            });
+        } else {
+            divisor.contentEditable = false;
         }
     });
 }
 
+
+window.initAsignarSeccionModal = function () {
+    const listaTareas = document.querySelector('.social-post-list.clase-tarea');
+    if (!listaTareas) {
+        console.log('initAsignarSeccionModal: listaTareas no encontrada.');
+        return;
+    }
+
+    if (listaTareas.dataset.seccionModalInic) {
+        // console.log('initAsignarSeccionModal: ya inicializado para esta lista.');
+        return;
+    }
+    listaTareas.dataset.seccionModalInic = 'true';
+
+    async function manejadorClickListaTareas(evento) {
+        const divCarpeta = evento.target.closest('.divCarpeta');
+        if (divCarpeta) {
+            evento.stopPropagation();
+            const idTarea = divCarpeta.dataset.tarea;
+            // console.log('manejadorClickListaTareas: divCarpeta clickeado, idTarea:', idTarea);
+            if (!idTarea) {
+                console.log('manejadorClickListaTareas: idTarea no encontrado en divCarpeta.');
+                return;
+            }
+            await abrirModalAsignarSeccion(idTarea, divCarpeta);
+        }
+    }
+
+    listaTareas.addEventListener('click', manejadorClickListaTareas);
+    console.log('initAsignarSeccionModal: listener configurado en listaTareas.');
+};
+
+async function abrirModalAsignarSeccion(idTarea, elemRef) {
+    console.log('abrirModalAsignarSeccion: idTarea', idTarea);
+    window.hideAllOpenTaskMenus();
+    cerrarModalAsignarSeccion();
+
+    const modal = document.createElement('div');
+    modal.id = 'modalAsignarSeccion';
+    modal.classList.add('modal-asignar-seccion', 'modal', 'bloque');
+
+    modal.innerHTML = `
+        <div class="div-asignar-seccion-input" style="gap: 5px;">
+            <input type="text" id="inputNuevaSeccionModal" placeholder="Crear sección" maxlength="30">
+            <button id="btnCrearAsignarSeccionModal" style="display: none;"></button>
+        </div>
+        <div id="listaSeccionesExistentesModal" ></div>
+        <button id="btnCerrarModalSeccion" style="display: none;">Cerrar</button>
+    `;
+
+    document.body.appendChild(modal);
+    // Forzar reflow para asegurar dimensiones correctas antes de calcular posición
+    modal.offsetHeight; 
+
+    const modalAncho = modal.offsetWidth;
+    const modalAlto = modal.offsetHeight;
+    const margenVP = 10; // Margen del viewport
+
+    const rectRef = elemRef.getBoundingClientRect();
+    
+    let topCalculado = window.scrollY + rectRef.bottom + 5;
+    let leftCalculado = window.scrollX + rectRef.left;
+
+    // Ajustar horizontalmente
+    if (leftCalculado + modalAncho > window.scrollX + window.innerWidth - margenVP) {
+        leftCalculado = window.scrollX + window.innerWidth - modalAncho - margenVP;
+    }
+    if (leftCalculado < window.scrollX + margenVP) {
+        leftCalculado = window.scrollX + margenVP;
+    }
+
+    // Ajustar verticalmente
+    if (topCalculado + modalAlto > window.scrollY + window.innerHeight - margenVP) { // Si se sale por abajo
+        let topArriba = window.scrollY + rectRef.top - modalAlto - 5;
+        if (topArriba < window.scrollY + margenVP) { // Si al ponerlo arriba, se sale por arriba
+            // No cabe ni arriba ni abajo cómodamente pegado al elemento.
+            // Colocarlo lo más abajo posible sin salirse del viewport.
+            topCalculado = window.scrollY + window.innerHeight - modalAlto - margenVP;
+            if (topCalculado < window.scrollY + margenVP) { // Si el modal es muy alto para el viewport
+                topCalculado = window.scrollY + margenVP; // Pegar al borde superior del viewport
+            }
+        } else {
+            topCalculado = topArriba; // Cabe arriba
+        }
+    }
+     if (topCalculado < window.scrollY + margenVP) { // Doble chequeo por si se posicionó muy arriba
+        topCalculado = window.scrollY + margenVP;
+    }
+
+
+    modal.style.position = 'absolute';
+    modal.style.top = `${Math.max(0, topCalculado)}px`;
+    modal.style.left = `${Math.max(0, leftCalculado)}px`;
+    modal.style.zIndex = '10001'; // z-index alto
+
+    const listaSecDiv = modal.querySelector('#listaSeccionesExistentesModal');
+    const divisores = document.querySelectorAll('.social-post-list.clase-tarea .divisorTarea');
+
+    divisores.forEach(divisor => {
+        const nomSecEnc = divisor.dataset.valor;
+        const nomSecOrig = decodeURIComponent(nomSecEnc);
+        if (nomSecOrig.toLowerCase() === 'archivado') return;
+
+        const pSec = document.createElement('p');
+        pSec.textContent = nomSecOrig;
+        pSec.addEventListener('click', async () => {
+            await manejarAsignacionSeccion(idTarea, nomSecOrig);
+        });
+        listaSecDiv.appendChild(pSec);
+    });
+
+    if (listaSecDiv.children.length === 0) {
+        listaSecDiv.innerHTML = '<p>No hay secciones. Crea una.</p>';
+    }
+
+    const inpNuevaSec = modal.querySelector('#inputNuevaSeccionModal');
+    const btnCrearSec = modal.querySelector('#btnCrearAsignarSeccionModal');
+
+    const procesarNuevaSeccion = async () => {
+        const nombreNuevo = inpNuevaSec.value.trim();
+        console.log('procesarNuevaSeccion: nombre', nombreNuevo, 'idTarea', idTarea);
+        const maxLong = 30;
+        const regexVal = /^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s]+$/;
+
+        if (!nombreNuevo) {
+            alert('El nombre de la nueva sección no puede estar vacío.');
+            return;
+        }
+        if (nombreNuevo.length > maxLong) {
+            alert(`El nombre de la sección no puede exceder los ${maxLong} caracteres.`);
+            return;
+        }
+        if (!regexVal.test(nombreNuevo)) {
+            alert('El nombre de la sección solo puede contener letras, números y espacios.');
+            return;
+        }
+        if (nombreNuevo.toLowerCase() === 'general' || nombreNuevo.toLowerCase() === 'archivado') {
+            alert('No se puede nombrar una sección como "General" o "Archivado".');
+            return;
+        }
+
+        let existe = false;
+        document.querySelectorAll('.social-post-list.clase-tarea .divisorTarea').forEach(div => {
+            if (decodeURIComponent(div.dataset.valor).toLowerCase() === nombreNuevo.toLowerCase()) {
+                existe = true;
+            }
+        });
+
+        if (existe) {
+            alert(`La sección "${nombreNuevo}" ya existe. Selecciónala de la lista o elige otro nombre.`);
+            return;
+        }
+        await manejarAsignacionSeccion(idTarea, nombreNuevo);
+    };
+
+    btnCrearSec.addEventListener('click', procesarNuevaSeccion);
+    inpNuevaSec.addEventListener('keypress', async (evento) => {
+        if (evento.key === 'Enter') {
+            evento.preventDefault();
+            await procesarNuevaSeccion();
+        }
+    });
+    inpNuevaSec.focus();
+    modal.querySelector('#btnCerrarModalSeccion').addEventListener('click', cerrarModalAsignarSeccion);
+
+    window.cerrarModalSeccionEvt = function (evento) {
+        if (modal && !modal.contains(evento.target) && evento.target !== elemRef && !elemRef.contains(evento.target)) {
+            cerrarModalAsignarSeccion();
+        }
+    };
+
+    setTimeout(() => { // Asegura que este listener se añade después del evento de click actual
+        document.addEventListener('click', window.cerrarModalSeccionEvt, true);
+    }, 0);
+    // console.log('abrirModalAsignarSeccion: modal configurado para idTarea', idTarea);
+}
+
+async function manejarAsignacionSeccion(idTarea, nombreSeccion) {
+    console.log('manejarAsignacionSeccion: idTarea', idTarea, 'seccion', nombreSeccion);
+    try {
+        const resp = await enviarAjax('asignarSeccionMeta', {
+            idTarea: idTarea,
+            sesion: nombreSeccion
+        });
+
+        if (resp.success) {
+            const tareaElem = document.querySelector(`.POST-tarea[id-post="${idTarea}"]`);
+            if (tareaElem) {
+                tareaElem.setAttribute('data-sesion', encodeURIComponent(nombreSeccion));
+            }
+            cerrarModalAsignarSeccion();
+            if (window.dividirTarea) {
+                await window.dividirTarea();
+            } else {
+                console.error('manejarAsignacionSeccion: window.dividirTarea no está definida.');
+            }
+        } else {
+            alert(`Error al asignar sección: ${resp.data || 'Error desconocido del servidor'}`);
+        }
+    } catch (error) {
+        console.error('manejarAsignacionSeccion: Excepción', error);
+        alert('Ocurrió una excepción al intentar asignar la sección.');
+    }
+}
+
+function cerrarModalAsignarSeccion() {
+    // console.log('cerrarModalAsignarSeccion: cerrando modal.');
+    const modal = document.getElementById('modalAsignarSeccion');
+    if (modal) {
+        modal.remove();
+    }
+    if (window.cerrarModalSeccionEvt) {
+        document.removeEventListener('click', window.cerrarModalSeccionEvt, true);
+        window.cerrarModalSeccionEvt = null;
+    }
+}

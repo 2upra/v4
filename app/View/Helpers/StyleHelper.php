@@ -206,6 +206,36 @@ function formTareaEstilo()
         .textoFechaLimite svg {
             height: 13px !important;
         }
+
+        div#modalAsignarSeccion {
+            background: #050505;
+            padding: 10px;
+            width: 180px;
+            gap: 5px;
+        }
+
+        input#inputNuevaSeccionModal {
+            background: unset;
+            border: var(--borde);
+            padding: 7px 10px;
+            font-size: 12px;
+        }
+
+        div#listaSeccionesExistentesModal {
+            display: flex;
+            flex-direction: column;
+        }
+
+        div#listaSeccionesExistentesModal p:hover {
+            background: #080808;
+            border-radius: var(--radius);
+        }
+
+        div#listaSeccionesExistentesModal p {
+            cursor: pointer;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
     </style>
 <?
     return ob_get_clean();

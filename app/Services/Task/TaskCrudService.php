@@ -572,3 +572,4 @@ function esPadreUnaSubtarea($idPosiblePadre, $idTareaQueSeMueve)
     }
     return false; // No se encontró $idTareaQueSeMueve en los ancestros de $idPosiblePadre.
 }
+

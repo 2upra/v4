@@ -3,7 +3,7 @@
 window.initMoverTarea = () => {
     const tit = document.getElementById('tituloTarea');
     if (tit) moverTarea();
-    //setTimeout(dibujarLineasSubtareas, 150); 
+    //setTimeout(dibujarLineasSubtareas, 150);
 };
 
 function manejarSeleccionTarea(ev) {
@@ -75,7 +75,8 @@ function moverTarea() {
             // (como el icono de prioridad, archivar, etc.), no queremos iniciar un arrastre.
             // Dejamos que el evento 'click' en ese control se maneje.
             // La función 'inicializarVars' se encargará de esto también.
-            if (inicializarVars(ev)) { // inicializarVars ya llama a ocultarMenuesAbiertos
+            if (inicializarVars(ev)) {
+                // inicializarVars ya llama a ocultarMenuesAbiertos
                 // inicializarVars ahora también debería verificar esto
                 listaMov.addEventListener('mousemove', manejarMov);
                 listaMov.addEventListener('mouseup', finalizarArrastre);
@@ -97,9 +98,7 @@ function moverTarea() {
     listaMov.addEventListener('dragstart', ev => ev.preventDefault());
 
     document.addEventListener('click', ev => {
-        const esEnControlInternoOmenu = ev.target.closest(
-            '.opcionesPrioridad, .opcionesFrecuencia, .divImportancia, .divFrecuencia, .divArchivado, .completaTarea'
-        );
+        const esEnControlInternoOmenu = ev.target.closest('.opcionesPrioridad, .opcionesFrecuencia, .divImportancia, .divFrecuencia, .divArchivado, .completaTarea');
 
         if (esEnControlInternoOmenu) {
             // Si el clic es en un menú, su botón de activación, u otro control interno de la tarea,
@@ -138,30 +137,23 @@ const tolerancia = 10;
 // Ajuste sugerido para inicializarVars para que no inicie arrastre
 // si el clic es en un control interno que tiene su propia acción.
 function inicializarVars(ev) {
-    const targetOriginal = ev.target; // El elemento exacto donde ocurrió el mousedown
+    const targetOriginal = ev.target;
     const elemArrastrable = targetOriginal.closest('.draggable-element');
 
-    if (!elemArrastrable) return false; // No es un elemento arrastrable
+    if (!elemArrastrable) return false;
 
-    // Si el mousedown fue directamente en un control DENTRO de la tarea que NO debe iniciar arrastre
     if (targetOriginal.closest('.divImportancia, .divArchivado, .completaTarea, .divFrecuencia')) {
-        // Estos elementos tienen sus propios listeners de 'click' para acciones.
-        // No queremos que un mousedown en ellos inicie un arrastre.
-        return false; // No inicializar para arrastre
+        return false;
     }
 
-    // MODIFICACIÓN: Si hemos llegado aquí, se va a iniciar un arrastre.
-    // Cerramos cualquier menú de opciones abierto.
     if (typeof window.ocultarMenuesAbiertos === 'function') {
         window.ocultarMenuesAbiertos();
     }
 
-    // Lógica original de inicializarVars para determinar el grupo a arrastrar
     let grupo;
     if (tareasSeleccionadas.includes(elemArrastrable.getAttribute('id-post'))) {
         grupo = Array.from(listaMov.querySelectorAll('.draggable-element')).filter(el => tareasSeleccionadas.includes(el.getAttribute('id-post')));
         if (grupo.length === 0) {
-            // Fallback si la tarea seleccionada no se encontró bien
             grupo = [elemArrastrable];
         }
     } else {
@@ -169,13 +161,16 @@ function inicializarVars(ev) {
     }
     arrastrandoElems = grupo;
 
-    // Resto de la lógica de inicializarVars (asignación a arrastrandoElem, esSubtarea, etc.)
     if (grupo.length === 1) {
         arrastrandoElem = grupo[0];
-        esSubtarea = arrastrandoElem.getAttribute('subtarea') === 'true';
+        esSubtarea = arrastrandoElem.getAttribute('subtarea') === 'true'; // Esto sigue siendo útil para la lógica de 'convertirse en subtarea'
         idTarea = arrastrandoElem.getAttribute('id-post');
         ordenViejo = Array.from(listaMov.querySelectorAll('.draggable-element')).map(t => t.getAttribute('id-post'));
-        if (!esSubtarea) {
+
+        // ***** MODIFICACIÓN AQUÍ *****
+        // Una tarea padre (con clase 'tarea-padre') siempre debe intentar mover sus subtareas,
+        // independientemente de si ella misma es una subtarea.
+        if (arrastrandoElem.classList.contains('tarea-padre')) {
             subtareasArrastradas = Array.from(listaMov.querySelectorAll(`.draggable-element[padre="${idTarea}"]`));
         } else {
             subtareasArrastradas = [];
@@ -183,7 +178,7 @@ function inicializarVars(ev) {
     } else {
         arrastrandoElem = null;
         subtareasArrastradas = [];
-        esSubtarea = false;
+        esSubtarea = false; // Irrelevante para grupos, pero limpiar.
         idTarea = null;
         ordenViejo = [];
     }
@@ -193,7 +188,7 @@ function inicializarVars(ev) {
 
     arrastrandoElems.forEach(el => el.classList.add('dragging'));
     document.body.classList.add('dragging-active');
-    return true; // Inicialización exitosa, se puede proceder a añadir listeners de mousemove/mouseup
+    return true;
 }
 
 /* MANEJO DEL MOVIMIENTO */
@@ -208,37 +203,64 @@ function manejarMov(ev) {
     }
     if (mouseY < rectLista.top || mouseY > rectLista.bottom) return;
 
-    // Se obtienen los elementos visibles que NO forman parte del grupo arrastrado
     const elemsVisibles = Array.from(listaMov.children).filter(child => child.style.display !== 'none' && !arrastrandoElems.includes(child));
     let insertado = false;
 
-    // Se recorre la lista para determinar dónde insertar el grupo
+    const tareaPrincipalArrastrada = arrastrandoElems[0];
+    const esArrastradaTareaPadre = tareaPrincipalArrastrada.classList.contains('tarea-padre');
+
     for (let i = 0; i < elemsVisibles.length; i++) {
-        const elem = elemsVisibles[i];
-        const rectElem = elem.getBoundingClientRect();
+        const elemActual = elemsVisibles[i];
+        const rectElem = elemActual.getBoundingClientRect();
         const elemMedio = rectElem.top + rectElem.height / 2;
+
         if (mouseY < elemMedio) {
-            // Se inserta cada elemento del grupo antes del elemento actual
+            if (esArrastradaTareaPadre) {
+                const anteriorVisibleAelemActual = elemsVisibles[i - 1];
+
+                if (elemActual.getAttribute('subtarea') === 'true' && anteriorVisibleAelemActual && anteriorVisibleAelemActual.getAttribute('subtarea') === 'true' && elemActual.getAttribute('padre') === anteriorVisibleAelemActual.getAttribute('padre') && elemActual.getAttribute('padre') !== tareaPrincipalArrastrada.getAttribute('id-post')) {
+                    continue;
+                }
+
+                if (anteriorVisibleAelemActual && anteriorVisibleAelemActual.classList.contains('tarea-padre')) {
+                    continue;
+                }
+            }
+
             arrastrandoElems.forEach(el => {
-                listaMov.insertBefore(el, elem);
+                listaMov.insertBefore(el, elemActual);
             });
             insertado = true;
             break;
         }
     }
-    // Si no se insertó en medio, se agregan al final
-    if (!insertado && elemsVisibles.length > 0) {
-        arrastrandoElems.forEach(el => {
-            listaMov.appendChild(el);
-        });
+
+    if (!insertado) {
+        if (elemsVisibles.length > 0) {
+            if (esArrastradaTareaPadre) {
+                const ultimoElemVisible = elemsVisibles[elemsVisibles.length - 1];
+                if (ultimoElemVisible && ultimoElemVisible.classList.contains('tarea-padre')) {
+                    // No se puede añadir al final
+                } else {
+                    arrastrandoElems.forEach(el => listaMov.appendChild(el));
+                }
+            } else {
+                arrastrandoElems.forEach(el => listaMov.appendChild(el));
+            }
+        } else if (arrastrandoElems.length > 0) {
+            arrastrandoElems.forEach(el => listaMov.appendChild(el));
+        }
     }
 
-    // En modo individual y si la tarea no es subtarea, se reposicionan también sus subtareas justo detrás
-    if (arrastrandoElems.length === 1 && !esSubtarea) {
-        let current = arrastrandoElem;
+    // ***** MODIFICACIÓN AQUÍ *****
+    // Si se arrastra una tarea individual que es 'tarea-padre', reposicionar sus subtareas.
+    // 'arrastrandoElem' es la tarea individual que se está moviendo.
+    if (arrastrandoElems.length === 1 && arrastrandoElem && arrastrandoElem.classList.contains('tarea-padre')) {
+        let actual = arrastrandoElem; // El padre que se acaba de mover
         subtareasArrastradas.forEach(subtarea => {
-            listaMov.insertBefore(subtarea, current.nextSibling);
-            current = subtarea;
+            // subtareasArrastradas fue poblado en inicializarVars
+            listaMov.insertBefore(subtarea, actual.nextSibling);
+            actual = subtarea; // La siguiente subtarea se insertará después de esta
         });
     }
 }
@@ -334,16 +356,30 @@ function obtenerSesionYData() {
 
 /* Función que determina si la tarea cambia a subtarea (se usa en modo individual) */
 function esSubtareaNueva() {
-    let esSubtareaNueva = false;
+    // Si la tarea que se está arrastrando es una tarea padre por clase, NUNCA puede ser una subtarea nueva.
+    // arrastrandoElem es la tarea individual que se está evaluando.
+    if (arrastrandoElem && arrastrandoElem.classList.contains('tarea-padre')) {
+        return false;
+    }
+
+    let esSubNuevaRet = false; // Renombrada para evitar confusión con la variable global esSubtarea
     let siguiente = arrastrandoElem.nextElementSibling;
     if (siguiente) {
-        const siguienteEsSubtarea = siguiente.getAttribute('subtarea') === 'true';
-        const siguienteEsPadre = siguiente.getAttribute('id-post') === arrastrandoElem.getAttribute('padre');
-        const siguienteEsPadreDeActual = siguiente.getAttribute('id-post') === arrastrandoElem.getAttribute('id-post');
-        const actualEsSubtareaDeSiguiente = arrastrandoElem.getAttribute('padre') === siguiente.getAttribute('id-post');
-        esSubtareaNueva = (siguienteEsSubtarea || siguienteEsPadre) && !siguienteEsPadreDeActual && !actualEsSubtareaDeSiguiente;
+        const sigEsSubtarea = siguiente.getAttribute('subtarea') === 'true';
+        // sigEsPadreOriginalDeArrastrada significa que 'siguiente' es el padre original de 'arrastrandoElem'
+        const sigEsPadreOriginalDeArrastrada = siguiente.getAttribute('id-post') === arrastrandoElem.getAttribute('padre');
+        // arrastradaEsPadreDeSiguiente significa que 'arrastrandoElem' es el padre de 'siguiente'
+        const arrastradaEsPadreDeSiguiente = arrastrandoElem.getAttribute('id-post') === siguiente.getAttribute('padre');
+
+        // Lógica original (simplificada): una tarea se convierte en subtarea si
+        // 1. El elemento siguiente es una subtarea O el elemento siguiente es el padre original de la tarea arrastrada
+        // Y ADEMÁS
+        // 2. La tarea arrastrada no es el padre del elemento siguiente.
+        if ((sigEsSubtarea || sigEsPadreOriginalDeArrastrada) && !arrastradaEsPadreDeSiguiente) {
+            esSubNuevaRet = true;
+        }
     }
-    return esSubtareaNueva;
+    return esSubNuevaRet;
 }
 
 function cambioASubtarea() {
@@ -400,57 +436,4 @@ function guardarOrdenTareasGrupo({tareasMovidas, nuevaPos, ordenNuevo}) {
         .catch(err => {
             console.error('Error en la petición AJAX:', err);
         });
-}
-
-function dibujarLineasSubtareas() {
-    const listaElem = document.querySelector('ul.clase-tarea');
-    if (!listaElem) {
-        // console.log('dibujarLineasSubtareas: ul.clase-tarea no encontrado.');
-        return;
-    }
-
-    const svgCont = listaElem.querySelector('#svgLineasConexion');
-    if (!svgCont) {
-        // console.log('dibujarLineasSubtareas: #svgLineasConexion no encontrado como hijo de ul.clase-tarea.');
-        return;
-    }
-
-    svgCont.style.width = listaElem.scrollWidth + 'px';
-    svgCont.style.height = listaElem.scrollHeight + 'px';
-    svgCont.innerHTML = ''; // Limpiar líneas previas
-
-    const todasTareasElems = listaElem.querySelectorAll('li.draggable-element');
-    const tareasMap = new Map();
-    todasTareasElems.forEach(tElem => tareasMap.set(tElem.getAttribute('id-post'), tElem));
-
-    const colX = 15; // Coordenada X (desde el borde izq. de la lista) para la línea vertical principal
-    const offsetXTexto = 25; // Distancia horizontal desde el borde izq. del LI al punto de conexión de texto
-
-    tareasMap.forEach(tareaElem => {
-        if (tareaElem.classList.contains('subtarea')) {
-            const idPadre = tareaElem.getAttribute('padre');
-            if (!idPadre) return;
-            
-            const padreElem = tareasMap.get(idPadre);
-
-            if (padreElem) {
-                const pSalidaX = padreElem.offsetLeft + offsetXTexto;
-                const pY = padreElem.offsetTop + (padreElem.offsetHeight / 2);
-
-                const sEntradaX = tareaElem.offsetLeft + offsetXTexto -5; // -5 para que la linea termine un poco antes del texto de la subtarea
-                const sY = tareaElem.offsetTop + (tareaElem.offsetHeight / 2);
-
-                const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-                
-                const puntos = `${pSalidaX},${pY} ${colX},${pY} ${colX},${sY} ${sEntradaX},${sY}`;
-                
-                polyline.setAttribute('points', puntos);
-                polyline.setAttribute('stroke', '#a0a0a0'); // Un gris suave
-                polyline.setAttribute('stroke-width', '1.5');
-                polyline.setAttribute('fill', 'none');
-                svgCont.appendChild(polyline);
-            }
-        }
-    });
-    // console.log('dibujarLineasSubtareas: Líneas actualizadas.');
 }

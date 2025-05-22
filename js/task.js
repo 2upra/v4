@@ -67,7 +67,7 @@ function initTareas() {
         borrarTareaVacia();
 
         iniciarManejadoresFechaLimiteMeta();
-        iniciarManejadoresFechaProximaHabito(); // NUEVA LLAMADA
+        iniciarManejadoresFechaProximaHabito(); 
 
         subTarea();
         window.initCal();
@@ -75,6 +75,7 @@ function initTareas() {
         window.initEnter();
         window.initMoverTarea();
         window.dividirTarea();
+        window.initAsignarSeccionModal(); 
     }
 }
 
@@ -1406,3 +1407,5 @@ async function actualizarFechaProximaHabitoServidorUI(idTarea, nuevaFechaISO, sp
         console.error(`actualizarFechaProximaHabitoServidorUI: Excepción AJAX para ${idTarea}`, error);
     }
 }
+
+

@@ -71,23 +71,31 @@ function calcularTextoTiempo($fechaReferencia)
     if (empty($fechaReferencia) || $fechaReferencia === '0000-00-00') { // Considerar '0000-00-00' como inválida
         return $valRetDefecto;
     }
-    
+
     $tsReferencia = strtotime($fechaReferencia);
-    if ($tsReferencia === false || $tsReferencia < 0) { 
+    if ($tsReferencia === false || $tsReferencia < 0) {
         return $valRetDefecto;
     }
 
     $tsHoy = strtotime(date('Y-m-d'));
     $difDias = floor(($tsReferencia - $tsHoy) / (60 * 60 * 24));
 
-    $txt = ''; $simbolo = ''; $claseNeg = '';
+    $txt = '';
+    $simbolo = '';
+    $claseNeg = '';
 
     if ($difDias == 0) $txt = 'Hoy';
     elseif ($difDias == 1) $txt = 'Mañana';
-    elseif ($difDias == -1) { $txt = 'Ayer'; $claseNeg = 'diaNegativo'; }
-    elseif ($difDias > 1) $txt = $difDias . 'd';
-    elseif ($difDias < -1) { $txt = abs($difDias) . 'd'; $simbolo = '-'; $claseNeg = 'diaNegativo';}
-    
+    elseif ($difDias == -1) {
+        $txt = 'Ayer';
+        $claseNeg = 'diaNegativo';
+    } elseif ($difDias > 1) $txt = $difDias . 'd';
+    elseif ($difDias < -1) {
+        $txt = abs($difDias) . 'd';
+        $simbolo = '-';
+        $claseNeg = 'diaNegativo';
+    }
+
     return ['txt' => $txt, 'simbolo' => $simbolo, 'claseNeg' => $claseNeg, 'diasDif' => $difDias];
 }
 
@@ -132,37 +140,51 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
     $esHabito = in_array($tipo, ['habito', 'habito rigido', 'habito flexible']);
     $esMeta = ($tipo === 'meta');
 
-    $idPadre = get_post_meta($id, 'subtarea', true); 
+    $idPadre = get_post_meta($id, 'subtarea', true);
+
 
     // --- INICIO: Información de depuración para el título ---
     $tituloOriginal = $titulo;
-    $infoDepuracionTitulo = "(ID: " . $id . ")";
+    $infoDepuracionTitulo = "(ID: " . $id . "";
+
+    if (!empty($sesion)) {
+        $infoDepuracionTitulo .= " | Sesión: " . esc_html($sesion);
+    }
+    $infoDepuracionTitulo .= ")";
+
 
     if ($idPadre) {
         $infoDepuracionTitulo .= " (Padre: " . esc_html($idPadre) . ")";
+        $tieneSubtareasIncompletas = false;
     } else {
-        // Es una tarea principal, buscar sus subtareas
-        $postTypeActual = get_post_type($id) ?: 'post'; // Usar el post_type de la tarea actual
-        
+        // Es una tarea principal, buscar sus subtareas que no estén completadas o eliminadas
+        $postTypeActual = get_post_type($id) ?: 'post';
         $argsSubtareas = [
-            'post_type' => $postTypeActual,
-            'post_status' => 'any', // Considera todos los estados, ajusta si es necesario
-            'meta_query' => [
+            'post_type'      => $postTypeActual,
+            'post_status'    => 'any',
+            'meta_query'     => [
                 [
-                    'key' => 'subtarea',
-                    'value' => $id,
+                    'key'     => 'subtarea',
+                    'value'   => $id,
                     'compare' => '=',
                 ],
+                [
+                    'key'     => 'estado',
+                    'value'   => ['completada', 'eliminada'],
+                    'compare' => 'NOT IN',
+                ],
             ],
-            'fields' => 'ids', // Solo obtener los IDs
-            'posts_per_page' => -1, // Todas las subtareas
-            'orderby' => 'menu_order', // O el orden que uses
-            'order' => 'ASC',
+            'fields'         => 'ids',
+            'posts_per_page' => -1,
+            'orderby'        => 'menu_order',
+            'order'          => 'ASC',
         ];
         $idsSubtareas = get_posts($argsSubtareas);
-
         if (!empty($idsSubtareas)) {
             $infoDepuracionTitulo .= " (SubT: " . implode(', ', $idsSubtareas) . ")";
+            $tieneSubtareasIncompletas = true;
+        } else {
+            $tieneSubtareasIncompletas = false;
         }
     }
     // --- FIN: Información de depuración para el título ---
@@ -186,7 +208,7 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
 
     ob_start();
 ?>
-    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $id; ?> <? echo $esCompletada ? 'completada' : ''; ?> draggable-element <? echo esc_attr($est); ?> <? echo $idPadre ? 'subtarea' : ''; ?>"
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $id; ?> <? echo $esCompletada ? 'completada' : ''; ?> <? echo (!$idPadre && $tieneSubtareasIncompletas) ? 'tarea-padre' : ''; ?> draggable-element <? echo esc_attr($est); ?> <? echo $idPadre ? 'subtarea' : ''; ?>"
         filtro="<? echo esc_attr($filtro); ?>"
         tipo-tarea="<? echo esc_attr($tipo); ?>"
         id-post="<? echo $id; ?>"
@@ -247,7 +269,7 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
                 <? echo $GLOBALS['archivadoIcon'] ?? '[A]'; ?>
             </p>
         </div>
-        
+
         <? if (!$esHabito && !$limiteTieneTextoValido) : ?>
             <div class="divFechaLimite ocultadoAutomatico" data-tarea="<? echo $id; ?>" style="display: none; cursor: pointer;">
                 <p>
@@ -257,6 +279,14 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
                 </p>
             </div>
         <? endif; ?>
+
+        <div class="divCarpeta ocultadoAutomatico" data-tarea="<? echo $id; ?>" style="display: none; cursor: pointer;">
+            <p>
+                <span class="carpetaSpan">
+                    <? echo $GLOBALS['meterCarpeta'] ?? '[C]'; ?>
+                </span>
+            </p>
+        </div>
     </li>
 <?
     return ob_get_clean();
