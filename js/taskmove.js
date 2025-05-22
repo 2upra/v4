@@ -286,14 +286,14 @@ function finalizarArrastre() {
                 } else {
                     padre = '';
                 }
-                arrastrandoElem.setAttribute('data-seccion', dataArriba);
+                arrastrandoElem.setAttribute('data-sesion', dataArriba);
                 arrastrandoElem.setAttribute('sesion', sesionArriba);
             } else {
                 padre = '';
                 arrastrandoElem.removeAttribute('padre');
                 arrastrandoElem.setAttribute('subtarea', 'false');
-                arrastrandoElem.setAttribute('data-seccion', dataArriba);
-                subtareasArrastradas.forEach(subtarea => subtarea.setAttribute('data-seccion', dataArriba));
+                arrastrandoElem.setAttribute('data-sesion', dataArriba);
+                subtareasArrastradas.forEach(subtarea => subtarea.setAttribute('data-sesion', dataArriba));
                 arrastrandoElem.setAttribute('sesion', sesionArriba);
                 subtareasArrastradas.forEach(subtarea => subtarea.setAttribute('sesion', sesionArriba));
             }
@@ -343,7 +343,7 @@ function obtenerSesionYData() {
     while (anterior) {
         if (anterior.classList.contains('POST-tarea')) {
             sesionArriba = anterior.getAttribute('sesion');
-            dataArriba = anterior.getAttribute('data-seccion');
+            dataArriba = anterior.getAttribute('data-sesion');
         } else if (anterior.classList.contains('divisorTarea')) {
             sesionArriba = sesionArriba || anterior.getAttribute('data-valor');
             dataArriba = dataArriba || anterior.getAttribute('data-valor');
@@ -393,26 +393,45 @@ function cambioASubtarea() {
 
 /* Función para guardar el nuevo orden cuando se mueve una sola tarea (modo individual) */
 function guardarOrdenTareas({idTarea, nuevaPos, ordenNuevo, sesionArriba, dataArriba, subtarea, padre}) {
-    let data = {
+    let log = `guardarOrdenTareas: TareaID ${idTarea}, NuevaPos ${nuevaPos}, Sesion ${sesionArriba}, EsSubtarea ${subtarea}, PadreID ${padre}. `;
+    let datosParaServidor = {
         tareaMovida: idTarea,
         nuevaPos,
         ordenNuevo,
-        sesionArriba,
-        dataArriba,
+        sesionArriba, // Esta es la sesión a la que se mueve la tarea
+        dataArriba,   // Idem, pero parece ser el mismo valor codificado
         subtarea,
         padre: subtarea ? padre : null
     };
-    enviarAjax('actualizarOrdenTareas', data)
+    
+    // console.log(log + `Datos enviados: ${JSON.stringify(datosParaServidor)}`);
+
+    enviarAjax('actualizarOrdenTareas', datosParaServidor)
         .then(res => {
+            let logRes = `guardarOrdenTareas AJAX Res: TareaID ${idTarea}. `;
             if (res && res.success) {
-                window.reiniciarPost(idTarea, 'tarea');
-                //dibujarLineasSubtareas();
+                logRes += `Éxito. `;
+                // En lugar de solo reiniciar la tarea principal, reiniciamos la tarea y sus subtareas.
+                // El backend ya debería haber actualizado la sección de la tarea principal
+                // Y TAMBIÉN la sección de sus subtareas.
+                window.reiniciarPost(idTarea, 'tarea'); // LÍNEA ANTERIOR
+                // window.reiniciarTareaYSubtareas(idTarea); // MODIFICACIÓN CLAVE
+
+                // La reorganización visual por secciones la maneja dividirTarea, que se activa
+                // con el evento 'reiniciar' general o se puede llamar explícitamente si es necesario
+                // aquí, pero el reinicio de los posts debería ser suficiente para que
+                // dividirTarea (si se ejecuta después) los coloque bien.
             } else {
+                logRes += `Error en respuesta: ${JSON.stringify(res)}. `;
                 console.error('Hubo un error en la respuesta del servidor:', res);
+                // Considera revertir cambios visuales si el backend falla.
             }
+            // console.log(logRes);
         })
         .catch(err => {
+            // console.log(`guardarOrdenTareas AJAX Catch: TareaID ${idTarea}. Error: ${err}`);
             console.error('Error en la petición AJAX:', err);
+            // Considera revertir cambios visuales.
         });
 }
 

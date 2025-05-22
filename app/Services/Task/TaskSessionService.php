@@ -1,185 +1,223 @@
-<?php
+<?
 
-// Refactor(Org): Funcion actualizarSeccion() y hook AJAX movidos desde app/Content/Task/logicTareas.php
+// Función de ayuda: Actualiza un metadato en una tarea y todas sus hijas directas
+// Devuelve el estado de la actualización del padre y cuenta las hijas actualizadas.
+function actTarHijosMet($idTar, $clave, $valor, &$cntHijAct = 0) {
+    $res = update_post_meta($idTar, $clave, $valor);
+    $hijos = get_children([
+        'post_parent' => $idTar,
+        'post_type'   => 'tarea',
+        'numberposts' => -1,
+        'fields'      => 'ids'
+    ]);
+    if ($hijos) {
+        foreach ($hijos as $idHijo) {
+            update_post_meta($idHijo, $clave, $valor);
+            $cntHijAct++;
+        }
+    }
+    return $res;
+}
 
-/**
- * Actualiza la sesión (campo meta 'sesion') de todas las tareas del usuario actual
- * que coincidan con un valor original.
- *
- * Se utiliza a través de AJAX.
- */
-function actualizarSeccion()
-{
+// Función de ayuda: Actualiza el estado de una tarea y todas sus hijas directas.
+// Esta es más específica que actTarHijosMet para el metadato 'estado'.
+function actEstTarHijos($idTar, $estNue, &$cntHijAct = 0) {
+    update_post_meta($idTar, 'estado', $estNue);
+    $hijos = get_children([
+        'post_parent' => $idTar,
+        'post_type'   => 'tarea',
+        'fields'      => 'ids',
+        'posts_per_page' => -1
+    ]);
+    if ($hijos) {
+        foreach ($hijos as $idHijo) {
+            update_post_meta($idHijo, 'estado', $estNue);
+            $cntHijAct++;
+        }
+    }
+}
+
+function actualizarSeccion() {
+    $f = 'actualizarSeccion';
     if (!current_user_can('edit_posts')) {
         wp_send_json_error('No tienes permisos.');
+        return;
     }
 
-    $valAnt = isset($_POST['valorOriginal']) ? sanitize_text_field($_POST['valorOriginal']) : '';
-    $valNue = isset($_POST['valorNuevo']) ? sanitize_text_field($_POST['valorNuevo']) : '';
+    $valAnt = sanitize_text_field($_POST['valorOriginal'] ?? '');
+    $valNue = sanitize_text_field($_POST['valorNuevo'] ?? '');
 
-    if (empty($valAnt) || empty($valNue)) {
+    if (!$valAnt || !$valNue) {
         wp_send_json_error('Faltan datos.');
+        return;
     }
 
-    $log = "El usuario " . get_current_user_id() . " actualizo la sesion: $valAnt a: $valNue";
+    $idUsr = get_current_user_id();
+    $log = "$f: usr $idUsr de '$valAnt' a '$valNue'";
 
-    $args = array(
+    $args = [
         'post_type' => 'tarea',
         'posts_per_page' => -1,
-        'author' => get_current_user_id(),
-        'meta_query' => array(
-            array(
-                'key' => 'sesion',
-                'value' => $valAnt,
-                'compare' => '='
-            )
-        )
-    );
+        'author' => $idUsr,
+        'meta_query' => [[
+            'key' => 'sesion',
+            'value' => $valAnt,
+            'compare' => '='
+        ]]
+    ];
 
     $tareas = get_posts($args);
-    $cant = count($tareas);
-    $log .= ", \n Se encontraron $cant tareas a modificar. ";
+    $cantTar = count($tareas);
+    $log .= ", $cantTar tareas encontradas";
+    $hijasAct = 0;
 
-    if (empty($tareas)) {
-        // Asumiendo que guardarLog() está disponible globalmente o será inyectado/requerido
-        // Si no, esta llamada fallará. Considerar inyección de dependencias o un helper global.
+    if (!$tareas) {
         if (function_exists('guardarLog')) {
-             guardarLog("actualizarSeccion:" . $log);
+            guardarLog($log . ", no se encontraron tareas.");
         }
         wp_send_json_success('No se encontraron tareas para actualizar.');
+        return;
     }
 
-    foreach ($tareas as $tarea) {
-        update_post_meta($tarea->ID, 'sesion', $valNue);
+    foreach ($tareas as $tar) {
+        actTarHijosMet($tar->ID, 'sesion', $valNue, $hijasAct);
     }
 
-    $log .= ", \n  Se actualizaron las sesiones de las tareas.";
-    // Asumiendo que guardarLog() está disponible globalmente o será inyectado/requerido
+    $log .= ", $cantTar tareas padres actualizadas";
+    if ($hijasAct > 0) {
+        $log .= ", $hijasAct tareas hijas actualizadas a '$valNue'";
+    }
+
     if (function_exists('guardarLog')) {
-        guardarLog("actualizarSeccion:" . $log);
+        guardarLog($log);
     }
-    wp_send_json_success();
+    wp_send_json_success("$cantTar tareas actualizadas. $hijasAct hijas también actualizadas.");
 }
 
 add_action('wp_ajax_actualizarSeccion', 'actualizarSeccion');
 
 function asignarSeccionMeta() {
-    $func = 'asignarSeccionMeta';
+    $f = 'asignarSeccionMeta';
+
     if (!current_user_can('edit_posts')) {
-        jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $func);
-    }
-
-    $idTarea = isset($_POST['idTarea']) ? (int)$_POST['idTarea'] : 0;
-    $sesion = isset($_POST['sesion']) ? sanitize_text_field(wp_unslash($_POST['sesion'])) : ''; // wp_unslash por si acaso
-
-    if ($idTarea <= 0) {
-        jsonTask(false, 'ID de tarea inválido.', "ID Tarea: $idTarea", $func);
-    }
-    // El nombre de la sesión puede ser cualquier cadena, el frontend lo maneja.
-    // Si es vacía, el frontend lo interpretará como 'General'.
-
-    $tarea = get_post($idTarea);
-    // Validar que la tarea exista y pertenezca al usuario o que el usuario tenga permisos para editarla.
-    // Si solo el autor puede editar sus tareas:
-    // if (!$tarea || $tarea->post_type !== 'tarea' || $tarea->post_author != get_current_user_id()) {
-    // Si cualquier usuario con 'edit_posts' puede editar cualquier tarea de tipo 'tarea':
-    if (!$tarea || $tarea->post_type !== 'tarea') {
-        jsonTask(false, 'Tarea no encontrada.', "Tarea ID $idTarea no encontrada.", $func);
-    }
-
-    $resultadoUpdate = update_post_meta($idTarea, 'sesion', $sesion);
-
-    if ($resultadoUpdate === false) {
-        // Esto también puede ser false si el valor nuevo es igual al antiguo, lo cual no es un error.
-        // Para un error real, podríamos comprobar si el meta realmente no se actualizó cuando debería.
-        $metaActual = get_post_meta($idTarea, 'sesion', true);
-        if ($metaActual !== $sesion) {
-            jsonTask(false, 'Error al actualizar la sesión de la tarea en la base de datos.', "Fallo update_post_meta para tarea $idTarea, sesion $sesion", $func);
-        }
-    }
-
-    jsonTask(true, ['mensaje' => "Sesión '$sesion' asignada a tarea $idTarea."], "Tarea $idTarea asignada a sesión '$sesion'.", $func);
-}
-add_action('wp_ajax_asignarSeccionMeta', 'asignarSeccionMeta');
-
-function actualizarSeccionEstado($tareaMov, $sesionArr)
-{
-    $log = "actualizarSeccionEstado tarea:$tareaMov";
-
-    $sesionParaActualizar = ($sesionArr === 'null' || is_null($sesionArr) || $sesionArr === '') ? "General" : $sesionArr;
-    $log .= ", sesionRecibida:'$sesionArr', sesionAUsar:'$sesionParaActualizar'";
-
-    $estadoAct = strtolower(get_post_meta($tareaMov, 'estado', true));
-    $sesionTareaAct = get_post_meta($tareaMov, 'sesion', true);
-    if (empty($sesionTareaAct) || $sesionTareaAct === 'null') { // Normalizar sesión actual para comparación
-        $sesionTareaAct = "General";
-    }
-    $log .= ", estadoActual:'$estadoAct', sesionActual:'$sesionTareaAct'";
-
-    $tarea = get_post($tareaMov);
-    if(!$tarea) {
-        $log .= ", error:tareaNoEncontrada";
-        guardarLog($log);
+        jsonTask(false, 'Sin permisos.', 'Acceso denegado.', $f);
         return;
     }
-    $esSubtarea = !empty($tarea->post_parent);
-    $hijas = [];
-    if (!$esSubtarea) { // Solo las tareas principales pueden tener hijas según la nueva lógica
-        $hijas = get_children(array(
-            'post_parent' => $tareaMov, 'post_type' => 'tarea', 'fields' => 'ids', 'posts_per_page' => -1
-        ));
-    }
-    $tieneSubtareas = !empty($hijas);
-    $log .= ", esSubtarea:" . ($esSubtarea?'si':'no') . ", tieneSubtareas:" . ($tieneSubtareas?'si':'no');
 
-    if (strtolower($sesionParaActualizar) !== 'general') {
-        if (strtolower($sesionParaActualizar) === 'archivado' && $estadoAct !== 'archivado') {
-            update_post_meta($tareaMov, 'estado', 'Archivado');
-            $log .= ", estadoActualizadoA:Archivado";
-            if ($tieneSubtareas) {
-                foreach ($hijas as $hijaId) {
-                    update_post_meta($hijaId, 'estado', 'Archivado');
-                }
-                $log .= ", subtareasTambiénArchivadas:" . count($hijas);
-            }
-        } elseif (strtolower($sesionParaActualizar) !== 'archivado' && $estadoAct === 'archivado') {
-            update_post_meta($tareaMov, 'estado', 'Pendiente');
-            $log .= ", estadoActualizadoA:Pendiente";
-            if ($tieneSubtareas) {
-                foreach ($hijas as $hijaId) {
-                    update_post_meta($hijaId, 'estado', 'Pendiente');
-                }
-                $log .= ", subtareasTambiénPendientes:" . count($hijas);
-            }
-        } else {
-            $log .= ", estadoNoRequirioCambio";
+    $idTar = (int)($_POST['idTarea'] ?? 0);
+    $ses = sanitize_text_field(wp_unslash($_POST['sesion'] ?? ''));
+
+    if (!$idTar) {
+        jsonTask(false, 'ID de tarea inválido.', "ID Tarea: $idTar", $f);
+        return;
+    }
+
+    $tar = get_post($idTar);
+    if (!$tar || $tar->post_type !== 'tarea') {
+        jsonTask(false, 'Tarea no encontrada.', "Tarea ID $idTar no encontrada o no tipo tarea.", $f);
+        return;
+    }
+
+    $hijasAct = 0;
+    $resUpd = actTarHijosMet($idTar, 'sesion', $ses, $hijasAct);
+
+    $logMsg = "tarea $idTar sesion '$ses'";
+
+    if ($resUpd === false) {
+        $metaAct = get_post_meta($idTar, 'sesion', true);
+        if ($metaAct !== $ses) {
+            jsonTask(false, 'Error al actualizar la sesión.', "Fallo update_post_meta tarea $idTar a sesion $ses", $f);
+            return;
         }
-    } else { // Sesión es 'General'
-        // Si el estado era 'Archivado' y la sesión se mueve a 'General', ¿debería cambiar a 'Pendiente'?
-        // Actualmente no lo hace si la $sesionParaActualizar es 'General'. Esto parece correcto.
-        $log .= ", sesionEsGeneral, estadoNoCambiadoPorSesion";
+        $logMsg .= " (valor sin cambios)";
     }
 
-    // Si es una subtarea y se archiva, desvincularla (convertirla en tarea principal archivada).
-    if ($esSubtarea && strtolower($sesionParaActualizar) === 'archivado') {
-        wp_update_post(array('ID' => $tareaMov, 'post_parent' => 0));
-        delete_post_meta($tareaMov, 'subtarea'); // Sincronizar con post_parent
-        $log .= ", subtareaArchivadaYDesvinculada";
+    if ($hijasAct > 0) {
+        $logMsg .= ", hijas $hijasAct a '$ses'";
     }
 
-    if ($sesionParaActualizar !== $sesionTareaAct) {
-        update_post_meta($tareaMov, 'sesion', $sesionParaActualizar);
-        $log .= ", sesionActualizadaA:'$sesionParaActualizar'";
+    $msjUsr = "Sesión '$ses' asignada a tarea $idTar.";
+    if ($hijasAct > 0) {
+        $msjUsr .= " Y a sus $hijasAct hija(s).";
+    }
+
+    jsonTask(true, ['mensaje' => $msjUsr], $logMsg, $f);
+}
+
+add_action('wp_ajax_asignarSeccionMeta', 'asignarSeccionMeta');
+
+function actualizarSeccionEstado($tareaMov, $sesionArr) {
+    $f = 'actualizarSeccionEstado';
+    $log = "$f tarea:$tareaMov";
+
+    $sesNue = (in_array($sesionArr, ['null', '', null], true)) ? "General" : $sesionArr;
+    $log .= ", sesRecib:'$sesionArr', sesAUsar:'$sesNue'";
+
+    $estAct = strtolower(get_post_meta($tareaMov, 'estado', true));
+    $sesAct = get_post_meta($tareaMov, 'sesion', true);
+    $sesAct = (in_array($sesAct, ['null', '', null], true)) ? "General" : $sesAct;
+    $log .= ", estAct:'$estAct', sesAct:'$sesAct'";
+
+    $tar = get_post($tareaMov);
+    if (!$tar) {
+        $log .= ", error:tareaNoEnc";
+        if (function_exists('guardarLog')) guardarLog($log);
+        return;
+    }
+
+    $esSub = !empty($tar->post_parent);
+    $tienHij = false;
+    if (!$esSub) {
+        $hijosIds = get_children([
+            'post_parent' => $tareaMov,
+            'post_type' => 'tarea',
+            'fields' => 'ids',
+            'posts_per_page' => -1
+        ]);
+        $tienHij = !empty($hijosIds);
+    }
+    $log .= ", esSub:" . ($esSub ? 'si' : 'no') . ", tienHij:" . ($tienHij ? 'si' : 'no');
+
+    $hijasEstAct = 0;
+    if (strtolower($sesNue) !== 'general') {
+        if (strtolower($sesNue) === 'archivado' && $estAct !== 'archivado') {
+            actEstTarHijos($tareaMov, 'Archivado', $hijasEstAct);
+            $log .= ", estUpd:Archivado";
+            if ($hijasEstAct > 0) $log .= ", hijEstArchiv:" . $hijasEstAct;
+        } elseif (strtolower($sesNue) !== 'archivado' && $estAct === 'archivado') {
+            actEstTarHijos($tareaMov, 'Pendiente', $hijasEstAct);
+            $log .= ", estUpd:Pendiente";
+            if ($hijasEstAct > 0) $log .= ", hijEstPend:" . $hijasEstAct;
+        } else {
+            $log .= ", estNoCambio";
+        }
     } else {
-        $log .= ", sesionNoRequirioCambio";
+        $log .= ", sesEsGeneral, estNoCambioPorSes";
     }
 
-    $estadoFin = strtolower(get_post_meta($tareaMov, 'estado', true));
-    $sesionFin = get_post_meta($tareaMov, 'sesion', true);
-    if (empty($sesionFin) || $sesionFin === 'null') { // Re-normalizar por si acaso
-        $sesionFin = "General";
-        update_post_meta($tareaMov, 'sesion', $sesionFin); // Corregir si es necesario
+    if ($esSub && strtolower($sesNue) === 'archivado') {
+        wp_update_post(['ID' => $tareaMov, 'post_parent' => 0]);
+        delete_post_meta($tareaMov, 'subtarea');
+        $log .= ", subArchivDesvinc";
     }
-    $log .= ", estadoFinal:'$estadoFin', sesionFinal:'$sesionFin'";
-    guardarLog($log);
+
+    $hijasSesAct = 0;
+    if ($sesNue !== $sesAct) {
+        actTarHijosMet($tareaMov, 'sesion', $sesNue, $hijasSesAct);
+        $log .= ", sesUpd:'$sesNue'";
+        if ($hijasSesAct > 0) {
+            $log .= ", hijSesUpd:" . $hijasSesAct . " a '$sesNue'";
+        }
+    } else {
+        $log .= ", sesNoCambio";
+    }
+
+    $estFin = strtolower(get_post_meta($tareaMov, 'estado', true));
+    $sesFin = get_post_meta($tareaMov, 'sesion', true);
+    if (in_array($sesFin, ['null', '', null], true)) {
+        $sesFin = "General";
+        update_post_meta($tareaMov, 'sesion', $sesFin);
+    }
+    $log .= ", estFin:'$estFin', sesFin:'$sesFin'";
+    if (function_exists('guardarLog')) guardarLog($log);
 }

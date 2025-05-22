@@ -1,7 +1,7 @@
 <?php
 # app/Services/Task/TaskOrderingService.php
 
-// Refactor(Org): Funcion ordenamientoTareas() movida desde app/Services/TaskService.php
+
 function ordenamientoTareas($queryArgs, $usu, $args, $prioridad = false)
 {
     $ordenarServidor = false;

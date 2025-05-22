@@ -29,6 +29,35 @@ let contextoCalendario = {
     tipoFecha: null // Nuevo: 'limite' o 'proxima'
 };
 
+function initTareas() {
+    const tit = document.getElementById('tituloTarea');
+
+    if (tit) {
+        selectorTipoTarea();
+        enviarTarea();
+        editarTarea();
+        completarTarea();
+        cambiarPrioridad();
+        prioridadTarea();
+        borrarTareasCompletadas();
+        cambiarFrecuencia();
+        archivarTarea();
+        ocultarBotones();
+        borrarTareaVacia();
+
+        iniciarManejadoresFechaLimiteMeta();
+        iniciarManejadoresFechaProximaHabito();
+
+        subTarea();
+        window.initCal();
+        window.initNotas();
+        window.initEnter();
+        window.initMoverTarea();
+        window.dividirTarea();
+        window.initAsignarSeccionModal();
+    }
+}
+
 window.hideAllOpenTaskMenus = function () {
     document.querySelectorAll('.opcionesPrioridad, .opcionesFrecuencia').forEach(menu => {
         if (menu) menu.remove();
@@ -49,35 +78,6 @@ window.hideAllOpenTaskMenus = function () {
     }
     // El listener para cerrar el calendario si se hace clic fuera ya se maneja en initCal y se limpia en ocultarCal.
 };
-
-function initTareas() {
-    const tit = document.getElementById('tituloTarea');
-
-    if (tit) {
-        selectorTipoTarea();
-        enviarTarea();
-        editarTarea();
-        completarTarea();
-        cambiarPrioridad();
-        prioridadTarea();
-        borrarTareasCompletadas();
-        cambiarFrecuencia();
-        archivarTarea();
-        ocultarBotones();
-        borrarTareaVacia();
-
-        iniciarManejadoresFechaLimiteMeta();
-        iniciarManejadoresFechaProximaHabito(); 
-
-        subTarea();
-        window.initCal();
-        window.initNotas();
-        window.initEnter();
-        window.initMoverTarea();
-        window.dividirTarea();
-        window.initAsignarSeccionModal(); 
-    }
-}
 
 function ocultarBotones() {
     const elementosLi = document.querySelectorAll('.draggable-element'); // Asumo que esta es la clase de tus <li> o contenedores de tarea
@@ -1079,7 +1079,7 @@ window.guardarOrden = function () {
         if (anterior.classList.contains('POST-tarea')) {
             sesionArriba = anterior.getAttribute('sesion');
             if (dataSeccionArriba === null) {
-                dataSeccionArriba = anterior.getAttribute('data-seccion');
+                dataSeccionArriba = anterior.getAttribute('data-sesion');
             }
         } else if (anterior.classList.contains('divisorTarea')) {
             if (sesionArriba === null) {
@@ -1158,7 +1158,6 @@ function subTarea() {
                     const datos = {id: idActual, padre: idAnterior, subtarea: true};
                     enviarAjax('crearSubtarea', datos)
                         .then(rta => {
-                            
                             let log = `subTarea Tab: ID ${idActual} -> subtarea de ${idAnterior}. RTA ${rta.success}`;
                             if (!rta.success && rta.data) log += `. Error: ${rta.data}`;
                             console.log(log);
@@ -1282,15 +1281,15 @@ async function actualizarFechaLimiteTareaServidorUI(idTarea, nuevaFechaISO, span
     // pero los mantenemos por si alguna lógica futura los necesita o para consistencia.
     const datos = {tareaId: idTarea, fechaLimite: nuevaFechaISO};
     let logBase = `actualizarFechaLimiteTareaServidorUI: Tarea ${idTarea}, `;
-    logBase += nuevaFechaISO ? `FechaNueva "${nuevaFechaISO}"` : "Fecha Borrada";
+    logBase += nuevaFechaISO ? `FechaNueva "${nuevaFechaISO}"` : 'Fecha Borrada';
 
     try {
         const rta = await enviarAjax('modificarFechaLimiteTarea', datos);
-        let logDetalles = "";
+        let logDetalles = '';
 
         if (rta.success) {
-            logDetalles += "Servidor OK. ";
-            
+            logDetalles += 'Servidor OK. ';
+
             // No necesitamos actualizar el dataset del liTarea o el atributo 'dif' manualmente aquí,
             // porque reiniciarPost() obtendrá la información más reciente del servidor.
             // Tampoco necesitamos tocar el spanDelIconoDisparador ni el display de fecha real.
@@ -1301,17 +1300,17 @@ async function actualizarFechaLimiteTareaServidorUI(idTarea, nuevaFechaISO, span
             // Si es síncrono o no devuelve una promesa que necesitemos esperar, no hace falta await.
             await window.reiniciarPost(idTarea, 'tarea');
             logDetalles += `Se llamó a reiniciarPost(${idTarea}, 'tarea') para actualizar UI.`;
-            
-            console.log(logBase + ". " + logDetalles);
+
+            console.log(logBase + '. ' + logDetalles);
         } else {
             logDetalles = `Error Servidor: ${rta.data || 'Desconocido'}`;
-            console.error(logBase + ". " + logDetalles);
+            console.error(logBase + '. ' + logDetalles);
             // Considera si quieres mostrar un alert aquí, ya que reiniciarPost no se llamará.
             alert('Error al actualizar fecha límite en servidor: ' + (rta.data || 'Error desconocido'));
         }
     } catch (error) {
         const logError = `Excepción AJAX. Error: ${error.message || error}`;
-        console.error(logBase + ". " + logError);
+        console.error(logBase + '. ' + logError);
         alert('Error de conexión al actualizar fecha límite.');
     }
 }
@@ -1408,4 +1407,37 @@ async function actualizarFechaProximaHabitoServidorUI(idTarea, nuevaFechaISO, sp
     }
 }
 
+/**
+ * Función auxiliar para reiniciar una tarea y sus subtareas.
+ * Asume que window.reiniciarPost(id, tipo) está disponible.
+ * @param {string} idTareaPrincipal El ID de la tarea a reiniciar (potencialmente padre).
+ */
+window.reiniciarTareaYSubtareas = function (idTareaPrincipal) {
+    const tareaElem = document.querySelector(`.POST-tarea[id-post="${idTareaPrincipal}"]`);
+    let log = `reiniciarTareaYSubtareas: TareaID ${idTareaPrincipal}. `;
 
+    if (tareaElem) {
+        log += `Principal reiniciando. `;
+        window.reiniciarPost(idTareaPrincipal, 'tarea');
+
+        // Buscar subtareas directas de esta tarea
+        // La clase 'tarea-padre' es un buen indicador, pero buscar por atributo 'padre' es más directo.
+        const subtareasElems = document.querySelectorAll(`.POST-tarea[padre="${idTareaPrincipal}"]`);
+
+        if (subtareasElems.length > 0) {
+            log += `${subtareasElems.length} subtareas encontradas. `;
+            subtareasElems.forEach(subElem => {
+                const idSub = subElem.getAttribute('id-post');
+                if (idSub) {
+                    log += `SubID ${idSub} reiniciando. `;
+                    window.reiniciarPost(idSub, 'tarea');
+                }
+            });
+        } else {
+            log += `No se encontraron subtareas en DOM. `;
+        }
+    } else {
+        log += `Elemento principal no encontrado en DOM. `;
+    }
+    console.log(log); // Descomenta si necesitas depurar esta función específicamente
+};

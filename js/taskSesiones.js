@@ -1,3 +1,5 @@
+// js/taskSesiones.js
+
 let mapa = {general: [], archivado: []};
 
 //No borrar este comentario: Se escribio mal "seccion", cuando se dice "sesion" se refiere a "seccion", es decir, grupo de tareas.
@@ -169,7 +171,7 @@ function generarLogFinal() {
     Array.from(listaSec.children).forEach(item => {
         if (item.tagName === 'LI') {
             const idPost = item.getAttribute('id-post');
-            final.push(`${item.getAttribute('data-seccion') || 'Sin sección'} - ${idPost || 'sin ID'}`);
+            final.push(`${item.getAttribute('data-sesion') || 'Sin sección'} - ${idPost || 'sin ID'}`);
         } else if (item.tagName === 'P') {
             final.push(`${item.textContent} - Divisor`);
         }
@@ -279,9 +281,9 @@ function hacerDivisoresEditables() {
                         // divisor.classList.remove(valorCodificadoOriginalEditor);
                         // divisor.classList.add(nuevoValorCodificadoEditor);
 
-                        const tareasAfectadas = document.querySelectorAll(`.POST-tarea[data-seccion="${valorCodificadoOriginalEditor}"]`);
+                        const tareasAfectadas = document.querySelectorAll(`.POST-tarea[data-sesion="${valorCodificadoOriginalEditor}"]`);
                         tareasAfectadas.forEach(tarea => {
-                            tarea.setAttribute('data-seccion', nuevoValorCodificadoEditor);
+                            tarea.setAttribute('data-sesion', nuevoValorCodificadoEditor);
                         });
 
                         // Opcional: Forzar reorganización visual si es necesario inmediatamente
@@ -322,7 +324,6 @@ function hacerDivisoresEditables() {
         }
     });
 }
-
 
 window.initAsignarSeccionModal = function () {
     const listaTareas = document.querySelector('.social-post-list.clase-tarea');
@@ -375,14 +376,14 @@ async function abrirModalAsignarSeccion(idTarea, elemRef) {
 
     document.body.appendChild(modal);
     // Forzar reflow para asegurar dimensiones correctas antes de calcular posición
-    modal.offsetHeight; 
+    modal.offsetHeight;
 
     const modalAncho = modal.offsetWidth;
     const modalAlto = modal.offsetHeight;
     const margenVP = 10; // Margen del viewport
 
     const rectRef = elemRef.getBoundingClientRect();
-    
+
     let topCalculado = window.scrollY + rectRef.bottom + 5;
     let leftCalculado = window.scrollX + rectRef.left;
 
@@ -395,23 +396,26 @@ async function abrirModalAsignarSeccion(idTarea, elemRef) {
     }
 
     // Ajustar verticalmente
-    if (topCalculado + modalAlto > window.scrollY + window.innerHeight - margenVP) { // Si se sale por abajo
+    if (topCalculado + modalAlto > window.scrollY + window.innerHeight - margenVP) {
+        // Si se sale por abajo
         let topArriba = window.scrollY + rectRef.top - modalAlto - 5;
-        if (topArriba < window.scrollY + margenVP) { // Si al ponerlo arriba, se sale por arriba
+        if (topArriba < window.scrollY + margenVP) {
+            // Si al ponerlo arriba, se sale por arriba
             // No cabe ni arriba ni abajo cómodamente pegado al elemento.
             // Colocarlo lo más abajo posible sin salirse del viewport.
             topCalculado = window.scrollY + window.innerHeight - modalAlto - margenVP;
-            if (topCalculado < window.scrollY + margenVP) { // Si el modal es muy alto para el viewport
+            if (topCalculado < window.scrollY + margenVP) {
+                // Si el modal es muy alto para el viewport
                 topCalculado = window.scrollY + margenVP; // Pegar al borde superior del viewport
             }
         } else {
             topCalculado = topArriba; // Cabe arriba
         }
     }
-     if (topCalculado < window.scrollY + margenVP) { // Doble chequeo por si se posicionó muy arriba
+    if (topCalculado < window.scrollY + margenVP) {
+        // Doble chequeo por si se posicionó muy arriba
         topCalculado = window.scrollY + margenVP;
     }
-
 
     modal.style.position = 'absolute';
     modal.style.top = `${Math.max(0, topCalculado)}px`;
@@ -479,7 +483,7 @@ async function abrirModalAsignarSeccion(idTarea, elemRef) {
     };
 
     btnCrearSec.addEventListener('click', procesarNuevaSeccion);
-    inpNuevaSec.addEventListener('keypress', async (evento) => {
+    inpNuevaSec.addEventListener('keypress', async evento => {
         if (evento.key === 'Enter') {
             evento.preventDefault();
             await procesarNuevaSeccion();
@@ -494,7 +498,8 @@ async function abrirModalAsignarSeccion(idTarea, elemRef) {
         }
     };
 
-    setTimeout(() => { // Asegura que este listener se añade después del evento de click actual
+    setTimeout(() => {
+        // Asegura que este listener se añade después del evento de click actual
         document.addEventListener('click', window.cerrarModalSeccionEvt, true);
     }, 0);
     // console.log('abrirModalAsignarSeccion: modal configurado para idTarea', idTarea);
@@ -505,13 +510,22 @@ async function manejarAsignacionSeccion(idTarea, nombreSeccion) {
     try {
         const resp = await enviarAjax('asignarSeccionMeta', {
             idTarea: idTarea,
-            sesion: nombreSeccion
+            sesion: nombreSeccion // Backend espera 'sesion' con nombre original
         });
 
         if (resp.success) {
+            const nombreSeccionCodificado = encodeURIComponent(nombreSeccion);
             const tareaElem = document.querySelector(`.POST-tarea[id-post="${idTarea}"]`);
+
             if (tareaElem) {
-                tareaElem.setAttribute('data-sesion', encodeURIComponent(nombreSeccion));
+                // 1. Actualizar data-sesion de la tarea principal en el DOM
+                tareaElem.setAttribute('data-sesion', nombreSeccionCodificado);
+
+                // 2. Actualizar data-sesion de sus subtareas en el DOM
+                const subtareasElems = document.querySelectorAll(`.POST-tarea[padre="${idTarea}"]`);
+                subtareasElems.forEach(subElem => {
+                    subElem.setAttribute('data-sesion', nombreSeccionCodificado);
+                });
             }
             cerrarModalAsignarSeccion();
             if (window.dividirTarea) {
