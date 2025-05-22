@@ -185,3 +185,77 @@ function esPadreUnaSubtarea($idPosiblePadre, $idTareaQueSeMueve)
     }
     return false; // No se encontró $idTareaQueSeMueve en los ancestros de $idPosiblePadre.
 }
+
+// Función de ayuda: Actualiza un metadato en una tarea y, opcionalmente, en sus hijas directas.
+// Si la clave es 'sesion', aplica la lógica de desvinculación para la tarea principal ($idTar) si es una subtarea
+// y su nueva sección difiere de la de su padre.
+// Devuelve el estado de la actualización del padre y cuenta las hijas actualizadas.
+function actTarHijosMet($idTar, $clave, $valor, &$cntHijAct = 0) {
+    $res = update_post_meta($idTar, $clave, $valor);
+
+    if ($clave === 'sesion') {
+        $tarActual = get_post($idTar);
+        // Verificar si $idTar es una subtarea (tiene un post_parent)
+        if ($tarActual && $tarActual->post_type === 'tarea' && $tarActual->post_parent > 0) {
+            $idPadreDeTarActual = $tarActual->post_parent;
+            $sesPadreDeTarActual = get_post_meta($idPadreDeTarActual, 'sesion', true);
+
+            // Normalizar secciones para comparación consistente ("General" para vacíos/nulos)
+            $valNorm = (in_array(strtolower($valor), ['null', '', null], true) || empty($valor)) ? "General" : $valor;
+            $sesPadreNorm = (in_array(strtolower($sesPadreDeTarActual), ['null', '', null], true) || empty($sesPadreDeTarActual)) ? "General" : $sesPadreDeTarActual;
+
+            if (strtolower($valNorm) !== strtolower($sesPadreNorm)) {
+                wp_update_post(['ID' => $idTar, 'post_parent' => 0]);
+                delete_post_meta($idTar, 'subtarea');
+                // Aquí $idTar se ha convertido en una tarea principal.
+                // Si se guarda un log, se podría indicar esta desvinculación.
+                // Ejemplo: guardarLog("actTarHijosMet: Tarea $idTar desvinculada de padre $idPadreDeTarActual por cambio de sección a '$valNorm' (padre tenía '$sesPadreNorm')");
+            }
+        }
+    }
+
+    $hijos = get_children([
+        'post_parent' => $idTar, // Las hijas siguen asociadas a $idTar por su ID
+        'post_type'   => 'tarea',
+        'numberposts' => -1,
+        'fields'      => 'ids'
+    ]);
+
+    if ($hijos) {
+        foreach ($hijos as $idHijo) {
+            // A las hijas se les asigna la misma clave y valor
+            update_post_meta($idHijo, $clave, $valor);
+            $cntHijAct++;
+            // Nota: La lógica de desvinculación para $idHijo no se aplica aquí recursivamente.
+            // Si $idHijo fuera una subtarea y necesitara ser desvinculada,
+            // se requeriría una llamada a actTarHijosMet($idHijo, $clave, $valor)
+            // o que la función que maneja $idHijo directamente aplique esta lógica.
+            // En este flujo, las hijas heredan la sección de $idTar,
+            // por lo que su sección coincidirá con la de su padre ($idTar),
+            // y no se desvincularán de $idTar por esta regla.
+        }
+    }
+    return $res;
+}
+
+// Función de ayuda: Actualiza el estado de una tarea y todas sus hijas directas.
+// Esta es más específica que actTarHijosMet para el metadato 'estado'.
+// No necesita cambios para la nueva lógica de sección.
+function actEstTarHijos($idTar, $estNue, &$cntHijAct = 0) {
+    update_post_meta($idTar, 'estado', $estNue);
+    $hijos = get_children([
+        'post_parent' => $idTar,
+        'post_type'   => 'tarea',
+        'fields'      => 'ids',
+        'posts_per_page' => -1
+    ]);
+    if ($hijos) {
+        foreach ($hijos as $idHijo) {
+            update_post_meta($idHijo, 'estado', $estNue);
+            $cntHijAct++;
+        }
+    }
+}
+
+// Las funciones actualizarSeccion y asignarSeccionMeta no necesitan cambios directos en su código
+// porque llaman a actTarHijosMet, que ahora contiene la nueva lógica.

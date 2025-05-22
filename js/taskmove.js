@@ -392,47 +392,74 @@ function cambioASubtarea() {
 }
 
 /* Función para guardar el nuevo orden cuando se mueve una sola tarea (modo individual) */
-function guardarOrdenTareas({idTarea, nuevaPos, ordenNuevo, sesionArriba, dataArriba, subtarea, padre}) {
+// js/taskmove.js
+
+async function guardarOrdenTareas({idTarea, nuevaPos, ordenNuevo, sesionArriba, dataArriba, subtarea, padre}) {
     let log = `guardarOrdenTareas: TareaID ${idTarea}, NuevaPos ${nuevaPos}, Sesion ${sesionArriba}, EsSubtarea ${subtarea}, PadreID ${padre}. `;
     let datosParaServidor = {
         tareaMovida: idTarea,
         nuevaPos,
         ordenNuevo,
-        sesionArriba, // Esta es la sesión a la que se mueve la tarea
-        dataArriba,   // Idem, pero parece ser el mismo valor codificado
+        sesionArriba,
+        dataArriba,
         subtarea,
         padre: subtarea ? padre : null
     };
-    
+
     // console.log(log + `Datos enviados: ${JSON.stringify(datosParaServidor)}`);
 
-    enviarAjax('actualizarOrdenTareas', datosParaServidor)
-        .then(res => {
-            let logRes = `guardarOrdenTareas AJAX Res: TareaID ${idTarea}. `;
-            if (res && res.success) {
-                logRes += `Éxito. `;
-                // En lugar de solo reiniciar la tarea principal, reiniciamos la tarea y sus subtareas.
-                // El backend ya debería haber actualizado la sección de la tarea principal
-                // Y TAMBIÉN la sección de sus subtareas.
-                window.reiniciarPost(idTarea, 'tarea'); // LÍNEA ANTERIOR
-                // window.reiniciarTareaYSubtareas(idTarea); // MODIFICACIÓN CLAVE
+    try {
+        const res = await enviarAjax('actualizarOrdenTareas', datosParaServidor);
+        let logRes = `guardarOrdenTareas AJAX Res: TareaID ${idTarea}. `;
+        if (res && res.success) {
+            logRes += `Éxito. `;
 
-                // La reorganización visual por secciones la maneja dividirTarea, que se activa
-                // con el evento 'reiniciar' general o se puede llamar explícitamente si es necesario
-                // aquí, pero el reinicio de los posts debería ser suficiente para que
-                // dividirTarea (si se ejecuta después) los coloque bien.
+            await window.reiniciarPost(idTarea, 'tarea'); // Esperamos a que el post se reinicie y actualice en el DOM
+
+            // --- INICIO DE LA MODIFICACIÓN ---
+            const tareaElem = document.querySelector(`.POST-tarea[id-post="${idTarea}"]`);
+            if (tareaElem) {
+                const idPadre = tareaElem.getAttribute('padre');
+                if (idPadre) {
+                    // Si ahora es una subtarea y tiene un padre definido
+                    const padreElem = document.querySelector(`.POST-tarea[id-post="${idPadre}"]`);
+                    if (padreElem && padreElem.parentNode === listaMov) {
+                        // Asegurarse que el padre está en la misma lista
+                        // Mover la tarea para que esté directamente después de su padre
+                        // Si el padre ya tiene otras subtareas, la nueva se colocará al final de ellas.
+                        let ultimoHermano = padreElem;
+                        while (ultimoHermano.nextElementSibling && ultimoHermano.nextElementSibling.getAttribute('padre') === idPadre) {
+                            ultimoHermano = ultimoHermano.nextElementSibling;
+                        }
+
+                        if (ultimoHermano.nextSibling) {
+                            listaMov.insertBefore(tareaElem, ultimoHermano.nextSibling);
+                        } else {
+                            listaMov.appendChild(tareaElem);
+                        }
+                        logRes += `Tarea ${idTarea} reubicada bajo padre ${idPadre}. `;
+                    } else {
+                        logRes += `Padre ${idPadre} no encontrado o no en la lista para tarea ${idTarea}. `;
+                    }
+                }
             } else {
-                logRes += `Error en respuesta: ${JSON.stringify(res)}. `;
-                console.error('Hubo un error en la respuesta del servidor:', res);
-                // Considera revertir cambios visuales si el backend falla.
+                logRes += `Tarea ${idTarea} no encontrada en el DOM después de reiniciarPost. `;
             }
-            // console.log(logRes);
-        })
-        .catch(err => {
-            // console.log(`guardarOrdenTareas AJAX Catch: TareaID ${idTarea}. Error: ${err}`);
-            console.error('Error en la petición AJAX:', err);
-            // Considera revertir cambios visuales.
-        });
+            // --- FIN DE LA MODIFICACIÓN ---
+
+            // Opcional: Si la reorganización general de secciones es necesaria después de esto.
+            // if (typeof window.dividirTarea === 'function') {
+            //     await window.dividirTarea();
+            // }
+        } else {
+            logRes += `Error en respuesta: ${JSON.stringify(res)}. `;
+            console.error('Hubo un error en la respuesta del servidor:', res);
+        }
+        // console.log(logRes);
+    } catch (err) {
+        // console.log(`guardarOrdenTareas AJAX Catch: TareaID ${idTarea}. Error: ${err}`);
+        console.error('Error en la petición AJAX:', err);
+    }
 }
 
 /* Función para guardar el nuevo orden cuando se mueven varias tareas (modo grupal) */

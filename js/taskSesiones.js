@@ -506,28 +506,65 @@ async function abrirModalAsignarSeccion(idTarea, elemRef) {
 }
 
 async function manejarAsignacionSeccion(idTarea, nombreSeccion) {
-    console.log('manejarAsignacionSeccion: idTarea', idTarea, 'seccion', nombreSeccion);
+    console.log(`manejarAsignacionSeccion: idTarea ${idTarea}, seccion ${nombreSeccion}`);
     try {
         const resp = await enviarAjax('asignarSeccionMeta', {
             idTarea: idTarea,
-            sesion: nombreSeccion // Backend espera 'sesion' con nombre original
+            sesion: nombreSeccion
         });
 
         if (resp.success) {
+            // Primero, reiniciamos el post del padre. Esto es importante para que su HTML esté actualizado.
+            // Asumimos que reiniciarPost no cambia drásticamente la posición del elemento,
+            // o si lo hace, lo encontraremos de nuevo.
+            await window.reiniciarPost(idTarea, 'tarea');
+
             const nombreSeccionCodificado = encodeURIComponent(nombreSeccion);
             const tareaElem = document.querySelector(`.POST-tarea[id-post="${idTarea}"]`);
+            // Necesitamos el contenedor principal de tareas para las manipulaciones del DOM.
+            const listaContenedora = document.querySelector('.social-post-list.clase-tarea');
 
-            if (tareaElem) {
-                // 1. Actualizar data-sesion de la tarea principal en el DOM
+            if (tareaElem && listaContenedora) {
+                // 1. Actualizar data-sesion de la tarea principal en el DOM.
+                //    Esto asegura que dividirTarea sepa a qué sección pertenece.
                 tareaElem.setAttribute('data-sesion', nombreSeccionCodificado);
 
-                // 2. Actualizar data-sesion de sus subtareas en el DOM
-                const subtareasElems = document.querySelectorAll(`.POST-tarea[padre="${idTarea}"]`);
+                // 2. Recolectar todas las subtareas y actualizar su data-sesion en el DOM.
+                //    Usamos Array.from para obtener una lista estática de elementos.
+                const subtareasElems = Array.from(listaContenedora.querySelectorAll(`.POST-tarea[padre="${idTarea}"]`));
                 subtareasElems.forEach(subElem => {
                     subElem.setAttribute('data-sesion', nombreSeccionCodificado);
                 });
+
+                // 3. Reordenar físicamente la tarea padre y sus subtareas en el DOM.
+                //    Queremos que el padre esté primero, seguido inmediatamente por sus hijas,
+                //    en el orden en que fueron encontradas.
+                //    Esto se hace ANTES de llamar a dividirTarea.
+
+                //    Movemos cada subtarea para que sea el siguiente hermano del padre (o de la subtarea anterior).
+                //    Iteramos en reversa sobre las subtareas para facilitar la inserción con `insertBefore`.
+                //    Si insertamos HijaN, HijaN-1, ..., Hija1 usando `insertBefore(hija, padre.nextSibling)`,
+                //    el resultado será Padre, Hija1, Hija2, ..., HijaN.
+                for (let i = subtareasElems.length - 1; i >= 0; i--) {
+                    const subElem = subtareasElems[i];
+                    // Asegurarnos de que la subtarea realmente está en la lista principal
+                    if (subElem.parentNode === listaContenedora) {
+                        listaContenedora.insertBefore(subElem, tareaElem.nextSibling);
+                    }
+                }
+                // En este punto, el DOM debería tener: ... TareaAnterior, Padre, Hija1, Hija2, ..., HijaN, SiguienteTarea ...
+                // o si el padre estaba al final: ... TareaAnterior, Padre, Hija1, Hija2, ..., HijaN
+                // console.log(`manejarAsignacionSeccion: Padre ${idTarea} y sus ${subtareasElems.length} hijas reordenadas en el DOM.`);
+            } else {
+                if (!tareaElem) console.error(`manejarAsignacionSeccion: Tarea padre ${idTarea} no encontrada en el DOM después de reiniciarPost.`);
+                if (!listaContenedora) console.error(`manejarAsignacionSeccion: Lista contenedora principal no encontrada.`);
             }
+
             cerrarModalAsignarSeccion();
+
+            // Ahora llamamos a dividirTarea. Como el padre y las hijas están contiguas y con el
+            // data-sesion correcto, actualizarMapa los leerá en ese orden, y crearSeccion
+            // los insertará juntos en la nueva sección.
             if (window.dividirTarea) {
                 await window.dividirTarea();
             } else {
