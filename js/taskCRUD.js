@@ -160,41 +160,75 @@ window.editarTarea = function() {
 }
 
 window.manejarEditarTarea = function(ev) {
-    ev.preventDefault();
-    const tarea = this; // 'this' se refiere al elemento que disparo el evento
-    const id = tarea.dataset.tarea;
+   ev.preventDefault();
+    const tarea = this; // 'this' se refiere al elemento .tituloTarea que disparó el evento
+    const id = tarea.dataset.tarea; // Asegúrate que el dataset 'tarea' tenga el ID
     let valorAnt = tarea.textContent.trim();
     tarea.contentEditable = true;
-    tarea.spellcheck = false;
+    tarea.spellcheck = false; // Ya lo haces, pero bueno reconfirmar
     tarea.focus();
+
+    // Aquí puedes capturar el valor anterior si lo necesitas para 'guardarEdicion'
+    // tarea.dataset.valorAnterior = valorAnt; // Si guardarEdicion lo fuera a usar del dataset
 
     const off = calcularPosicionCursor(ev, tarea);
     setCursorPos(tarea, off);
 
     const salirEdicion = () => {
-        if (tarea.textContent.trim().length > 300) {
-            alert('El titulo no puede superar los 300 caracteres.');
-            tarea.textContent = valorAnt;
-        } else if (tarea.textContent.trim() !== '' && tarea.textContent.trim() !== valorAnt) {
-            guardarEdicion(tarea, id, valorAnt);
+        // CAMBIO: Si hay un temporizador de input pendiente para este elemento, cancelarlo.
+        if (tarea._temporizadorGuardado) {
+            clearTimeout(tarea._temporizadorGuardado);
+            delete tarea._temporizadorGuardado; // Limpiar la propiedad del elemento
         }
+
+        const textoActual = tarea.textContent.trim(); // Obtener el texto actual una vez
+
+        if (textoActual.length > 300) {
+            alert('El titulo no puede superar los 300 caracteres.');
+            tarea.textContent = valorAnt; // Revertir al valor anterior
+        } else if (textoActual !== '' && textoActual !== valorAnt) {
+            // Solo guardar si el texto no está vacío Y es diferente del valor anterior.
+            guardarEdicion(tarea, id, valorAnt); // valorAnt es el que tenía al iniciar la edición
+        }
+        // Si textoActual === '', no se guarda, y la tarea queda vacía (hasta que 'borrarTareaVacia' actúe en Backspace)
+        // Si textoActual === valorAnt, no se guarda porque no hubo cambios.
+
         tarea.contentEditable = false;
-        // Remover los event listeners despues de usarlos
+        // Remover los event listeners después de usarlos
         tarea.removeEventListener('blur', salirEdicion);
-        tarea.removeEventListener('paste', manejarPegado);
+        // 'paste' listener también se añade aquí, ¿debería removerse aquí o es persistente?
+        // Si se añade cada vez que se hace clic, debe removerse.
+        // La lógica actual de `manejarPegado` parece independiente del ciclo de `salirEdicion`.
+        // Si `manejarPegado` se añade solo una vez por `editarTarea` y `editarTarea` se llama múltiples veces,
+        // entonces también necesitaría lógica para no duplicarse o removerse.
+        // Por ahora, sigo tu código original para `paste`.
+        // Si `manejarPegado` se añade en `manejarEditarTarea` como `tarea.addEventListener('paste', manejarPegado);`
+        // entonces sí, debería removerse: `tarea.removeEventListener('paste', manejarPegado);`
     };
 
-    const manejarPegado = ev => {
+    const manejarPegado = ev => { // Asumo que esta función se define aquí dentro o es accesible.
         ev.preventDefault();
-        const texto = ev.clipboardData.getData('text/plain').trim();
-        const nuevoTexto = texto.substring(0, 300 - tarea.textContent.trim().length);
-        document.execCommand('insertText', false, nuevoTexto);
+        const texto = (ev.clipboardData || window.clipboardData).getData('text/plain').trim();
+        // Prevenir que el pegado exceda los 300 caracteres totales
+        const textoActualEnCampo = tarea.textContent.trim();
+        const caracteresRestantes = 300 - textoActualEnCampo.length;
+        const textoAPegar = texto.substring(0, Math.max(0, caracteresRestantes)); // Tomar solo lo que cabe
+
+        if (textoAPegar.length > 0) {
+            document.execCommand('insertText', false, textoAPegar);
+        }
+        // Si se pegó más de lo que cabía, se podría notificar al usuario.
     };
 
-    // Usar una funcion con nombre para poder removerla despues
+    // Asegurarse de no duplicar listeners si manejarEditarTarea se llamara múltiples veces en el mismo elemento sin limpiar.
+    // Tu código original en editarTarea() ya verifica !tarea.dataset.eventoAgregado,
+    // lo que previene añadir el listener de 'click' múltiples veces.
+    // Los listeners de 'blur' y 'paste' se añaden *dentro* del handler de 'click',
+    // y 'blur' se remueve a sí mismo, lo cual está bien.
     tarea.addEventListener('blur', salirEdicion);
-    tarea.addEventListener('paste', manejarPegado);
+    tarea.addEventListener('paste', manejarPegado); // Si este listener es temporal para esta sesión de edición
 }
+
 
 window.guardarEdicion = function(t, id, valorAnt) {
     const valorNuevo = t.textContent.trim();

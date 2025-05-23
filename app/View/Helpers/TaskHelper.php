@@ -1,5 +1,6 @@
 <?
 // app/View/Helpers/TaskHelper.php
+$depurarTitulo = false;
 
 function htmlTareas($filtro)
 {
@@ -136,28 +137,21 @@ function fechaLimite($id, $fechaLimite)
 
 function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frec, $est, $autorId, $tipo, $proxima, $fechaLimite, $sesion, $impnum, $mostrarIcono)
 {
+    global $depurarTitulo;
+
     $esCompletada = ($est === 'completada');
     $esHabito = in_array($tipo, ['habito', 'habito rigido', 'habito flexible']);
     $esMeta = ($tipo === 'meta');
-
     $idPadre = get_post_meta($id, 'subtarea', true);
-
-
-    // --- INICIO: Información de depuración para el título ---
     $tituloOriginal = $titulo;
-    $infoDepuracionTitulo = "(ID: " . $id . "";
+    $infoDepuracionTitulo = "";
 
-    if (!empty($sesion)) {
-        $infoDepuracionTitulo .= " | Sesión: " . esc_html($sesion);
-    }
-    $infoDepuracionTitulo .= ")";
-
+    $tieneSubtareasIncompletas = false;
+    $idsSubtareas = [];
 
     if ($idPadre) {
-        $infoDepuracionTitulo .= " (Padre: " . esc_html($idPadre) . ")";
         $tieneSubtareasIncompletas = false;
     } else {
-        // Es una tarea principal, buscar sus subtareas que no estén completadas o eliminadas
         $postTypeActual = get_post_type($id) ?: 'post';
         $argsSubtareas = [
             'post_type'      => $postTypeActual,
@@ -181,14 +175,27 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
         ];
         $idsSubtareas = get_posts($argsSubtareas);
         if (!empty($idsSubtareas)) {
-            $infoDepuracionTitulo .= " (SubT: " . implode(', ', $idsSubtareas) . ")";
             $tieneSubtareasIncompletas = true;
         } else {
             $tieneSubtareasIncompletas = false;
         }
     }
-    // --- FIN: Información de depuración para el título ---
 
+    if ($depurarTitulo) {
+        $partesDepuracionPrincipal = [];
+        $partesDepuracionPrincipal[] = "ID: " . $id;
+
+        if (!empty($sesion)) {
+            $partesDepuracionPrincipal[] = "Sesión: " . esc_html($sesion);
+        }
+        $infoDepuracionTitulo = "(" . implode(" | ", $partesDepuracionPrincipal) . ")";
+
+        if ($idPadre) {
+            $infoDepuracionTitulo .= " (Padre: " . esc_html($idPadre) . ")";
+        } elseif (!empty($idsSubtareas)) {
+            $infoDepuracionTitulo .= " (SubT: " . implode(', ', $idsSubtareas) . ")";
+        }
+    }
 
     $tiempoProxima = calcularTextoTiempo($proxima);
     $difDiasHabito = ($esHabito && !empty($tiempoProxima['txt'])) ? $tiempoProxima['diasDif'] : 0;
@@ -230,7 +237,9 @@ function generarHtmlTarea($id, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $f
 
         <p class="tituloTarea" data-tarea="<? echo $id; ?>">
             <? echo esc_html($tituloOriginal); ?>
-            <span class="info-ids-depuracion" style="font-size:0.75em; color: #666; margin-left: 8px; font-weight:normal;"><? echo esc_html($infoDepuracionTitulo); ?></span>
+            <? if (!empty($infoDepuracionTitulo)): ?>
+                <span class="info-ids-depuracion" style="font-size:0.75em; color: #666; margin-left: 8px; font-weight:normal;"><? echo esc_html($infoDepuracionTitulo); ?></span>
+            <? endif; ?>
         </p>
 
         <p class="idtarea" style="display: none; font-size: 11px;">
