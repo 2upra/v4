@@ -11,6 +11,42 @@ function jsonTask($exito, $datosOError, $logDetalles, $nombreFunc)
     else wp_send_json_error($datosOError);
 }
 
+function procesarCompletadoInterno($idTarea)
+{
+    $tip = get_post_meta($idTarea, 'tipo', true);
+    $logLocal = "ProcCompletado TareaID:$idTarea Tipo:$tip";
+
+    if ($tip === 'una vez') {
+        update_post_meta($idTarea, 'estado', 'completada');
+        $logLocal .= " Estado->completada.";
+    } elseif ($tip === 'habito' || $tip === 'habito rigido') {
+        $fecProAnt = get_post_meta($idTarea, 'fechaProxima', true);
+        $frec = (int) get_post_meta($idTarea, 'frecuencia', true);
+        if ($frec <= 0) $frec = 1; 
+        $hoy = date('Y-m-d');
+
+        $vecesComp = (int) get_post_meta($idTarea, 'vecesCompletado', true) + 1;
+        $fechasComp = get_post_meta($idTarea, 'fechasCompletado', true);
+        if (!is_array($fechasComp)) $fechasComp = [];
+        $fechasComp[] = $hoy;
+
+        update_post_meta($idTarea, 'vecesCompletado', $vecesComp);
+        update_post_meta($idTarea, 'fechasCompletado', $fechasComp);
+
+        $baseFec = ($tip === 'habito' || empty($fecProAnt) || !strtotime($fecProAnt)) ? $hoy : $fecProAnt;
+        if (empty($baseFec) || !strtotime($baseFec)) $baseFec = $hoy; // Doble seguro
+
+        $nvaFecPro = date('Y-m-d', strtotime("$baseFec +$frec days"));
+        update_post_meta($idTarea, 'fechaProxima', $nvaFecPro);
+
+        $logLocal .= " Comp:$vecesComp FecProxAnt:$fecProAnt FecProxNva:$nvaFecPro.";
+    } else {
+        update_post_meta($idTarea, 'estado', 'completada');
+        $logLocal .= " Estado->completada (tipo no específico para hábito).";
+    }
+    return $logLocal;
+}
+
 function crearTarea()
 {
     $func = 'crearTarea';
@@ -85,37 +121,22 @@ function completarTarea()
     $tarea = get_post($id);
     if (!$tarea || $tarea->post_type !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
-    $tip = get_post_meta($id, 'tipo', true);
-    $logDet = "ID: $id, Tipo: $tip";
+    $logDet = "IDPrincipal:$id ";
+    $logDet .= procesarCompletadoInterno($id);
 
-    if ($tip === 'una vez') {
-        $est = sanitize_text_field($_POST['estado'] ?? 'completada');
-        update_post_meta($id, 'estado', $est);
-        $logDet .= ". Estado -> $est.";
-    } elseif ($tip === 'habito' || $tip === 'habito rigido') {
-        $fecProAnt = get_post_meta($id, 'fechaProxima', true);
-        $frec = (int) get_post_meta($id, 'frecuencia', true);
-        $hoy = date('Y-m-d');
-
-        $vecesComp = (int) get_post_meta($id, 'vecesCompletado', true) + 1;
-        $fechasComp = get_post_meta($id, 'fechasCompletado', true);
-        if (!is_array($fechasComp)) $fechasComp = [];
-        $fechasComp[] = $hoy;
-
-        update_post_meta($id, 'vecesCompletado', $vecesComp);
-        update_post_meta($id, 'fechasCompletado', $fechasComp);
-
-        $baseFec = ($tip === 'habito') ? $hoy : $fecProAnt;
-        $nvaFecPro = date('Y-m-d', strtotime("$baseFec +$frec days"));
-        update_post_meta($id, 'fechaProxima', $nvaFecPro);
-
-        $logDet .= ". Comp: $vecesComp. FecProx: $fecProAnt -> $nvaFecPro.";
+    $subtareasIds = get_children(['post_parent' => $id, 'post_type' => 'tarea', 'numberposts' => -1, 'fields' => 'ids']);
+    if (!empty($subtareasIds)) {
+        $logDet .= " Subtareas(" . count($subtareasIds) . "):";
+        foreach ($subtareasIds as $subId) {
+            $logDet .= " [" . procesarCompletadoInterno($subId) . "]";
+        }
     } else {
-        $logDet .= ". Sin acción especial de completado.";
+        $logDet .= " SinSubtareas.";
     }
 
-    jsonTask(true, ['mensaje' => 'Tarea procesada.'], $logDet, $func);
+    jsonTask(true, ['mensaje' => 'Tarea(s) procesada(s).'], trim($logDet), $func);
 }
+
 add_action('wp_ajax_completarTarea', 'completarTarea');
 
 function cambiarPrioridad()
@@ -185,42 +206,40 @@ function archivarTarea()
 
     $id = (int) ($_POST['id'] ?? 0);
     if ($id <= 0) jsonTask(false, 'ID tarea inválido.', 'ID inválido.', $func);
-    if (!get_post($id) || get_post_type($id) !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
+    
+    $tarea = get_post($id);
+    if (!$tarea || $tarea->post_type !== 'tarea') jsonTask(false, 'Tarea no encontrada.', "ID $id no encontrado.", $func);
 
     $estAct = get_post_meta($id, 'estado', true);
-    $logDet = "ID: $id. Est.Actual: $estAct.";
-    $usu = get_current_user_id();
+    $logDet = "ID:$id EstActual:$estAct.";
+    $cntHijAct = 0; // Variable para contar hijos actualizados
+    $mensajeUsuario = '';
 
-    if ($estAct === 'archivado') { // Desarchivar
-        update_post_meta($id, 'estado', 'pendiente');
-        update_post_meta($id, 'sesion', 'General');
-        wp_update_post(['ID' => $id, 'post_parent' => 0]);
-        delete_post_meta($id, 'subtarea');
-        $logDet .= " Desarchivada -> pendiente, Sesion General, padre 0.";
-    } else { // Archivar
+    if ($estAct === 'archivado') { 
+        $nuevoEstado = 'pendiente';
+        actEstTarHijos($id, $nuevoEstado, $cntHijAct); 
+        $logDet .= " DesarchivadaA:$nuevoEstado. SubtareasAfectadas:$cntHijAct."; // Corregido aquí
+        $mensajeUsuario = 'Tarea y subtareas desarchivadas.';
+    } else { 
+        $nuevoEstado = 'archivado';
+        actEstTarHijos($id, $nuevoEstado, $cntHijAct); 
+        $logDet .= " Archivada. SubtareasAfectadas:$cntHijAct."; // Corregido aquí
+        $mensajeUsuario = 'Tarea y subtareas archivadas.';
+        
+        $usu = get_current_user_id();
         $orden = get_user_meta($usu, 'ordenTareas', true);
         if (is_array($orden)) {
-            if (($pos = array_search($id, $orden)) !== false) unset($orden[$pos]);
-            $orden[] = $id;
-            update_user_meta($usu, 'ordenTareas', $orden);
-            $logDet .= " Orden actualizado.";
+            if (($pos = array_search($id, $orden)) !== false) {
+                unset($orden[$pos]);
+                update_user_meta($usu, 'ordenTareas', array_values($orden)); // Asegurar que los índices se reorganicen
+                $logDet .= " TareaQuitadaOrdenPersonalizado.";
+            }
         }
-
-        $subtareas = get_children(['post_parent' => $id, 'post_type' => 'tarea', 'fields' => 'ids']);
-        foreach ($subtareas as $subId) {
-            update_post_meta($subId, 'estado', 'archivado');
-            // Opcional: wp_update_post(['ID' => $subId, 'post_parent' => 0]); delete_post_meta($subId, 'subtarea');
-            $logDet .= " Subtarea $subId archivada.";
-        }
-
-        wp_update_post(['ID' => $id, 'post_parent' => 0]);
-        delete_post_meta($id, 'subtarea');
-        update_post_meta($id, 'estado', 'archivado');
-        $logDet .= " Archivada (padre 0).";
     }
 
-    jsonTask(true, ['mensaje' => 'Estado de archivo actualizado.'], $logDet, $func);
+    jsonTask(true, ['mensaje' => $mensajeUsuario], $logDet, $func);
 }
+
 add_action('wp_ajax_archivarTarea', 'archivarTarea');
 
 function cambiarFrecuencia()

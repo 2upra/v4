@@ -41,21 +41,56 @@ function cambiarEstado($idPost, $nuevoEstado)
         return wp_send_json_error(['message' => 'Post no encontrado']);
     }
 
+    $tipoPost = $post->post_type;
     $estadoAnterior = $post->post_status;
-    $post->post_status = $nuevoEstado;
-    $resultado = wp_update_post($post);
+
+    // Inicio de la lógica específica para TAREAS y pending_deletion
+    if ($tipoPost === 'tarea' && $nuevoEstado === 'pending_deletion') {
+        error_log("cambiarEstado Info: Solicitud de borrado para TAREA ID $idPost (estado anterior: $estadoAnterior). Procediendo a borrar con sus subtareas.");
+        
+        // La acción 'eliminarpostrs' lleva a 'pending_deletion'.
+        // Aquí, en lugar de solo cambiar el estado, eliminamos el post y sus hijos.
+        $resultadoBorrado = wp_delete_post($idPost, true); // true para forzar borrado y eliminar hijos
+
+        if (false === $resultadoBorrado || null === $resultadoBorrado) {
+            error_log("cambiarEstado Error: wp_delete_post falló para TAREA ID $idPost.");
+            return wp_send_json_error(['message' => 'Error al eliminar la tarea y sus subtareas.']);
+        }
+        
+        error_log("cambiarEstado Info: TAREA ID $idPost y sus subtareas (si las tuvo) eliminadas permanentemente.");
+        // Si el borrado fue exitoso, enviamos un mensaje acorde.
+        // El 'new_status' podría ser algo como 'deleted' para reflejar la acción.
+        return wp_send_json_success(['message' => 'Tarea y subtareas eliminadas.', 'new_status' => 'deleted_permanently', 'post_id' => $idPost]);
+    }
+    // Fin de la lógica específica para TAREAS
+
+    // Lógica original para otros tipos de post o tareas que no van a 'pending_deletion'
+    // (o si $tipoPost no es 'tarea' pero $nuevoEstado es 'pending_deletion')
+    $datosActualizacion = ['ID' => $idPost, 'post_status' => $nuevoEstado]; // Usar un array para wp_update_post
+    $resultado = wp_update_post($datosActualizacion, true); // Pasar true para obtener WP_Error en caso de fallo
 
     if (is_wp_error($resultado)) {
         error_log("cambiarEstado Error: Fallo al actualizar post ID $idPost a estado '$nuevoEstado'. Error: " . $resultado->get_error_message());
         return wp_send_json_error(['message' => 'Error al actualizar el post', 'error' => $resultado->get_error_message()]);
     }
-    if (0 === $resultado) {
-        error_log("cambiarEstado Error: wp_update_post devolvió 0 para post ID $idPost (posiblemente post no existe o fallo).");
-        return wp_send_json_error(['message' => 'Error: No se pudo actualizar el post (ID 0 devuelto).']);
+    
+    // wp_update_post devuelve 0 si no hay cambios o si el post no existe, ID del post si es exitoso.
+    // La comprobación de is_wp_error es más robusta.
+    // Si $resultado es 0 pero no es un WP_Error, y el estado sí debía cambiar, puede ser un problema.
+    if (0 === $resultado && $estadoAnterior !== $nuevoEstado) { 
+        error_log("cambiarEstado Advertencia: wp_update_post devolvió 0 para post ID $idPost intentando cambiar estado de '$estadoAnterior' a '$nuevoEstado'. Verificar si el post existe y es editable.");
+        // Podrías considerar esto un error si se esperaba un cambio
+        return wp_send_json_error(['message' => 'Error: No se pudo actualizar el estado del post (ID 0 devuelto).']);
+    }
+    if (0 === $resultado && $estadoAnterior === $nuevoEstado) {
+        error_log("cambiarEstado Info: No hubo cambios en el estado del post ID $idPost (ya estaba en '$nuevoEstado').");
+        // Devolver éxito, ya que el estado deseado ya está aplicado.
+        return wp_send_json_success(['new_status' => $nuevoEstado, 'message' => 'El post ya se encontraba en el estado solicitado.']);
     }
 
-    error_log("cambiarEstado Info: Post ID $idPost cambiado de estado '$estadoAnterior' a '$nuevoEstado'.");
-    return wp_send_json_success(['new_status' => $nuevoEstado]);
+
+    error_log("cambiarEstado Info: Post ID $idPost (tipo: $tipoPost) cambiado de estado '$estadoAnterior' a '$nuevoEstado'.");
+    return wp_send_json_success(['new_status' => $nuevoEstado, 'post_id' => $idPost]);
 }
 
 # Maneja los cambios de estado de los posts a través de AJAX.
