@@ -32,7 +32,12 @@ function scriptsOrdenados()
         'genericAjax',
         'comentarios',
         'stripeCompra',
-        'task',
+        // 'task', // Removed as per refactoring
+        'taskUtils',
+        'taskDates',
+        'taskProperties',
+        'taskCRUD',
+        'taskCore',
         'notas',
         'taskCal'
     ];
@@ -80,7 +85,12 @@ function scriptsOrdenados()
         'taskEnter'         => '1.0.1',
         'taskmove'          => '1.0.1',
         'taskSesiones'      => '1.0.1',
-        'task'              => '1.0.1',
+        // 'task'              => '1.0.1', // Removed as per refactoring
+        'taskUtils'       => '1.0.1',
+        'taskDates'       => '1.0.1',
+        'taskProperties'  => '1.0.1',
+        'taskCRUD'        => '1.0.1',
+        'taskCore'        => '1.0.1',
         'icons'             => '1.0.1',
         'notas'             => '1.0.1',
         'filtros'           => '1.0.1',
@@ -137,8 +147,8 @@ function scriptsOrdenados()
         wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
         //$error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
 
-        // Localizar el nonce para task.js
-        wp_localize_script('task', 'task_vars', array(
+        // Localizar el nonce para taskCore.js (formerly task.js)
+        wp_localize_script('taskCore', 'task_vars', array(
             'borrar_tarea_nonce' => wp_create_nonce('borrar_tarea_nonce')
         ));
     }
