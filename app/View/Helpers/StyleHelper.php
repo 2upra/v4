@@ -236,6 +236,20 @@ function formTareaEstilo()
             padding: 4px 10px;
             font-size: 12px;
         }
+
+        .nombre-seccion-editable {
+            outline: none;
+            border: none;
+            background-color: transparent;
+            padding: 1px;
+            /* A veces necesario para que el cursor de texto aparezca bien */
+            min-height: 1em;
+            /* Asegura que el área sea clickeable incluso si está vacía */
+        }
+
+        span.iconoPlus {
+            display: none;
+        }
     </style>
 <?
     return ob_get_clean();
