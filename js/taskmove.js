@@ -2,7 +2,84 @@
 
 window.initMoverTarea = () => {
     const tit = document.getElementById('tituloTarea');
-    if (tit) moverTarea();
+    // The SortableJS initialization was not present in the provided js/taskmove.js
+    // It seems that moverTarea() which is called if tit exists, should contain the SortableJS logic.
+    // For now, I will assume moverTarea() is where SortableJS is initialized,
+    // or that initMoverTarea itself should contain the SortableJS initialization directly.
+    // Based on the analysis phase, initMoverTarea was identified as the place for Sortable.
+    // Let's add the SortableJS initialization here directly.
+
+    const listas = document.querySelectorAll('.clase-tarea'); // Assuming .clase-tarea is the list container
+    if (!listas.length) return;
+
+    listas.forEach(lista => {
+        if (lista.dataset.sortableInitialized === 'true') return;
+
+        const sortable = new Sortable(lista, {
+            group: 'shared',
+            animation: 150,
+            handle: '.dragHandle', // Make sure .dragHandle elements exist on your draggable items
+            filter: '.no-drag', // Elements with this class won't be draggable
+            preventOnFilter: true, // Clicks on filtered elements won't trigger drag
+            draggable: '.draggable-element, .divisorTarea', // Allow tasks and section dividers to be draggable
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            forceFallback: true, // Ensures ghost class behavior
+            onEnd: function (evt) {
+                // New logic for handling full order of tasks and section dividers
+                const fullOrder = [];
+                // evt.from is the list from which the item was dragged
+                evt.from.childNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) { // Ensure it's an element
+                        if (node.classList.contains('POST-tarea') && node.hasAttribute('id-post')) {
+                            fullOrder.push(node.getAttribute('id-post'));
+                        } else if (node.classList.contains('divisorTarea') && node.hasAttribute('data-valor')) {
+                            // Ensure 'divisorTarea' is the correct class for section dividers
+                            // and 'data-valor' holds the section identifier (e.g., "Work", "Personal")
+                            fullOrder.push(node.getAttribute('data-valor'));
+                        }
+                    }
+                });
+
+                // AJAX call to the new backend action
+                // Now sending the full mixed order (task IDs and section names)
+                // as the backend is expected to handle it.
+                // const taskOrderIds = fullOrder.filter(id => !isNaN(parseInt(id))); // No longer filtering to only task IDs
+
+                // Assuming enviarAjax is a global function similar to the one used elsewhere
+                // and it handles the nonce and other WordPress AJAX requirements.
+                enviarAjax('actualizarOrdenTareasGrupo', { ordenNuevo: fullOrder.join(',') })
+                    .then(response => {
+                        if (response.success) {
+                            console.log('Orden de tareas y secciones (mixto) actualizado correctamente.');
+                            // Optionally, refresh or update UI elements if needed
+                        } else {
+                            console.error('Error al actualizar el orden de tareas y secciones:', response.data);
+                            // Handle error, maybe revert UI changes or notify user
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error en la llamada AJAX para actualizarOrdenTareasGrupo:', error);
+                        // Handle AJAX call error
+                    });
+                
+                // Comment out or remove old logic if it was here.
+                // The original function body of initMoverTarea was just:
+                // const tit = document.getElementById('tituloTarea');
+                // if (tit) moverTarea();
+                // So, there's no old onEnd logic here to comment out from initMoverTarea itself.
+                // The old logic was in `moverTarea`'s `finalizarArrastre` which handles individual/group task moves,
+                // but not section moves. This SortableJS instance is intended to replace that for ordering.
+            }
+        });
+        lista.dataset.sortableInitialized = 'true';
+    });
+
+    // Original lines from initMoverTarea, if moverTarea() is still needed for other things:
+    // const tit = document.getElementById('tituloTarea');
+    // if (tit) moverTarea(); // moverTarea might contain other event listeners or logic not replaced by SortableJS
+
     //setTimeout(dibujarLineasSubtareas, 150);
 };
 

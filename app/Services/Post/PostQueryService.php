@@ -792,10 +792,63 @@ function procesarPublicaciones($queryArgs, $args, $is_ajax)
         echo formNotas();
     }
 
-    if ($query->have_posts()) { // Si hay posts
+    // Part 1: Modify Task Rendering Logic for Sections
+    if ($tipoPost === 'tarea' && $query->have_posts()) {
+        $orden_secciones = get_user_meta($userId, 'ordenTareasSecciones', true);
+        $all_user_tasks = $query->posts; // WP_Post objects from the query
+
+        $indexed_tasks = [];
+        if (!empty($all_user_tasks)) {
+            foreach ($all_user_tasks as $task_post_obj) {
+                $indexed_tasks[$task_post_obj->ID] = $task_post_obj;
+            }
+        }
+
+        if (is_array($orden_secciones) && !empty($orden_secciones)) {
+            // Custom loop based on ordenTareasSecciones
+            global $post; // Required for setup_postdata and functions like get_the_id() in htmlTareas/generarHtmlTarea
+            $tasks_rendered_from_orden = [];
+
+            foreach ($orden_secciones as $item) {
+                if (is_numeric($item)) {
+                    $task_id = intval($item);
+                    if (isset($indexed_tasks[$task_id])) {
+                        $post = $indexed_tasks[$task_id]; // Set the global $post object
+                        setup_postdata($post); // Setup post data for template tags
+                        echo htmlTareas($filtro); // Assumes htmlTareas uses global $post or get_the_id()
+                        $tasks_rendered_from_orden[$task_id] = true;
+                    }
+                } elseif (is_string($item)) {
+                    $section_name = sanitize_text_field($item);
+                    // Ensure this matches the expected structure for section dividers
+                    echo '<p class="divisorTarea" data-valor="' . esc_attr($section_name) . '">' . esc_html($section_name) . '</p>';
+                }
+            }
+            wp_reset_postdata(); // Clean up global $post
+
+            // Render any remaining tasks that were not in orden_secciones (e.g., newly created)
+            // These will typically be appended at the end without a specific section or under a default one,
+            // depending on how ordenamientoTareas and the JS side handle them.
+            foreach ($all_user_tasks as $task_post_obj) {
+                if (!isset($tasks_rendered_from_orden[$task_post_obj->ID])) {
+                    $post = $task_post_obj;
+                    setup_postdata($post);
+                    echo htmlTareas($filtro);
+                }
+            }
+            wp_reset_postdata();
+
+        } else {
+            // Fallback to original loop if ordenTareasSecciones is not set or invalid
+            while ($query->have_posts()) {
+                $query->the_post();
+                // This is the original logic for 'tarea' when orden_secciones is not used
+                echo htmlTareas($filtro);
+            }
+        }
+    } elseif ($query->have_posts()) { // Original loop for other post types
         while ($query->have_posts()) {
             $query->the_post();
-
             switch ($tipoPost) {
                 case 'social_post':
                     if ($filtro === 'rola' || $filtro === 'tiendaPerfil') {
@@ -810,9 +863,7 @@ function procesarPublicaciones($queryArgs, $args, $is_ajax)
                 case 'colecciones':
                     echo htmlColec($filtro);
                     break;
-                case 'tarea':
-                    echo htmlTareas($filtro);
-                    break;
+                // 'tarea' case is handled above
                 case 'notas':
                     echo htmlNotas($filtro);
                     break;
@@ -823,8 +874,8 @@ function procesarPublicaciones($queryArgs, $args, $is_ajax)
                     echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
-    } else { // Si no hay posts
-        if ($filtro !== 'notas') {
+    } else { // Si no hay posts (applies to all post types)
+        if ($filtro !== 'notas') { // Original condition
             echo nohayPost($filtro, $is_ajax);
         }
     }
