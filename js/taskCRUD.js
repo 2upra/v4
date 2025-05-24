@@ -311,7 +311,7 @@ window.manejarClicCompletar = function() {
         log += `Procesando ${id}. `;
 
         enviarAjax('completarTarea', dat)
-            .then(rta => {
+            .then(async rta => { // Add async here
                 if (rta.success) {
                     log += `Éxito AJAX para ${id}. `;
                     if (estadoDeseado === 'completada') {
@@ -328,7 +328,30 @@ window.manejarClicCompletar = function() {
                         } else if (esHabitoActual || esHabitoFlexibleActual) {
                             // Reiniciar hábito individualmente
                             log += `Tarea ${id} es habito/flexible, reiniciando post. `;
-                            window.reiniciarPost(id, 'tarea');
+                            await window.reiniciarPost(id, 'tarea'); // Await the call
+
+                            // Re-select the task element as reiniciarPost replaces it
+                            const refreshedTaskElement = document.querySelector(`.POST-tarea[id-post="${id}"]`);
+
+                            if (refreshedTaskElement && window.filtrosGlobales && window.filtrosGlobales.includes('mostrarHabitosHoy')) {
+                                const tipoTarea = refreshedTaskElement.getAttribute('tipo-tarea');
+                                const fechaProximaStr = refreshedTaskElement.dataset.proxima; // From data-proxima="YYYY-MM-DD"
+
+                                if ((tipoTarea === 'habito' || tipoTarea === 'habito rigido') && fechaProximaStr) {
+                                    const hoy = new Date();
+                                    hoy.setHours(0, 0, 0, 0); // Normalize today's date
+                                    
+                                    const year = hoy.getFullYear();
+                                    const month = String(hoy.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                                    const day = String(hoy.getDate()).padStart(2, '0');
+                                    const hoyStr = `${year}-${month}-${day}`;
+
+                                    if (fechaProximaStr > hoyStr) {
+                                        refreshedTaskElement.remove();
+                                        log += ` Tarea ${id} (hábito) eliminada del DOM porque fechaProxima (${fechaProximaStr}) es futura y mostrarHabitosHoy está activo.`;
+                                    }
+                                }
+                            }
                         }
                     } else {
                         // estado deseado es 'pendiente'

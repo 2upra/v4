@@ -214,20 +214,110 @@ function aplicarFiltrosDeUsuario($queryArgs, $usu, $filtro)
             $queryArgs['author'] = $usu;
         }
     }
-    if (($filtro === 'tarea' || $filtro === 'tareaPrioridad') && is_array($filtrosUsuario) && in_array('ocultarCompletadas', $filtrosUsuario)) {
+    if (($filtro === 'tarea' || $filtro === 'tareaPrioridad') && is_array($filtrosUsuario)) {
         $queryArgs['author'] = $usu;
-        $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
-            [
+
+        // Initialize meta_query correctly
+        if (!isset($queryArgs['meta_query']) || !is_array($queryArgs['meta_query'])) {
+            $queryArgs['meta_query'] = [];
+        }
+
+        $task_specific_conditions = [];
+
+        if (in_array('ocultarCompletadas', $filtrosUsuario)) {
+            $task_specific_conditions[] = [
                 'key' => 'estado',
                 'value' => 'completada',
                 'compare' => '!=',
-            ],
-           /* [
-                'key' => 'estado',
-                'value' => 'archivado',
-                'compare' => '!=',
-            ] */
-        ]);
+            ];
+        }
+
+        if (in_array('mostrarHabitosHoy', $filtrosUsuario)) {
+            $today = date('Y-m-d');
+            $task_types_to_filter_by_date = ['habito', 'habito rigido'];
+            $task_specific_conditions[] = [
+                'relation' => 'OR',
+                [
+                    'key' => 'tipo',
+                    'compare' => 'NOT EXISTS', // Task is not a habit (no 'tipo' field)
+                ],
+                [
+                    'key' => 'tipo',
+                    'value' => $task_types_to_filter_by_date, // Task type is set but is NOT one of the habit types
+                    'compare' => 'NOT IN', 
+                ],
+                [
+                    'relation' => 'AND', // Task type IS one of the habit types, and it's due
+                    [
+                        'key' => 'tipo',
+                        'value' => $task_types_to_filter_by_date,
+                        'compare' => 'IN',
+                    ],
+                    [
+                        'key' => 'fechaProxima',
+                        'value' => $today,
+                        'compare' => '<=',
+                        'type' => 'DATE',
+                    ]
+                ]
+            ];
+        }
+
+        if (!empty($task_specific_conditions)) {
+            // Check if there are pre-existing conditions in meta_query
+            // A simple way to check is to see if meta_query is empty or only contains 'relation'
+            $has_preexisting_conditions = false;
+            if (!empty($queryArgs['meta_query'])) {
+                foreach ($queryArgs['meta_query'] as $key => $value) {
+                    if ($key !== 'relation') {
+                        $has_preexisting_conditions = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($has_preexisting_conditions) {
+                // If there are pre-existing conditions, ensure they are wrapped in an array if not already
+                // and then add task_specific_conditions as another clause.
+                // The top-level relation must be AND.
+                
+                // Store existing conditions
+                $existing_mq = $queryArgs['meta_query'];
+                
+                // If existing_mq is a single condition (not an array of conditions or already having a relation key)
+                // This is a simple check; more robust might be needed if structure is very varied.
+                if (!isset($existing_mq[0]) && isset($existing_mq['key'])) {
+                    $existing_mq = [$existing_mq];
+                }
+
+                $queryArgs['meta_query'] = ['relation' => 'AND'];
+                
+                // Add back existing conditions. If it was already an AND group, its conditions are added.
+                // If it was a single condition or an OR group, it's added as one item.
+                if (isset($existing_mq['relation']) && count($existing_mq) > 1) { // Already a group
+                    foreach($existing_mq as $k_mq => $v_mq){
+                        if($k_mq === 'relation') continue;
+                        $queryArgs['meta_query'][] = $v_mq;
+                    }
+                } else { // Single condition or an OR group
+                     $queryArgs['meta_query'][] = $existing_mq;
+                }
+
+
+                if (count($task_specific_conditions) > 1) {
+                    $queryArgs['meta_query'][] = array_merge(['relation' => 'AND'], $task_specific_conditions);
+                } else {
+                    $queryArgs['meta_query'][] = $task_specific_conditions[0];
+                }
+
+            } else { // No pre-existing conditions, meta_query was empty or just had a relation
+                if (count($task_specific_conditions) > 1) {
+                    $queryArgs['meta_query'] = array_merge(['relation' => 'AND'], $task_specific_conditions);
+                } elseif (!empty($task_specific_conditions)) { // Only one specific condition
+                    $queryArgs['meta_query'] = $task_specific_conditions[0];
+                }
+            }
+        }
     }
 
     return $queryArgs;
