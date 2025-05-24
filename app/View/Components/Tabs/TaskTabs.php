@@ -48,6 +48,17 @@ function taskTabs()
                             </label>
                         </div>
 
+                        <div class="opcionCheck">
+                            <div>
+                                <label>Mostrar solo hábitos para hoy</label>
+                                <p class="description"></p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="mostrarHabitosHoy" id="mostrarHabitosHoy">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
                         <div class="XJAAHB">
                             <button class="botonsecundario borde">Restablecer</button>
                             <button class="botonprincipal">Guardar</button>
