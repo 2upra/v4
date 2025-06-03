@@ -1,6 +1,6 @@
 // js/taskCRUD.js
 
-window.enviarTarea = function() {
+window.enviarTarea = function () {
     // Asumo que enviarTareaHandler y pegarTareaHandler son funciones ya definidas en otro lugar.
     const tit = document.getElementById('tituloTarea');
 
@@ -19,7 +19,7 @@ window.enviarTarea = function() {
 }
 
 //necesito ajustar lo de pegar tareas, porque ya no se usa reiniciarContenido sino reiniciarPost
-window.pegarTareaHandler = function(ev) {
+window.pegarTareaHandler = function (ev) {
     ev.preventDefault();
     const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
     const lineas = textoPegado
@@ -83,7 +83,7 @@ window.pegarTareaHandler = function(ev) {
 }
 
 //te dejo un ejemplo correcto
-window.enviarTareaHandler = function(ev) {
+window.enviarTareaHandler = function (ev) {
     const tit = document.getElementById('tituloTarea');
     const listaTareas = document.querySelector('.tab.active .social-post-list.clase-tarea');
 
@@ -108,7 +108,7 @@ window.enviarTareaHandler = function(ev) {
             const tituloParaEnviar = tit.value;
             tit.value = '';
 
-            enviarAjax('crearTarea', {...data, titulo: tituloParaEnviar})
+            enviarAjax('crearTarea', { ...data, titulo: tituloParaEnviar })
                 .then(async rta => {
                     if (rta.success) {
                         alert('Tarea creada.');
@@ -147,7 +147,7 @@ window.enviarTareaHandler = function(ev) {
     }
 }
 
-window.editarTarea = function() {
+window.editarTarea = function () {
     const tareas = document.querySelectorAll('.tituloTarea');
 
     tareas.forEach(tarea => {
@@ -159,8 +159,8 @@ window.editarTarea = function() {
     });
 }
 
-window.manejarEditarTarea = function(ev) {
-   ev.preventDefault();
+window.manejarEditarTarea = function (ev) {
+    ev.preventDefault();
     const tarea = this; // 'this' se refiere al elemento .tituloTarea que disparó el evento
     const id = tarea.dataset.tarea; // Asegúrate que el dataset 'tarea' tenga el ID
     let valorAnt = tarea.textContent.trim();
@@ -230,7 +230,7 @@ window.manejarEditarTarea = function(ev) {
 }
 
 
-window.guardarEdicion = function(t, id, valorAnt) {
+window.guardarEdicion = function (t, id, valorAnt) {
     const valorNuevo = t.textContent.trim();
 
     if (valorAnt !== valorNuevo) {
@@ -238,7 +238,7 @@ window.guardarEdicion = function(t, id, valorAnt) {
         t.style.outline = 'none';
         t.style.border = 'none';
         t.style.boxShadow = 'none';
-        const dat = {id, titulo: valorNuevo};
+        const dat = { id, titulo: valorNuevo };
         console.log('Llamando modificarTarea desde guardarEdicion');
         enviarAjax('modificarTarea', dat)
             .then(rta => {
@@ -263,7 +263,7 @@ window.guardarEdicion = function(t, id, valorAnt) {
 }
 
 //se que esto oculta la tarea cuando el filtro esta activado pero, no la tiene que ocultar, sino eliminar del dom
-window.completarTarea = function() {
+window.completarTarea = function () {
     document.querySelectorAll('.completaTarea').forEach(boton => {
         // Remover listener anterior para evitar duplicados si se llama multiples veces
         boton.removeEventListener('click', manejarClicCompletar);
@@ -273,7 +273,7 @@ window.completarTarea = function() {
     });
 }
 
-window.manejarClicCompletar = function() {
+window.manejarClicCompletar = function () {
     const botonClicado = this;
     const tareaElemento = botonClicado.closest('.draggable-element');
     const tareaIdOriginal = botonClicado.dataset.tarea;
@@ -307,7 +307,7 @@ window.manejarClicCompletar = function() {
         // Importante: Usar el estado deseado consistentemente para todas las tareas del grupo
         const estadoDeseado = estadoOriginal;
 
-        const dat = {id: id, estado: estadoDeseado};
+        const dat = { id: id, estado: estadoDeseado };
         log += `Procesando ${id}. `;
 
         enviarAjax('completarTarea', dat)
@@ -340,7 +340,7 @@ window.manejarClicCompletar = function() {
                                 if ((tipoTarea === 'habito' || tipoTarea === 'habito rigido') && fechaProximaStr) {
                                     const hoy = new Date();
                                     hoy.setHours(0, 0, 0, 0); // Normalize today's date
-                                    
+
                                     const year = hoy.getFullYear();
                                     const month = String(hoy.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
                                     const day = String(hoy.getDate()).padStart(2, '0');
@@ -379,7 +379,7 @@ window.manejarClicCompletar = function() {
     console.log(log + 'Fin manejarClicCompletar.');
 }
 
-window.archivarTarea = function() {
+window.archivarTarea = function () {
     document.querySelectorAll('.divArchivado').forEach(div => {
         // Remover listener anterior si existe para evitar duplicados
         const listenerExistente = div.funcionListenerArchivo; // Necesitamos guardar una referencia
@@ -414,7 +414,7 @@ window.archivarTarea = function() {
                     continue; // Saltar al siguiente id
                 }
                 // La acción (archivar/desarchivar) es la misma para todas, basada en el estado original clicado
-                const data = {id: id, desarchivar: desarchivarOriginal};
+                const data = { id: id, desarchivar: desarchivarOriginal };
                 logs += `Procesando ${id}. `;
 
                 try {
@@ -476,7 +476,7 @@ window.archivarTarea = function() {
 // The following SEARCH block is targeting the line before where window.borrarTareasCompletadas starts
 // to insert window.subTarea before it.
 
-window.subTarea = function() {
+window.subTarea = function () {
     const lista = document.querySelector('.clase-tarea');
     if (!lista) {
         // console.log('subTarea: Lista de tareas no encontrada.'); // Log opcional para desarrollo
@@ -502,7 +502,7 @@ window.subTarea = function() {
                     tareaActual.classList.remove('subtarea');
                     tareaActual.removeAttribute('padre');
 
-                    const datos = {id: idActual, subtarea: false};
+                    const datos = { id: idActual, subtarea: false };
                     enviarAjax('crearSubtarea', datos)
                         .then(rta => {
                             let log = `subTarea Shift+Tab: ID ${idActual} -> ya no es subtarea. RTA ${rta.success}`;
@@ -527,7 +527,7 @@ window.subTarea = function() {
                     const idAnterior = tareaAnterior.getAttribute('id-post');
                     tareaActual.setAttribute('padre', idAnterior);
 
-                    const datos = {id: idActual, padre: idAnterior, subtarea: true};
+                    const datos = { id: idActual, padre: idAnterior, subtarea: true };
                     enviarAjax('crearSubtarea', datos)
                         .then(rta => {
                             let log = `subTarea Tab: ID ${idActual} -> subtarea de ${idAnterior}. RTA ${rta.success}`;
@@ -551,7 +551,7 @@ window.subTarea = function() {
     // console.log('subTarea: Listener inicializado.'); // Log opcional para desarrollo
 };
 
-window.borrarTareasCompletadas = async function() {
+window.borrarTareasCompletadas = async function () {
     const boton = document.querySelector('.borrarTareasCompletadas');
     let limpiar = true;
 
@@ -581,7 +581,8 @@ window.borrarTareasCompletadas = async function() {
     boton.listener = handleClick;
 }
 
-window.borrarTareaVacia = function() {
+
+window.borrarTareaVacia = function () {
     const tareas = document.querySelectorAll('.tituloTarea');
 
     tareas.forEach(tarea => {
@@ -648,7 +649,7 @@ window.borrarTareaVacia = function() {
     });
 }
 
-window.borrarTareasCompletadas = async function() {
+window.borrarTareasCompletadas = async function () {
     const boton = document.querySelector('.borrarTareasCompletadas');
     let limpiar = true;
 
@@ -677,3 +678,85 @@ window.borrarTareasCompletadas = async function() {
     boton.addEventListener('click', handleClick);
     boton.listener = handleClick;
 }
+
+window.initMarcarDiaHabito = function () {
+    document.querySelectorAll('.dia-habito-item').forEach(item => {
+        // Remover listener anterior para evitar duplicados si initTareas se llama multiples veces
+        item.removeEventListener('click', manejarClicDiaHabito);
+        item.addEventListener('click', manejarClicDiaHabito);
+    });
+}
+
+window.manejarClicDiaHabito = function (event) {
+    const item = event.currentTarget;
+    const tareaId = item.dataset.tareaId;
+    const fecha = item.dataset.fecha;
+    let estadoActual = item.dataset.estado;
+    let estadoNuevo;
+    let nuevoIcono;
+
+    // Use the global icon variables
+    if (estadoActual === 'pendiente') {
+        estadoNuevo = 'completado';
+        nuevoIcono = window.iconoCheck1;
+    } else if (estadoActual === 'completado') {
+        estadoNuevo = 'saltado';
+        nuevoIcono = window.iconoMinus;
+    } else if (estadoActual === 'saltado') {
+        estadoNuevo = 'pendiente';
+        nuevoIcono = window.iconoEquis;
+    } else {
+        // Estado desconocido, volver a pendiente por seguridad
+        console.warn(`Estado desconocido '${estadoActual}' para ${tareaId} en ${fecha}. Volviendo a pendiente.`);
+        estadoNuevo = 'pendiente';
+        nuevoIcono = window.iconoEquis;
+    }
+
+    const data = {
+        action: 'marcarDiaHabito',
+        tareaId: tareaId,
+        fecha: fecha,
+        estado: estadoNuevo
+    };
+
+    // Usar la función global enviarAjax si existe y es apropiada
+    if (typeof enviarAjax === 'function') {
+        enviarAjax('marcarDiaHabito', data)
+            .then(respuesta => {
+                if (respuesta.success) {
+                    window.reiniciarPost(tareaId)
+                } else {
+                    alert('Error al actualizar el día del hábito: ' + (respuesta.data || 'Error desconocido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error en AJAX marcarDiaHabito:', error);
+                alert('Error de conexión al actualizar el día del hábito.');
+            });
+    } else {
+        // Fallback a jQuery AJAX si enviarAjax no está definida
+        console.warn('enviarAjax no definida, usando jQuery.ajax como fallback.');
+        jQuery.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: data,
+            success: function (response) {
+                const respuesta = JSON.parse(response);
+                if (respuesta.success) {
+                    item.innerHTML = nuevoIcono; // Changed from textContent to innerHTML
+                    item.dataset.estado = estadoNuevo;
+                    console.log(`Día ${fecha} de tarea ${tareaId} marcado como ${estadoNuevo} (via jQuery).`);
+                } else {
+                    alert('Error al actualizar (jQuery): ' + (respuesta.data.mensaje || respuesta.data || 'Error desconocido'));
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('Error en jQuery AJAX marcarDiaHabito:', textStatus, errorThrown);
+                alert('Error de conexión (jQuery) al actualizar el día del hábito.');
+            }
+        });
+    }
+}
+// Asegúrate de que initMarcarDiaHabito se llame después de que las tareas se carguen o se actualicen en el DOM.
+// Por ejemplo, dentro de initTareas o después de que reiniciarPost complete su trabajo si añade nuevos elementos de tarea.
+// Ya lo has añadido a initTareas en el paso anterior, lo cual es un buen lugar.

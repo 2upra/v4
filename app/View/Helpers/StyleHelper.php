@@ -5,7 +5,7 @@
 function formTareaEstilo()
 {
     ob_start();
-?>
+    ?>
     <style>
         span.icono p {
             font-size: 12px;
@@ -88,6 +88,28 @@ function formTareaEstilo()
             align-items: center;
             justify-content: center;
             color: #cbd5e0;
+        }
+
+        .habito-dias-visualizacion {
+            display: flex;
+            gap: 5px;
+            
+        }
+
+        .dia-habito-item svg {
+            height: 12px;
+            width: 12px;
+            cursor: pointer;
+        }
+
+        span.dia-habito-item.estado-pendiente {
+            opacity: 0.6;
+        }
+
+        .divOpcionesHabito.ocultadoAutomatico.divFrecuencia {
+            align-items: center;
+            gap: 5px;
+            align-content: center;
         }
 
         .cal-nav-btn:hover {
@@ -249,6 +271,11 @@ function formTareaEstilo()
 
         span.iconoPlus {
             display: none;
+        }
+
+        .completaTarea svg {
+            height: 13px;
+            width: 13px;
         }
     </style>
 <?

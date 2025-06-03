@@ -13,19 +13,20 @@ function guardarFiltro()
         return;
     }
 
-    $user_id = get_current_user_id();
+    $user_id       = get_current_user_id();
     $filtro_tiempo = intval($_POST['filtroTiempo']);
 
     if (update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo)) {
         wp_send_json_success([
-            'message' => 'Filtro guardado correctamente',
+            'message'      => 'Filtro guardado correctamente',
             'filtroTiempo' => $filtro_tiempo,
-            'userId' => $user_id
+            'userId'       => $user_id
         ]);
     } else {
         wp_send_json_error(['message' => 'Error al guardar el filtro']);
     }
 }
+
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 // Refactor(Org): Mover función obtenerFiltroActual() y su hook AJAX aquí desde filtroLogic.php
@@ -36,16 +37,17 @@ function obtenerFiltroActual()
         return;
     }
 
-    $user_id = get_current_user_id();
-    $filtro_tiempo = intval(get_user_meta($user_id, 'filtroTiempo', true) ?: 0);
+    $user_id         = get_current_user_id();
+    $filtro_tiempo   = intval(get_user_meta($user_id, 'filtroTiempo', true) ?: 0);
     $nombres_filtros = ['Feed', 'Reciente', 'Semanal', 'Mensual'];
-    $nombre_filtro = $nombres_filtros[$filtro_tiempo] ?? 'Feed';
+    $nombre_filtro   = $nombres_filtros[$filtro_tiempo] ?? 'Feed';
 
     wp_send_json_success([
         'filtroTiempo' => $filtro_tiempo,
         'nombreFiltro' => $nombre_filtro
     ]);
 }
+
 add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
 // Refactor(Org): Mover función restablecerFiltros() y su hook AJAX aquí desde filtroLogic.php
@@ -128,6 +130,7 @@ function restablecerFiltros()
     wp_send_json_success(['message' => 'Filtros restablecidos']);
     error_log('restablecerFiltros: Fin');
 }
+
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
 
 // Refactor(Org): Mover lógica de filtros de usuario (obtenerFiltrosTotal, guardarFiltroPost, obtenerFiltros) desde filtroLogic.php
@@ -138,15 +141,16 @@ function obtenerFiltrosTotal()
         return;
     }
 
-    $user_id = get_current_user_id();
-    $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: '{}'; 
+    $user_id       = get_current_user_id();
+    $filtro_post   = get_user_meta($user_id, 'filtroPost', true) ?: '{}';
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
 
     wp_send_json_success([
-        'filtroPost' => $filtro_post,
+        'filtroPost'   => $filtro_post,
         'filtroTiempo' => $filtro_tiempo,
     ]);
 }
+
 add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
 
 function guardarFiltroPost()
@@ -163,6 +167,7 @@ function guardarFiltroPost()
         wp_send_json_error('Error al guardar los filtros');
     }
 }
+
 add_action('wp_ajax_guardarFiltroPost', 'guardarFiltroPost');
 
 function obtenerFiltros()
@@ -177,13 +182,14 @@ function obtenerFiltros()
 
     wp_send_json_success(['filtros' => $filtros]);
 }
+
 add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
 // Refactor(Org): Funciones de filtro global movidas desde app/Content/Logic/filtroGlobal.php
 function aplicarFiltroPorAutor($queryArgs, $userId, $filtro)
 {
     $queryArgs['author'] = $userId;
-    $metaQuery = $queryArgs['meta_query'] ?? [];
+    $metaQuery           = $queryArgs['meta_query'] ?? [];
 
     if ($filtro === 'imagenesPerfil') {
         $metaQuery = array_merge($metaQuery, [
@@ -203,120 +209,91 @@ function aplicarFiltroPorAutor($queryArgs, $userId, $filtro)
 
 function aplicarFiltrosDeUsuario($queryArgs, $usu, $filtro)
 {
-    $filtrosUsuario = get_user_meta($usu, 'filtroPost', true);
+    $filtUsu = get_user_meta($usu, 'filtroPost', true);
 
     if (in_array($filtro, ['sampleList', 'notas', 'colecciones'])) {
-        if ($filtro === 'sampleList' && is_array($filtrosUsuario) && in_array('misPost', $filtrosUsuario)) {
+        if ($filtro === 'sampleList' && is_array($filtUsu) && in_array('misPost', $filtUsu)) {
             $queryArgs['author'] = $usu;
         } elseif ($filtro === 'notas') {
             $queryArgs['author'] = $usu;
-        } elseif ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+        } elseif ($filtro === 'colecciones' && is_array($filtUsu) && in_array('misColecciones', $filtUsu)) {
             $queryArgs['author'] = $usu;
         }
     }
-    if (($filtro === 'tarea' || $filtro === 'tareaPrioridad') && is_array($filtrosUsuario)) {
-        $queryArgs['author'] = $usu;
 
-        // Initialize meta_query correctly
-        if (!isset($queryArgs['meta_query']) || !is_array($queryArgs['meta_query'])) {
-            $queryArgs['meta_query'] = [];
-        }
+    if (($filtro === 'tarea' || $filtro === 'tareaPrioridad') && is_array($filtUsu)) {
+        $apFiltTar = false;
+        $nMetaQ    = [];
 
-        $task_specific_conditions = [];
-
-        if (in_array('ocultarCompletadas', $filtrosUsuario)) {
-            $task_specific_conditions[] = [
-                'key' => 'estado',
-                'value' => 'completada',
+        if (in_array('ocultarCompletadas', $filtUsu)) {
+            $nMetaQ[]  = [
+                'key'     => 'estado',
+                'value'   => 'completada',
                 'compare' => '!=',
             ];
+            $apFiltTar = true;
         }
 
-        if (in_array('mostrarHabitosHoy', $filtrosUsuario)) {
-            $today = date('Y-m-d');
-            $task_types_to_filter_by_date = ['habito', 'habito rigido'];
-            $task_specific_conditions[] = [
+        // Si el filtro está activo, debe MOSTRAR hábitos con fechaProxima <= hoy
+        // y OCULTAR hábitos con fechaProxima > hoy.
+        // Tu comentario indica: "el filtro esta activo y solo veo habitos para dias proximos"
+        // lo que significa que actualmente la condición es fechaProxima > hoy.
+        // Para invertirlo y mostrar los de hoy/pasados, cambiamos '>' a '<='.
+        if (in_array('mostrarHabitosHoy', $filtUsu)) {
+            $hoy    = date('Y-m-d');
+            // Asegúrate que los valores en $tipHab coincidan con los almacenados en la BD para la meta_key 'tipo'.
+            // Si almacenas números (ej: 2, 4), usa $tipHab = [2, 4];
+            // Si almacenas strings (ej: 'habito'), usa $tipHab = ['habito', 'habito rigido'];
+            $tipHab = ['habito', 'habito rigido'];
+
+            $nMetaQ[]  = [
                 'relation' => 'OR',
                 [
-                    'key' => 'tipo',
-                    'compare' => 'NOT EXISTS', // Task is not a habit (no 'tipo' field)
+                    'key'     => 'tipo',      // Corregido de 'tipoPost' si tu meta_key es 'tipo'
+                    'value'   => $tipHab,
+                    'compare' => 'NOT IN',
                 ],
                 [
-                    'key' => 'tipo',
-                    'value' => $task_types_to_filter_by_date, // Task type is set but is NOT one of the habit types
-                    'compare' => 'NOT IN', 
-                ],
-                [
-                    'relation' => 'AND', // Task type IS one of the habit types, and it's due
+                    'relation' => 'AND',
                     [
-                        'key' => 'tipo',
-                        'value' => $task_types_to_filter_by_date,
+                        'key'     => 'tipo',  // Corregido de 'tipoPost'
+                        'value'   => $tipHab,
                         'compare' => 'IN',
                     ],
                     [
-                        'key' => 'fechaProxima',
-                        'value' => $today,
-                        'compare' => '<=',
-                        'type' => 'DATE',
+                        'key'     => 'fechaProxima',
+                        'value'   => $hoy,
+                        'compare' => '<=',    // CAMBIO: de '>' a '<=' para mostrar hoy y pasados
+                        'type'    => 'DATE',
                     ]
                 ]
             ];
+            $apFiltTar = true;
         }
 
-        if (!empty($task_specific_conditions)) {
-            // Check if there are pre-existing conditions in meta_query
-            // A simple way to check is to see if meta_query is empty or only contains 'relation'
-            $has_preexisting_conditions = false;
-            if (!empty($queryArgs['meta_query'])) {
-                foreach ($queryArgs['meta_query'] as $key => $value) {
-                    if ($key !== 'relation') {
-                        $has_preexisting_conditions = true;
-                        break;
-                    }
+        if ($apFiltTar) {
+            $queryArgs['author'] = $usu;                             // Aplicar filtro de autor si cualquier filtro de tarea está activo
+            if (!empty($nMetaQ)) {
+                if (!isset($queryArgs['meta_query'])) {
+                    $queryArgs['meta_query'] = [];
+                } elseif (isset($queryArgs['meta_query']['key'])) {  // Si es una 'condición única', se envuelve
+                    $queryArgs['meta_query'] = [$queryArgs['meta_query']];
                 }
+                $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'], $nMetaQ);
+
+                // Si después de combinar, solo hay una condición en meta_query, la desanidamos
+                // Esto es opcional y depende de si se esperan siempre múltiples condiciones o no.
+                // WP_Query maneja bien [ [...condición...] ] si es solo una.
+                // Si $nMetaQ tenía una sola condición y $queryArgs['meta_query'] estaba vacío,
+                // el resultado es [ [...condición...] ], que es correcto.
+                // Si $queryArgs['meta_query'] ya tenía una condición y $nMetaQ una,
+                // el resultado es [ [cond_orig], [cond_nueva] ], también correcto.
             }
+        }
 
-            if ($has_preexisting_conditions) {
-                // If there are pre-existing conditions, ensure they are wrapped in an array if not already
-                // and then add task_specific_conditions as another clause.
-                // The top-level relation must be AND.
-                
-                // Store existing conditions
-                $existing_mq = $queryArgs['meta_query'];
-                
-                // If existing_mq is a single condition (not an array of conditions or already having a relation key)
-                // This is a simple check; more robust might be needed if structure is very varied.
-                if (!isset($existing_mq[0]) && isset($existing_mq['key'])) {
-                    $existing_mq = [$existing_mq];
-                }
-
-                $queryArgs['meta_query'] = ['relation' => 'AND'];
-                
-                // Add back existing conditions. If it was already an AND group, its conditions are added.
-                // If it was a single condition or an OR group, it's added as one item.
-                if (isset($existing_mq['relation']) && count($existing_mq) > 1) { // Already a group
-                    foreach($existing_mq as $k_mq => $v_mq){
-                        if($k_mq === 'relation') continue;
-                        $queryArgs['meta_query'][] = $v_mq;
-                    }
-                } else { // Single condition or an OR group
-                     $queryArgs['meta_query'][] = $existing_mq;
-                }
-
-
-                if (count($task_specific_conditions) > 1) {
-                    $queryArgs['meta_query'][] = array_merge(['relation' => 'AND'], $task_specific_conditions);
-                } else {
-                    $queryArgs['meta_query'][] = $task_specific_conditions[0];
-                }
-
-            } else { // No pre-existing conditions, meta_query was empty or just had a relation
-                if (count($task_specific_conditions) > 1) {
-                    $queryArgs['meta_query'] = array_merge(['relation' => 'AND'], $task_specific_conditions);
-                } elseif (!empty($task_specific_conditions)) { // Only one specific condition
-                    $queryArgs['meta_query'] = $task_specific_conditions[0];
-                }
-            }
+        // Limpiar meta_query si está vacío (por si se inicializó pero no se usó)
+        if (isset($queryArgs['meta_query']) && empty($queryArgs['meta_query'])) {
+            unset($queryArgs['meta_query']);
         }
     }
 
@@ -333,7 +310,7 @@ function aplicarCondicionesDeMetaQuery($queryArgs, $filtro, $usuarioActual, $tip
             $result($queryArgs);
         } else {
             $queryArgs['post_status'] = 'publish';
-            $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], $result);
+            $queryArgs['meta_query']  = array_merge($queryArgs['meta_query'] ?? [], $result);
         }
     }
 
@@ -349,10 +326,10 @@ function obtenerCondicionesMetaQuery($usuarioActual, $tipoUsuario)
         'rolasRechazadas' => function (&$queryArgs) {
             $queryArgs['post_status'] = 'rejected';
         },
-        'rolasPendiente' => function (&$queryArgs) {
+        'rolasPendiente'  => function (&$queryArgs) {
             $queryArgs['post_status'] = 'pending';
         },
-        'likesRolas' => function (&$queryArgs) use ($usuarioActual) {
+        'likesRolas'      => function (&$queryArgs) use ($usuarioActual) {
             $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
             if ($userLikedPostIds) {
                 $queryArgs['post__in'] = $userLikedPostIds;
@@ -360,20 +337,20 @@ function obtenerCondicionesMetaQuery($usuarioActual, $tipoUsuario)
                 $queryArgs['posts_per_page'] = 0;
             }
         },
-        'nada' => function (&$queryArgs) {
+        'nada'            => function (&$queryArgs) {
             $queryArgs['post_status'] = 'publish';
         },
-        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
-        'libres' => [
+        'colabs'          => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'libres'          => [
             ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
             ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
             ['key' => 'rola', 'value' => '1', 'compare' => '!='],
         ],
-        'momento' => [
+        'momento'         => [
             ['key' => 'momento', 'value' => '1', 'compare' => '='],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
-        'sample' => function (&$queryArgs) use ($tipoUsuario) {
+        'sample'          => function (&$queryArgs) use ($tipoUsuario) {
             if ($tipoUsuario === 'Fan') {
                 $queryArgs['post_status'] = 'publish';
             } else {
@@ -383,7 +360,7 @@ function obtenerCondicionesMetaQuery($usuarioActual, $tipoUsuario)
                 ]);
             }
         },
-        'rolaListLike' => function (&$queryArgs) use ($usuarioActual) {
+        'rolaListLike'    => function (&$queryArgs) use ($usuarioActual) {
             $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
             if (!empty($userLikedPostIds)) {
                 $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
@@ -398,12 +375,12 @@ function obtenerCondicionesMetaQuery($usuarioActual, $tipoUsuario)
                         'compare' => 'EXISTS',
                     ],
                 ]);
-                $queryArgs['post__in'] = $userLikedPostIds;
+                $queryArgs['post__in']   = $userLikedPostIds;
             } else {
                 $queryArgs['posts_per_page'] = 0;
             }
         },
-        'sampleList' => [
+        'sampleList'      => [
             'relation' => 'AND',
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
             [
@@ -412,14 +389,14 @@ function obtenerCondicionesMetaQuery($usuarioActual, $tipoUsuario)
                 ['key' => 'tienda', 'value' => '1', 'compare' => '='],
             ],
         ],
-        'colab' => function (&$queryArgs) {
+        'colab'           => function (&$queryArgs) {
             $queryArgs['post_status'] = 'publish';
         },
-        'colabPendiente' => function (&$queryArgs) {
-            $queryArgs['author'] = get_current_user_id();
+        'colabPendiente'  => function (&$queryArgs) {
+            $queryArgs['author']      = get_current_user_id();
             $queryArgs['post_status'] = 'pending';
         },
-        'rola' => [
+        'rola'            => [
             ['key' => 'rola', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
@@ -428,19 +405,18 @@ function obtenerCondicionesMetaQuery($usuarioActual, $tipoUsuario)
 
 function aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
-    $log = "Inicio aplicarFiltroGlobal \n";
+    $log    = "Inicio aplicarFiltroGlobal \n";
     $filtro = $args['filtro'] ?? 'nada';
-    $log .= "Filtro recibido: $filtro \n";
+    $log   .= "Filtro recibido: $filtro \n";
     if (!empty($userId)) {
-        $log .= "Aplicando filtro por autor, userId: $userId \n";
+        $log      .= "Aplicando filtro por autor, userId: $userId \n";
         $queryArgs = aplicarFiltroPorAutor($queryArgs, $userId, $filtro);
     } else {
-        $log .= "Aplicando filtros de usuario, usuarioActual: $usuarioActual \n";
+        $log      .= "Aplicando filtros de usuario, usuarioActual: $usuarioActual \n";
         $queryArgs = aplicarFiltrosDeUsuario($queryArgs, $usuarioActual, $filtro);
-        $log .= "Aplicando condiciones de meta query, filtro: $filtro, tipoUsuario: $tipoUsuario \n";
+        $log      .= "Aplicando condiciones de meta query, filtro: $filtro, tipoUsuario: $tipoUsuario \n";
         $queryArgs = aplicarCondicionesDeMetaQuery($queryArgs, $filtro, $usuarioActual, $tipoUsuario);
     }
-    //guardarLog("aplicarFiltroGlobal, $log, queryArgs resultantes: " . print_r($queryArgs, true));
+    // guardarLog("aplicarFiltroGlobal, $log, queryArgs resultantes: " . print_r($queryArgs, true));
     return $queryArgs;
 }
-

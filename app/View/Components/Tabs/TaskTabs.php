@@ -50,7 +50,7 @@ function taskTabs()
 
                         <div class="opcionCheck">
                             <div>
-                                <label>Mostrar solo hábitos para hoy</label>
+                                <label>Ocultar hábitos completados</label>
                                 <p class="description"></p>
                             </div>
                             <label class="switch">

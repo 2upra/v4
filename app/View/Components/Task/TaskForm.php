@@ -32,7 +32,7 @@ function formTarea()
             <div class="A1806242">
                 <button value="una vez">Una vez</button>
                 <button value="habito">Hábito flexible</button>
-                <button value="habito rigido">Hábito rígido</button>
+                <button value="habito rigido" style="display: none;">Hábito rígido</button>
                 <button value="meta" style="display: none;">Meta</button>
             </div>
         </div>

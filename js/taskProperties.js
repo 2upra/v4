@@ -20,7 +20,7 @@ window.ocultarBotones = function() {
                     // La condición "solo aparecera cuando la tarea no tenga fecha limite"
                     // la maneja tu PHP al no generar el div si ya hay fecha, o no dándole la clase 'ocultadoAutomatico'.
                     // Por lo tanto, si el elemento está aquí y tiene 'ocultadoAutomatico', debe mostrarse.
-                    eo.style.display = 'block';
+                    eo.style.display = 'flex';
                 });
             };
 

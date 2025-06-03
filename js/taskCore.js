@@ -43,6 +43,7 @@ function initTareas() {
         window.initMoverTarea();
         window.dividirTarea();
         window.initAsignarSeccionModal();
+        initMarcarDiaHabito(); // Nueva función para los días de hábito
     }
 }
 
