@@ -1,5 +1,7 @@
 // js/taskCRUD.js
 
+let seccionSeleccionadaFormulario = ''; // Variable global para la sección, vacía por defecto
+
 window.enviarTarea = function () {
     // Asumo que enviarTareaHandler y pegarTareaHandler son funciones ya definidas en otro lugar.
     const tit = document.getElementById('tituloTarea');
@@ -15,6 +17,185 @@ window.enviarTarea = function () {
     tit.addEventListener('input', () => {
         // Reemplaza uno o mas saltos de linea (\n) globalmente (g) por nada ('').
         tit.value = tit.value.replace(/\n+/g, '');
+    });
+
+    initSeccionSelectorEnFormulario(); // Inicializar el nuevo selector de sección
+}
+
+function initSeccionSelectorEnFormulario() {
+    const sSeccion = document.getElementById('sSeccion');
+    const modalAsignarSeccion = document.getElementById('modalAsignarSeccionForm');
+    const listaDeSeccionesDiv = document.getElementById('listaSeccionesExistentesModalForm');
+    const inputNuevaSeccion = document.getElementById('inputNuevaSeccionModalForm');
+    const btnCrearAsignarSeccion = document.getElementById('btnCrearAsignarSeccionModalForm');
+    const btnCerrarModal = document.getElementById('btnCerrarModalSeccionForm');
+    const nombreSeccionDisplay = sSeccion.querySelector('.nombreSeccionSeleccionada');
+
+    if (!sSeccion || !modalAsignarSeccion || !listaDeSeccionesDiv || !nombreSeccionDisplay || !inputNuevaSeccion || !btnCrearAsignarSeccion || !btnCerrarModal) {
+        console.error('Error: No se encontraron todos los elementos para el modal de selección de sección del formulario.');
+        return;
+    }
+
+    // Actualizar visualización inicial
+    if (seccionSeleccionadaFormulario) {
+        nombreSeccionDisplay.textContent = seccionSeleccionadaFormulario;
+    } else {
+        nombreSeccionDisplay.textContent = ''; // Vacío por defecto, el placeholder se maneja con CSS si es necesario
+    }
+
+    sSeccion.addEventListener('click', () => {
+        // Posicionar el modal cerca del selector
+        const rect = sSeccion.getBoundingClientRect();
+        modalAsignarSeccion.style.top = `${rect.bottom + window.scrollY}px`;
+        modalAsignarSeccion.style.left = `${rect.left + window.scrollX}px`;
+        modalAsignarSeccion.style.display = 'block';
+
+        listaDeSeccionesDiv.innerHTML = ''; // Limpiar opciones anteriores
+        let seccionesExistentes = [];
+        // 1. Obtener secciones de window.mapa
+        if (window.mapa && typeof window.mapa === 'object') {
+            Object.keys(window.mapa).forEach(secOriginal => {
+                const secDecodificada = decodeURIComponent(secOriginal);
+                if (secDecodificada.toLowerCase() !== 'archivado' && secDecodificada !== '') {
+                    if (!seccionesExistentes.map(s => s.toLowerCase()).includes(secDecodificada.toLowerCase())) {
+                        seccionesExistentes.push(secDecodificada);
+                    }
+                }
+            });
+        }
+
+        // 2. Obtener secciones directamente de los items de tarea en el DOM
+        const listaTareasItems = document.querySelectorAll('.social-post-list.clase-tarea > li[data-sesion]');
+        listaTareasItems.forEach(item => {
+            const sesionAttr = item.getAttribute('data-sesion');
+            if (sesionAttr) {
+                const nombreSeccion = decodeURIComponent(sesionAttr);
+                if (nombreSeccion.toLowerCase() !== 'archivado' && nombreSeccion !== '' && nombreSeccion.toLowerCase() !== 'pendiente') {
+                    if (!seccionesExistentes.map(s => s.toLowerCase()).includes(nombreSeccion.toLowerCase())) {
+                        seccionesExistentes.push(nombreSeccion);
+                    }
+                }
+            }
+        });
+        // Asegurar que 'General' esté presente si no vino del mapa y no hay otras secciones
+        if (!seccionesExistentes.includes('General') && !seccionesExistentes.find(s => s.toLowerCase() === 'general')) {
+             if (seccionesExistentes.length === 0 || !Object.keys(window.mapa).map(k => decodeURIComponent(k).toLowerCase()).includes('general')){
+                seccionesExistentes.push('General'); // Añadir General si no está y el mapa no lo tiene explícitamente (o mapa vacío)
+             }
+        }
+        // Si 'General' se añadió manualmente y también vino del mapa (con diferente capitalización), eliminar duplicados sensibles a mayúsculas.
+        // Primero, un set para eliminar duplicados exactos, luego un filtro para duplicados insensibles a mayúsculas, priorizando la del mapa si existe.
+        seccionesExistentes = [...new Set(seccionesExistentes)]; 
+        const seccionesUnicas = [];
+        const nombresLower = new Set();
+        // Priorizar la versión de 'General' que podría venir del mapa
+        const generalDelMapa = Object.keys(window.mapa || {}).find(k => decodeURIComponent(k).toLowerCase() === 'general');
+        if (generalDelMapa) {
+            seccionesUnicas.push(decodeURIComponent(generalDelMapa));
+            nombresLower.add('general');
+        }
+
+        seccionesExistentes.forEach(sec => {
+            if (!nombresLower.has(sec.toLowerCase())) {
+                seccionesUnicas.push(sec);
+                nombresLower.add(sec.toLowerCase());
+            }
+        });
+        seccionesExistentes = seccionesUnicas;
+        seccionesExistentes = [...new Set(seccionesExistentes)];
+        // Ordenar, asegurando que 'General' vaya primero si existe
+        seccionesExistentes.sort((a, b) => {
+            if (a.toLowerCase() === 'general') return -1;
+            if (b.toLowerCase() === 'general') return 1;
+            return a.localeCompare(b);
+        });
+
+        seccionesExistentes.forEach(nombreSec => {
+            const pSec = document.createElement('p');
+            pSec.textContent = nombreSec;
+            pSec.addEventListener('click', () => {
+                seccionSeleccionadaFormulario = nombreSec;
+                nombreSeccionDisplay.textContent = nombreSec;
+                modalAsignarSeccion.style.display = 'none';
+            });
+            listaDeSeccionesDiv.appendChild(pSec);
+        });
+        inputNuevaSeccion.value = ''; // Limpiar input
+        btnCrearAsignarSeccion.style.display = 'none'; // Ocultar botón de crear
+    });
+
+    inputNuevaSeccion.addEventListener('input', () => {
+        btnCrearAsignarSeccion.style.display = inputNuevaSeccion.value.trim() ? 'inline-block' : 'none';
+    });
+
+    btnCrearAsignarSeccion.addEventListener('click', () => {
+        const nuevoNombre = inputNuevaSeccion.value.trim();
+        if (nuevoNombre) {
+            // Para la validación al crear, usamos la misma lógica de recolección de secciones que al popular el modal
+            let seccionesParaValidar = [];
+            if (window.mapa && typeof window.mapa === 'object') {
+                Object.keys(window.mapa).forEach(secOriginal => {
+                    const secDecodificada = decodeURIComponent(secOriginal);
+                    if (secDecodificada.toLowerCase() !== 'archivado' && secDecodificada !== '') {
+                        if (!seccionesParaValidar.map(s => s.toLowerCase()).includes(secDecodificada.toLowerCase())) {
+                            seccionesParaValidar.push(secDecodificada);
+                        }
+                    }
+                });
+            }
+            const itemsTareasParaValidar = document.querySelectorAll('.social-post-list.clase-tarea > li[data-sesion]');
+            itemsTareasParaValidar.forEach(item => {
+                const sesionAttr = item.getAttribute('data-sesion');
+                if (sesionAttr) {
+                    const nombreSeccion = decodeURIComponent(sesionAttr);
+                    if (nombreSeccion.toLowerCase() !== 'archivado' && nombreSeccion !== '' && nombreSeccion.toLowerCase() !== 'pendiente') {
+                        if (!seccionesParaValidar.map(s => s.toLowerCase()).includes(nombreSeccion.toLowerCase())) {
+                            seccionesParaValidar.push(nombreSeccion);
+                        }
+                    }
+                }
+            });
+            // Asegurar 'General' para validación si no está
+            if (!seccionesParaValidar.map(s => s.toLowerCase()).includes('general')) {
+                 seccionesParaValidar.push('General');
+            }
+            seccionesParaValidar = [...new Set(seccionesParaValidar.map(s => {
+                // Normalizar 'General' a la capitalización exacta si existe una versión, sino usar 'General'
+                const generalMatch = Object.keys(window.mapa || {}).find(k => decodeURIComponent(k).toLowerCase() === 'general');
+                if (s.toLowerCase() === 'general' && generalMatch) return decodeURIComponent(generalMatch);
+                return s;
+            }))];
+
+            if (seccionesParaValidar.some(s => s.toLowerCase() === nuevoNombre.toLowerCase())) {
+                alert(`La sección "${nuevoNombre}" ya existe.`);
+                return;
+            }
+
+            if (seccionesExistentes.some(s => s.toLowerCase() === nuevoNombre.toLowerCase())) {
+                alert(`La sección "${nuevoNombre}" ya existe.`);
+                return;
+            }
+            seccionSeleccionadaFormulario = nuevoNombre;
+            nombreSeccionDisplay.textContent = nuevoNombre;
+            modalAsignarSeccion.style.display = 'none';
+            // Opcional: agregar la nueva sección al window.mapa si se quiere que esté disponible inmediatamente para otros selectores sin recargar.
+            // if (window.mapa && typeof window.mapa === 'object') {
+            //    window.mapa[encodeURIComponent(nuevoNombre)] = [];
+            // }
+        } else {
+            alert('El nombre de la sección no puede estar vacío.');
+        }
+    });
+
+    btnCerrarModal.addEventListener('click', () => {
+        modalAsignarSeccion.style.display = 'none';
+    });
+
+    // Ocultar modal si se hace clic fuera
+    document.addEventListener('click', function(event) {
+        if (!sSeccion.contains(event.target) && !modalAsignarSeccion.contains(event.target) && modalAsignarSeccion.style.display === 'block') {
+            modalAsignarSeccion.style.display = 'none';
+        }
     });
 }
 
@@ -42,8 +223,8 @@ window.pegarTareaHandler = function (ev) {
             titulo: titulo,
             importancia: importancia.valor,
             tipo: tipoTarea.valor,
-            // MODIFICACIÓN AQUÍ:
-            fechaLimite: tipoTarea.valor === 'meta' ? fechaLimite.valor : null
+            fechaLimite: tipoTarea.valor === 'meta' ? fechaLimite.valor : null,
+            sesion: seccionSeleccionadaFormulario // Añadir sección
         });
     });
 
@@ -102,7 +283,8 @@ window.enviarTareaHandler = function (ev) {
                 titulo: tit.value,
                 importancia: importancia.valor,
                 tipo: tipoTarea.valor,
-                fechaLimite: fechaLimite.valor // Añadir fechaLimite
+                fechaLimite: fechaLimite.valor, // Añadir fechaLimite
+                sesion: seccionSeleccionadaFormulario // Añadir sección
             };
 
             const tituloParaEnviar = tit.value;

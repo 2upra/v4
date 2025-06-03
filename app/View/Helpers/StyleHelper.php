@@ -112,6 +112,22 @@ function formTareaEstilo()
             align-content: center;
         }
 
+        div#sSeccion {
+            display: flex;
+        }
+
+        span.nombreSeccionSeleccionada {
+            font-size: 12px;
+            padding: 0px 3px;
+            opacity: 0.9;
+        }
+
+        .selectorIcono.sSeccion svg {
+            height: 14px;
+            margin-bottom: -1px;
+            width: 14px;
+        }
+
         .cal-nav-btn:hover {
             opacity: 1;
             background-color: #2d2d2d;
@@ -229,31 +245,31 @@ function formTareaEstilo()
             height: 13px !important;
         }
 
-        div#modalAsignarSeccion {
+        div#modalAsignarSeccion, .modal-asignar-seccion {
             background: #050505;
             padding: 10px;
             width: 180px;
             gap: 5px;
         }
 
-        input#inputNuevaSeccionModal {
+        input#inputNuevaSeccionModal, #inputNuevaSeccionModalForm {
             background: unset;
             border: var(--borde);
             padding: 7px 10px;
             font-size: 12px;
         }
 
-        div#listaSeccionesExistentesModal {
+        div#listaSeccionesExistentesModal, #listaSeccionesExistentesModalForm {
             display: flex;
             flex-direction: column;
         }
 
-        div#listaSeccionesExistentesModal p:hover {
+        div#listaSeccionesExistentesModal p:hover, #listaSeccionesExistentesModalForm p:hover {
             background: #080808;
             border-radius: var(--radius);
         }
 
-        div#listaSeccionesExistentesModal p {
+        div#listaSeccionesExistentesModal p, #listaSeccionesExistentesModalForm p {
             cursor: pointer;
             padding: 4px 10px;
             font-size: 12px;
@@ -277,6 +293,11 @@ function formTareaEstilo()
             height: 13px;
             width: 13px;
         }
+
+        .bloque.tareasbloque {
+            padding-right: 10px;
+        }
+        
     </style>
 <?
     return ob_get_clean();

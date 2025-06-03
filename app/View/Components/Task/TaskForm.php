@@ -42,6 +42,21 @@ function formTarea()
             <? // El texto se manejará por JS ?>
         </div>
 
+        <div class="selectorIcono sSeccion" id="sSeccion">
+            <span class="icono"><? echo $GLOBALS['meterCarpeta'] ?? '[C]'; ?></span>
+            <span class="nombreSeccionSeleccionada" data-placeholder="Seleccionar sección"></span>
+            <? // El texto o la selección de la sección se manejará por JS ?>
+        </div>
+
+        <div id="modalAsignarSeccionForm" class="modal-asignar-seccion modal bloque" style="display: none; position: absolute; z-index: 10001;"> 
+            <div class="div-asignar-seccion-input" style="gap: 5px;"> 
+                <input type="text" id="inputNuevaSeccionModalForm" placeholder="Crear sección" maxlength="30"> 
+                <button id="btnCrearAsignarSeccionModalForm" style="display: none;">Crear</button> 
+            </div> 
+            <div id="listaSeccionesExistentesModalForm"></div> 
+            <button id="btnCerrarModalSeccionForm" style="display: none;">Cerrar</button> 
+        </div>
+
         <!-- Calendario personalizado -->
         <div id="calCont" class="cal-contenedor" style="display:none; position:absolute; z-index:1001;">
             <div class="cal-nav">
