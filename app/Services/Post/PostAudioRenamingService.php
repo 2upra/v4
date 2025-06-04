@@ -9,11 +9,13 @@ class PostAudioRenamingService
 {
     private Logger $logger;
     private IAService $iaService;
+    private PostAttachmentService $postAttachmentService;
 
-    public function __construct(Logger $logger, IAService $iaService)
+    public function __construct(Logger $logger, IAService $iaService, PostAttachmentService $postAttachmentService)
     {
         $this->logger = $logger;
         $this->iaService = $iaService;
+        $this->postAttachmentService = $postAttachmentService;
     }
 
     public function renameAudio(int $postId, string $audioFilePath): ?string
@@ -35,28 +37,9 @@ class PostAudioRenamingService
         $nombre_final_con_id = $this->generateUniqueAudioName($nombre_archivo, $post_content, $audioFilePath);
 
         if ($nombre_final_con_id) {
-            $attachment_id_audio = get_post_meta($postId, 'post_audio', true);
-            $attachment_id_audio_lite = get_post_meta($postId, 'post_audio_lite', true);
-
-            if (!$attachment_id_audio) {
-                $this->logger->error("No se encontró el meta 'post_audio' para el post ID: {$postId}");
-                return null;
-            }
-
-            if (!$attachment_id_audio_lite) {
-                $this->logger->error("No se encontró el meta 'post_audio_lite' para el post ID: {$postId}");
-                return null;
-            }
-
-            $renombrado_audio = renombrar_archivo_adjunto($attachment_id_audio, $nombre_final_con_id, false);
-            if (!$renombrado_audio) {
-                $this->logger->error("Falló al renombrar el archivo 'post_audio' para el post ID: {$postId}");
-                return null;
-            }
-
-            $renombrado_audio_lite = renombrar_archivo_adjunto($attachment_id_audio_lite, $nombre_final_con_id, true);
-            if (!$renombrado_audio_lite) {
-                $this->logger->error("Falló al renombrar el archivo 'post_audio_lite' para el post ID: {$postId}");
+            // Call the new private method for WordPress attachment renaming
+            if (!$this->renameWordPressAttachments($postId, $nombre_final_con_id)) {
+                $this->logger->error("Falló el renombrado de adjuntos de WordPress para el post ID: {$postId}");
                 return null;
             }
 
@@ -91,6 +74,7 @@ class PostAudioRenamingService
 
             $id_hash_audio = get_post_meta($postId, 'idHash_audioId', true);
             if ($id_hash_audio) {
+                $attachment_id_audio = get_post_meta($postId, 'post_audio', true); // Re-fetch attachment_id_audio if needed for URL
                 $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
                 actualizarUrlArchivo($id_hash_audio, $nueva_url_audio);
                 $this->logger->log("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
@@ -142,5 +126,35 @@ class PostAudioRenamingService
         }
 
         return null;
+    }
+
+    private function renameWordPressAttachments(int $postId, string $newName): bool
+    {
+        $attachment_id_audio = get_post_meta($postId, 'post_audio', true);
+        $attachment_id_audio_lite = get_post_meta($postId, 'post_audio_lite', true);
+
+        if (!$attachment_id_audio) {
+            $this->logger->error("No se encontró el meta 'post_audio' para el post ID: {$postId} al intentar renombrar adjuntos de WP.");
+            return false;
+        }
+
+        if (!$attachment_id_audio_lite) {
+            $this->logger->error("No se encontró el meta 'post_audio_lite' para el post ID: {$postId} al intentar renombrar adjuntos de WP.");
+            return false;
+        }
+
+        $renombrado_audio = $this->postAttachmentService->renameAttachmentFile($attachment_id_audio, $newName, false);
+        if (!$renombrado_audio) {
+            $this->logger->error("Falló al renombrar el archivo 'post_audio' (principal) para el post ID: {$postId}");
+            return false;
+        }
+
+        $renombrado_audio_lite = $this->postAttachmentService->renameAttachmentFile($attachment_id_audio_lite, $newName, true);
+        if (!$renombrado_audio_lite) {
+            $this->logger->error("Falló al renombrar el archivo 'post_audio_lite' para el post ID: {$postId}");
+            return false;
+        }
+
+        return true;
     }
 }
