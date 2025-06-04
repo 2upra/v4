@@ -21,7 +21,7 @@ Se necesita contexto adicional para una refactorización detallada, ya que el ar
 ---
 ### Tarea AP-TSK-001: Encapsular autProcesarAudio en AutomaticPostService
 - **ID:** AP-TSK-001
-- **Estado:** PENDIENTE
+- **Estado:** FALLIDA_TEMPORALMENTE
 - **Descripción:** Crear una nueva clase `AutomaticPostService` en `app/Services/`. Mover la lógica completa de la función global `autProcesarAudio` a un método público dentro de esta clase, por ejemplo, `processAutomaticAudio(string $rutaOriginalOne): void`. En esta etapa, el enfoque es la encapsulación; no es necesario refactorizar la lógica interna del método, pero se deben preparar las llamadas a funciones externas (`autLog`, `eliminarHash`, `obtenerFileIDPorURL`, `crearAutPost`, `manejarArchivoFallido`) para una posible inyección de dependencias o mapeo.
 - **Archivos Implicados Específicos (Opcional):** app/Services/AutomaticPostService.php
 - **Intentos:** 0
