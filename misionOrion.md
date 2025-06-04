@@ -55,7 +55,7 @@ Necesito contexto adicional para:
 ---
 ### Tarea RF-HandleOriginalFile_005: Gestionar Renombrado de Archivo Original y Actualización de URL
 - **ID:** RF-HandleOriginalFile_005
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADA
 - **Descripción:** Extraer la lógica para manejar `rutaOriginal`, buscar en subcarpetas (`buscarArchivoEnSubcarpetas`), renombrar el archivo original en el servidor, actualizar la meta `rutaOriginal`, y actualizar `idHash_audioId` en la base de datos (`actualizarUrlArchivo`) en un nuevo método privado, por ejemplo, `handleOriginalFileAndDatabaseUpdates(int $postId, string $oldAudioPath, string $newAudioName)` dentro de `PostAudioRenamingService`. Externalizar la ruta hardcodeada `/home/asley01/MEGA/Waw/X` utilizada en `buscarArchivoEnSubcarpetas` a una constante de clase o a un archivo de configuración (ej. `config.php`) y actualizar su uso. Asegurar que `Logger` sea utilizado para las llamadas a `guardarLog`. Este método debe devolver `true` en caso de éxito o `false` en caso de fallo.
 - **Archivos Implicados Específicos (Opcional):** app/Auto/reEditarPost.php, app/Services/Post/PostAudioRenamingService.php, app/Services/Post/PostAttachmentService.php, app/Utils/Logger.php, config.php
 - **Intentos:** 0
