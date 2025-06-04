@@ -34,7 +34,7 @@ Necesito contexto adicional para:
 ---
 ### Tarea RF-ValidatePerms_002: Extraer Validación de Permisos y Archivo
 - **ID:** RF-ValidatePerms_002
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADA
 - **Descripción:** Mover la verificación de permisos de usuario (`user_can`) y la comprobación inicial de existencia del archivo (`file_exists`) de `rehacerNombreAudio` a un nuevo método privado, por ejemplo, `validatePermissionsAndFileExists(int $userId, string $audioFilePath)` dentro de `PostAudioRenamingService`. Este método debe devolver `true` en caso de éxito o `false` en caso de fallo, registrando los errores apropiadamente. Actualizar `rehacerNombreAudio` para llamar a este nuevo método.
 - **Archivos Implicados Específicos (Opcional):** app/Auto/reEditarPost.php, app/Services/Post/PostAudioRenamingService.php
 - **Intentos:** 0
