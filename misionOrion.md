@@ -48,7 +48,7 @@ Necesito contexto adicional para:
 ---
 ### Tarea RF-RenameWPAttachments_004: Extraer Renombrado de Adjuntos de WordPress
 - **ID:** RF-RenameWPAttachments_004
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADA
 - **Descripción:** Mover la lógica para obtener `attachment_id_audio` y `attachment_id_audio_lite`, y llamar a `renombrar_archivo_adjunto` para ambos, a un nuevo método privado, por ejemplo, `renameWordPressAttachments(int $postId, string $newName)` dentro de `PostAudioRenamingService`. Asegurar que `PostAudioRenamingService` utilice la función `renombrarArchivoAdjunto` de `app/Services/Post/PostAttachmentService.php`. La función global `renombrar_archivo_adjunto` en `app/Auto/reEditarPost.php` debe ser eliminada después de su migración. Este método debe devolver `true` en caso de éxito o `false` en caso de fallo.
 - **Archivos Implicados Específicos (Opcional):** app/Auto/reEditarPost.php, app/Services/Post/PostAudioRenamingService.php, app/Services/Post/PostAttachmentService.php
 - **Intentos:** 0
