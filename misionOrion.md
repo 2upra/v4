@@ -42,7 +42,7 @@ Para una refactorización más precisa y para asegurar la integración adecuada,
 ---
 ### Tarea RF-CAP-003: Refactorizar crearAutPost y extraer lógica de archivos
 - **ID:** RF-CAP-003
-- **Estado:** PENDIENTE
+- **Estado:** FALLIDA_TEMPORALMENTE
 - **Descripción:** Refactorizar la función `crearAutPost` en `app/Auto/multiple.php`. Primero, modificarla para que utilice la función `crearPost` existente en `app/Services/Post/PostCreationService.php` para la inserción inicial del post. Segundo, extraer toda la lógica relacionada con el manejo y renombrado de archivos, así como la adjunción de archivos (`adjuntarArchivoAut`), a una nueva clase `AudioFileHandler` ubicada en `app/Services/Audio/AudioFileHandler.php`. Esta nueva clase deberá manejar las operaciones de archivos y retornar los IDs de los adjuntos. `crearAutPost` se convertirá en una función orquestadora que coordine el uso de `PostCreationService`, `AudioFileHandler` y `automaticAudio`.
 - **Archivos Implicados Específicos (Opcional):** [app/Auto/multiple.php, app/Services/Post/PostCreationService.php, app/Services/Audio/AudioFileHandler.php, app/Auto/automaticPost.php]
 - **Intentos:** 0
