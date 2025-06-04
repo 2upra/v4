@@ -41,10 +41,10 @@ Necesito contexto adicional para:
 ---
 ### Tarea RF-GenerateAIName_003: Extraer Generación y Limpieza de Nombre por IA
 - **ID:** RF-GenerateAIName_003
-- **Estado:** PENDIENTE
+- **Estado:** FALLIDA_TEMPORALMENTE
 - **Descripción:** Extraer la lógica responsable de construir el prompt de IA, llamar a `generarDescripcionIA`, y limpiar/truncar el nombre generado (`nombre_generado`, `nombre_generado_limpio`, `nombre_final_con_id`) en un nuevo método privado, por ejemplo, `generateUniqueAudioName(string $originalFileName, string $postContent)` dentro de `PostAudioRenamingService`. Este método debe devolver el nombre final único o `null` en caso de fallo. Asegurar que `IAService` sea inyectado y utilizado.
 - **Archivos Implicados Específicos (Opcional):** app/Auto/reEditarPost.php, app/Services/Post/PostAudioRenamingService.php, app/Services/IAService.php
-- **Intentos:** 0
+- **Intentos:** 1
 ---
 ### Tarea RF-RenameWPAttachments_004: Extraer Renombrado de Adjuntos de WordPress
 - **ID:** RF-RenameWPAttachments_004
