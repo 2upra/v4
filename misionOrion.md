@@ -45,7 +45,7 @@ Se necesita contexto adicional para una refactorización detallada, ya que el ar
 ---
 ### Tarea AP-TSK-004: Externalizar Rutas Hardcodeadas y Comandos FFmpeg
 - **ID:** AP-TSK-004
-- **Estado:** PENDIENTE
+- **Estado:** FALLIDA_TEMPORALMENTE
 - **Descripción:** Identificar todas las rutas hardcodeadas para FFmpeg (`/usr/bin/ffmpeg`) y el directorio de verificación (`/home/asley01/MEGA/Waw/Verificar/`) dentro de `AutomaticPostService`. Introducir constantes de clase o propiedades para estas rutas y reemplazar las cadenas hardcodeadas con estas nuevas constantes/propiedades en todos los métodos de `AutomaticPostService`.
 - **Archivos Implicados Específicos (Opcional):** Ninguno
 - **Intentos:** 0
