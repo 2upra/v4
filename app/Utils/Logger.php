@@ -1,5 +1,21 @@
 <?php
 
+namespace App
+\Utils;
+
+class Logger
+{
+    public function log(string $message): void
+    {
+        guardarLog($message);
+    }
+
+    public function error(string $message): void
+    {
+        guardarLog("ERROR: " . $message);
+    }
+}
+
 //esto funciona cuando es local, tiene que sar el rror log de wp pro defecto spara todos los archivos 
 function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
 {
