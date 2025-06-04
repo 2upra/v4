@@ -12,7 +12,7 @@
 ---
 ### Tarea RSYNC-001: Centralizar llamadas a log
 - **ID:** RSYNC-001
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADA
 - **Descripción:** Reemplazar todas las llamadas directas a `error_log()` en `app/Sync/api.php` con la función `guardarLog()` proporcionada por el módulo `app/Utils/Logger.php`. Esto incluye las funciones `verificarCambiosAudios`, `obtenerAudiosUsuario`, `actualizarTimestampDescargas` y `descargarAudiosSync`.
 - **Archivos Implicados Específicos (Opcional):** app/Sync/api.php, app/Utils/Logger.php
 - **Intentos:** 0
