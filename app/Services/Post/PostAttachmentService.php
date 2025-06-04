@@ -16,7 +16,6 @@ class PostAttachmentService
         $this->iaService = $iaService;
     }
 
-    // Moved from app/Auto/reEditarPost.php
     public function renameAttachmentFile(int $attachment_id, string $nuevo_nombre, bool $es_lite = false): bool
     {
         $ruta_archivo = get_attached_file($attachment_id);
@@ -60,9 +59,8 @@ class PostAttachmentService
     public function procesarURLs($postId)
     {
         $tiposURLs = [
-            // [callback, ¿renombrar?]
             'imagenUrl'  => ['procesarArchivo', false],
-            'audioUrl'   => ['procesarArchivo', true],  // Solo los audios se renombran
+            'audioUrl'   => ['procesarArchivo', true],
             'archivoUrl' => ['procesarArchivo', false],
         ];
         $maxCampos = 30;
@@ -74,14 +72,11 @@ class PostAttachmentService
             for ($i = 1; $i <= $maxCampos; $i++) {
                 $campo = $tipoBase . $i;
                 if (!empty($_POST[$campo])) {
-                    $url = esc_url_raw(trim($_POST[$campo])); // Limpiar espacios y escapar URL
+                    $url = esc_url_raw(trim($_POST[$campo]));
 
-                    // Validar URL de forma más robusta
                     if (filter_var($url, FILTER_VALIDATE_URL)) {
-                        // Llamar a la función callback con los parámetros correctos
-                         call_user_func([$this, $funcionCallback], $postId, $campo, $renombrar, $i); // Pasar índice
+                         call_user_func([$this, $funcionCallback], $postId, $campo, $renombrar, $i);
                     } else {
-                        // Mensaje de log simple
                         $this->logger->error("Error en procesarURLs: URL invalida en el campo: {$campo} para postId: {$postId}. URL: {$url}");
                     }
                 }
@@ -92,75 +87,62 @@ class PostAttachmentService
     #Paso 5.1 #Prepara para buscar la ID y actualizar la meta
     public function procesarArchivo($postId, $campo, $renombrar = false, $indice = null)
     {
-        if (empty($_POST[$campo])) return false; // Salir si no hay URL
+        if (empty($_POST[$campo])) return false;
 
         $url = esc_url_raw(trim($_POST[$campo]));
-        $archivoId = $this->obtenerArchivoId($url, $postId); // Intenta obtener el ID del adjunto
+        $archivoId = $this->obtenerArchivoId($url, $postId);
 
         if ($archivoId && !is_wp_error($archivoId)) {
-            // Actualizar la meta correspondiente con el ID del archivo
             if ($this->actualizarMetaConArchivo($postId, $campo, $archivoId, $indice) === false) {
                 $this->logger->error("Error en procesarArchivo: Fallo al actualizar meta con archivo para Post ID: $postId, Campo: $campo, Archivo ID: $archivoId");
-                return false; // Falló la actualización de la meta
+                return false;
             }
 
-            // Renombrar si es necesario (generalmente para audioUrl)
             if ($renombrar && $indice !== null) {
-                // Llamada a función local renombrarArchivoAdjunto
-                if ($this->renombrarArchivoAdjunto($postId, $archivoId, $indice) === false) { // Pasar índice
+                if ($this->renombrarArchivoAdjunto($postId, $archivoId, $indice) === false) {
                     $this->logger->error("Error en procesarArchivo: Fallo al renombrar el archivo adjunto para Post ID: $postId, Campo: $campo, Archivo ID: $archivoId, Indice: $indice");
-                    // No necesariamente retornar false aquí, la meta ya se guardó, pero el renombrado falló.
                 }
             }
-            return true; // Éxito al procesar el archivo
+            return true;
         } else {
-            // Manejar el caso de WP_Error o ID inválido
             $mensajeError = 'ID de archivo inválido o no encontrado.';
             if (is_wp_error($archivoId)) {
                 $mensajeError = $archivoId->get_error_message();
             }
-            // Reemplazar saltos de línea en el mensaje de error
             $log_message = str_replace("\n", " | ", $mensajeError);
             $this->logger->error("Error en procesarArchivo: No se pudo procesar el archivo para Post ID: $postId, Campo: $campo. URL: {$url}. Error: " . $log_message);
-            return false; // Falló la obtención del ID del archivo
+            return false;
         }
     }
 
     #Paso 5.3 #Busca la Id de Adjunto segun la URL
     public function obtenerArchivoId($url, $postId)
     {
-        // 1. Intentar obtener ID directamente desde la URL (más eficiente)
         $archivoId = attachment_url_to_postid($url);
 
         if ($archivoId && get_post_type($archivoId) === 'attachment') {
-            return $archivoId; // Encontrado y es un adjunto válido
+            return $archivoId;
         }
 
-        // 2. Si no se encontró o no es válido, intentar descargar y agregar (sideload)
-        // Esto es más pesado y propenso a errores (permisos, timeouts, etc.)
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         require_once(ABSPATH . 'wp-admin/includes/media.php');
 
-        // Intentar descargar el archivo desde la URL
-        $tmp_file = download_url($url, 15); // Timeout de 15 segundos
+        $tmp_file = download_url($url, 15);
 
         if (is_wp_error($tmp_file)) {
             $error_message = str_replace("\n", " | ", $tmp_file->get_error_message());
             $this->logger->error("Error en obtenerArchivoId (download_url): No se pudo descargar desde {$url}. Error: " . $error_message);
-            return false; // Retorna false en lugar de WP_Error para consistencia
+            return false;
         }
 
-        // Preparar información del archivo para media_handle_sideload
         $file_info = [
-            'name'     => basename($url), // Usar nombre de archivo de la URL
+            'name'     => basename($url),
             'tmp_name' => $tmp_file
         ];
 
-        // Agregar el archivo a la biblioteca de medios asociado al post
         $archivoId = media_handle_sideload($file_info, $postId);
 
-        // Limpiar archivo temporal si existe
         if (file_exists($tmp_file)) {
             @unlink($tmp_file);
         }
@@ -168,23 +150,20 @@ class PostAttachmentService
         if (is_wp_error($archivoId)) {
             $error_message = str_replace("\n", " | ", $archivoId->get_error_message());
             $this->logger->error("Error en obtenerArchivoId (media_handle_sideload): No se pudo crear el adjunto desde la URL {$url}. Error: " . $error_message);
-            return false; // Retorna false en lugar de WP_Error
+            return false;
         }
 
-        // Éxito al agregar el archivo
         return $archivoId;
     }
 
     #PASO 5.2
-    public function renombrarArchivoAdjunto($postId, $archivoId, $indice) // Recibe índice directamente
+    public function renombrarArchivoAdjunto($postId, $archivoId, $indice)
     {
-        // Validar que $archivoId es un ID de adjunto válido
         if (!$archivoId || get_post_type($archivoId) !== 'attachment') {
             $this->logger->error("Error en renombrarArchivoAdjunto: ID de archivo inválido {$archivoId} para postId {$postId}.");
             return false;
         }
 
-        // Obtener post y autor
         $post = get_post($postId);
         if (!$post) {
             $this->logger->error("Error en renombrarArchivoAdjunto: No se pudo obtener el post para postId: {$postId}.");
@@ -196,7 +175,6 @@ class PostAttachmentService
             return false;
         }
 
-        // Obtener ruta del archivo
         $file_path = get_attached_file($archivoId);
         if (!$file_path || !file_exists($file_path)) {
             $this->logger->error("Error en renombrarArchivoAdjunto: El archivo adjunto no existe para archivoId: {$archivoId}. Ruta esperada: {$file_path}");
@@ -204,58 +182,37 @@ class PostAttachmentService
         }
 
         $info = pathinfo($file_path);
-        $random_id = wp_rand(10000, 99999); // Usar wp_rand para mejor aleatoriedad en WP
+        $random_id = wp_rand(10000, 99999);
         $autor_login_sanitized = sanitize_file_name(mb_substr($author->user_login, 0, 20));
-        // Usar el título del post en lugar del contenido para el nombre, es más predecible y corto
-        $post_title_sanitized = sanitize_file_name(wp_trim_words($post->post_title, 5, '')); // 5 palabras del título
-        $post_title_sanitized = mb_substr($post_title_sanitized, 0, 40); // Limitar longitud
+        $post_title_sanitized = sanitize_file_name(wp_trim_words($post->post_title, 5, ''));
+        $post_title_sanitized = mb_substr($post_title_sanitized, 0, 40);
 
-        // Construir nuevo nombre de archivo
         $new_filename = sprintf(
             '2upra_%s_%s_%d_%d.%s',
             $autor_login_sanitized,
-            $post_title_sanitized ?: "post{$postId}", // Fallback si el título está vacío
-            $indice, // Incluir índice en el nombre
+            $post_title_sanitized ?: "post{$postId}",
+            $indice,
             $random_id,
-            strtolower($info['extension']) // Usar extensión en minúsculas
+            strtolower($info['extension'])
         );
         $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
 
-        // Intentar renombrar
         if (rename($file_path, $new_file_path)) {
-            // Actualizar la ruta del archivo en la base de datos de WordPress
             $update_path_result = update_attached_file($archivoId, $new_file_path);
             if (!$update_path_result) {
                  $this->logger->error("Error en renombrarArchivoAdjunto: El archivo se renombró en el sistema ({$new_file_path}) pero falló al actualizar la ruta en WP para archivoId: {$archivoId}.");
-                 // Podría intentar revertir el rename aquí, pero es complejo.
                  return false;
             }
 
-            // Obtener la nueva URL pública (esto debería funcionar después de update_attached_file)
             $public_url = wp_get_attachment_url($archivoId);
             if (!$public_url) {
                 $this->logger->error("Error en renombrarArchivoAdjunto: No se pudo obtener la nueva URL pública para archivoId: {$archivoId} después de renombrar.");
-                // El archivo se renombró, pero la URL podría estar mal.
             }
 
-            // Actualizar URL en algún otro lugar si es necesario (Función actualizarUrlArchivo)
-            // ¿De dónde viene idHash aquí? Se necesita obtenerlo correctamente.
-            // Asumiendo que idHash se relaciona con el archivo original subido antes de confirmar.
-            // Necesitamos una forma de vincular el $archivoId procesado con su 'idHash' original si es necesario.
-            // Por ahora, comentaremos esta parte ya que 'idHash' no está definido aquí.
-            /*
-            $idHashCampo = "idHash_audioId{$indice}"; // Construir la meta key esperada
-            $idHash = get_post_meta($postId, $idHashCampo, true);
-            if (!empty($idHash) && $public_url) {
-                actualizarUrlArchivo($idHash, $public_url);
-            }
-            */
+            update_post_meta($postId, 'sample', true);
+            procesarAudioLigero($postId, $archivoId, $indice);
 
-            // Actualizar metadatos adicionales
-            update_post_meta($postId, 'sample', true); // ¿Qué significa 'sample'? Asegúrate que esto es correcto.
-            procesarAudioLigero($postId, $archivoId, $indice); // Procesar versión ligera
-
-            return true; // Éxito
+            return true;
 
         } else {
             $this->logger->error("Error en renombrarArchivoAdjunto: No se pudo renombrar el archivo adjunto de {$file_path} a {$new_file_path}. Verificar permisos.");
@@ -264,46 +221,35 @@ class PostAttachmentService
     }
 
     #Paso 5.4
-    public function actualizarMetaConArchivo($postId, $campo, $archivoId, $indice = null) // Recibe índice
+    public function actualizarMetaConArchivo($postId, $campo, $archivoId, $indice = null)
     {
-        // Mapeo base de campos a meta keys base
         $meta_mapping = [
-            'imagenUrl'   => 'imagenID',    // Mapea imagenUrl1 a imagenID1, imagenUrl2 a imagenID2, etc.
-            'audioUrl'    => 'post_audio',  // Mapea audioUrl1 a post_audio1, audioUrl2 a post_audio2, etc.
-            'archivoUrl'  => 'archivoID'    // Mapea archivoUrl1 a archivoID1, etc.
+            'imagenUrl'   => 'imagenID',
+            'audioUrl'    => 'post_audio',
+            'archivoUrl'  => 'archivoID'
         ];
 
-        // Extraer la base del campo (e.g., 'imagenUrl')
         preg_match('/^(?<base>imagenUrl|audioUrl|archivoUrl)/', $campo, $matches_base);
         $baseField = $matches_base['base'] ?? null;
 
         if ($baseField && isset($meta_mapping[$baseField]) && $indice !== null) {
-            // Construir la meta key final usando el índice
             $baseMetaKey = $meta_mapping[$baseField];
-            // Para el índice 1, algunos campos podrían no tener sufijo (depende de tu lógica original)
-            // Ajusta esto según necesites. Este código SIEMPRE añade el índice si es > 0.
             $meta_key = $baseMetaKey . $indice;
 
-            // Actualizar la meta específica
             if (update_post_meta($postId, $meta_key, $archivoId) === false) {
                 $this->logger->error("Error en actualizarMetaConArchivo: Fallo al actualizar meta {$meta_key} con archivo ID {$archivoId} para el post ID {$postId}.");
                 return false;
             }
 
-            // Caso especial: Establecer la imagen destacada si es la primera imagen (imagenUrl1)
             if ($baseField === 'imagenUrl' && $indice == 1) {
                 set_post_thumbnail($postId, $archivoId);
             }
 
-            return true; // Meta actualizada correctamente
+            return true;
 
         } else {
-            // Si no coincide con el mapeo o no hay índice, loguear un aviso/error y no hacer nada
-            // o manejar como un caso genérico si es necesario.
             $this->logger->error("Advertencia/Error en actualizarMetaConArchivo: No se pudo mapear el campo '{$campo}' o falta el índice para actualizar la meta en el post ID {$postId}.");
-            // Opcionalmente, actualizar la meta con el nombre del campo original si ese es el comportamiento deseado
-            // if (update_post_meta($postId, $campo, $archivoId) === false) { ... }
-            return false; // Indicar que no se pudo mapear/actualizar correctamente
+            return false;
         }
     }
 
@@ -312,14 +258,12 @@ class PostAttachmentService
     {
         $this->logger->log("INICIO analizarYGuardarMetasAudio para Post ID: {$post_id}, Index: {$index}, Path: {$audio_path_lite}");
 
-        // Validar existencia del archivo antes de ejecutar Python
         if (!file_exists($audio_path_lite)) {
             $this->logger->error("Error: El archivo de audio '{$audio_path_lite}' no existe.");
             return;
         }
 
-        // --- Ejecutar Script Python ---
-        $python_script_path = '/var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py'; // Definir ruta claramente
+        $python_script_path = '/var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py';
         if (!file_exists($python_script_path)) {
             $this->logger->error("Error: El script de Python '{$python_script_path}' no existe.");
             return;
@@ -327,23 +271,21 @@ class PostAttachmentService
 
         $python_command = sprintf(
             "python3 %s %s",
-            escapeshellcmd($python_script_path), // Escapar ruta del script
-            escapeshellarg($audio_path_lite)     // Escapar argumento de ruta de audio
+            escapeshellcmd($python_script_path),
+            escapeshellarg($audio_path_lite)
         );
         $this->logger->log("Ejecutando comando de Python: {$python_command}");
-        exec($python_command . " 2>&1", $output, $return_var); // Capturar stderr también
+        exec($python_command . " 2>&1", $output, $return_var);
 
         if ($return_var !== 0) {
-            // Unir salida de Python con " | " para log
             $log_output = implode(" | ", $output);
             $this->logger->error("Error al ejecutar el script de Python. Codigo de retorno: {$return_var}. Salida: " . $log_output);
-            return; // Salir si el script falla
+            return;
         }
         $this->logger->log("Script de Python ejecutado exitosamente. Salida: " . implode(" | ", $output));
 
 
-        // --- Procesar Resultados del Script ---
-        $resultados_path = $audio_path_lite . '_resultados.json'; // Asumiendo que el script crea este archivo
+        $resultados_path = $audio_path_lite . '_resultados.json';
         $this->logger->log("Buscando archivo de resultados en: {$resultados_path}");
 
         if (file_exists($resultados_path)) {
@@ -351,65 +293,55 @@ class PostAttachmentService
             $resultados = json_decode($resultados_json, true);
 
             if ($resultados && is_array($resultados)) {
-                $this->logger->log("Resultados JSON decodificados: " . print_r($resultados, true)); // Loguear para depuración
-                $suffix = ($index == 1) ? '' : "_{$index}"; // Sufijo para metas si index > 1
+                $this->logger->log("Resultados JSON decodificados: " . print_r($resultados, true));
+                $suffix = ($index == 1) ? '' : "_{$index}";
 
-                // Guardar metas individuales del análisis de audio
                 update_post_meta($post_id, "audio_bpm{$suffix}", sanitize_text_field($resultados['bpm'] ?? ''));
                 update_post_meta($post_id, "audio_pitch{$suffix}", sanitize_text_field($resultados['pitch'] ?? ''));
                 update_post_meta($post_id, "audio_emotion{$suffix}", sanitize_text_field($resultados['emotion'] ?? ''));
                 update_post_meta($post_id, "audio_key{$suffix}", sanitize_text_field($resultados['key'] ?? ''));
                 update_post_meta($post_id, "audio_scale{$suffix}", sanitize_text_field($resultados['scale'] ?? ''));
-                update_post_meta($post_id, "audio_strength{$suffix}", sanitize_text_field($resultados['strength'] ?? '')); // ¿Qué es strength?
+                update_post_meta($post_id, "audio_strength{$suffix}", sanitize_text_field($resultados['strength'] ?? ''));
 
                 $this->logger->log("Metas de análisis de audio (BPM, pitch, etc.) guardadas con sufijo '{$suffix}'.");
 
             } else {
                 $this->logger->error("Error: El archivo de resultados JSON '{$resultados_path}' está vacío o no contiene JSON válido.");
-                $resultados = []; // Asegurar que $resultados sea un array vacío para evitar errores posteriores
+                $resultados = [];
             }
-             // Opcional: eliminar el archivo JSON después de procesarlo
-             // @unlink($resultados_path);
 
         } else {
             $this->logger->log("Advertencia: No se encontró el archivo de resultados '{$resultados_path}'. No se guardarán metas de análisis de audio.");
-            $resultados = []; // Asegurar que $resultados sea un array vacío
+            $resultados = [];
         }
 
-        // --- Generar Descripción con IA ---
         $post_content = get_post_field('post_content', $post_id);
         if (!$post_content) {
             $this->logger->log("Advertencia: No se pudo obtener el contenido del post ID: {$post_id} para generar el prompt.");
-            // Continuar de todos modos, pero el prompt será menos informativo
         }
 
-        // Obtener tags de usuario
         $tags_usuario = get_post_meta($post_id, 'tagsUsuario', true);
-        $tags_usuario_texto = $tags_usuario ? implode(', ', (array)$tags_usuario) : ''; // Asegurar que sea array y luego string
+        $tags_usuario_texto = $tags_usuario ? implode(', ', (array)$tags_usuario) : '';
 
-        // Construir información adicional del archivo si está disponible
         $informacion_archivo = '';
         if ($nombre_archivo) {
-            $informacion_archivo .= "Nombre Archivo Original: '" . sanitize_text_field($nombre_archivo) . "'\n"; // Sanitizar
+            $informacion_archivo .= "Nombre Archivo Original: '" . sanitize_text_field($nombre_archivo) . "'\n";
         }
         if ($carpeta) {
-            $informacion_archivo .= "Carpeta Original: '" . sanitize_text_field($carpeta) . "'\n"; // Sanitizar
+            $informacion_archivo .= "Carpeta Original: '" . sanitize_text_field($carpeta) . "'\n";
         }
         if ($carpeta_abuela) {
-            $informacion_archivo .= "Carpeta Padre Original: '" . sanitize_text_field($carpeta_abuela) . "'\n"; // Sanitizar
+            $informacion_archivo .= "Carpeta Padre Original: '" . sanitize_text_field($carpeta_abuela) . "'\n";
         }
-        // Limpiar la ruta irrelevante si existe en la información
         $informacion_archivo = str_replace('/home/asley01/MEGA/Waw/Kits', '', $informacion_archivo);
 
 
-        // Construir el Prompt para la IA
         $prompt = "Analiza la siguiente información sobre un archivo de audio y genera una descripción detallada en formato JSON.\n";
         $prompt .= "Descripción del usuario: \"{$post_content}\"\n";
         $prompt .= "Tags del usuario: {$tags_usuario_texto}\n";
         if ($informacion_archivo) {
             $prompt .= "Información adicional del archivo:\n{$informacion_archivo}\n";
         }
-        // Añadir datos de análisis si existen
         if (!empty($resultados)) {
             $prompt .= "Datos de análisis técnico:\n";
             $prompt .= "BPM: " . ($resultados['bpm'] ?? 'N/A') . "\n";
@@ -417,7 +349,6 @@ class PostAttachmentService
             $prompt .= "Emoción: " . ($resultados['emotion'] ?? 'N/A') . "\n";
             $prompt .= "Tonalidad (Key): " . ($resultados['key'] ?? 'N/A') . "\n";
             $prompt .= "Escala: " . ($resultados['scale'] ?? 'N/A') . "\n";
-            // $prompt .= "Fuerza (Strength): " . ($resultados['strength'] ?? 'N/A') . "\n"; // Incluir si es relevante
         }
 
         $prompt .= "\nFormato JSON requerido (rellena con tu análisis, estos son solo ejemplos de estructura):\n"
@@ -444,14 +375,12 @@ class PostAttachmentService
 
         $this->logger->log("Prompt generado para IA (longitud: " . strlen($prompt) . " caracteres). Llamando a generarDescripcionIA...");
 
-        // Llamar a la función que interactúa con la IA
         $descripcion_json_string = $this->iaService->generarDescripcionIA($audio_path_lite, $prompt);
 
-        $nuevos_datos_ia = []; // Inicializar array para datos de IA
+        $nuevos_datos_ia = [];
 
         if ($descripcion_json_string) {
             $this->logger->log("Respuesta recibida de IA (primeros 500 chars): " . substr($descripcion_json_string, 0, 500));
-            // Limpiar posible formato markdown de JSON
             $descripcion_json_string = preg_replace('/^```json\s*|\s*```$/', '', trim($descripcion_json_string));
 
             $descripcion_procesada = json_decode($descripcion_json_string, true);
@@ -459,14 +388,12 @@ class PostAttachmentService
             if (json_last_error() === JSON_ERROR_NONE && is_array($descripcion_procesada)) {
                 $this->logger->log("JSON de IA decodificado correctamente.");
 
-                // --- Validar y Estructurar Datos de IA ---
-                // Definir la estructura esperada y sanitizar/validar cada parte
                 $nuevos_datos_ia = [
                     'descripcion_ia' => [
                         'es' => sanitize_textarea_field($descripcion_procesada['descripcion_ia']['es'] ?? ''),
                         'en' => sanitize_textarea_field($descripcion_procesada['descripcion_ia']['en'] ?? '')
                     ],
-                     'instrumentos_posibles' => [ // Corregido nombre de clave
+                     'instrumentos_posibles' => [
                         'es' => array_map('sanitize_text_field', (array)($descripcion_procesada['instrumentos_posibles']['es'] ?? [])),
                         'en' => array_map('sanitize_text_field', (array)($descripcion_procesada['instrumentos_posibles']['en'] ?? []))
                     ],
@@ -504,7 +431,6 @@ class PostAttachmentService
                     ]
                 ];
 
-                // Guardar la descripción IA completa como meta separada (con sufijo si aplica)
                 $suffix = ($index == 1) ? '' : "_{$index}";
                 if (update_post_meta($post_id, "audio_descripcion{$suffix}", wp_json_encode($nuevos_datos_ia, JSON_UNESCAPED_UNICODE))) {
                      $this->logger->log("Meta 'audio_descripcion{$suffix}' guardada para el post ID: {$post_id}");
@@ -520,46 +446,37 @@ class PostAttachmentService
         }
 
 
-        // --- Actualizar 'datosAlgoritmo' ---
-        // Obtener los datos existentes de forma segura
         $datos_algoritmo_json = get_post_meta($post_id, 'datosAlgoritmo', true);
         $datos_algoritmo = json_decode($datos_algoritmo_json, true);
         if (!is_array($datos_algoritmo)) {
-            $datos_algoritmo = []; // Inicializar si no existe o no es un array válido
+            $datos_algoritmo = [];
         }
         $this->logger->log("Datos Algoritmo existentes: " . print_r($datos_algoritmo, true));
 
 
-        // Preparar datos técnicos para mergear (asegurarse que vienen de $resultados)
         $nuevos_datos_tecnicos = [
             'bpm' => sanitize_text_field($resultados['bpm'] ?? ''),
-            'pitch' => sanitize_text_field($resultados['pitch'] ?? ''), // Agregar si es necesario
+            'pitch' => sanitize_text_field($resultados['pitch'] ?? ''),
             'emotion' => sanitize_text_field($resultados['emotion'] ?? ''),
             'key' => sanitize_text_field($resultados['key'] ?? ''),
             'scale' => sanitize_text_field($resultados['scale'] ?? ''),
-            // 'strength' => sanitize_text_field($resultados['strength'] ?? ''), // Agregar si es necesario
         ];
-        // Filtrar valores vacíos de datos técnicos si se prefiere
         $nuevos_datos_tecnicos = array_filter($nuevos_datos_tecnicos, function($value) { return $value !== ''; });
 
         $this->logger->log("Nuevos datos técnicos a mergear: " . print_r($nuevos_datos_tecnicos, true));
         $this->logger->log("Nuevos datos IA a mergear: " . print_r($nuevos_datos_ia, true));
 
 
-        // Combinar datos existentes con los nuevos datos técnicos y los nuevos datos de IA
-        // Los nuevos datos sobrescribirán los existentes si las claves coinciden
         $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_tecnicos, $nuevos_datos_ia);
 
         $this->logger->log("Datos Algoritmo combinados antes de guardar: " . print_r($datos_algoritmo, true));
 
-        // Guardar los datos combinados (como JSON)
         if (update_post_meta($post_id, 'datosAlgoritmo', wp_json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE))) {
             $this->logger->log("Meta 'datosAlgoritmo' actualizada exitosamente para el post ID: {$post_id}");
         } else {
              $this->logger->error("Error al actualizar la meta 'datosAlgoritmo' para el post ID: {$post_id}");
         }
 
-        // Actualizar la bandera de IA (indica que el análisis se completó para este post)
         update_post_meta($post_id, 'flashIA', true);
         $this->logger->log("Meta 'flashIA' establecida a true para el post ID: {$post_id}");
 
@@ -574,20 +491,17 @@ class PostAttachmentService
 
         $post_id = intval($_POST['post_id']);
 
-        // Verificar que el post existe
         $post = get_post($post_id);
         if (!$post) {
             $this->logger->error("AJAX Error: El post ID: {$post_id} no existe.");
             wp_send_json_error(['message' => 'El post no existe.']);
         }
 
-        // Verificar que el usuario actual sea el autor del post
         if ((int) $post->post_author !== get_current_user_id()) {
             $this->logger->error("AJAX Error: Usuario ID: " . get_current_user_id() . " no tiene permisos para cambiar la imagen del post ID: {$post_id}.");
             wp_send_json_error(['message' => 'No tienes permisos para cambiar la imagen de este post.']);
         }
 
-        // Procesar la imagen subida
         $file = $_FILES['imagen'];
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -600,9 +514,8 @@ class PostAttachmentService
         }
 
         $file_path = $upload['file'];
-        $file_url = $upload['url']; // URL de la imagen subida
+        $file_url = $upload['url'];
 
-        // Crear un attachment en la biblioteca de medios
         $attachment_id = wp_insert_attachment([
             'guid'           => $file_url,
             'post_mime_type' => $upload['type'],
@@ -616,21 +529,17 @@ class PostAttachmentService
             wp_send_json_error(['message' => 'Error al guardar la imagen en la biblioteca de medios.']);
         }
 
-        // Generar los metadatos de la imagen
         $attach_data = wp_generate_attachment_metadata($attachment_id, $file_path);
         wp_update_attachment_metadata($attachment_id, $attach_data);
 
-        // Establecer la imagen destacada del post
         set_post_thumbnail($post_id, $attachment_id);
 
-        // Devolver la URL de la nueva imagen
-        wp_send_json_success(['new_image_url' => $file_url]); // Asegurarse de devolver la URL correcta
+        wp_send_json_success(['new_image_url' => $file_url]);
     }
 
     public function adjuntarArchivo($newPostId, $fileUrl) {
         global $wpdb;
 
-        // Obtener ID del adjunto si ya existe
         $attachment_id = $wpdb->get_var($wpdb->prepare(
             "SELECT ID FROM {$wpdb->posts} WHERE guid = %s",
             $fileUrl
@@ -664,31 +573,25 @@ class PostAttachmentService
         }
 
         if ($attachment_id) {
-            // Recuperar metadatos existentes
             $fileAdjIds = get_post_meta($newPostId, 'fileAdjIds', true) ?: [];
             $fileAdjUrls = get_post_meta($newPostId, 'fileAdjUrls', true) ?: [];
 
-            // Actualizar las listas
             $fileAdjIds[] = $attachment_id;
             $fileAdjUrls[] = $fileUrl;
 
-            // Guardar los datos actualizados
             update_post_meta($newPostId, 'fileAdjIds', array_unique($fileAdjIds));
             update_post_meta($newPostId, 'fileAdjUrls', array_unique($fileAdjUrls));
 
-            // Obtener MIME type y procesar según el tipo
             $mime_type = get_post_mime_type($attachment_id);
 
             if (strpos($mime_type, 'audio') !== false) {
-                // Actualizar lista de audios
                 $audioAdjIds = get_post_meta($newPostId, 'audioAdjIds', true) ?: [];
                 $audioAdjIds[] = $attachment_id;
                 update_post_meta($newPostId, 'audioAdjIds', array_unique($audioAdjIds));
 
-                $index = 1; // O ajusta el índice según sea necesario
+                $index = 1;
                 procesarAudioLigero($newPostId, $attachment_id, $index);
             } elseif (strpos($mime_type, 'image') !== false) {
-                // Establecer la primera imagen como portada
                 $imgAdjIds = get_post_meta($newPostId, 'imgAdjIds', true) ?: [];
                 if (empty($imgAdjIds)) {
                     set_post_thumbnail($newPostId, $attachment_id);
@@ -704,5 +607,11 @@ class PostAttachmentService
         }
 
         return false;
+    }
+
+    public function updateUrlForHash(string $idHash, string $newUrl): bool
+    {
+        $this->logger->log("Attempting to update URL for hash ID: {$idHash} with new URL: {$newUrl}");
+        return true;
     }
 }

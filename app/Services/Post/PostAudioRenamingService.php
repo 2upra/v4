@@ -4,12 +4,16 @@ namespace App\Services\Post;
 
 use App\Utils\Logger;
 use App\Services\IAService;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 class PostAudioRenamingService
 {
     private Logger $logger;
     private IAService $iaService;
     private PostAttachmentService $postAttachmentService;
+
+    const BASE_AUDIO_SEARCH_PATH = '/home/asley01/MEGA/Waw/X';
 
     public function __construct(Logger $logger, IAService $iaService, PostAttachmentService $postAttachmentService)
     {
@@ -37,49 +41,14 @@ class PostAudioRenamingService
         $nombre_final_con_id = $this->generateUniqueAudioName($nombre_archivo, $post_content, $audioFilePath);
 
         if ($nombre_final_con_id) {
-            // Call the new private method for WordPress attachment renaming
             if (!$this->renameWordPressAttachments($postId, $nombre_final_con_id)) {
                 $this->logger->error("Falló el renombrado de adjuntos de WordPress para el post ID: {$postId}");
                 return null;
             }
 
-            if (get_post_meta($postId, 'rutaPerdida', true)) {
-                $this->logger->log("No se intentará renombrar, 'rutaPerdida' está marcada como true para el post ID: {$postId}");
+            if (!$this->handleOriginalFileAndDatabaseUpdates($postId, $audioFilePath, $nombre_final_con_id)) {
+                $this->logger->error("Falló el manejo del archivo original o la actualización de la base de datos para el post ID: {$postId}");
                 return null;
-            }
-
-            $ruta_original = get_post_meta($postId, 'rutaOriginal', true);
-            if ($ruta_original && file_exists($ruta_original)) {
-                $directorio_original = pathinfo($ruta_original, PATHINFO_DIRNAME);
-            } else {
-                $directorio_original = buscarArchivoEnSubcarpetas("/home/asley01/MEGA/Waw/X", basename($ruta_original));
-            }
-
-            if ($directorio_original) {
-                $ext_extension = pathinfo($ruta_original, PATHINFO_EXTENSION);
-                $nueva_ruta_original = $directorio_original . '/' . $nombre_final_con_id . '.' . $ext_extension;
-
-                if (rename($ruta_original, $nueva_ruta_original)) {
-                    update_post_meta($postId, 'rutaOriginal', $nueva_ruta_original);
-                    $this->logger->log("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
-                    $this->logger->log("Archivo renombrado en el servidor de {$ruta_original} a {$nueva_ruta_original}");
-                } else {
-                    $this->logger->error("Error en renombrar archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
-                    update_post_meta($postId, 'rutaOriginalPerdida', true);
-                }
-            } else {
-                $this->logger->error("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$postId}");
-                update_post_meta($postId, 'rutaPerdida', true);
-            }
-
-            $id_hash_audio = get_post_meta($postId, 'idHash_audioId', true);
-            if ($id_hash_audio) {
-                $attachment_id_audio = get_post_meta($postId, 'post_audio', true); // Re-fetch attachment_id_audio if needed for URL
-                $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
-                actualizarUrlArchivo($id_hash_audio, $nueva_url_audio);
-                $this->logger->log("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
-            } else {
-                $this->logger->log("Meta 'idHash_audioId' no existe para el post ID: {$postId}");
             }
 
             $this->logger->log("Renombrado completado exitosamente para el post ID: {$postId}");
@@ -156,5 +125,79 @@ class PostAudioRenamingService
         }
 
         return true;
+    }
+
+    private function handleOriginalFileAndDatabaseUpdates(int $postId, string $oldAudioPath, string $newAudioName): bool
+    {
+        if (get_post_meta($postId, 'rutaPerdida', true)) {
+            $this->logger->log("No se intentará renombrar, 'rutaPerdida' está marcada como true para el post ID: {$postId}");
+            return false;
+        }
+
+        $ruta_original = get_post_meta($postId, 'rutaOriginal', true);
+        $directorio_original = false;
+
+        if ($ruta_original && file_exists($ruta_original)) {
+            $directorio_original = pathinfo($ruta_original, PATHINFO_DIRNAME);
+        } else {
+            $directorio_original = $this->findFileInSubfolders(self::BASE_AUDIO_SEARCH_PATH, basename($ruta_original));
+        }
+
+        if ($directorio_original) {
+            $ext_extension = pathinfo($ruta_original, PATHINFO_EXTENSION);
+            $nueva_ruta_original = $directorio_original . '/' . $newAudioName . '.' . $ext_extension;
+
+            if (rename($ruta_original, $nueva_ruta_original)) {
+                update_post_meta($postId, 'rutaOriginal', $nueva_ruta_original);
+                $this->logger->log("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
+                $this->logger->log("Archivo renombrado en el servidor de {$ruta_original} a {$nueva_ruta_original}");
+            } else {
+                $this->logger->error("Error en renombrar archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
+                update_post_meta($postId, 'rutaOriginalPerdida', true);
+                return false;
+            }
+        } else {
+            $this->logger->error("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$postId}");
+            update_post_meta($postId, 'rutaPerdida', true);
+            return false;
+        }
+
+        $id_hash_audio = get_post_meta($postId, 'idHash_audioId', true);
+        if ($id_hash_audio) {
+            $attachment_id_audio = get_post_meta($postId, 'post_audio', true);
+            $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
+            if (!$this->postAttachmentService->updateUrlForHash($id_hash_audio, $nueva_url_audio)) {
+                $this->logger->error("Falló la actualización de URL para el hash ID: {$id_hash_audio}");
+                return false;
+            }
+            $this->logger->log("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
+        } else {
+            $this->logger->log("Meta 'idHash_audioId' no existe para el post ID: {$postId}");
+        }
+
+        return true;
+    }
+
+    private function findFileInSubfolders(string $baseDirectory, string $fileName): string|false
+    {
+        $this->logger->log("Buscando archivo '{$fileName}' en subcarpetas de '{$baseDirectory}'");
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($baseDirectory));
+        foreach ($iterator as $file) {
+            if (!$file->isDir()) {
+                $extension = strtolower($file->getExtension());
+                $name = $file->getFilename();
+
+                if (!in_array($extension, ['wav', 'mp3']) || strpos($name, '2upra') !== 0) {
+                    continue;
+                }
+
+                if ($name === $fileName) {
+                    $this->logger->log("Archivo encontrado: {$file->getPathname()}");
+                    return $file->getPath();
+                }
+            }
+        }
+        $this->logger->log("Archivo '{$fileName}' no encontrado en subcarpetas de '{$baseDirectory}'");
+        return false;
     }
 }

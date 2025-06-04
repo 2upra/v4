@@ -14,21 +14,3 @@ function rehacerNombreAudio($post_id, $archivo_audio)
 
     return $audioRenamingService->renameAudio($post_id, $archivo_audio);
 }
-
-function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
-{
-    $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
-    foreach ($iterador as $archivo) {
-        $extension = strtolower($archivo->getExtension());
-        $nombre = $archivo->getFilename();
-
-        if (!in_array($extension, ['wav', 'mp3']) || strpos($nombre, '2upra') !== 0) {
-            continue;
-        }
-
-        if ($nombre === $nombre_archivo) {
-            return $archivo->getPath();
-        }
-    }
-    return false;
-}
