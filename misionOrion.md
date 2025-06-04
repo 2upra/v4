@@ -35,7 +35,7 @@ Para una refactorización más precisa y para asegurar la integración adecuada,
 ---
 ### Tarea RF-PMH-002: Crear un servicio PostMetaHandler
 - **ID:** RF-PMH-002
-- **Estado:** PENDIENTE
+- **Estado:** COMPLETADA
 - **Descripción:** Crear una nueva clase `PostMetaHandler` en `app/Services/Post/PostMetaHandler.php`. Esta clase será responsable de encapsular las operaciones repetitivas de `update_post_meta` y `delete_post_meta` que se encuentran en `procesarAudiosMultiples` y `crearAutPost`. Implementar métodos como `copyMeta(int $sourcePostId, int $targetPostId, array $metaKeys)` y `deleteMetaBatch(int $postId, array $metaKeys)` para promover el principio DRY. Las funciones existentes deberán ser actualizadas para utilizar este nuevo servicio.
 - **Archivos Implicados Específicos (Opcional):** [app/Auto/multiple.php, app/Services/Post/PostMetaHandler.php]
 - **Intentos:** 0
