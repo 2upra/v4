@@ -89,6 +89,7 @@ function incluirArchivos($directorio)
 
 $directorios = [
     'app/',
+    'Glory/',
 ];
 
 foreach ($directorios as $directorio) {

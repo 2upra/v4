@@ -38,6 +38,11 @@
         "issues": "https://github.com/Automattic/_s/issues",
         "source": "https://github.com/Automattic/_s"
     },
+    "autoload": {
+        "psr-4": {
+            "Glory\\": "Glory/"
+        }
+    },
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": false
