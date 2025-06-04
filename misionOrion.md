@@ -35,7 +35,7 @@ Se necesita contexto adicional para una refactorización detallada, ya que el ar
 ---
 ### Tarea AP-TSK-003: Refactorizar Manejo de Errores y Permisos de Directorio
 - **ID:** AP-TSK-003
-- **Estado:** PENDIENTE
+- **Estado:** FALLIDA_TEMPORALMENTE
 - **Descripción:** 
   1.  Introducir un método privado o protegido `handleProcessingFailure(string $rutaArchivo, string $motivo, ?int $fileId = null): void` dentro de `AutomaticPostService`. Este método encapsulará las llamadas a `eliminarHash`, `autLog`, y `manejarArchivoFallido`.
   2.  Modificar el método `processAutomaticAudio` (anteriormente `autProcesarAudio`) para que use este nuevo método `handleProcessingFailure` en lugar de las llamadas repetidas a las funciones de manejo de errores.
