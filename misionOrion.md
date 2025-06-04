@@ -28,7 +28,7 @@ Se necesita contexto adicional para una refactorización detallada, ya que el ar
 ---
 ### Tarea AP-TSK-002: Encapsular automaticAudio en AutomaticPostService
 - **ID:** AP-TSK-002
-- **Estado:** PENDIENTE
+- **Estado:** FALLIDA_TEMPORALMENTE
 - **Descripción:** Mover la lógica completa de la función global `automaticAudio` a un nuevo método público dentro de la clase `AutomaticPostService`, por ejemplo, `generateAutomaticAudioDescription(string $rutaArchivo, ?string $nombre_archivo = null, ?string $carpeta = null, ?string $carpeta_abuela = null): array|false`. Asegurar que las llamadas a funciones externas (`procesarArchivoAudioPython`, `generarDescripcionIA`, `iaLog`) estén correctamente mapeadas o preparadas para inyección de dependencias. No refactorizar la lógica interna del método ni la construcción del prompt en esta tarea.
 - **Archivos Implicados Específicos (Opcional):** Ninguno
 - **Intentos:** 0
