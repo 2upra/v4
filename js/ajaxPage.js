@@ -130,38 +130,88 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
 
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
+
         if (pageCache[url] && shouldCache(url)) {
-            document.getElementById('content').innerHTML = pageCache[url];
+            const contentEl = document.getElementById('content');
+            const mainEl = document.getElementById('main');
+            if (contentEl) {
+                contentEl.innerHTML = pageCache[url];
+            }
             requestAnimationFrame(() => {
-                document.getElementById('main').scrollTop = 0;
+                if (mainEl) {
+                    mainEl.scrollTop = 0;
+                }
             });
-            if (pushState) history.pushState(null, '', url);
+            if (pushState) {
+                history.pushState(null, '', url);
+            }
             return reinit();
         }
-        document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
+
+        const loadingBar = document.getElementById('loadingBar');
+        if (loadingBar) {
+            loadingBar.style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
+        }
+
         fetch(url)
-            .then(r => r.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(data => {
                 const doc = new DOMParser().parseFromString(data, 'text/html');
-                const content = doc.getElementById('content').innerHTML;
-                document.getElementById('content').innerHTML = content;
-                if (shouldCache(url)) pageCache[url] = content;
-                document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
-                setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
-                if (pushState) history.pushState(null, '', url);
+                const newContent = doc.getElementById('content');
+                const contentEl = document.getElementById('content');
+
+                if (newContent && contentEl) {
+                    contentEl.innerHTML = newContent.innerHTML;
+                    if (shouldCache(url)) {
+                        pageCache[url] = newContent.innerHTML;
+                    }
+                }
+
+                if (loadingBar) {
+                    loadingBar.style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
+                    setTimeout(() => {
+                        loadingBar.style.cssText = 'width: 0%; opacity: 0; transition: width 0.3s ease, opacity 0.3s ease;';
+                    }, 100);
+                }
+
+                if (pushState) {
+                    history.pushState(null, '', url);
+                }
+
                 requestAnimationFrame(() => {
-                    document.getElementById('content').scrollTop = 0;
-                });
-                doc.querySelectorAll('script').forEach(s => {
-                    if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
-                    } else if (!s.src) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
+                    const mainEl = document.getElementById('main');
+                    if (mainEl) {
+                        mainEl.scrollTop = 0;
+                    } else if (contentEl) {
+                        contentEl.scrollTop = 0;
                     }
                 });
+
+                doc.querySelectorAll('script').forEach(s => {
+                    const newScript = document.createElement('script');
+                    if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
+                        newScript.src = s.src;
+                        newScript.async = false;
+                        document.body.appendChild(newScript);
+                    } else if (!s.src) {
+                        newScript.textContent = s.textContent;
+                        document.body.appendChild(newScript);
+                    }
+                });
+
                 setTimeout(reinit, 200);
             })
-            .catch(e => console.error('Load error:', e));
+            .catch(e => {
+                console.error('Error en la función load:', e);
+                if (loadingBar) {
+                    loadingBar.style.cssText = 'width: 0%; opacity: 0;';
+                }
+            });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -262,81 +312,3 @@ function redir() {
 }
 
 //
-
-function inicIcAy() {
-    const it = document.querySelector('.menu-item.iconoInver');
-    if (!it) return;
-
-    const lnk = it.querySelector('a');
-    const txtAy = it.querySelector('.textoAyuda');
-    const tmpIcAy = 'tmpIcAy';
-    const tmpMax = 86400000;
-    const tmpInc = [8, 12, 24];
-
-    if (!localStorage.getItem(tmpIcAy)) {
-        localStorage.setItem(tmpIcAy, Date.now());
-    }
-
-    function tmpSig() {
-        let tmpUlt = parseInt(localStorage.getItem(tmpIcAy));
-        let difTmp = Date.now() - tmpUlt;
-        let indTmp = 0;
-        let tmpSigTime = tmpInc[indTmp] * 3600000;
-
-        while (difTmp > tmpSigTime && indTmp < tmpInc.length - 1) {
-            indTmp++;
-            tmpSigTime = tmpInc[indTmp] * 3600000;
-        }
-
-        if (difTmp > tmpMax) {
-            localStorage.setItem(tmpIcAy, Date.now());
-            return 0;
-        }
-
-        let tiempoRestante = Math.max(0, tmpSigTime - difTmp);
-
-        if (difTmp < tmpInc[0] * 3600000) {
-            if (txtAy) txtAy.style.display = 'none';
-        } else if (difTmp < tmpInc[1] * 3600000) {
-            if (txtAy) txtAy.style.display = 'none';
-        }
-
-        return tiempoRestante;
-    }
-
-    function ponRj() {
-        it.classList.add('rojoSVG');
-        if (txtAy) {
-            txtAy.textContent = '2upra necesita tu ayuda';
-            txtAy.style.display = 'block';
-        }
-    }
-
-    function qtRj(e) {
-        if (e) e.preventDefault();
-        it.classList.remove('rojoSVG');
-        if (txtAy) txtAy.style.display = 'none';
-        localStorage.setItem(tmpIcAy, Date.now());
-        let tmpRest = tmpSig();
-        if (tmpRest > 0) {
-            setTimeout(ponRj, tmpRest);
-        } else {
-            ponRj();
-        }
-    }
-
-    let tmpRest = tmpSig();
-    if (tmpRest === 0) {
-        ponRj();
-    } else {
-        setTimeout(ponRj, tmpRest);
-    }
-
-    if (lnk) lnk.addEventListener('click', qtRj);
-
-    if (txtAy) {
-        txtAy.addEventListener('mouseenter', () => {
-            txtAy.style.display = 'none';
-        });
-    }
-}
