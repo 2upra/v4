@@ -1,6 +1,5 @@
 <?php
 
-// Refactor(Exec): Funcion formRs() movida desde app/View/Helpers/UIHelper.php
 function formRs()
 {
     ob_start();
