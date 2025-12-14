@@ -1,84 +1,138 @@
-<?
+<?php
 
-function get_user_id_from_post($key) {
-    return isset($_POST[$key]) ? (int) $_POST[$key] : 0;
+/**
+ * Sistema de seguimiento de usuarios (Archivo Legacy).
+ * 
+ * Este archivo mantiene funciones wrapper para compatibilidad con código existente.
+ * La lógica real está en Theme\V4\Services\SeguirService y Theme\V4\Controllers\SeguirController.
+ *
+ * @package Theme_V4
+ * @since 1.0.0
+ * @deprecated Las funciones serán eliminadas cuando todo el código use las clases.
+ */
+
+// Evitar acceso directo
+if (!defined('ABSPATH')) {
+    exit('Acceso directo no permitido.');
 }
 
-function update_follow_relationship($follower_id, $followed_id, $action) {
-    if (!is_numeric($follower_id) || !is_numeric($followed_id)) {
-        return false;
-    }
+use Theme\V4\Services\SeguirService;
+use Theme\V4\Controllers\SeguirController;
 
-    $following = (array) get_user_meta($follower_id, 'siguiendo', true);
-    $followers = (array) get_user_meta($followed_id, 'seguidores', true);
+/* 
+ *
+ * Inicialización del controlador AJAX
+ *
+ */
+
+$seguirController = new SeguirController();
+$seguirController->registrar();
+
+/* 
+ *
+ * Funciones wrapper para compatibilidad
+ *
+ */
+
+/**
+ * Obtener ID de usuario desde POST.
+ *
+ * @param string $key Clave del valor en POST.
+ * @return int
+ * @deprecated Usar método privado en controlador.
+ */
+function get_user_id_from_post($key): int
+{
+    return isset($_POST[$key]) ? absint($_POST[$key]) : 0;
+}
+
+/**
+ * Actualizar relación de seguimiento.
+ *
+ * @param int    $followerId  ID del seguidor.
+ * @param int    $followedId  ID del seguido.
+ * @param string $action      'follow' o 'unfollow'.
+ * @return bool
+ * @deprecated Usar SeguirService::seguir() o SeguirService::dejarDeSeguir().
+ */
+function update_follow_relationship($followerId, $followedId, $action): bool
+{
+    $servicio = new SeguirService();
 
     if ($action === 'follow') {
-        if (!in_array($followed_id, $following)) {
-            $following[] = $followed_id;
-            $followers[] = $follower_id;
-        } else {
-            return false;
-        }
+        return $servicio->seguir((int) $followerId, (int) $followedId);
     } elseif ($action === 'unfollow') {
-        $following = array_diff($following, [$followed_id]);
-        $followers = array_diff($followers, [$follower_id]);
+        return $servicio->dejarDeSeguir((int) $followerId, (int) $followedId);
     }
 
-    $update_following = update_user_meta($follower_id, 'siguiendo', array_values($following));
-    $update_followers = update_user_meta($followed_id, 'seguidores', array_values($followers));
-
-    return $update_following && $update_followers;
+    return false;
 }
 
-function seguir_usuario() {
-    $result = update_follow_relationship(
-        get_user_id_from_post('seguidor_id'),
-        get_user_id_from_post('seguido_id'),
-        'follow'
+/**
+ * Handler AJAX para seguir usuario.
+ * 
+ * @deprecated Manejado por SeguirController.
+ */
+function seguir_usuario(): void
+{
+    $controller = new SeguirController();
+    $controller->seguirUsuario();
+}
+
+/**
+ * Handler AJAX para dejar de seguir usuario.
+ * 
+ * @deprecated Manejado por SeguirController.
+ */
+function dejar_de_seguir_usuario(): void
+{
+    $controller = new SeguirController();
+    $controller->dejarDeSeguirUsuario();
+}
+
+/**
+ * Shortcode para mostrar contadores de usuario.
+ */
+add_shortcode('mostrar_contadores', function (): string {
+    $userId = get_current_user_id();
+
+    if ($userId === 0) {
+        return '';
+    }
+
+    $servicio = new SeguirService();
+    $contadores = $servicio->obtenerContadores($userId);
+
+    return sprintf(
+        '%d seguidores %d seguidos %d posts',
+        $contadores['seguidores'],
+        $contadores['siguiendo'],
+        $contadores['posts']
     );
-
-    wp_send_json([
-        'success' => $result,
-        'message' => $result ? 'Usuario seguido exitosamente' : 'Error al seguir usuario'
-    ]);
-}
-add_action('wp_ajax_seguir_usuario', 'seguir_usuario');
-
-function dejar_de_seguir_usuario() {
-    $result = update_follow_relationship(
-        get_user_id_from_post('seguidor_id'),
-        get_user_id_from_post('seguido_id'),
-        'unfollow'
-    );
-
-    wp_send_json([
-        'success' => $result,
-        'message' => $result ? 'Usuario dejado de seguir exitosamente' : 'Error al dejar de seguir usuario'
-    ]);
-}
-add_action('wp_ajax_dejar_de_seguir_usuario', 'dejar_de_seguir_usuario');
-
-add_shortcode('mostrar_contadores', function() {
-    $user_id = get_current_user_id();
-    $seguidores = count((array) get_user_meta($user_id, 'seguidores', true));
-    $siguiendo = count((array) get_user_meta($user_id, 'siguiendo', true));
-    $posts_count = (new WP_Query(['author' => $user_id, 'post_type' => 'social_post']))->found_posts;
-
-    return "{$seguidores} seguidores {$siguiendo} seguidos {$posts_count} posts";
 });
 
-function seguir_usuario_automaticamente($user_id) {
-    $siguiendo = (array) get_user_meta($user_id, 'siguiendo', true);
-    if (!in_array($user_id, $siguiendo)) {
-        $siguiendo[] = $user_id;
-        update_user_meta($user_id, 'siguiendo', $siguiendo);
-    }
+/**
+ * Auto-seguir al registrarse.
+ *
+ * @param int $userId ID del nuevo usuario.
+ */
+function seguir_usuario_automaticamente($userId): void
+{
+    $servicio = new SeguirService();
+    $servicio->autoSeguir((int) $userId);
 }
 add_action('user_register', 'seguir_usuario_automaticamente');
 
-function seguir_usuarios_automaticamente1() {
-    foreach (get_users() as $usuario) {
-        seguir_usuario_automaticamente($usuario->ID);
+/**
+ * Auto-seguir para todos los usuarios existentes (utility).
+ * 
+ * @deprecated Solo para migración inicial.
+ */
+function seguir_usuarios_automaticamente1(): void
+{
+    $servicio = new SeguirService();
+
+    foreach (get_users(['fields' => 'ID']) as $userId) {
+        $servicio->autoSeguir((int) $userId);
     }
 }
-

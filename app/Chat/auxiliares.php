@@ -1,65 +1,39 @@
-<?
+<?php
 
+use Theme\V4\Controllers\ChatController;
+use Theme\V4\Services\ChatService;
+
+/**
+ * Utilidad: Tiempo relativo.
+ * Mantenida como global por estar en uso posiblemente extendido.
+ */
 function tiempoRelativo($fecha)
 {
-    $timestamp = strtotime($fecha);
-    $diferencia = time() - $timestamp;
-
-    if ($diferencia < 60) {
-        return 'unos segundos';
-    } elseif ($diferencia < 3600) {
-        $minutos = floor($diferencia / 60);
-        return "$minutos minuto" . ($minutos > 1 ? 's' : '');
-    } elseif ($diferencia < 86400) {
-        $horas = floor($diferencia / 3600);
-        return "$horas hora" . ($horas > 1 ? 's' : '');
-    } elseif ($diferencia < 604800) {
-        $dias = floor($diferencia / 86400);
-        return "$dias día" . ($dias > 1 ? 's' : '');
-    } else {
-        $semanas = floor($diferencia / 604800);
-        return "$semanas semana" . ($semanas > 1 ? 's' : '');
-    }
+    $service = new ChatService();
+    return $service->tiempoRelativo($fecha);
 }
 
+/**
+ * Utilidad: Nombre de usuario.
+ * Mantenida como global por compatibilidad.
+ */
 function obtenerNombreUsuario($usuarioId)
 {
-    $usuario = get_userdata($usuarioId);
-
-    if ($usuario) {
-        return !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
-    }
-
-    return 'Usuario desconocido';
+    $service = new ChatService();
+    $info = $service->obtenerInfoUsuario((int)$usuarioId);
+    return $info ? $info['nombre'] : 'Usuario desconocido';
 }
 
-
-function infoUsuario() {
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
-        wp_die();
-    }
-
-    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
-
-    if ($receptor <= 0) {
-        wp_send_json_error(array('message' => 'ID del receptor inválido.'));
-        wp_die();
-    }
-
-    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
-    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
-
-    if (ob_get_length()) {
-        ob_end_clean();
-    }
-
-    wp_send_json_success(array(
-        'imagenPerfil' => $imagenPerfil,
-        'nombreUsuario' => $nombreUsuario
-    ));
-
-    wp_die();
+/**
+ * Handler AJAX: Info usuario (Legacy Wrapper).
+ * 
+ * @deprecated Usar ChatController::ajaxInfoUsuario
+ */
+function infoUsuario()
+{
+    $controller = new ChatController();
+    $controller->ajaxInfoUsuario();
 }
 
-add_action('wp_ajax_infoUsuario', 'infoUsuario');
+// Action hook removed from here as it is registered in ChatController
+// add_action('wp_ajax_infoUsuario', 'infoUsuario'); 

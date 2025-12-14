@@ -59,6 +59,15 @@ Este es un tema de WordPress para una aplicación social/musical. El código fue
 - Validar permisos con `current_user_can()`
 - Escapar salidas: `esc_attr()`, `esc_html()`, `esc_url()`
 
+### 7. Logging (OBLIGATORIO)
+- **PROHIBIDO** usar `error_log()`, `print_r()`, o `var_dump()`.
+- **SIEMPRE** usar la clase `Logger`:
+  ```php
+  $logger = \Theme\V4\Services\Logger::obtenerInstancia();
+  $logger->info('canal', 'Mensaje');
+  ```
+- Canales disponibles: `like`, `chat`, `auth`, `debug`, etc. (Ver `inc/Config/constants.php`)
+
 ### 6. Estructura de Archivos
 
 ```
@@ -124,16 +133,64 @@ $likeService = new LikeService();
 
 > **Resultado:** `functions.php` reducido de 715 líneas a 124 líneas (~83% reducción)
 
-### Fase 2: Organizar `/app/` ⬅️ **ACTUAL** (PRIORIDAD)
-| Paso | Descripción                                   | Estado      |
-| ---- | --------------------------------------------- | ----------- |
-| 2.1  | Auditar estructura actual de /app/            | ⏳ Pendiente |
-| 2.2  | Estandarizar nomenclatura (PascalCase clases) | ⏳ Pendiente |
-| 2.3  | Organizar /app/Functions/ (23 archivos)       | ⏳ Pendiente |
-| 2.4  | Organizar /app/Content/ (36 archivos)         | ⏳ Pendiente |
-| 2.5  | Convertir funciones sueltas a clases          | ⏳ Pendiente |
-| 2.6  | Implementar namespaces/autoloading            | ⏳ Pendiente |
-| 2.7  | Eliminar carpeta "Pendiente por refactorizar" | ⏳ Pendiente |
+### Fase 2: Migrar `/app/` a `/src/` ⬅️ **ACTUAL** (PRIORIDAD)
+
+#### Estrategia de Migración
+
+La idea es **empezar de cero** en `/src/` con código limpio:
+
+1. **`/app/`** = Código legacy (funciones sueltas, sin estructura)
+2. **`/src/`** = Código refactorizado (clases, namespaces, SOLID)
+
+**Proceso por cada módulo:**
+1. Analizar el archivo en `/app/`
+2. Crear clase equivalente en `/src/` con namespace `Theme\V4`
+3. Mantener funciones wrapper en `/app/` que llamen a la nueva clase
+4. Cuando todo funcione, eliminar el archivo de `/app/`
+
+**Ejemplo de migración:**
+```php
+// ANTES: app/Functions/likes.php
+function manejarLike() { ... }
+function likeAccion($postId, $userId) { ... }
+
+// DESPUÉS: src/Services/LikeService.php
+namespace Theme\V4\Services;
+
+class LikeService 
+{
+    public function manejar(): array { ... }
+    public function accion(int $postId, int $userId): void { ... }
+}
+
+// WRAPPER temporal en app/Functions/likes.php
+function manejarLike() {
+    return (new \Theme\V4\Services\LikeService())->manejar();
+}
+```
+
+#### Pasos de la Fase 2
+| Paso | Descripción                                         | Estado       |
+| ---- | --------------------------------------------------- | ------------ |
+| 2.1  | Crear estructura `/src/` con autoloader PSR-4       | ✅ Completado |
+| 2.2  | Migrar `app/Functions/likes.php` → `src/Services/`  | ✅ Completado |
+| 2.3  | Migrar `app/Functions/seguir.php` → `src/Services/` | ✅ Completado |
+| 2.4  | Migrar `app/Chat/` → `src/Services/ChatService.php` | 🚧 Parcial    |
+| 2.5  | Migrar `app/Content/` → `src/Services/` y `Models/` | ⏳ Pendiente  |
+| 2.6  | Migrar `app/Finanza/` → `src/Services/`             | ⏳ Pendiente  |
+| 2.7  | Eliminar `/app/` cuando esté vacío                  | ⏳ Pendiente  |
+
+#### Estructura de `/src/`
+```
+src/
+├── autoload.php           # Carga automática de clases PSR-4
+├── Core/                  # Clases base (abstract, interfaces, traits)
+├── Services/              # Lógica de negocio (LikeService, ChatService, etc.)
+├── Controllers/           # Handlers de AJAX y REST API
+├── Models/                # Modelos de datos (Post, User, Coleccion, etc.)
+└── Views/                 # Componentes de vista reutilizables
+```
+
 
 ### Fase 3: Limpiar `header.php`
 | Paso | Descripción                             | Estado      |
@@ -196,6 +253,20 @@ $likeService = new LikeService();
   - `/app/` - Código legacy pendiente de refactorizar
   - `src/autoload.php` - Autoloader PSR-4 para clases en /src/
 - **[FIX]** Restauradas funciones eliminadas: `incluirArchivos`, `loadingBar`, `limpiarLogs`
+- **[2.2]** Migrado sistema de likes a arquitectura OOP:
+  - `src/Services/LikeService.php` - Lógica de negocio (290 líneas)
+  - `src/Controllers/LikeController.php` - Handler AJAX (135 líneas)
+  - `app/Functions/likes.php` - Convertido a wrappers de compatibilidad
+  - Mejoras: tipado estricto, inyección de dependencias, métodos SRP
+- **[2.3]** Migrado sistema de seguimiento a arquitectura OOP:
+  - `src/Services/SeguirService.php` - Lógica de seguimiento (190 líneas)
+  - `src/Controllers/SeguirController.php` - Handler AJAX (105 líneas)
+  - `app/Functions/seguir.php` - Convertido a wrappers
+- **[2.4]** Migrado Core del Chat:
+  - `src/Services/ChatService.php` - Gestión de tokens y seguridad
+  - `src/Controllers/ChatController.php` - Endpoints REST y AJAX
+  - `app/Chat/api.php` y `auxiliares.php` - Refactorizados a wrappers
+- **[FIX]** Estandarización de logs: Reemplazado `error_log` por `Logger::obtenerInstancia()` en todos los servicios y controladores nuevos.
 
 ---
 
