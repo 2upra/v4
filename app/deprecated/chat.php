@@ -169,3 +169,16 @@ if (!function_exists('conversacionesUsuario')) {
         return \Kamples\Views\Components\ChatList::mostrar((int)$usuarioId);
     }
 }
+
+/**
+ * Renderizar el modal de chat.
+ * 
+ * @return string HTML del chat.
+ * @deprecated Usar Kamples\Views\Components\ChatBox::mostrar()
+ */
+if (!function_exists('renderChat')) {
+    function renderChat(): string
+    {
+        return \Kamples\Views\Components\ChatBox::mostrar();
+    }
+}
