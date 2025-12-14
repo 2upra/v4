@@ -167,4 +167,4 @@ class DatabaseMigrations
 }
 
 // Ejecutar migraciones al iniciar WordPress
-add_action('init', [DatabaseMigrations::class, 'ejecutar']);
+# add_action('init', [DatabaseMigrations::class, 'ejecutar']);
