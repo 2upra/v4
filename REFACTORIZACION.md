@@ -193,7 +193,7 @@ $likeService = new LikeService();
 | 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado |
 | 2.6b | Migrar `app/Authentication/`                  | ✅ Completado |
 | 2.6c | Migrar `app/AlgoritmoPost/`                   | ✅ Completado |
-| 2.6d | Migrar `app/Functions/`                       | ⏳ Pendiente  |
+| 2.6d | Migrar `app/Functions/`                       | ✅ Completado |
 | 2.6e | Migrar resto de `/app/`                       | ⏳ Pendiente  |
 | 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final   |
 
@@ -367,6 +367,32 @@ $likeService = new LikeService();
   - Wrappers creados en `app/deprecated/`: `algoritmo.php`
   - Funciones migradas: calcularFeedPersonalizado, calcularPuntosParaPost, calcularPuntosIntereses, calcularPuntosIdentifier, calcularPuntosSimilarTo, getDecayFactor, generarMetaDeIntereses, obtenerLikesDelUsuario, actualizarIntereses
   - Mejoras: arquitectura OOP con Singleton, tipado estricto, Logger integrado, separación de responsabilidades
+- **[2.6d]** Migración COMPLETA de app/Functions/:
+  - `src/Services/UsuarioService.php` - Gestión de usuarios (~300 líneas: tipos, bloqueos, pinkys)
+  - `src/Controllers/UsuarioController.php` - Handlers AJAX de usuario
+  - `src/Services/ReporteService.php` - Sistema de reportes de contenido
+  - `src/Controllers/ReporteController.php` - Handler AJAX de reportes
+  - `src/Services/ImagenService.php` - Optimización de imágenes y adjuntos
+  - `src/Services/TagService.php` - Tags frecuentes con cache
+  - `src/Views/Components/TagComponents.php` - Componente de visualización de tags
+  - `src/Services/StreamService.php` - Streaming de audio con tokens seguros y cache (~400 líneas)
+  - `src/Controllers/StreamController.php` - Endpoints REST para streaming
+  - `src/Services/DescargaService.php` - Descargas de audio con tokens y pinkys (~260 líneas)
+  - `src/Controllers/DescargaController.php` - Handler AJAX y redirect de descargas
+  - `src/Views/Components/DescargaComponents.php` - Botones de descarga y sincronización
+  - `src/Services/ReproductorService.php` - Reproducciones y oyentes con rate limiting
+  - `src/Controllers/ReproductorController.php` - Endpoint REST de reproducciones
+  - `src/Views/Components/ReproductorComponents.php` - Reproductor flotante de audio
+  - `src/Core/OptimizacionWP.php` - Optimizaciones de WordPress (emojis, embeds, feeds, etc.)
+  - `src/Views/Components/FiltroComponents.php` - Componente de filtros de samples
+  - `src/Views/Components/AppModalComponents.php` - Modales de descarga/actualización de app
+  - `src/Services/NormalizacionService.php` - Normalización de tags de posts (~290 líneas)
+  - `src/Services/AudioProteccionService.php` - Protección y optimización de audio (~300 líneas)
+  - `src/Services/PostEdicionService.php` - Edición de posts con IA (~280 líneas)
+  - `src/Controllers/PostEdicionController.php` - Handlers AJAX de edición de posts
+  - Wrappers creados en `app/deprecated/`: `functions.php`, `stream.php`, `descargas.php`, `reproductor.php`, `optimizacion.php`, `modales.php`, `renderFiltro.php`, `normalizarTags.php`, `protegerAudio.php`, `ajaxPost.php`
+  - Funciones migradas: stream, descargas, reproductor, filtros, modales, normalización de tags, protección de audio, edición de posts
+  - Pendiente: `descargarColeccion.php` (utiliza ColeccionService existente)
 
 ---
 
