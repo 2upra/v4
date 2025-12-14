@@ -29,7 +29,7 @@ class ChatService
     /**
      * Instancia del Logger.
      * 
-     * @var \Theme\V4\Services\Logger|null
+     * @var \Logger|null
      */
     private $logger;
 
@@ -42,8 +42,8 @@ class ChatService
         $this->secretKey = $_ENV['GALLEKEY'] ?? '';
 
         // Inicializar logger si está disponible
-        if (class_exists('Theme\V4\Services\Logger')) {
-            $this->logger = \Theme\V4\Services\Logger::obtenerInstancia();
+        if (class_exists('\Logger')) {
+            $this->logger = \Logger::obtenerInstancia();
         }
     }
 

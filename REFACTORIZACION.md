@@ -63,7 +63,7 @@ Este es un tema de WordPress para una aplicación social/musical. El código fue
 - **PROHIBIDO** usar `error_log()`, `print_r()`, o `var_dump()`.
 - **SIEMPRE** usar la clase `Logger`:
   ```php
-  $logger = \Theme\V4\Services\Logger::obtenerInstancia();
+  $logger = \Logger::obtenerInstancia();
   $logger->info('canal', 'Mensaje');
   ```
 - Canales disponibles: `like`, `chat`, `auth`, `debug`, etc. (Ver `inc/Config/constants.php`)

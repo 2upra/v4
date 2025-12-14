@@ -31,7 +31,7 @@ class LikeController
     /**
      * Instancia del Logger.
      * 
-     * @var \Theme\V4\Services\Logger
+     * @var \Logger
      */
     private $logger;
 
@@ -44,8 +44,8 @@ class LikeController
     {
         $this->likeService = $likeService ?? new LikeService();
 
-        if (class_exists('Theme\V4\Services\Logger')) {
-            $this->logger = \Theme\V4\Services\Logger::obtenerInstancia();
+        if (class_exists('\Logger')) {
+            $this->logger = \Logger::obtenerInstancia();
         }
     }
 

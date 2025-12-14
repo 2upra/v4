@@ -56,7 +56,7 @@ function nonAdminRedirect()
 {
     // Debug logging
     try {
-        $logger = \Theme\V4\Services\Logger::obtenerInstancia();
+        $logger = \Logger::obtenerInstancia();
         $logger->info('debug', 'Checking admin access', [
             'user_id' => get_current_user_id(),
             'is_admin_check' => current_user_can('administrator'),
