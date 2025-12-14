@@ -24,6 +24,17 @@ function obtenerFeedPersonalizado(
     $tipoUsuario = null,
     $filtrosUsuario = null
 ) {
+    /* 
+     * El código legacy puede pasar $filtrosUsuario como string serializado.
+     * Convertimos a array si es necesario.
+     */
+    if (is_string($filtrosUsuario) && !empty($filtrosUsuario)) {
+        $deserializado = @unserialize($filtrosUsuario);
+        $filtrosUsuario = is_array($deserializado) ? $deserializado : null;
+    } elseif (!is_array($filtrosUsuario)) {
+        $filtrosUsuario = null;
+    }
+
     return FeedService::obtenerInstancia()->obtenerFeedPersonalizado(
         (int)$idUsuario,
         (string)$identificador,
