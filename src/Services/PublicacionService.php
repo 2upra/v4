@@ -761,15 +761,21 @@ class PublicacionService
         mixed $userId,
         ?string $tipoUsuario = null
     ): array {
+        /* Convertir userId a int o null */
+        $userIdInt = null;
+        if (!empty($userId)) {
+            $userIdInt = is_numeric($userId) ? (int)$userId : null;
+        }
+
         /* Delegar a FiltroService si existe */
         if (class_exists('Kamples\\Services\\FiltroService')) {
             $filtroService = FiltroService::obtenerInstancia();
-            return $filtroService->aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId, $tipoUsuario);
+            return $filtroService->aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userIdInt, $tipoUsuario);
         }
 
         /* Fallback a función global */
         if (function_exists('aplicarFiltroGlobal')) {
-            return aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId, $tipoUsuario);
+            return aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userIdInt, $tipoUsuario);
         }
 
         return $queryArgs;
