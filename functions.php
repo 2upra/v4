@@ -15,6 +15,9 @@
 // CARGA DE MÓDULOS DEL TEMA
 // =============================================================================
 
+// Suprimir advertencias de deprecación (PHP 8.4 compatibility)
+error_reporting(E_ALL & ~E_DEPRECATED);
+
 // Configuración y constantes (debe cargarse primero)
 require_once get_template_directory() . '/inc/Config/constants.php';
 
