@@ -35,6 +35,19 @@ require_once get_template_directory() . '/inc/Setup/scripts.php';
 require_once get_template_directory() . '/src/autoload.php';
 
 // =============================================================================
+// INICIALIZACIÓN DE SERVICIOS REFACTORIZADOS
+// =============================================================================
+
+// Registrar Custom Post Types y estados
+\Kamples\Core\PostTypes::inicializar();
+
+// Servicio de gestión de slugs
+\Kamples\Services\PostSlugService::inicializar();
+
+// Controlador de posts (AJAX handlers)
+\Kamples\Controllers\PostController::inicializar();
+
+// =============================================================================
 // DEPENDENCIAS EXTERNAS
 // =============================================================================
 

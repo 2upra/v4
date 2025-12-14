@@ -179,19 +179,21 @@ $likeService = new LikeService();
    ```
 
 #### Pasos de la Fase 2
-| Paso | Descripción                                   | Estado        |
-| ---- | --------------------------------------------- | ------------- |
-| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado  |
-| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado  |
-| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado  |
-| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado  |
-| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado  |
-| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado  |
-| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado  |
-| 2.5d | Migrar `app/Content/Logic/` completo          | 🔄 En progreso |
-| 2.5e | Migrar resto de `app/Content/`                | ⏳ Pendiente   |
-| 2.6  | Migrar `app/Finanza/` → `src/Services/`       | ⏳ Pendiente   |
-| 2.7  | Migrar resto de `/app/` y eliminar deprecated | ⏳ Pendiente   |
+| Paso | Descripción                                   | Estado       |
+| ---- | --------------------------------------------- | ------------ |
+| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado |
+| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado |
+| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado |
+| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado |
+| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado |
+| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado |
+| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado |
+| 2.5d | Migrar `app/Content/Logic/` completo          | ✅ Completado |
+| 2.5e | Migrar resto de `app/Content/`                | ✅ Completado |
+| 2.6  | Migrar resto de `/app/` y eliminar deprecated | ⏳ Pendiente  |
+| 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final   |
+
+> **Nota:** El módulo `app/Finanza/` (Stripe/pagos) se deja para el final ya que no es prioritario y requiere pruebas especiales con el sistema de pagos.
 
 
 ### Fase 3: Limpiar `header.php`
@@ -312,7 +314,26 @@ $likeService = new LikeService();
   - `src/Controllers/ContadorController.php` - Handler AJAX de conteo
   - **ELIMINADOS** archivos: `cache.php`, `feed.php`, `reiniciarFeed.php`, `datosParaCalculo.php`, `filtroGlobal.php`, `filtroLogic.php`, `busqueda.php`, `estado.php`, `contador.php`, `manejarColeccion.php`, `localControl.php`
   - Wrappers creados en `app/deprecated/`: `cache.php`, `feed.php`, `filtro.php`, `busqueda.php`, `estado.php`, `contador.php`
-  - **PENDIENTE**: `queryPost.php` (938 líneas) y `procesarIdeas.php` (221 líneas) - archivos complejos que requieren migración cuidadosa
+- **[2.5d+]** Migración COMPLETA de Logic (queryPost y procesarIdeas):
+  - `src/Services/IdeaService.php` - Procesamiento de ideas basado en colecciones (posts similares, puntuación por vistas)
+  - `src/Services/PublicacionService.php` - Servicio central de queries (~1100 líneas, 20+ métodos)
+  - `src/Controllers/PublicacionController.php` - Handler AJAX cargar_mas_publicaciones
+  - **ELIMINADA** carpeta `app/Content/Logic/` completamente
+  - Wrappers creados en `app/deprecated/`: `ideas.php`, `publicaciones.php`
+  - Funciones migradas: `publicaciones`, `publicacionAjax`, `configuracionQueryArgs`, `preOrdenamiento`, `ordenamiento`, `ordenamientoColecciones`, `aplicarFiltrosUsuario`, `prefiltrarIdentifier`, `procesarPublicaciones`, `obtenerUserId`, `manejarIdea`, `procesarIdeas`, `asignarPuntuacionPorVistas`
+  - Mejoras: arquitectura OOP, tipado estricto, Logger integrado, separación de responsabilidades, uso de servicios existentes (FeedService, CacheService)
+- **[2.5e]** Migración COMPLETA de resto de Content (Momentos, Options, Posts):
+  - `src/Core/PostTypes.php` - Registro centralizado de CPTs (social_post, albums, stories, colab, colecciones, etc.) y estados (rejected, pending_deletion)
+  - `src/Services/PostSlugService.php` - Gestión automática de títulos y slugs para social_posts verificados
+  - `src/Services/PostRenderService.php` - Preparación de variables para renderizado (variablesPosts, variablesArticulo, imágenes, audio)
+  - `src/Views/Components/PostComponents.php` - Componentes HTML de posts (~600 líneas: fondoPost, imagenPostList, infoPost, opcionesPost, wave, audioPost, etc.)
+  - `src/Views/Components/PostContentComponents.php` - Renderizado especializado (~400 líneas: renderMusicContent, renderNonMusicContent, sampleListHtml, htmlArticulo)
+  - `src/Views/Components/MomentoComponents.php` - Componentes de Momentos (momentos, publicarMomento)
+  - `src/Controllers/PostController.php` - Handlers AJAX (handle_user_modification, update_post_content)
+  - **ELIMINADA** carpeta `app/Content/` completamente (Momentos/, Options/, Posts/)
+  - Wrappers creados en `app/deprecated/`: `posts.php`, `momentos.php`, `typesPosts.php`, `ajustes.php`
+  - 30+ funciones migradas: htmlPost, variablesPosts, botonseguir, opcionesPost, opcionesRola, wave, audioPost, infoPost, fondoPost, imagenPostList, renderMusicContent, renderNonMusicContent, sampleListHtml, renderPostControls, nohayPost, etc.
+  - Mejoras: arquitectura OOP, separación de responsabilidades (Service/Component), tipado estricto, Logger integrado
 
 ---
 

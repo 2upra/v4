@@ -505,7 +505,7 @@ class FeedService
      * @param array|null $filtrosUsuario Filtros
      * @return array|false
      */
-    private function calcularFeed(
+    public function calcularFeed(
         int $userId,
         string $identificador = '',
         string $similar = '',
