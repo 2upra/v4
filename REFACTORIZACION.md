@@ -179,25 +179,40 @@ $likeService = new LikeService();
    ```
 
 #### Pasos de la Fase 2
-| Paso | Descripción                                   | Estado       |
-| ---- | --------------------------------------------- | ------------ |
-| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado |
-| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado |
-| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado |
-| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado |
-| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado |
-| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado |
-| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado |
-| 2.5d | Migrar `app/Content/Logic/` completo          | ✅ Completado |
-| 2.5e | Migrar resto de `app/Content/`                | ✅ Completado |
-| 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado |
-| 2.6b | Migrar `app/Authentication/`                  | ✅ Completado |
-| 2.6c | Migrar `app/AlgoritmoPost/`                   | ✅ Completado |
-| 2.6d | Migrar `app/Functions/`                       | ✅ Completado |
-| 2.6e | Migrar resto de `/app/`                       | ⏳ Pendiente  |
-| 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final   |
+| Paso | Descripción                                   | Estado        |
+| ---- | --------------------------------------------- | ------------- |
+| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado  |
+| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado  |
+| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado  |
+| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado  |
+| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado  |
+| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado  |
+| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado  |
+| 2.5d | Migrar `app/Content/Logic/` completo          | ✅ Completado  |
+| 2.5e | Migrar resto de `app/Content/`                | ✅ Completado  |
+| 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado  |
+| 2.6b | Migrar `app/Authentication/`                  | ✅ Completado  |
+| 2.6c | Migrar `app/AlgoritmoPost/`                   | ✅ Completado  |
+| 2.6d | Migrar `app/Functions/`                       | ✅ Completado  |
+| 2.6e | Migrar `app/Admin/`, `app/Hook/`, `app/View/` | ✅ Completado  |
+| 2.6f | Migrar resto de `/app/`                       | ⏳ En progreso |
+| 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final    |
 
 > **Nota:** El módulo `app/Finanza/` (Stripe/pagos) se deja para el final ya que no es prioritario y requiere pruebas especiales con el sistema de pagos.
+
+#### Carpetas pendientes en `/app/` (2.6f)
+| Carpeta     | Archivos | Descripción           | Prioridad |
+| ----------- | -------- | --------------------- | --------- |
+| `Auto/`     | 7        | Posts automáticos, IA | Media     |
+| `Form/`     | 4        | Formularios de subida | Alta      |
+| `Misc/`     | 6        | Iconos, emergencias   | Baja      |
+| `Pages/`    | 15       | Tabs de páginas       | Media     |
+| `Perfiles/` | 4        | Perfiles de usuario   | Media     |
+| `Sync/`     | 1        | API de sincronización | Baja      |
+| `Test/`     | 3        | Archivos de prueba    | Baja      |
+| `Commands/` | 2        | Scripts shell         | Baja      |
+| `python/`   | 2        | Scripts Python        | Baja      |
+
 
 
 ### Fase 3: Limpiar `header.php`
@@ -393,8 +408,22 @@ $likeService = new LikeService();
   - Wrappers creados en `app/deprecated/`: `functions.php`, `stream.php`, `descargas.php`, `reproductor.php`, `optimizacion.php`, `modales.php`, `renderFiltro.php`, `normalizarTags.php`, `protegerAudio.php`, `ajaxPost.php`
   - Funciones migradas: stream, descargas, reproductor, filtros, modales, normalización de tags, protección de audio, edición de posts
   - Pendiente: `descargarColeccion.php` (utiliza ColeccionService existente)
+- **[2.6e]** Migración de carpetas restantes de /app/:
+  - `src/Services/ColeccionDescargaService.php` - Descarga de colecciones en ZIP (~450 líneas)
+  - `src/Core/AdminConfig.php` - Configuración centralizada de administración (~210 líneas)
+  - `src/Core/CleanupService.php` - Limpieza automática de posts pending/trash
+  - `src/Views/Components/AdminComponents.php` - Componentes de panel admin
+  - `src/Views/Components/OnboardingComponents.php` - Modales de tipo de usuario y géneros
+  - `src/Controllers/OnboardingController.php` - Handlers AJAX de onboarding
+  - Actualizado `ColeccionComponents.php` con métodos `renderBotonDescarga` y `renderBotonSincronizar`
+  - **ELIMINADA** carpeta `app/Functions/` completamente (incluido `Ajax Post/`)
+  - **ELIMINADA** carpeta `app/Admin/` completamente
+  - **ELIMINADA** carpeta `app/Hook/` completamente
+  - **ELIMINADA** carpeta `app/View/` completamente
+  - Wrappers creados en `app/deprecated/`: `descargarColeccion.php`, `admin.php`, `hooks.php`, `onboarding.php`
 
 ---
+
 
 ## Problemas de Seguridad Identificados
 

@@ -369,7 +369,7 @@ class ColeccionComponents
             }
             ?>
         </div>
-<?php
+        <?php
         return ob_get_clean();
     }
 
@@ -398,5 +398,86 @@ class ColeccionComponents
         }
 
         return '';
+    }
+
+    /**
+     * Renderizar botón de descarga de colección.
+     * 
+     * @param int $postId ID de la colección.
+     * @param int $sampleCount Cantidad de samples.
+     * @return string HTML del botón.
+     */
+    public static function renderBotonDescarga(int $postId, int $sampleCount): string
+    {
+        ob_start();
+        $userId = get_current_user_id();
+        $descargaIcono = $GLOBALS['descargaicono'] ?? '';
+
+        if ($userId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            $yaDescargado = isset($descargasAnteriores[$postId]);
+            $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+        ?>
+            <div class="ZAQIBB">
+                <button class="icon-arrow-down botonprincipal <?php echo esc_attr($claseExtra); ?>"
+                    data-post-id="<?php echo esc_attr($postId); ?>"
+                    aria-label="Boton Descarga"
+                    id="download-button-<?php echo esc_attr($postId); ?>"
+                    onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userId); ?>', 'true', '<?php echo esc_js($sampleCount); ?>')">
+                    <?php echo $descargaIcono; ?> Descargar
+                </button>
+            </div>
+        <?php
+        } else {
+        ?>
+            <div class="ZAQIBB">
+                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
+                    <?php echo $descargaIcono; ?>
+                </button>
+            </div>
+        <?php
+        }
+
+        return ob_get_clean();
+    }
+
+    /**
+     * Renderizar botón de sincronización de colección.
+     * 
+     * @param int $postId ID de la colección.
+     * @param int $sampleCount Cantidad de samples.
+     * @return string HTML del botón.
+     */
+    public static function renderBotonSincronizar(int $postId, int $sampleCount): string
+    {
+        ob_start();
+        $userId = get_current_user_id();
+
+        if ($userId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            $yaDescargado = isset($descargasAnteriores[$postId]);
+            $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+        ?>
+            <div class="ZAQIBB">
+                <button class="icon-arrow-down botonsecundario <?php echo esc_attr($claseExtra); ?>"
+                    data-post-id="<?php echo esc_attr($postId); ?>"
+                    aria-label="Boton Descarga"
+                    id="download-button-<?php echo esc_attr($postId); ?>"
+                    onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userId); ?>', 'true', '<?php echo esc_js($sampleCount); ?>', 'true')">
+                    Sincronizar
+                </button>
+            </div>
+        <?php
+        } else {
+        ?>
+            <div class="ZAQIBB">
+                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
+                    Sincronizar
+                </button>
+            </div>
+<?php
+        }
+
+        return ob_get_clean();
     }
 }
