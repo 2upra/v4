@@ -125,7 +125,8 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
     }
 
     function shouldCache(url) {
-        return !/https:\/\/2upra\.com\/nocache/.test(url);
+        const nocachePattern = new RegExp(`${siteConfig.homeUrl.replace(/https?:\/\//, 'https?:\\/\\/')}\\/nocache`);
+        return !nocachePattern.test(url);
     }
 
     function load(url, pushState) {
@@ -178,7 +179,8 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
             const lowerUrl = url.trim().toLowerCase();
-            if (/\.pdf$|^(https:\/\/2upra\.com\/nocache|javascript|data|vbscript):|#/.test(lowerUrl)) return true;
+            const nocachePattern = new RegExp(`${siteConfig.homeUrl.replace(/https?:\/\//, 'https?:\\/\\/')}\\/nocache`);
+            if (/\.pdf$/.test(lowerUrl) || nocachePattern.test(lowerUrl) || /^(javascript|data|vbscript):|#/.test(lowerUrl)) return true;
             e.preventDefault();
 
             // Cerrar submenús

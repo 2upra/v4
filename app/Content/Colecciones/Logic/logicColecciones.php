@@ -181,8 +181,8 @@ function guardarSampleEnColec()
         if (!$colecEspId) {
             $tit = ($colecId === 'favoritos') ? 'Favoritos' : 'Usar más tarde';
             $imgUrl = ($colecId === 'favoritos')
-                ? 'https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'
-                : 'https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg';
+                ? site_url('/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg')
+                : site_url('/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg');
 
             $colecEspId = wp_insert_post([
                 'post_title'    => $tit,

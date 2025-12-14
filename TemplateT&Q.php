@@ -13,10 +13,10 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
         
         <div class="RWOVSU">
-            <h1>Términos y Condiciones de 2upra</h1>
+            <h1>Términos y Condiciones de Kamples</h1>
             <p>Última actualización: 13 de octubre de 2024</p>
 
-            <p>Bienvenido a 2upra.com ("2upra," "nosotros," "nuestro," o "la Plataforma"). Estos Términos y Condiciones ("Términos") rigen el acceso y uso de nuestro sitio web, aplicaciones, software, contenido, productos y servicios (colectivamente, los "Servicios"). Al acceder o utilizar los Servicios, usted ("Usuario", "usted" o "su") acepta estar legalmente obligado por estos Términos. Si no está de acuerdo con estos Términos, no acceda ni utilice los Servicios.</p>
+            <p>Bienvenido a Kamples.com ("2upra," "Kamples, "nosotros," "nuestro," o "la Plataforma"). Estos Términos y Condiciones ("Términos") rigen el acceso y uso de nuestro sitio web, aplicaciones, software, contenido, productos y servicios (colectivamente, los "Servicios"). Al acceder o utilizar los Servicios, usted ("Usuario", "usted" o "su") acepta estar legalmente obligado por estos Términos. Si no está de acuerdo con estos Términos, no acceda ni utilice los Servicios.</p>
 
             <ol class="ZPFSXX">
                 <li>

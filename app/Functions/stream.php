@@ -155,7 +155,8 @@ function verificarAudio($token)
     }
 
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    if ($referer_host !== '2upra.com') {
+    $current_host = $_SERVER['HTTP_HOST'];
+    if ($referer_host !== $current_host) {
         //guardarLog("Error: referer no válido");
         return false;
     }
@@ -204,7 +205,7 @@ function verificarAudio($token)
             if (
                 $access_count !== false &&
                 $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
-                strpos($_SERVER['HTTP_REFERER'], '2upra.com') !== false
+                parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) === $_SERVER['HTTP_HOST']
             ) {
 
                 set_transient($cache_key, $access_count + 1, 3600);

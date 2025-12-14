@@ -490,7 +490,7 @@ function limpiarJSON($json_data)
 function nohayPost($filtro, $is_ajax)
 {
     if ($filtro === 'notas') {
-        return; 
+        return;
     }
 
     $post_id = get_the_ID();
@@ -515,7 +515,7 @@ function nohayPost($filtro, $is_ajax)
                 <? if ($filtro === 'rolastatus'): ?>
                     <p>Cuando publiques tu primera rola, aparecerá aquí</p>
                 <? endif; ?>
-                <button class="borde"><a href="https://2upra.com/">Volver al inicio</a></button>
+                <button class="borde"><a href="<? echo home_url('/'); ?>">Volver al inicio</a></button>
             </div>
         <? endif; ?>
 

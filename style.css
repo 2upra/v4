@@ -1711,7 +1711,9 @@ a.profile-link.inicio-music {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: url(https://2upra.com/wp-content/uploads/2024/03/Captura-de-pantalla-2024-03-30-174640.png) no-repeat center center fixed;
+	/* NOTA: Esta URL debe actualizarse después de migrar la base de datos a kamples.com */
+	/* background: url(/wp-content/uploads/2024/03/Captura-de-pantalla-2024-03-30-174640.png) no-repeat center center fixed; */
+	background: #0a0a0a; /* Fallback background */
 	filter: blur(9px) brightness(0.4);
 	z-index: -1;
 }
@@ -1844,7 +1846,9 @@ svg#opc {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: url(https://2upra.com/wp-content/uploads/2024/03/tertfgfg.png) no-repeat center center fixed;
+	/* NOTA: Esta URL debe actualizarse después de migrar la base de datos a kamples.com */
+	/* background: url(https://2upra.com/wp-content/uploads/2024/03/tertfgfg.png) no-repeat center center fixed; */
+	background: #0a0a0a; /* Fallback background */
 	filter: blur(9px) brightness(0.4);
 	z-index: -1;
 }

@@ -37,14 +37,19 @@ function htmlColab($filtro)
                     <? echo tituloColab($var); ?>
                     <? echo participantesColab($var) ?>
                     <button class="cerrarColab" id-post="<? echo get_the_ID(); ?>"><?php echo $GLOBALS['cancelicon']; ?></button>
-                    <? // echo opcionesColabActivo($var); ?>
+                    <? // echo opcionesColabActivo($var); 
+                    ?>
                 </div>
                 <div class="MXPLYN">
                     <? echo chatColab($var); ?>
-                    <? //echo archivosColab($var); ?>
-                    <? //echo historialColab($var); ?>
-                    <? //echo comandosColab($var); ?>
-                    <? //echo enviarColab($var);?>
+                    <? //echo archivosColab($var); 
+                    ?>
+                    <? //echo historialColab($var); 
+                    ?>
+                    <? //echo comandosColab($var); 
+                    ?>
+                    <? //echo enviarColab($var);
+                    ?>
                 </div>
             <? endif; ?>
 
@@ -60,7 +65,7 @@ function colab()
     ob_start() ?>
 
     <div class="FLXVTQ">
-        <a href="https://2upra.com/">
+        <a href="<? echo esc_url(home_url('/')); ?>">
             <p>La funcionalidad de colaboración aún no esta disponible</p>
             <button class="borde">Volver</button>
         </a>
@@ -80,7 +85,7 @@ function colabTest()
             <? echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendiente', 'posts' => 20]); ?>
         </div>
         <div>
-            
+
         </div>
     </div>
 <?
@@ -117,8 +122,8 @@ function chatColab($var)
         <div class="chatEnvio">
             <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
 
-            <button class="enviarMensajeColab borde" data-post-id="<? echo esc_attr( $post_id);  ?>" data-conversacion-id="<? echo esc_attr($conversacion_id); ?>">
-                
+            <button class="enviarMensajeColab borde" data-post-id="<? echo esc_attr($post_id);  ?>" data-conversacion-id="<? echo esc_attr($conversacion_id); ?>">
+
                 <? echo $GLOBALS['enviarMensaje']; ?>
             </button>
             <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
@@ -129,7 +134,8 @@ function chatColab($var)
 }
 
 
-function colabsResumen() {
+function colabsResumen()
+{
     // Obtener el ID del usuario actual
     $current_user_id = get_current_user_id();
 
@@ -156,32 +162,32 @@ function colabsResumen() {
     );
 
     // Ejecutar la consulta
-    $query = new WP_Query( $args );
+    $query = new WP_Query($args);
 
     // Inicializar la variable de salida
     $output = '';
 
-    if ( $query->have_posts() ) {
+    if ($query->have_posts()) {
         // Iniciar la lista ordenada
         $output .= '<ol class="listaDeColabresumen">';
 
         // Loop a través de los posts
-        while ( $query->have_posts() ) {
+        while ($query->have_posts()) {
             $query->the_post();
             $post_id = get_the_ID();
 
             // Obtener la URL de la imagen destacada o la imagen alternativa
-            $imagenPost = get_the_post_thumbnail_url( $post_id, 'full' );
-            if ( ! $imagenPost ) {
-                $imagenPost = 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/09/1ndoryu_1725478496.webp?quality=40&strip=all';
+            $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
+            if (! $imagenPost) {
+                $imagenPost = site_url('/wp-content/uploads/2024/09/1ndoryu_1725478496.webp');
             }
 
             // Obtener la meta conversacion_id
-            $conversacion_id = get_post_meta( $post_id, 'conversacion_id', true );
+            $conversacion_id = get_post_meta($post_id, 'conversacion_id', true);
 
             // Construir el elemento de la lista
-            $output .= '<li class="colabResumen" data-conversacion_id="' . esc_attr( $conversacion_id ) . '" data-post_id="' . esc_attr( $post_id ) . '">';
-            $output .= '<img src="' . esc_url( $imagenPost ) . '" class="colabResumenImagen" alt="' . esc_attr( get_the_title() ) . '" width="40" />';
+            $output .= '<li class="colabResumen" data-conversacion_id="' . esc_attr($conversacion_id) . '" data-post_id="' . esc_attr($post_id) . '">';
+            $output .= '<img src="' . esc_url($imagenPost) . '" class="colabResumenImagen" alt="' . esc_attr(get_the_title()) . '" width="40" />';
             $output .= '</li>';
         }
 
@@ -191,7 +197,6 @@ function colabsResumen() {
         // Restaurar datos originales del post
         wp_reset_postdata();
     } else {
-
     }
 
     return $output;

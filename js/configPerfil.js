@@ -91,13 +91,12 @@ function SubidaImagenPerfil() {
 }
 
 function IniciadoresConfigPerfil() {
-    SubidaImagenPerfil();  
-    selectorFanArtistaTipo(); 
+    SubidaImagenPerfil();
+    selectorFanArtistaTipo();
     cambiarNombre();
     cambiarDescripcion();
     cambiarEnlace();
     copiarEnlacePerfil();
-    
 }
 
 /*
@@ -166,7 +165,7 @@ function cambiarNombre() {
                 return; // No se necesitan cambios
             }
             if (!newUsername) {
-                alert("Por favor, ingresa un nombre de usuario.");
+                alert('Por favor, ingresa un nombre de usuario.');
                 return;
             }
             if (newUsername.length > maxCharacters) {
@@ -179,11 +178,11 @@ function cambiarNombre() {
 
             if (confirmed) {
                 try {
-                    const response = await enviarAjax('cambiar_nombre', { new_username: newUsername });
+                    const response = await enviarAjax('cambiar_nombre', {new_username: newUsername});
                     if (response.success) {
                         alert('Nombre de usuario actualizado con éxito.');
                         usernameInput.value = newUsername;
-                        originalUsername = newUsername
+                        originalUsername = newUsername;
                     } else {
                         alert('Error: ' + response.message);
                     }
@@ -225,7 +224,7 @@ function cambiarDescripcion() {
 
             if (confirmed) {
                 try {
-                    const response = await enviarAjax('cambiar_descripcion', { new_description: nuevaDescripcion });
+                    const response = await enviarAjax('cambiar_descripcion', {new_description: nuevaDescripcion});
                     if (response.success) {
                         alert('Descripción actualizada con éxito.');
                         descripcionInput.value = nuevaDescripcion;
@@ -275,7 +274,7 @@ function cambiarEnlace() {
 
             if (confirmed) {
                 try {
-                    const response = await enviarAjax('cambiar_enlace', { new_link: newLink });
+                    const response = await enviarAjax('cambiar_enlace', {new_link: newLink});
                     if (response.success) {
                         alert('Enlace actualizado con éxito.');
                         linkInput.value = newLink;
@@ -320,22 +319,22 @@ function selectorFanArtistaTipo() {
         fetch(ajaxUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: new URLSearchParams({
                 action: 'guardarTipoUsuario',
-                tipoUsuario: tipoUsuario,
-            }),
+                tipoUsuario: tipoUsuario
+            })
         })
-            .then((response) => response.json())
-            .then((data) => {
+            .then(response => response.json())
+            .then(data => {
                 if (data.success) {
                     location.reload(); // Recarga la página
                 } else {
                     console.error('Error al guardar tipo de usuario:', data.data);
                 }
             })
-            .catch((error) => {
+            .catch(error => {
                 console.error('Error en la solicitud AJAX:', error);
             });
     }
@@ -388,12 +387,13 @@ function copiarEnlacePerfil() {
     const botonesCompartir = document.querySelectorAll('.compartirPerfil');
 
     botonesCompartir.forEach(boton => {
-        boton.addEventListener('click', function() {
+        boton.addEventListener('click', function () {
             const username = this.getAttribute('data-username');
-            const enlacePerfil = `https://2upra.com/perfil/${username}`;
+            const enlacePerfil = `${siteConfig.homeUrl}/perfil/${username}`;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(enlacePerfil)
+                navigator.clipboard
+                    .writeText(enlacePerfil)
                     .then(() => {
                         alert('Enlace del perfil copiado al portapapeles: ' + enlacePerfil);
                     })

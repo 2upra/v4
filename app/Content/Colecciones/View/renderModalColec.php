@@ -57,7 +57,7 @@ function modalColeccion()
     );
 
     $user_collections = new WP_Query($args);
-    $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg'; // Imagen predeterminada
+    $default_image = site_url('/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg'); // Imagen predeterminada
 ?>
     <div class="modalColec modal" style="display: none;">
         <div class="colecciones">
@@ -66,14 +66,14 @@ function modalColeccion()
             <ul class="listaColeccion borde">
                 <? if (!$favoritos_id) : ?>
                     <li class="coleccion" id="favoritos" data-post_id="favoritos">
-                        <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt="">
+                        <img src="<? echo esc_url(site_url('/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg')); ?>" alt="">
                         <span>Favoritos</span>
                     </li>
                 <? endif; ?>
 
                 <? if (!$despues_id) : ?>
                     <li class="coleccion borde" id="despues" data-post_id="despues">
-                        <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt="">
+                        <img src="<? echo esc_url(site_url('/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg')); ?>" alt="">
                         <span>Usar más tarde</span>
                     </li>
                 <? endif; ?>
@@ -133,7 +133,7 @@ function obtenerListaColec()
         error_log("No se encontraron colecciones para el usuario ID: $current_user_id");
     }
 
-    $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg';
+    $default_image = site_url('/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg');
 
     ob_start();
 ?>

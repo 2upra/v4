@@ -170,37 +170,37 @@ function headGeneric()
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="https://2upra.com/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" sizes="57x57" href="https://2upra.com/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="https://2upra.com/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="https://2upra.com/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="https://2upra.com/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="https://2upra.com/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="https://2upra.com/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="https://2upra.com/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://2upra.com/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://2upra.com/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="https://2upra.com/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/favicon-16x16.png">
-    <link rel="manifest" href="https://2upra.com/manifest.json">
+    <link rel="icon" href="<?php echo esc_url(site_url('/favicon.ico')); ?>" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="57x57" href="<?php echo esc_url(site_url('/apple-icon-57x57.png')); ?>">
+    <link rel="apple-touch-icon" sizes="60x60" href="<?php echo esc_url(site_url('/apple-icon-60x60.png')); ?>">
+    <link rel="apple-touch-icon" sizes="72x72" href="<?php echo esc_url(site_url('/apple-icon-72x72.png')); ?>">
+    <link rel="apple-touch-icon" sizes="76x76" href="<?php echo esc_url(site_url('/apple-icon-76x76.png')); ?>">
+    <link rel="apple-touch-icon" sizes="114x114" href="<?php echo esc_url(site_url('/apple-icon-114x114.png')); ?>">
+    <link rel="apple-touch-icon" sizes="120x120" href="<?php echo esc_url(site_url('/apple-icon-120x120.png')); ?>">
+    <link rel="apple-touch-icon" sizes="144x144" href="<?php echo esc_url(site_url('/apple-icon-144x144.png')); ?>">
+    <link rel="apple-touch-icon" sizes="152x152" href="<?php echo esc_url(site_url('/apple-icon-152x152.png')); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo esc_url(site_url('/apple-icon-180x180.png')); ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?php echo esc_url(site_url('/android-icon-192x192.png')); ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo esc_url(site_url('/favicon-32x32.png')); ?>">
+    <link rel="icon" type="image/png" sizes="96x96" href="<?php echo esc_url(site_url('/favicon-96x96.png')); ?>">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo esc_url(site_url('/favicon-16x16.png')); ?>">
+    <link rel="manifest" href="<?php echo esc_url(site_url('/manifest.json')); ?>">
     <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="https://2upra.com/ms-icon-144x144.png">
+    <meta name="msapplication-TileImage" content="<?php echo esc_url(site_url('/ms-icon-144x144.png')); ?>">
     <meta name="theme-color" content="#ffffff">
 
     <!-- Etiquetas Open Graph para Facebook y otras plataformas -->
     <meta property="og:title" content="<?php echo get_the_title(); ?>" />
     <meta property="og:description" content="Social Media para artistas" />
-    <meta property="og:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all" />
-    <meta property="og:url" content="https://2upra.com" />
+    <meta property="og:image" content="<?php echo esc_url(wp_get_attachment_image_url(get_option('site_icon'), 'full')); ?>" />
+    <meta property="og:url" content="<?php echo esc_url(home_url('/')); ?>" />
     <meta property="og:type" content="website" />
 
     <!-- Etiquetas de Twitter Cards -->
     <meta property="og:title" content="<?php echo get_the_title(); ?>" />
     <meta name="twitter:title" content="Social Media para artistas">
     <meta name="twitter:description" content="Descripción de tu página que aparecerá al compartir.">
-    <meta name="twitter:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all">
+    <meta name="twitter:image" content="<?php echo esc_url(wp_get_attachment_image_url(get_option('site_icon'), 'full')); ?>">
     <meta name="twitter:site" content="@wandorius" />
 
 <?php
@@ -212,8 +212,9 @@ function preload_fonts()
     if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
         return;
     }
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
+    $theme_url = get_template_directory_uri();
+    echo '<link rel="preload" href="' . esc_url($theme_url . '/../2upra3v/assets/Fonts/SourceSans3-Regular.woff2') . '" as="font" type="font/woff2" crossorigin>';
+    echo '<link rel="preload" href="' . esc_url($theme_url . '/../2upra3v/assets/Fonts/SourceSans3-Bold.woff2') . '" as="font" type="font/woff2" crossorigin>';
 }
 add_action('wp_head', 'preload_fonts', 1);
 
@@ -233,8 +234,9 @@ add_action('wp_enqueue_scripts', 'encolar_sw_js');
 */
 
 //esto funciona cuando es local, tiene que sar el rror log de wp pro defecto spara todos los archivos 
-function escribirLog($mensaje, $archivo = '', $maxlineas = 10000) {
-    
+function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
+{
+
     // Intentar usar el error_log de WordPress por defecto
     if (is_object($mensaje) || is_array($mensaje)) {
         error_log(print_r($mensaje, true));
@@ -278,7 +280,6 @@ function escribirLog($mensaje, $archivo = '', $maxlineas = 10000) {
             } else {
                 error_log("escribirLog: No se pudo abrir el archivo: $archivo");
             }
-            
         } catch (Exception $e) {
             error_log("escribirLog: Excepción capturada: " . $e->getMessage());
             return false;
@@ -513,7 +514,19 @@ function scriptsOrdenados()
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
     //$error_log[] = "Script ajaxPage localizado.";
 
-
+    // Configuracion global de URLs para JavaScript
+    $upload_dir = wp_upload_dir();
+    wp_localize_script('ajaxPage', 'siteConfig', [
+        'siteUrl' => site_url(),
+        'homeUrl' => home_url(),
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'restUrl' => rest_url(),
+        'wsUrl' => 'wss://' . $_SERVER['HTTP_HOST'] . '/ws',
+        'uploadsUrl' => $upload_dir['baseurl'],
+        'uploadsPath' => trailingslashit(site_url()) . 'wp-content/uploads',
+        'themeUrl' => get_template_directory_uri(),
+        'defaultAvatar' => get_template_directory_uri() . '/assets/images/perfildefault.jpg'
+    ]);
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
     //$error_log[] = "Script en línea para genericAjax añadido con wpAdminUrl.";
@@ -617,7 +630,8 @@ add_action('clean_log_files_hook', 'limpiarLogs');
 
 function custom_site_icon($meta_tags)
 {
-    $meta_tags[] = sprintf('<link rel="icon" href="%s">', 'https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png');
+    $theme_url = get_template_directory_uri();
+    $meta_tags[] = sprintf('<link rel="icon" href="%s">', esc_url($theme_url . '/../2upra3v/assets/icons/favicon-96x96.png'));
     return $meta_tags;
 }
 add_filter('site_icon_meta_tags', 'custom_site_icon');

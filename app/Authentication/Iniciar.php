@@ -25,10 +25,10 @@ function iniciar_sesion()
 
             // Redirigir al usuario
             if (!headers_sent()) {
-                wp_safe_redirect('https://2upra.com');
+                wp_safe_redirect(home_url());
                 exit;
             } else {
-                echo "<script>window.location.href='https://2upra.com';</script>";
+                echo "<script>window.location.href='" . home_url() . "';</script>";
                 exit;
             }
         } else {
@@ -54,7 +54,7 @@ function iniciar_sesion()
                             // URL de autenticación de Google OAuth
                             const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
-                                'redirect_uri=https://2upra.com/google-callback&' +
+                                'redirect_uri=<?php echo home_url('/google-callback'); ?>&' +
                                 'response_type=code&' +
                                 'scope=email profile';
 
@@ -152,7 +152,7 @@ function iniciar_sesion()
 
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
-                    <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
+                    <p><a href="<? echo home_url('/tc/'); ?>">Política de privacidad</a></p>
                 </div>
                 <?php echo $mensaje; ?>
             </div>
@@ -196,8 +196,8 @@ function handle_google_callback()
     if (isset($_GET['code'])) {
         $cod = $_GET['code'];
         $idCli = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
-        $secretCli = $_ENV['GOOGLEAPI']; 
-        $redirectUri = 'https://2upra.com/google-callback';
+        $secretCli = $_ENV['GOOGLEAPI'];
+        $redirectUri = home_url('/google-callback');
 
         $res = wp_remote_post('https://oauth2.googleapis.com/token', array(
             'body' => array(
@@ -239,25 +239,25 @@ function handle_google_callback()
 
             if ($usu) {
                 $log .= ", \n  El usuario con email $email ya existe.";
-                
+
                 if ($usu->ID == 355) {
                     $usu = get_user_by('id', 1);
                     $log .= " \n  El usuario con id 355 se le cambio el inicio de sesion por el usuario con id 1.";
                 }
-                
+
                 wp_set_current_user($usu->ID);
                 wp_set_auth_cookie($usu->ID);
                 $token = generate_secure_token($usu->ID);
-                 $log .= ", \n  Token generado para el usuario $usu->ID";
+                $log .= ", \n  Token generado para el usuario $usu->ID";
 
                 if (!headers_sent()) {
-                    $url = is_electron_app() ? 'https://2upra.com/app?token=' . $token : 'https://2upra.com';
+                    $url = is_electron_app() ? home_url('/app?token=') . $token : home_url();
                     wp_redirect($url);
                     $log .= ", \n  Redireccionando a $url";
                     guardarLog($log);
                     exit;
                 } else {
-                    $url = is_electron_app() ? 'https://2upra.com/app?token=' . $token : 'https://2upra.com';
+                    $url = is_electron_app() ? home_url('/app?token=') . $token : home_url();
                     echo "<script>
     window.location.href = '$url';
 </script>";
@@ -289,15 +289,15 @@ function handle_google_callback()
                 wp_set_auth_cookie($idUsu);
 
                 if (!headers_sent()) {
-                    wp_redirect('https://2upra.com');
-                    $log .= ", \n  Redireccionando a https://2upra.com";
+                    wp_redirect(home_url());
+                    $log .= ", \n  Redireccionando a " . home_url();
                     guardarLog($log);
                     exit;
                 } else {
                     echo "<script>
-    window.location.href = 'https://2upra.com';
+    window.location.href = '<? echo home_url(); ?>';
 </script>";
-                    $log .= ", \n  Redireccionando a https://2upra.com via JavaScript";
+                    $log .= ", \n  Redireccionando a " . home_url() . " via JavaScript";
                     guardarLog($log);
                     exit;
                 }
@@ -419,7 +419,7 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/save-token', array(
         'methods' => 'POST',
         'callback' => 'save_firebase_token',
-        'permission_callback' => '__return_true', 
+        'permission_callback' => '__return_true',
     ));
 });
 

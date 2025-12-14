@@ -132,7 +132,6 @@ function actualizarMetaDatos($postId)
     if (isset($_POST['tienda']) && $_POST['tienda'] == '1') {
         registrarPrecios($postId);
     }
-
 }
 
 #Paso 2.1
@@ -420,7 +419,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         //guardarLog("No se pudo obtener el nombre de usuario del autor. Se usará 'Desconocido'.");
     }
 
-    $page_name = "2upra.com";
+    $page_name = parse_url(home_url(), PHP_URL_HOST);
 
     // Procesar archivo de audio ligero (128 kbps) con metadatos adicionales
     $nuevo_archivo_path_lite = $base_path . '_128k.mp3';

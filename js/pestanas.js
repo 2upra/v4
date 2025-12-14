@@ -40,7 +40,7 @@ function mostrarPestana(id) {
     //window.location.hash = id;
     const tabName = id.substring(1); // Eliminar el #
     const newUrl = window.location.pathname + id; // Mantener la ruta actual y agregar el hash
-    history.replaceState({ tab: tabName }, tabName, newUrl);
+    history.replaceState({tab: tabName}, tabName, newUrl);
     requestAnimationFrame(() => {
         document.getElementById('content').scrollTop = 0;
     });
@@ -52,7 +52,7 @@ function inicializarPestanas() {
     const pestañasExistentes = document.querySelectorAll('.tab-content .tab');
     const menuData = document.getElementById('menuData');
     let targetId = '';
-    
+
     // Obtener la pestaña activa desde el atributo data-active-tab
     let activeTab = menuData ? menuData.getAttribute('data-active-tab') : null;
 
@@ -73,7 +73,7 @@ function inicializarPestanas() {
     const enlaces = document.querySelectorAll(`${estaEnPerfil() ? '.tab-linksPerfil' : '.tab-links'} a`);
     if (enlaces.length > 0) {
         enlaces.forEach(a => {
-            a.addEventListener('click', function(e) {
+            a.addEventListener('click', function (e) {
                 e.preventDefault();
                 const targetTabId = this.getAttribute('href').substring(1);
                 mostrarPestana(this.getAttribute('href'));
@@ -99,7 +99,6 @@ function asignarPestanas() {
     const contenedorActivo = estaEnPerfil() ? adaptableTabsPerfil : adaptableTabs;
 
     if (menuData && contenedorActivo) {
-
         const tabs = menuData.querySelectorAll('[data-tab]');
         if (tabs.length === 0) {
             console.warn('No se encontraron elementos con [data-tab] para asignar pestañas.');
@@ -125,5 +124,5 @@ function asignarPestanas() {
 }
 
 function estaEnPerfil() {
-    return window.location.href.startsWith('https://2upra.com/perfil');
+    return window.location.href.startsWith(siteConfig.homeUrl + '/perfil');
 }

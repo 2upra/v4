@@ -129,23 +129,23 @@ function verificarCamposRs() {
         const momentocheck = document.getElementById('momentocheck');
         const exclusivoCheckbox = document.getElementById('exclusivocheck');
         const colabCheckbox = document.getElementById('colabcheck');
-        
+
         // Verificación de audiosData para múltiples posts
         if (audiosData.length > 1) {
             const individualPost = document.getElementById('individualPost');
             const multiplePost = document.getElementById('multiplePost');
-        
+
             if (!individualPost.checked && !multiplePost.checked) {
                 alert('Debe seleccionar al menos una opción: Post individual o múltiples, porque estás intentando subir varios audios :)');
                 return false;
             }
-        
+
             if (multiplePost.checked && (momentocheck.checked || exclusivoCheckbox.checked || colabCheckbox.checked)) {
                 alert('No puedes seleccionar "Múltiples" si también has seleccionado "Momento", "Exclusivo" o "Colaboración".');
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -205,7 +205,7 @@ async function envioRs() {
         };
 
         const isValidUrl = url => {
-            const requiredPrefix = 'https://2upra.com/wp-content/uploads';
+            const requiredPrefix = siteConfig.uploadsPath;
             return url.startsWith(requiredPrefix);
         };
 
@@ -853,7 +853,7 @@ async function selectorformtipo() {
             }
         } else {
             descargacheck.checked = false;
-            
+
             exclusivocheck.checked = false;
             colabcheck.checked = false;
             tiendacheck.checked = false;

@@ -19,7 +19,7 @@ function variablesColab($post_id = null)
 
     $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
     if (!$imagenPost) {
-        $imagenPost = 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/09/1ndoryu_1725478496.webp?quality=40&strip=all';
+        $imagenPost = site_url('/wp-content/uploads/2024/09/1ndoryu_1725478496.webp');
     }
     $imagenPostOp = img($imagenPost, 40, 'all');
 
@@ -220,6 +220,3 @@ function opcionesColabActivo($var)
 <?
     return ob_get_clean();
 }
-
-
-

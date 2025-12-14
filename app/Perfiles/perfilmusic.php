@@ -1,11 +1,12 @@
 <?
 
-function custom_user_profile_shortcode_music() {
+function custom_user_profile_shortcode_music()
+{
     $url_path = trim(parse_url(add_query_arg([]), PHP_URL_PATH), '/');
     $url_segments = explode('/', $url_path);
     $user_slug = end($url_segments);
     $user = get_user_by('slug', $user_slug);
-    
+
 
     if ($user !== false) {
         $user_id = $user->ID;
@@ -19,13 +20,13 @@ function custom_user_profile_shortcode_music() {
 
         $imagenPerfilId = get_user_meta($user_id, 'imagen_perfil_id', true);
         if ($imagenPerfilId) {
-            $image_attributes = wp_get_attachment_image_src($imagenPerfilId, 'medium'); 
+            $image_attributes = wp_get_attachment_image_src($imagenPerfilId, 'medium');
             if ($image_attributes) {
-                $imagen_perfil_url = $image_attributes[0]; 
+                $imagen_perfil_url = $image_attributes[0];
                 $imagen_html = '<img src="' . esc_url($imagen_perfil_url) . '" alt="Imagen de perfil" class="gravatar avatar avatar-96 um-avatar um-avatar-default" width="' . $image_attributes[1] . '" height="' . $image_attributes[2] . '" onerror="if ( ! this.getAttribute(\'data-load-error\') ){ this.setAttribute(\'data-load-error\', \'1\');this.setAttribute(\'src\', this.getAttribute(\'data-default\'));}" loading="lazy">';
             }
         } else {
-            $imagen_html = '<img src="https://2upra.com/wp-content/plugins/ultimate-member/assets/img/default_avatar.jpg" alt="Imagen de perfil" class="gravatar avatar avatar-96 um-avatar um-avatar-default lazyloaded" width="96" height="96" data-default="https://2upra.com/wp-content/plugins/ultimate-member/assets/img/default_avatar.jpg" onerror="if ( ! this.getAttribute(\'data-load-error\') ){ this.setAttribute(\'data-load-error\', \'1\');this.setAttribute(\'src\', this.getAttribute(\'data-default\'));}" loading="lazy">';
+            $imagen_html = '<img src="' . esc_url(site_url('/wp-content/plugins/ultimate-member/assets/img/default_avatar.jpg')) . '" alt="Imagen de perfil" class="gravatar avatar avatar-96 um-avatar um-avatar-default lazyloaded" width="96" height="96" data-default="' . esc_url(site_url('/wp-content/plugins/ultimate-member/assets/img/default_avatar.jpg')) . '" onerror="if ( ! this.getAttribute(\'data-load-error\') ){ this.setAttribute(\'data-load-error\', \'1\');this.setAttribute(\'src\', this.getAttribute(\'data-default\'));}" loading="lazy">';
         }
 
         $insignia_urls = get_insignia_urls();
@@ -86,7 +87,7 @@ function custom_user_profile_shortcode_music() {
             }
         }
 
-        if ($user_id === $current_user->ID) { 
+        if ($user_id === $current_user->ID) {
             $output .= '<button class="music custom-edit-profile-btn" onclick="abrirModalEditarPerfil()">Editar Perfil</button>';
         }
 
@@ -101,7 +102,8 @@ function custom_user_profile_shortcode_music() {
 }
 add_shortcode('custom_user_profile_music', 'custom_user_profile_shortcode_music');
 
-function enqueue_scripts42() {
+function enqueue_scripts42()
+{
     wp_enqueue_script('color-thief', 'https://cdn.jsdelivr.net/npm/colorthief/dist/color-thief.umd.js', array(), null, true);
     if (!wp_script_is('colormusic', 'registered')) {
         wp_register_script('colormusic', get_template_directory_uri() . '/js/colormusic.js', array('jquery', 'color-thief'), '1.0.3', true);
@@ -119,9 +121,10 @@ add_action('wp_enqueue_scripts', 'enqueue_scripts42');
 
 
 
-function presentacion_shortcode($atts) {
+function presentacion_shortcode($atts)
+{
     // Determina el usuario actual y el usuario de la URL, si es aplicable
-    $current_user_id = get_current_user_id();  
+    $current_user_id = get_current_user_id();
     $url_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $url_segments = explode('/', trim($url_path, '/'));
     $perfil_index = array_search('music', $url_segments);
@@ -132,7 +135,7 @@ function presentacion_shortcode($atts) {
     $saved_image = get_user_meta($user_id, 'presentacion_imagen', true);
     $atts = shortcode_atts(array(
         'texto' => $saved_text ?: 'Este es un texto de ejemplo blablabla, 1ndoryü tu patrona.',
-        'imagen' => $saved_image ?: 'https://2upra.com/wp-content/uploads/2024/03/GC1r9wVXgAA5e2T.jpg',
+        'imagen' => $saved_image ?: site_url('/wp-content/uploads/2024/03/GC1r9wVXgAA5e2T.jpg'),
     ), $atts);
 
     // Construye el HTML del shortcode
@@ -163,7 +166,8 @@ function presentacion_shortcode($atts) {
 add_shortcode('presentacion', 'presentacion_shortcode');
 
 
-function ajax_update_presentacion() {
+function ajax_update_presentacion()
+{
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     require_once(ABSPATH . 'wp-admin/includes/file.php');
     require_once(ABSPATH . 'wp-admin/includes/media.php');
@@ -171,8 +175,8 @@ function ajax_update_presentacion() {
     $user_id = get_current_user_id();
 
     $texto = isset($_POST['texto']) ? sanitize_text_field($_POST['texto']) : 'Texto predeterminado';
-    $imagen_url = isset($_POST['imagen']) ? esc_url_raw($_POST['imagen']) : ''; 
-    
+    $imagen_url = isset($_POST['imagen']) ? esc_url_raw($_POST['imagen']) : '';
+
     if (isset($_FILES['newImage']) && $_FILES['newImage']['size'] > 0) {
         $imagen_id = media_handle_upload('newImage', 0);
         if (is_wp_error($imagen_id)) {
@@ -203,20 +207,21 @@ add_action('wp_ajax_nopriv_update_presentacion', 'ajax_update_presentacion');
 
 
 
-function postrolaresumen() {
+function postrolaresumen()
+{
     global $post;
     $current_user_id = get_current_user_id();
     $author_id = get_the_author_meta('ID');
-    $user = get_userdata($author_id); 
+    $user = get_userdata($author_id);
     $insignia_urls = get_insignia_urls();
-    $insignia_html = ''; 
+    $insignia_html = '';
     $author_name = get_the_author();
-    $audio_id_lite = get_post_meta(get_the_ID(), 'post_audio_lite', true);   
+    $audio_id_lite = get_post_meta(get_the_ID(), 'post_audio_lite', true);
     $audio_id = get_post_meta(get_the_ID(), 'post_audio', true);
     $audio_url = wp_get_attachment_url($audio_id);
     $audio_lite = wp_get_attachment_url($audio_id_lite);
     $wave = get_post_meta(get_the_ID(), 'audio_waveform_image', true);
-    $duration = get_post_meta(get_the_ID(), 'audio_duration', true); 
+    $duration = get_post_meta(get_the_ID(), 'audio_duration', true);
 
     // Obtener información de 'likes' NUEVO
     $current_post_id = get_the_ID();
@@ -225,107 +230,108 @@ function postrolaresumen() {
     $liked_class = $user_has_liked ? 'liked' : 'not-liked';
 
     $post_content = get_the_content();
-    $post_content = wp_strip_all_tags($post_content); 
-    $post_content = esc_attr($post_content); 
+    $post_content = wp_strip_all_tags($post_content);
+    $post_content = esc_attr($post_content);
     $post_thumbnail_id = get_post_thumbnail_id();
-    $post_thumbnail_url = function_exists('jetpack_photon_url') 
-        ? jetpack_photon_url(wp_get_attachment_image_url($post_thumbnail_id, 'medium'), array('quality' => 50, 'strip' => 'all')) 
+    $post_thumbnail_url = function_exists('jetpack_photon_url')
+        ? jetpack_photon_url(wp_get_attachment_image_url($post_thumbnail_id, 'medium'), array('quality' => 50, 'strip' => 'all'))
         : wp_get_attachment_image_url($post_thumbnail_id, 'medium');
 
     ob_start();
-    ?>
+?>
     <li class="social-post rola" data-post-id="<? echo get_the_ID(); ?>">
         <input type="hidden" class="post-id" value="<? echo get_the_ID(); ?>" />
         <div class="rola social-post-content" style="font-size: 13px;">
-                    
-            <div id="audio-container-<? echo get_the_ID(); ?>" class="audio-container" 
-             data-imagen="<? echo esc_url($post_thumbnail_url); ?>"
-             data-title="<? echo $post_content; ?>"
-             data-author="<? echo esc_attr($author_name); ?>"
-             data-post-id="<? echo get_the_ID(); ?>"
-             data-artist="<? echo esc_attr($author_id); ?>"
-             data-liked="<? echo $user_has_liked ? 'true' : 'false'; ?>"
-             style="width: 40px; height: 40px; aspect-ratio: 1 / 1; position: relative;">
+
+            <div id="audio-container-<? echo get_the_ID(); ?>" class="audio-container"
+                data-imagen="<? echo esc_url($post_thumbnail_url); ?>"
+                data-title="<? echo $post_content; ?>"
+                data-author="<? echo esc_attr($author_name); ?>"
+                data-post-id="<? echo get_the_ID(); ?>"
+                data-artist="<? echo esc_attr($author_id); ?>"
+                data-liked="<? echo $user_has_liked ? 'true' : 'false'; ?>"
+                style="width: 40px; height: 40px; aspect-ratio: 1 / 1; position: relative;">
 
                 <img class="imagen-post" src="<? echo esc_url($post_thumbnail_url); ?>" alt="Imagen del post" style="position: absolute; border-radius: 3%; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
                 <div class="play-pause-sobre-imagen" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer; display: none;">
-                    <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;"> 
+                    <img src="<?php echo esc_url(site_url('/wp-content/uploads/2024/03/1.svg')); ?>" alt="Play" style="width: 50px; height: 50px;">
                 </div>
                 <audio id="audio-<? echo get_the_ID(); ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
             </div>
 
 
-    <div class="contentrola"><? the_content(); ?></div>
-    <div class="duracionrola"><? echo esc_html($duration); ?></div>
-    <div class="social-post-like rola">
-        <?
-        $current_post_id = get_the_ID();
-        $nonce = wp_create_nonce('like_post_nonce');
-        $like_count = contarLike($current_post_id);
-        like($current_post_id);
-        ?>          
-    </div>
+            <div class="contentrola"><? the_content(); ?></div>
+            <div class="duracionrola"><? echo esc_html($duration); ?></div>
+            <div class="social-post-like rola">
+                <?
+                $current_post_id = get_the_ID();
+                $nonce = wp_create_nonce('like_post_nonce');
+                $like_count = contarLike($current_post_id);
+                like($current_post_id);
+                ?>
+            </div>
 
-</li>
-  <?
-  return ob_get_clean();
+    </li>
+<?
+    return ob_get_clean();
 }
 
-function postcover() {
+function postcover()
+{
     global $post;
     $current_user_id = get_current_user_id();
     $author_id = get_the_author_meta('ID');
-    $user = get_userdata($author_id); 
+    $user = get_userdata($author_id);
     $insignia_urls = get_insignia_urls();
-    $insignia_html = ''; 
+    $insignia_html = '';
     $likes = get_post_meta(get_the_ID(), '_post_likes', true);
     $like_count = is_array($likes) ? count($likes) : 0;
-    $user_has_liked = is_array($likes) && in_array($current_user_id, $likes); 
-    $liked_class = $user_has_liked ? 'liked' : ''; 
+    $user_has_liked = is_array($likes) && in_array($current_user_id, $likes);
+    $liked_class = $user_has_liked ? 'liked' : '';
     $author_name = get_the_author();
-    $audio_id_lite = get_post_meta(get_the_ID(), 'post_audio_lite', true);   
+    $audio_id_lite = get_post_meta(get_the_ID(), 'post_audio_lite', true);
     $audio_id = get_post_meta(get_the_ID(), 'post_audio', true);
     $audio_url = wp_get_attachment_url($audio_id);
     $audio_lite = wp_get_attachment_url($audio_id_lite);
     $wave = get_post_meta(get_the_ID(), 'audio_waveform_image', true);
-    $duration = get_post_meta(get_the_ID(), 'audio_duration', true); 
+    $duration = get_post_meta(get_the_ID(), 'audio_duration', true);
     ob_start();
     $post_content = get_the_content();
-    $post_content = wp_strip_all_tags($post_content); 
-    $post_content = esc_attr($post_content); 
+    $post_content = wp_strip_all_tags($post_content);
+    $post_content = esc_attr($post_content);
     $post_thumbnail_id = get_post_thumbnail_id();
-    $post_thumbnail_url = function_exists('jetpack_photon_url') 
-        ? jetpack_photon_url(wp_get_attachment_image_url($post_thumbnail_id, 'medium'), array('quality' => 50, 'strip' => 'all')) 
+    $post_thumbnail_url = function_exists('jetpack_photon_url')
+        ? jetpack_photon_url(wp_get_attachment_image_url($post_thumbnail_id, 'medium'), array('quality' => 50, 'strip' => 'all'))
         : wp_get_attachment_image_url($post_thumbnail_id, 'medium');
 
-    ?>
+?>
     <li class="social-post cover" data-post-id="<? echo get_the_ID(); ?>">
         <input type="hidden" class="post-id" value="<? echo get_the_ID(); ?>" />
         <div class="cover social-post-content" style="font-size: 13px;">
-                    
-            <div id="audio-container-<? echo get_the_ID(); ?>" class="audio-container" 
-             data-imagen="<? echo esc_url($post_thumbnail_url); ?>"
-             data-title="<? echo $post_content; ?>"
-             data-author="<? echo esc_attr($author_name); ?>"
-             data-post-id="<? echo get_the_ID(); ?>"
-             data-artist="<? echo esc_attr($author_id); ?>"
-             data-liked="<? echo $user_has_liked ? 'true' : 'false'; ?>"
-             style="width: 150px;height: 150px;aspect-ratio: 1 / 1;position: relative;/* margin: auto; */">
+
+            <div id="audio-container-<? echo get_the_ID(); ?>" class="audio-container"
+                data-imagen="<? echo esc_url($post_thumbnail_url); ?>"
+                data-title="<? echo $post_content; ?>"
+                data-author="<? echo esc_attr($author_name); ?>"
+                data-post-id="<? echo get_the_ID(); ?>"
+                data-artist="<? echo esc_attr($author_id); ?>"
+                data-liked="<? echo $user_has_liked ? 'true' : 'false'; ?>"
+                style="width: 150px;height: 150px;aspect-ratio: 1 / 1;position: relative;/* margin: auto; */">
 
                 <img class="imagen-post" src="<? echo esc_url($post_thumbnail_url); ?>" alt="Imagen del post" style="position: absolute; border-radius: 3%; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
                 <div class="play-pause-sobre-imagen" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer; display: none;">
-                    <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;"> 
+                    <img src="<?php echo esc_url(site_url('/wp-content/uploads/2024/03/1.svg')); ?>" alt="Play" style="width: 50px; height: 50px;">
                 </div>
                 <audio id="audio-<? echo get_the_ID(); ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
             </div>
 
 
-        <div class="contentrola"><? the_content(); ?></div>
-        
-    <div class="social-post-like" style="display: none;">
-        <button class="post-like-button <? echo esc_attr($liked_class); ?>" data-post_id="<? echo get_the_ID(); ?>" data-nonce="<? echo wp_create_nonce('like_post_nonce'); ?>"><i class="fa-heart fas"></i></button>           
-    </div>
-</li>
-  <?
-  return ob_get_clean();
+            <div class="contentrola"><? the_content(); ?></div>
+
+            <div class="social-post-like" style="display: none;">
+                <button class="post-like-button <? echo esc_attr($liked_class); ?>" data-post_id="<? echo get_the_ID(); ?>" data-nonce="<? echo wp_create_nonce('like_post_nonce'); ?>"><i class="fa-heart fas"></i></button>
+            </div>
+    </li>
+<?
+    return ob_get_clean();
 }

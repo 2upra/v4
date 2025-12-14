@@ -28,7 +28,7 @@ $postId = get_the_ID();
                         </div>
                         <div class="botonesPost">
                             <? echo like($postId); ?>
-                            <button class="btnSinglePost"><a href="https://2upra.com/inversion/">Apoyar el proyecto</a></button>
+                            <button class="btnSinglePost"><a href="<?php echo esc_url(home_url('/inversion/')); ?>">Apoyar el proyecto</a></button>
                             <? echo botonComentar($postId, $colab); ?>
                         </div>
                     </article>

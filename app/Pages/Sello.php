@@ -6,7 +6,7 @@ function panel()
 ?>
 
     <div class="FLXVTQ">
-        <a href="https://2upra.com/">
+        <a href="<? echo home_url('/'); ?>">
             <p>Aquí podrás ver tus rolas enviadas a las plataformas de stream, pero aún estamos trabajando en esta funcionalidad.</p>
             <button class="borde">Volver</button>
         </a>

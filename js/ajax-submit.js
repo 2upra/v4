@@ -120,7 +120,7 @@ function forms_submit(form, submitBtnId) {
         try {
             const messages = await sendFormData(formData);
             alert(messages);
-            setTimeout(() => (window.location.href = 'https://2upra.com'), 99999999);
+            setTimeout(() => (window.location.href = siteConfig.homeUrl), 99999999);
         } catch (error) {
             alert('Error: ' + error);
             submitBtn.disabled = false;

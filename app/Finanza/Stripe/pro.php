@@ -16,7 +16,7 @@ function crear_sesion_pro(WP_REST_Request $request)
     \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
     $body = $request->get_json_params();
     $userId = isset($body['user_id']) ? intval($body['user_id']) : 0;
-    
+
     if (!$userId) {
         $error = 'Usuario no autenticado o ID no proporcionado.';
         stripeError($error);  // Log del error
@@ -28,8 +28,8 @@ function crear_sesion_pro(WP_REST_Request $request)
             'payment_method_types' => ['card'],
             'line_items' => [['price' => 'price_1PBgGfCdHJpmDkrrHorFUNaV', 'quantity' => 1]],
             'mode' => 'subscription',
-            'success_url' => 'https://2upra.com',
-            'cancel_url' => 'https://2upra.com',
+            'success_url' => home_url('/'),
+            'cancel_url' => home_url('/'),
             'client_reference_id' => $userId,
         ]);
 
@@ -96,6 +96,3 @@ function stripe_webhook_pro(WP_REST_Request $request)
         );
     }
 }
-
-
-

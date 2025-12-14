@@ -533,7 +533,7 @@ function audioPost($postId)
     <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
-            <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
+            <img src="<? echo esc_url(site_url('/wp-content/uploads/2024/03/1.svg')); ?>" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
         <audio id="audio-<? echo $postId; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
@@ -559,7 +559,7 @@ function audioPostList($postId)
     <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
-            <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
+            <img src="<? echo esc_url(site_url('/wp-content/uploads/2024/03/1.svg')); ?>" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
         <audio id="audio-<? echo $postId; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>

@@ -122,7 +122,7 @@ async function enviarComentario() {
             if (url === null) {
                 return true;
             }
-            const requiredPrefix = 'https://2upra.com/wp-content/uploads';
+            const requiredPrefix = siteConfig.uploadsPath;
             return url.startsWith(requiredPrefix);
         };
 
@@ -445,7 +445,7 @@ function cargarComentarios() {
     let paginaActual = 1;
     let cargando = false;
     const comentariosList = document.querySelector('.listComentarios');
-    
+
     //console.log('Función cargarComentarios iniciada.');
 
     function cargarPaginaComentario() {
@@ -464,7 +464,8 @@ function cargarComentarios() {
         console.log('Enviando datos:', data);
 
         enviarAjax('renderComentarios', data)
-            .then(data => { // Modificado: Ahora 'data' es directamente el objeto JSON
+            .then(data => {
+                // Modificado: Ahora 'data' es directamente el objeto JSON
                 console.log('Respuesta recibida:', data);
 
                 // Ya no necesitas JSON.parse()
@@ -479,12 +480,10 @@ function cargarComentarios() {
                 // }
 
                 if (data.noComentarios) {
-                    
                     console.log('No hay más comentarios o no hay comentarios.');
                     cargando = true; // Lo dejamos en true para que no intente cargar más páginas.
 
                     if (paginaActual === 1) {
-                        
                         comentariosList.innerHTML = data.html;
                     }
                     return;

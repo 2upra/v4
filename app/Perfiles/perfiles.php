@@ -20,7 +20,7 @@ function imagenPerfil($user_id)
     if (!empty($imagenPerfilId)) {
         $url = wp_get_attachment_url($imagenPerfilId);
     } else {
-        $url = 'https://2upra.com/wp-content/uploads/2024/05/perfildefault.jpg';
+        $url = site_url('/wp-content/uploads/2024/05/perfildefault.jpg');
     }
     return img($url);
 }

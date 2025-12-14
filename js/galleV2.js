@@ -22,7 +22,7 @@ function formatearTiempoRelativo(fecha) {
 
 function galle() {
     const channel = new BroadcastChannel('galle_chat_channel');
-    const wsUrl = 'wss://2upra.com/ws';
+    const wsUrl = siteConfig.wsUrl;
     const emisor = galleV2.emisor;
     let receptor = null;
     let conversacion = null;
@@ -192,7 +192,7 @@ function galle() {
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor: userId});
                     if (data?.success) {
-                        const imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                        const imagenPerfil = data.data.imagenPerfil || siteConfig.defaultAvatar;
                         const nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
                         userInfos.set(userId, {imagenPerfil, nombreUsuario});
                     } else {
@@ -499,7 +499,7 @@ function galle() {
             try {
                 const data = await enviarAjax('infoUsuario', {receptor});
                 if (data?.success) {
-                    imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                    imagenPerfil = data.data.imagenPerfil || siteConfig.defaultAvatar;
                     nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
                 } else {
                     console.error('Error del servidor:', data.message);

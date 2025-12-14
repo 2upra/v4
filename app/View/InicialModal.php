@@ -9,8 +9,8 @@ function modalTipoUsuario()
         return '';
     }
 
-    $fanDiv = img('https://2upra.com/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp');
-    $artistaBg = img('https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
+    $fanDiv = img(site_url('/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp'));
+    $artistaBg = img(site_url('/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp'));
     ob_start();
 ?>
     <div class="modal selectorModalUsuario" style="display: none;">

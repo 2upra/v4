@@ -125,7 +125,7 @@ function modalApp()
 
                     botonDespues.addEventListener('click', hideModalForDay);
                     botonDescargar.addEventListener('click', function() {
-                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra24122024a.apk";
+                        window.location.href = siteConfig.siteUrl + "/wp-content/uploads/2024/12/2upra24122024a.apk";
                         hideModalForDay();
                     });
                 });

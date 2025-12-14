@@ -73,10 +73,10 @@ if (!defined('ABSPATH')) {
                 $font_path_source_sans_3_semibold = get_template_directory_uri() . '/assets/Fonts/SourceSans3-SemiBold.woff2';
                 $font_path_source_sans_3_bold = get_template_directory_uri() . '/assets/Fonts/SourceSans3-Bold.woff2';
             } else {
-                $font_path_gothic = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf';
-                $font_path_source_sans_3_regular = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2';
-                $font_path_source_sans_3_semibold = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-SemiBold.woff2';
-                $font_path_source_sans_3_bold = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2';
+                $font_path_gothic = site_url('/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf');
+                $font_path_source_sans_3_regular = site_url('/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2');
+                $font_path_source_sans_3_semibold = site_url('/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-SemiBold.woff2');
+                $font_path_source_sans_3_bold = site_url('/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2');
             }
             ?>@font-face {
                 font-family: 'Gothic №60';
@@ -412,7 +412,7 @@ if (!defined('ABSPATH')) {
                     <div class="A1806242">
                         <button><a href="<?php echo home_url('/perfil/'); ?>">Perfil</a></button>
                         <button class="reporte">Reportar un error</button>
-                        <button class="no-ajax"><a href="https://2upra.com/wp-content/uploads/2024/12/2upra24122024a.apk">App Android</a></button>
+                        <button class="no-ajax"><a href="<?php echo esc_url(site_url('/wp-content/uploads/2024/12/2upra24122024a.apk')); ?>">App Android</a></button>
                         <button class="no-ajax"><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">Sync Windows</a></button>
 
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>

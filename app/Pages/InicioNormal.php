@@ -41,25 +41,25 @@ function inicio()
         <?
         $images = [
             [
-                'url' => 'https://2upra.com/wp-content/uploads/2024/05/0177.png',
+                'url' => site_url('/wp-content/uploads/2024/05/0177.png'),
                 'alt' => 'Recursos gratuitos',
                 'title' => 'Recursos gratuitos para artistas',
                 'description' => 'Accede a una biblioteca exclusiva de samples, plugins y sample packs de alta calidad, actualizados semanalmente. Descarga y utiliza estos recursos sin costo para impulsar tu creatividad musical.'
             ],
             [
-                'url' => 'https://2upra.com/wp-content/uploads/2024/05/fsfs5.png',
+                'url' => site_url('/wp-content/uploads/2024/05/fsfs5.png'),
                 'alt' => 'Colaboraciones',
                 'title' => 'Fomenta la colaboración',
                 'description' => 'Publica tus proyectos musicales y conecta con otros artistas talentosos. Encuentra colaboradores para llevar tus ideas al siguiente nivel y crea música excepcional.'
             ],
             [
-                'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
+                'url' => site_url('/wp-content/uploads/2024/05/asfsdf4.png'),
                 'alt' => 'Vende tus trabajos',
                 'title' => 'Monetiza tu música',
                 'description' => 'Publica tus beats y composiciones en nuestra plataforma con comisiones bajas y sin límites de subida. Alcanza un público global y genera ingresos por tu talento musical.'
             ],
             [
-                'url' => 'https://2upra.com/wp-content/uploads/2024/05/adsfadsf4.png',
+                'url' => site_url('/wp-content/uploads/2024/05/adsfadsf4.png'),
                 'alt' => 'Sello emergente',
                 'title' => 'Sello discográfico emergente',
                 'description' => 'Te apoyamos en la distribución, promoción y alcance de tu música. Nuestro sello emergente te brinda las herramientas y el apoyo necesarios para que tu música llegue a un público más amplio.'
@@ -90,7 +90,7 @@ function inicio()
                     ¡Descárgala ahora y descubre todo lo que puedes lograr!</p>
             </div>
             <div class="spaceimagen XX8">
-                <img src="https://2upra.com/wp-content/uploads/2024/05/asdfar4.png" alt="Descargar App">
+                <img src="<? echo esc_url(site_url('/wp-content/uploads/2024/05/asdfar4.png')); ?>" alt="Descargar App">
             </div>
         </div>
     </div>
