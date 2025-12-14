@@ -1,8 +1,9 @@
-<?
+<?php
 
-function tablaBloqueo() {
+function tablaBloqueo()
+{
     global $wpdb;
-    $tabla_bloqueo = $wpdb->prefix . 'bloqueo'; 
+    $tabla_bloqueo = $wpdb->prefix . 'bloqueo';
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE IF NOT EXISTS $tabla_bloqueo (
@@ -21,18 +22,19 @@ function tablaBloqueo() {
 
 
 
-function guardarBloqueo() {
+function guardarBloqueo()
+{
     global $wpdb;
     $tabla_bloqueo = $wpdb->prefix . 'bloqueo';
     $usuario_actual = get_current_user_id();
     $post_id = intval($_POST['post_id']);
     $post = get_post($post_id);
-    
+
     if (!$post) {
         wp_send_json_error('Post no encontrado.');
         return;
     }
-    
+
     $autor_id = $post->post_author;
 
     // Verificar si el autor es un administrador
@@ -40,13 +42,13 @@ function guardarBloqueo() {
         wp_send_json_error('Pero que haces boludo?');
         return;
     }
-    
+
     $bloqueo_existente = $wpdb->get_var($wpdb->prepare(
         "SELECT id FROM $tabla_bloqueo WHERE idUser = %d AND idBloqueado = %d",
         $usuario_actual,
         $autor_id
     ));
-    
+
     if ($bloqueo_existente) {
         $wpdb->delete($tabla_bloqueo, array(
             'idUser' => $usuario_actual,
@@ -63,24 +65,25 @@ function guardarBloqueo() {
 }
 add_action('wp_ajax_guardarBloqueo', 'guardarBloqueo');
 
-function quitarBloqueo() {
+function quitarBloqueo()
+{
     global $wpdb;
     $tabla_bloqueo = $wpdb->prefix . 'bloqueo';
     $usuario_actual = get_current_user_id();
     $post_id = intval($_POST['post_id']);
     $post = get_post($post_id);
-    
+
     if (!$post) {
         wp_send_json_error('Post no encontrado.');
         return;
     }
-    
+
     $autor_id = $post->post_author;
     $resultado = $wpdb->delete($tabla_bloqueo, array(
         'idUser' => $usuario_actual,
         'idBloqueado' => $autor_id
     ));
-    
+
     if ($resultado !== false) {
         wp_send_json_success('Bloqueo eliminado.');
     } else {

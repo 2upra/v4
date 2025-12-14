@@ -1,4 +1,4 @@
-<?
+<?php
 
 // Redirigir URLs con /tag/ a búsqueda personalizada
 
@@ -54,6 +54,18 @@ add_action('wp_head', 'personalizar_estilos_wp_admin_bar');
 
 function nonAdminRedirect()
 {
+    // Debug logging
+    try {
+        $logger = \Theme\V4\Services\Logger::obtenerInstancia();
+        $logger->info('debug', 'Checking admin access', [
+            'user_id' => get_current_user_id(),
+            'is_admin_check' => current_user_can('administrator'),
+            'doing_ajax' => wp_doing_ajax()
+        ]);
+    } catch (\Throwable $e) {
+        error_log('Logger error: ' . $e->getMessage());
+    }
+
     if (!current_user_can('administrator') && !wp_doing_ajax()) {
         wp_redirect(home_url());
         exit;
@@ -124,7 +136,8 @@ function mantener_sesion_activa()
 
 add_action('init', 'mantener_sesion_activa');
 
-function mantenerSesion() {
+function mantenerSesion()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado.');
     }
@@ -135,28 +148,32 @@ function mantenerSesion() {
 
 add_action('wp_ajax_mantener_sesion_viva', 'mantenerSesion');
 
-function tiempo_expiracion_cookies($expira, $userId, $recordar) {
+function tiempo_expiracion_cookies($expira, $userId, $recordar)
+{
     // 315360000 segundos = 10 años.
     $log = "Tiempo de expiración de la cookie para el usuario $userId: 315360000 segundos";
     guardarLog($log);
-    return 315360000; 
+    return 315360000;
 }
 add_filter('auth_cookie_expiration', 'tiempo_expiracion_cookies', 99, 3);
 
 
-function agregarReglaReescritura() {
+function agregarReglaReescritura()
+{
     add_rewrite_rule('^sample/([0-9]+)/?$', 'index.php?p=$matches[1]&post_type=social_post', 'top');
 }
 add_action('init', 'agregarReglaReescritura', 10, 0);
 
-function modificarConsultaPrincipal($consulta) {
+function modificarConsultaPrincipal($consulta)
+{
     if (!is_admin() && $consulta->is_main_query() && $consulta->get('p') && $consulta->get('post_type') === 'social_post') {
         $consulta->set('name', '');
     }
 }
 add_action('pre_get_posts', 'modificarConsultaPrincipal');
 
-function forzarPlantillaSocialPost($template) {
+function forzarPlantillaSocialPost($template)
+{
     global $wp_query;
     if (isset($wp_query->query_vars['post_type']) && $wp_query->query_vars['post_type'] === 'social_post' && isset($wp_query->query_vars['p'])) {
         $plantilla = locate_template('single-social_post.php');
