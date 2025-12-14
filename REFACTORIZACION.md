@@ -192,7 +192,7 @@ $likeService = new LikeService();
 | 2.5e | Migrar resto de `app/Content/`                | ✅ Completado |
 | 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado |
 | 2.6b | Migrar `app/Authentication/`                  | ✅ Completado |
-| 2.6c | Migrar `app/AlgoritmoPost/`                   | ⏳ Pendiente  |
+| 2.6c | Migrar `app/AlgoritmoPost/`                   | ✅ Completado |
 | 2.6d | Migrar `app/Functions/`                       | ⏳ Pendiente  |
 | 2.6e | Migrar resto de `/app/`                       | ⏳ Pendiente  |
 | 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final   |
@@ -359,6 +359,14 @@ $likeService = new LikeService();
   - Wrappers creados en `app/deprecated/`: `auth.php`
   - Funciones migradas: iniciar_sesion, registrar_usuario, handle_google_callback, generate_secure_token, verify_secure_token, save_firebase_token, is_electron_app
   - Mejoras: tipado estricto, Logger integrado, separación Service/Controller/Component, detección de navegadores embebidos
+- **[2.6c]** Migración COMPLETA de AlgoritmoPost:
+  - `src/Services/AlgoritmoService.php` - Algoritmo de recomendación (~650 líneas: calcularFeedPersonalizado, puntos por intereses, identificadores, similitud, decaimiento)
+  - `src/Services/InteresService.php` - Gestión de intereses del usuario (~270 líneas: generarMetaDeIntereses, obtenerLikesDelUsuario)
+  - FeedService actualizado para usar AlgoritmoService e InteresService directamente
+  - **ELIMINADA** carpeta `app/AlgoritmoPost/` completamente
+  - Wrappers creados en `app/deprecated/`: `algoritmo.php`
+  - Funciones migradas: calcularFeedPersonalizado, calcularPuntosParaPost, calcularPuntosIntereses, calcularPuntosIdentifier, calcularPuntosSimilarTo, getDecayFactor, generarMetaDeIntereses, obtenerLikesDelUsuario, actualizarIntereses
+  - Mejoras: arquitectura OOP con Singleton, tipado estricto, Logger integrado, separación de responsabilidades
 
 ---
 

@@ -234,9 +234,9 @@ class FeedService
             $intereses = $this->obtenerInteresesUsuario($userId);
             $vistas = $this->vistasDatos($userId);
 
-            if (function_exists('generarMetaDeIntereses')) {
-                generarMetaDeIntereses($userId);
-            }
+            /* Generar/actualizar intereses del usuario */
+            $interesService = InteresService::obtenerInstancia();
+            $interesService->generarMetaDeIntereses($userId);
 
             $postsIds = $this->obtenerIdsPostsRecientes();
             if (empty($postsIds)) {
@@ -496,14 +496,14 @@ class FeedService
     }
 
     /**
-     * Calcula el feed (wrapper para la función global).
+     * Calcula el feed personalizado usando el AlgoritmoService.
      * 
      * @param int $userId ID del usuario
      * @param string $identificador Identificador
      * @param string $similar Similar
      * @param string|null $tipoUsuario Tipo de usuario
      * @param array|null $filtrosUsuario Filtros
-     * @return array|false
+     * @return array
      */
     public function calcularFeed(
         int $userId,
@@ -511,11 +511,16 @@ class FeedService
         string $similar = '',
         ?string $tipoUsuario = null,
         ?array $filtrosUsuario = null
-    ) {
-        if (function_exists('calcularFeedPersonalizado')) {
-            return calcularFeedPersonalizado($userId, $identificador, $similar, $tipoUsuario, $filtrosUsuario);
-        }
-        return [];
+    ): array {
+        $algoritmoService = AlgoritmoService::obtenerInstancia();
+        $similarTo = !empty($similar) ? (int)$similar : null;
+
+        return $algoritmoService->calcularFeedPersonalizado(
+            $userId,
+            $identificador,
+            $similarTo,
+            $tipoUsuario
+        );
     }
 
     /**
