@@ -131,8 +131,24 @@ class ScriptsManager
      */
     public function inicializar(): void
     {
+        add_action('wp_enqueue_scripts', [$this, 'encolarEstilos']);
         add_action('wp_enqueue_scripts', [$this, 'encolarScripts']);
         add_action('wp_enqueue_scripts', [$this, 'encolarScriptVH']);
+    }
+
+    /**
+     * Encolar estilos CSS del tema.
+     *
+     * @return void
+     */
+    public function encolarEstilos(): void
+    {
+        wp_enqueue_style(
+            'tema-principal',
+            get_stylesheet_uri(),
+            [],
+            $this->obtenerVersion()
+        );
     }
 
     /**
@@ -444,4 +460,3 @@ function scriptsOrdenados()
 {
     // Mantenida por compatibilidad - ScriptsManager se encarga ahora
 }
-
