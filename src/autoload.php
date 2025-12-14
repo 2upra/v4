@@ -1,12 +1,12 @@
 <?php
 
 /**
- * Autoloader PSR-4 para el namespace Theme\V4.
+ * Autoloader PSR-4 para el namespace Kamples.
  * 
  * Este archivo implementa autoloading PSR-4 para las clases en /src/.
  * Permite usar namespaces y cargar clases automáticamente.
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
  */
 
@@ -16,32 +16,31 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Registrar el autoloader para el namespace Theme\V4.
+ * Registrar el autoloader para el namespace Kamples.
  */
 spl_autoload_register(function ($clase) {
-    // Namespace base del tema
-    $prefijo = 'Theme\\V4\\';
+    // Prefijo del namespace base para el tema
+    $prefix = 'Kamples\\';
 
-    // Directorio base para el namespace
-    $directorioBase = get_template_directory() . '/src/';
+    // Directorio base para el namespace (usando __DIR__ que es más seguro que get_template_directory)
+    $base_dir = __DIR__ . '/';
 
     // Verificar si la clase usa el prefijo del namespace
-    $longitudPrefijo = strlen($prefijo);
-    if (strncmp($prefijo, $clase, $longitudPrefijo) !== 0) {
+    $len = strlen($prefix);
+    if (strncmp($prefix, $clase, $len) !== 0) {
         // La clase no pertenece a este namespace
         return;
     }
 
     // Obtener el nombre relativo de la clase
-    $claseRelativa = substr($clase, $longitudPrefijo);
+    $relative_class = substr($clase, $len);
 
     // Construir la ruta del archivo
-    // Reemplazar separadores de namespace con separadores de directorio
-    $archivo = $directorioBase . str_replace('\\', '/', $claseRelativa) . '.php';
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
 
     // Cargar el archivo si existe
-    if (file_exists($archivo)) {
-        require $archivo;
+    if (file_exists($file)) {
+        require $file;
     }
 });
 
@@ -55,7 +54,7 @@ spl_autoload_register(function ($clase) {
  */
 function servicio(string $nombreServicio)
 {
-    $claseCompleta = "Theme\\V4\\Services\\{$nombreServicio}";
+    $claseCompleta = "Kamples\\Services\\{$nombreServicio}";
 
     if (class_exists($claseCompleta)) {
         if (method_exists($claseCompleta, 'obtenerInstancia')) {

@@ -6,7 +6,7 @@
  * Este archivo ha sido refactorizado para seguir principios SOLID.
  * Las responsabilidades se han dividido en módulos dentro de /inc/.
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
  * @see REFACTORIZACION.md para el historial de cambios
  */
@@ -31,7 +31,7 @@ require_once get_template_directory() . '/inc/Setup/scripts.php';
 // AUTOLOADER PARA /src/ (código refactorizado con namespaces)
 // =============================================================================
 
-// Cargar autoloader PSR-4 para namespace Theme\V4
+// Cargar autoloader PSR-4 para namespace Kamples
 require_once get_template_directory() . '/src/autoload.php';
 
 // =============================================================================

@@ -6,11 +6,11 @@
  * Encapsula toda la lógica de negocio relacionada con seguir/dejar de seguir
  * usuarios y obtener contadores de seguidores/seguidos.
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
  */
 
-namespace Theme\V4\Services;
+namespace Kamples\Services;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {

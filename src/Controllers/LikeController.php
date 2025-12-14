@@ -6,13 +6,13 @@
  * Maneja las solicitudes AJAX relacionadas con likes,
  * favoritos y dislikes de posts.
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
  */
 
-namespace Theme\V4\Controllers;
+namespace Kamples\Controllers;
 
-use Theme\V4\Services\LikeService;
+use Kamples\Services\LikeService;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {

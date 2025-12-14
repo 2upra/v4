@@ -79,30 +79,31 @@ Este es un tema de WordPress para una aplicación social/musical. El código fue
 │   ├── Utils/               # Utilidades y helpers
 │   └── Security/            # Funciones de seguridad
 │
-├── src/                     # CÓDIGO REFACTORIZADO (con namespaces)
+├── src/                     # CÓDIGO REFACTORIZADO (namespace Kamples)
 │   ├── autoload.php         # Autoloader PSR-4
-│   ├── Core/                # Clases base del tema
+│   ├── Core/                # Clases base (DatabaseMigrations, etc.)
 │   ├── Services/            # Servicios (lógica de negocio)
 │   ├── Controllers/         # Controladores (AJAX, REST API)
 │   ├── Models/              # Modelos de datos
 │   └── Views/               # Componentes de vista
+│       └── Components/      # LikeButtons, ChatBox, ChatList
 │
 ├── app/                     # CÓDIGO LEGACY (pendiente de refactorizar)
-│   ├── Functions/           # 23 archivos - funciones sueltas
+│   ├── deprecated/          # Wrappers temporales (SE ELIMINARÁN)
+│   ├── Functions/           # Funciones legacy
 │   ├── Content/             # 36 archivos - contenido y posts
-│   ├── Chat/                # Sistema de chat
 │   ├── Finanza/             # Sistema financiero/Stripe
 │   └── ...                  # Otros módulos legacy
 │
-└── js/                      # Scripts JavaScript (se cargan automáticamente)
+└── js/                      # Scripts JavaScript
 ```
 
 ### 7. Namespace del Tema
 
-Las clases refactorizadas usan el namespace `Theme\V4`:
+Las clases refactorizadas usan el namespace `Kamples`:
 
 ```php
-namespace Theme\V4\Services;
+namespace Kamples\Services;
 
 class LikeService
 {
@@ -112,7 +113,7 @@ class LikeService
 
 Uso:
 ```php
-use Theme\V4\Services\LikeService;
+use Kamples\Services\LikeService;
 
 $likeService = new LikeService();
 ```
@@ -135,61 +136,58 @@ $likeService = new LikeService();
 
 ### Fase 2: Migrar `/app/` a `/src/` ⬅️ **ACTUAL** (PRIORIDAD)
 
-#### Estrategia de Migración
+#### Reglas de Migración (OBLIGATORIAS)
 
-La idea es **empezar de cero** en `/src/` con código limpio:
+> **OBJETIVO FINAL:** La carpeta `/app/` debe quedar VACÍA.
 
-1. **`/app/`** = Código legacy (funciones sueltas, sin estructura)
-2. **`/src/`** = Código refactorizado (clases, namespaces, SOLID)
+1. **Migración COMPLETA por módulo**
+   - Al migrar un módulo, TODO su código debe ir a `/src/`
+   - Lógica de negocio → `src/Services/`
+   - Handlers AJAX/REST → `src/Controllers/`
+   - Renderizado HTML → `src/Views/Components/`
+   - NO dejar funciones sueltas en archivos legacy
 
-**Proceso por cada módulo:**
-1. Analizar el archivo en `/app/`
-2. Crear clase equivalente en `/src/` con namespace `Theme\V4`
-3. Mantener funciones wrapper en `/app/` que llamen a la nueva clase
-4. Cuando todo funcione, eliminar el archivo de `/app/`
+2. **Wrappers temporales van a `/app/deprecated/`**
+   - Los wrappers de compatibilidad van a `/app/deprecated/nombreModulo.php`
+   - Cada wrapper debe tener `@deprecated` con la alternativa correcta
+   - El archivo original en `/app/` se **ELIMINA** después de migrar
 
-**Ejemplo de migración:**
-```php
-// ANTES: app/Functions/likes.php
-function manejarLike() { ... }
-function likeAccion($postId, $userId) { ... }
+3. **Estructura destino en `/src/`**
+   ```
+   src/
+   ├── autoload.php           # PSR-4 autoloader (namespace Kamples)
+   ├── Services/              # Lógica de negocio
+   │   ├── LikeService.php
+   │   ├── ChatService.php
+   │   └── SeguirService.php
+   ├── Controllers/           # Handlers AJAX y REST API
+   │   ├── LikeController.php
+   │   ├── ChatController.php
+   │   └── SeguirController.php
+   ├── Views/                 # Componentes de renderizado
+   │   └── Components/
+   │       └── LikeButtons.php
+   └── Models/                # Modelos de datos (futuro)
+   ```
 
-// DESPUÉS: src/Services/LikeService.php
-namespace Theme\V4\Services;
-
-class LikeService 
-{
-    public function manejar(): array { ... }
-    public function accion(int $postId, int $userId): void { ... }
-}
-
-// WRAPPER temporal en app/Functions/likes.php
-function manejarLike() {
-    return (new \Theme\V4\Services\LikeService())->manejar();
-}
-```
+4. **Estructura temporal en `/app/deprecated/`**
+   ```
+   app/deprecated/
+   ├── likes.php              # Wrappers deprecados de likes
+   ├── seguir.php             # Wrappers deprecados de seguir
+   └── chat.php               # Wrappers deprecados de chat
+   ```
 
 #### Pasos de la Fase 2
 | Paso | Descripción                                         | Estado       |
 | ---- | --------------------------------------------------- | ------------ |
 | 2.1  | Crear estructura `/src/` con autoloader PSR-4       | ✅ Completado |
-| 2.2  | Migrar `app/Functions/likes.php` → `src/Services/`  | ✅ Completado |
-| 2.3  | Migrar `app/Functions/seguir.php` → `src/Services/` | ✅ Completado |
-| 2.4  | Migrar `app/Chat/` → `src/Services/ChatService.php` | 🚧 Parcial    |
+| 2.2  | Migrar `app/Functions/likes.php` completo           | ✅ Completado |
+| 2.3  | Migrar `app/Functions/seguir.php` completo          | ✅ Completado |
+| 2.4  | Migrar `app/Chat/` completo                         | ✅ Completado |
 | 2.5  | Migrar `app/Content/` → `src/Services/` y `Models/` | ⏳ Pendiente  |
 | 2.6  | Migrar `app/Finanza/` → `src/Services/`             | ⏳ Pendiente  |
-| 2.7  | Eliminar `/app/` cuando esté vacío                  | ⏳ Pendiente  |
-
-#### Estructura de `/src/`
-```
-src/
-├── autoload.php           # Carga automática de clases PSR-4
-├── Core/                  # Clases base (abstract, interfaces, traits)
-├── Services/              # Lógica de negocio (LikeService, ChatService, etc.)
-├── Controllers/           # Handlers de AJAX y REST API
-├── Models/                # Modelos de datos (Post, User, Coleccion, etc.)
-└── Views/                 # Componentes de vista reutilizables
-```
+| 2.7  | Migrar resto de `/app/` y eliminar deprecated       | ⏳ Pendiente  |
 
 
 ### Fase 3: Limpiar `header.php`
@@ -249,7 +247,7 @@ src/
   - Solo se especifican excepciones (dependencias, usuarios logueados)
 - **[1.5]** `functions.php` reducido de 715 a ~310 líneas (56% reducción)
 - **[2.0]** Nueva estructura de carpetas:
-  - `/src/` - Código refactorizado con namespaces (Theme\V4)
+  - `/src/` - Código refactorizado con namespaces (Kamples)
   - `/app/` - Código legacy pendiente de refactorizar
   - `src/autoload.php` - Autoloader PSR-4 para clases en /src/
 - **[FIX]** Restauradas funciones eliminadas: `incluirArchivos`, `loadingBar`, `limpiarLogs`
@@ -263,9 +261,16 @@ src/
   - `src/Controllers/SeguirController.php` - Handler AJAX (105 líneas)
   - `app/Functions/seguir.php` - Convertido a wrappers
 - **[2.4]** Migrado Core del Chat:
-  - `src/Services/ChatService.php` - Gestión de tokens y seguridad
-  - `src/Controllers/ChatController.php` - Endpoints REST y AJAX
-  - `app/Chat/api.php` y `auxiliares.php` - Refactorizados a wrappers
+  - `src/Services/ChatService.php` - Gestión de tokens, mensajes y conversaciones
+  - `src/Controllers/ChatController.php` - Endpoints REST y AJAX (360+ líneas)
+- **[2.4+]** Migración COMPLETA de Chat:
+  - `src/Views/Components/ChatBox.php` - Vista del modal de chat
+  - `src/Views/Components/ChatList.php` - Vista de lista de conversaciones
+  - `src/Views/Components/LikeButtons.php` - Botones de like refactorizados
+  - `src/Core/DatabaseMigrations.php` - Migraciones de tablas centralizadas
+  - **ELIMINADA** carpeta `app/Chat/` completamente
+  - Wrappers movidos a `app/deprecated/chat.php`
+- **[NAMESPACE]** Renombrado namespace global de `Theme\V4` a `Kamples`
 - **[FIX]** Estandarización de logs: Reemplazado `error_log` por `Logger::obtenerInstancia()` en todos los servicios y controladores nuevos.
 
 ---

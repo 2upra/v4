@@ -6,16 +6,18 @@
  * Encapsula la lógica de seguridad (tokens), mensajería y utilidades
  * relacionadas con el chat Galle v2.
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
  */
 
-namespace Theme\V4\Services;
+namespace Kamples\Services;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
+
+use Exception;
 
 class ChatService
 {
@@ -160,6 +162,200 @@ class ChatService
             $semanas = floor($diferencia / 604800);
             return "$semanas semana" . ($semanas > 1 ? 's' : '');
         }
+    }
+
+    /**
+     * Guardar un nuevo mensaje en la base de datos.
+     *
+     * @param int    $emisor         ID del usuario emisor.
+     * @param int    $receptor       ID del usuario receptor (puede ser 0 si hay conversacion_id).
+     * @param string $mensaje        Contenido del mensaje.
+     * @param mixed  $adjunto        Datos adjuntos (opcional).
+     * @param mixed  $metadata       Metadatos adicionales (opcional).
+     * @param int|null $conversacionId ID de la conversación (opcional).
+     * @return int ID del mensaje guardado.
+     * @throws Exception Si ocurre un error al guardar.
+     */
+    public function guardarMensaje(int $emisor, int $receptor, string $mensaje, $adjunto = null, $metadata = null, ?int $conversacionId = null): int
+    {
+        global $wpdb;
+
+        $tablaMensajes = $wpdb->prefix . 'mensajes';
+        $tablaConversacion = $wpdb->prefix . 'conversacion';
+
+        // Iniciar transacción
+        $wpdb->query('START TRANSACTION');
+
+        try {
+            // Resolver ID de conversación
+            if ($conversacionId) {
+                $this->log("Usando la conversación existente con ID: $conversacionId");
+            } else {
+                $conversacionId = $this->obtenerConversacionId($emisor, $receptor, true);
+            }
+
+            // Guardar mensaje
+            $datosMensaje = [
+                'conversacion' => $conversacionId,
+                'emisor' => $emisor,
+                'mensaje' => $mensaje,
+                'fecha' => current_time('mysql'),
+                'adjunto' => isset($adjunto) ? json_encode($adjunto) : null,
+                'metadata' => isset($metadata) ? json_encode($metadata) : null,
+            ];
+
+            $resultado = $wpdb->insert($tablaMensajes, $datosMensaje);
+
+            if ($resultado === false) {
+                throw new Exception("Error al insertar el mensaje: " . $wpdb->last_error);
+            }
+
+            $mensajeId = $wpdb->insert_id;
+
+            // Commit transacción
+            $wpdb->query('COMMIT');
+
+            $this->log("Mensaje guardado con ID: $mensajeId en la conversación: $conversacionId");
+            return $mensajeId;
+        } catch (Exception $e) {
+            // Rollback en caso de error
+            $wpdb->query('ROLLBACK');
+            $this->log("Error al guardar mensaje: " . $e->getMessage(), 'ERROR');
+            throw $e;
+        }
+    }
+
+    /**
+     * Obtener o crear una conversación entre dos usuarios.
+     *
+     * @param int  $user1 ID del usuario 1.
+     * @param int  $user2 ID del usuario 2.
+     * @param bool $crearSiNoExiste Crear si no existe.
+     * @return int|null ID de la conversación o null.
+     */
+    public function obtenerConversacionId(int $user1, int $user2, bool $crearSiNoExiste = false): ?int
+    {
+        global $wpdb;
+        $tablaConversacion = $wpdb->prefix . 'conversacion';
+
+        $query = $wpdb->prepare("
+            SELECT id FROM $tablaConversacion
+            WHERE tipo = 1
+            AND JSON_CONTAINS(participantes, %s)
+            AND JSON_CONTAINS(participantes, %s)
+            LIMIT 1
+        ", json_encode($user1), json_encode($user2));
+
+        $conversacionId = $wpdb->get_var($query);
+
+        if ($conversacionId) {
+            return (int) $conversacionId;
+        }
+
+        if ($crearSiNoExiste) {
+            $participantes = json_encode([$user1, $user2], JSON_NUMERIC_CHECK);
+            $wpdb->insert($tablaConversacion, [
+                'tipo' => 1,
+                'participantes' => $participantes,
+                'fecha' => current_time('mysql')
+            ]);
+            return $wpdb->insert_id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtener mensajes de una conversación.
+     *
+     * @param int $conversacionId ID de la conversación.
+     * @param int $page           Página.
+     * @param int $perPage        Mensajes por página.
+     * @return array Lista de mensajes.
+     */
+    public function obtenerMensajes(int $conversacionId, int $page = 1, int $perPage = 20): array
+    {
+        global $wpdb;
+        $tablaMensajes = $wpdb->prefix . 'mensajes';
+
+        $offset = ($page - 1) * $perPage;
+
+        $query = $wpdb->prepare("
+            SELECT id, mensaje, emisor AS remitente, fecha, adjunto, metadata, leido, conversacion
+            FROM $tablaMensajes
+            WHERE conversacion = %d
+            ORDER BY fecha DESC
+            LIMIT %d OFFSET %d
+        ", $conversacionId, $perPage, $offset);
+
+        $mensajes = $wpdb->get_results($query);
+
+        if (!$mensajes) {
+            return [];
+        }
+
+        // Procesar datos (decodificar JSON)
+        foreach ($mensajes as $mensaje) {
+            if (!empty($mensaje->adjunto)) {
+                $mensaje->adjunto = json_decode($mensaje->adjunto, true);
+            }
+            if (!empty($mensaje->metadata)) {
+                $mensaje->metadata = json_decode($mensaje->metadata, true);
+            }
+        }
+
+        return array_reverse($mensajes);
+    }
+
+    /**
+     * Marcar mensajes como leídos.
+     * 
+     * @param int $conversacionId ID conversación.
+     * @param int $lectorId      ID del usuario que lee (para no marcar sus propios mensajes).
+     * @return int Número de filas afectadas.
+     */
+    public function marcarComoLeido(int $conversacionId, int $lectorId): int
+    {
+        global $wpdb;
+        $tablaMensajes = $wpdb->prefix . 'mensajes';
+
+        // Update mensajes donde conversacion = id, emisor != lector, leido = 0
+        $sql = $wpdb->prepare("
+            UPDATE $tablaMensajes 
+            SET leido = 1 
+            WHERE conversacion = %d 
+            AND emisor != %d 
+            AND leido = 0
+        ", $conversacionId, $lectorId);
+
+        $result = $wpdb->query($sql);
+
+        return $result === false ? 0 : $result;
+    }
+
+    /**
+     * Verificar si un usuario pertenece a una conversación.
+     * 
+     * @param int $conversacionId
+     * @param int $userId
+     * @return bool
+     */
+    public function validarParticipante(int $conversacionId, int $userId): bool
+    {
+        global $wpdb;
+        $tablaConversacion = $wpdb->prefix . 'conversacion';
+
+        $participantesJson = $wpdb->get_var($wpdb->prepare(
+            "SELECT participantes FROM $tablaConversacion WHERE id = %d",
+            $conversacionId
+        ));
+
+        if (!$participantesJson) {
+            return false;
+        }
+
+        $participantes = json_decode($participantesJson, true);
+        return is_array($participantes) && in_array($userId, $participantes);
     }
 
     /**

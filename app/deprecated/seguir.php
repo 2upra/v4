@@ -1,14 +1,18 @@
 <?php
 
 /**
- * Sistema de seguimiento de usuarios (Archivo Legacy).
+ * Funciones de seguimiento DEPRECADAS.
  * 
- * Este archivo mantiene funciones wrapper para compatibilidad con código existente.
- * La lógica real está en Theme\V4\Services\SeguirService y Theme\V4\Controllers\SeguirController.
+ * Este archivo contiene wrappers temporales para compatibilidad.
+ * Todas las funciones aquí están marcadas como @deprecated y serán eliminadas.
+ * 
+ * USO CORRECTO:
+ * - Lógica: Kamples\Services\SeguirService
+ * - AJAX: Kamples\Controllers\SeguirController
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
- * @deprecated Las funciones serán eliminadas cuando todo el código use las clases.
+ * @deprecated Este archivo será eliminado una vez se actualicen todas las referencias.
  */
 
 // Evitar acceso directo
@@ -16,8 +20,8 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
-use Theme\V4\Services\SeguirService;
-use Theme\V4\Controllers\SeguirController;
+use Kamples\Services\SeguirService;
+use Kamples\Controllers\SeguirController;
 
 /* 
  *
@@ -30,7 +34,7 @@ $seguirController->registrar();
 
 /* 
  *
- * Funciones wrapper para compatibilidad
+ * Funciones wrapper DEPRECADAS
  *
  */
 
@@ -91,27 +95,6 @@ function dejar_de_seguir_usuario(): void
 }
 
 /**
- * Shortcode para mostrar contadores de usuario.
- */
-add_shortcode('mostrar_contadores', function (): string {
-    $userId = get_current_user_id();
-
-    if ($userId === 0) {
-        return '';
-    }
-
-    $servicio = new SeguirService();
-    $contadores = $servicio->obtenerContadores($userId);
-
-    return sprintf(
-        '%d seguidores %d seguidos %d posts',
-        $contadores['seguidores'],
-        $contadores['siguiendo'],
-        $contadores['posts']
-    );
-});
-
-/**
  * Auto-seguir al registrarse.
  *
  * @param int $userId ID del nuevo usuario.
@@ -136,3 +119,24 @@ function seguir_usuarios_automaticamente1(): void
         $servicio->autoSeguir((int) $userId);
     }
 }
+
+/**
+ * Shortcode para mostrar contadores de usuario.
+ */
+add_shortcode('mostrar_contadores', function (): string {
+    $userId = get_current_user_id();
+
+    if ($userId === 0) {
+        return '';
+    }
+
+    $servicio = new SeguirService();
+    $contadores = $servicio->obtenerContadores($userId);
+
+    return sprintf(
+        '%d seguidores %d seguidos %d posts',
+        $contadores['seguidores'],
+        $contadores['siguiendo'],
+        $contadores['posts']
+    );
+});

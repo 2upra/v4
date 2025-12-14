@@ -5,13 +5,13 @@
  * 
  * Maneja las solicitudes AJAX para seguir y dejar de seguir usuarios.
  *
- * @package Theme_V4
+ * @package Kamples
  * @since 1.0.0
  */
 
-namespace Theme\V4\Controllers;
+namespace Kamples\Controllers;
 
-use Theme\V4\Services\SeguirService;
+use Kamples\Services\SeguirService;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {
