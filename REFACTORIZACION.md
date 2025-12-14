@@ -60,39 +60,91 @@ Este es un tema de WordPress para una aplicación social/musical. El código fue
 - Escapar salidas: `esc_attr()`, `esc_html()`, `esc_url()`
 
 ### 6. Estructura de Archivos
+
 ```
-inc/                    # Módulos del tema
-├── Core/               # Clases principales
-├── Config/             # Configuración y constantes
-├── Logging/            # Sistema de logs
-├── Setup/              # Inicialización (scripts, páginas)
-├── Utils/              # Utilidades y helpers
-└── Security/           # Funciones de seguridad
+├── inc/                     # Módulos de soporte (funciones helpers)
+│   ├── Config/              # Configuración y constantes
+│   ├── Logging/             # Sistema de logs (clase Logger)
+│   ├── Setup/               # Inicialización (ScriptsManager)
+│   ├── Core/                # Clases principales auxiliares
+│   ├── Utils/               # Utilidades y helpers
+│   └── Security/            # Funciones de seguridad
+│
+├── src/                     # CÓDIGO REFACTORIZADO (con namespaces)
+│   ├── autoload.php         # Autoloader PSR-4
+│   ├── Core/                # Clases base del tema
+│   ├── Services/            # Servicios (lógica de negocio)
+│   ├── Controllers/         # Controladores (AJAX, REST API)
+│   ├── Models/              # Modelos de datos
+│   └── Views/               # Componentes de vista
+│
+├── app/                     # CÓDIGO LEGACY (pendiente de refactorizar)
+│   ├── Functions/           # 23 archivos - funciones sueltas
+│   ├── Content/             # 36 archivos - contenido y posts
+│   ├── Chat/                # Sistema de chat
+│   ├── Finanza/             # Sistema financiero/Stripe
+│   └── ...                  # Otros módulos legacy
+│
+└── js/                      # Scripts JavaScript (se cargan automáticamente)
+```
+
+### 7. Namespace del Tema
+
+Las clases refactorizadas usan el namespace `Theme\V4`:
+
+```php
+namespace Theme\V4\Services;
+
+class LikeService
+{
+    // Lógica de likes refactorizada
+}
+```
+
+Uso:
+```php
+use Theme\V4\Services\LikeService;
+
+$likeService = new LikeService();
 ```
 
 ---
 
 ## Roadmap de Refactorización
 
-### Fase 1: Organizar `functions.php` ⬅️ **ACTUAL**
+### Fase 1: Organizar `functions.php` ✅ **COMPLETADA**
 | Paso | Descripción                                          | Estado       |
 | ---- | ---------------------------------------------------- | ------------ |
 | 1.1  | Crear estructura de carpetas `inc/`                  | ✅ Completado |
 | 1.2  | Extraer constantes a `inc/Config/constants.php`      | ✅ Completado |
 | 1.3  | Extraer funciones de logging a `inc/Logging/`        | ✅ Completado |
-| 1.4  | Extraer enqueue de scripts a `inc/Setup/scripts.php` | ⏳ Pendiente  |
-| 1.5  | Extraer registro de páginas a `inc/Setup/pages.php`  | ⏳ Pendiente  |
-| 1.6  | Limpiar functions.php (solo includes)                | ⏳ Pendiente  |
+| 1.4  | Extraer enqueue de scripts a `inc/Setup/scripts.php` | ✅ Completado |
+| 1.5  | Implementar auto-detección de scripts en /js/        | ✅ Completado |
+| 1.6  | Limpiar functions.php (solo includes)                | ✅ Completado |
 
-### Fase 2: Limpiar `header.php`
+> **Resultado:** `functions.php` reducido de 715 líneas a 124 líneas (~83% reducción)
+
+### Fase 2: Organizar `/app/` ⬅️ **ACTUAL** (PRIORIDAD)
+| Paso | Descripción                                   | Estado      |
+| ---- | --------------------------------------------- | ----------- |
+| 2.1  | Auditar estructura actual de /app/            | ⏳ Pendiente |
+| 2.2  | Estandarizar nomenclatura (PascalCase clases) | ⏳ Pendiente |
+| 2.3  | Organizar /app/Functions/ (23 archivos)       | ⏳ Pendiente |
+| 2.4  | Organizar /app/Content/ (36 archivos)         | ⏳ Pendiente |
+| 2.5  | Convertir funciones sueltas a clases          | ⏳ Pendiente |
+| 2.6  | Implementar namespaces/autoloading            | ⏳ Pendiente |
+| 2.7  | Eliminar carpeta "Pendiente por refactorizar" | ⏳ Pendiente |
+
+### Fase 3: Limpiar `header.php`
 | Paso | Descripción                             | Estado      |
 | ---- | --------------------------------------- | ----------- |
-| 2.1  | Extraer CSS inline a archivos CSS       | ⏳ Pendiente |
-| 2.2  | Crear componentes de menú reutilizables | ⏳ Pendiente |
-| 2.3  | Separar lógica de usuario               | ⏳ Pendiente |
+| 3.1  | Extraer CSS inline a archivos CSS       | ⏳ Pendiente |
+| 3.2  | Crear componentes de menú reutilizables | ⏳ Pendiente |
+| 3.3  | Separar lógica de usuario               | ⏳ Pendiente |
 
-### Fase 3: Organizar Templates
+### Fase 4: Organizar Templates
 | Paso | Descripción                              | Estado      |
+
 | ---- | ---------------------------------------- | ----------- |
 | 3.1  | Mover Template*.php a carpeta templates/ | ⏳ Pendiente |
 | 3.2  | Estandarizar estructura de templates     | ⏳ Pendiente |
@@ -135,6 +187,15 @@ inc/                    # Módulos del tema
   - Canales independientes con configuración granular
   - Auto-limpieza de archivos grandes
   - Canal `refactor` para seguimiento de cambios
+- **[1.4]** Creado `inc/Setup/scripts.php` - ScriptsManager con auto-detección de JS
+  - Los scripts de /js/ se cargan automáticamente
+  - Solo se especifican excepciones (dependencias, usuarios logueados)
+- **[1.5]** `functions.php` reducido de 715 a ~310 líneas (56% reducción)
+- **[2.0]** Nueva estructura de carpetas:
+  - `/src/` - Código refactorizado con namespaces (Theme\V4)
+  - `/app/` - Código legacy pendiente de refactorizar
+  - `src/autoload.php` - Autoloader PSR-4 para clases en /src/
+- **[FIX]** Restauradas funciones eliminadas: `incluirArchivos`, `loadingBar`, `limpiarLogs`
 
 ---
 
