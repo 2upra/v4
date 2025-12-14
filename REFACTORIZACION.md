@@ -179,15 +179,19 @@ $likeService = new LikeService();
    ```
 
 #### Pasos de la Fase 2
-| Paso | Descripción                                         | Estado       |
-| ---- | --------------------------------------------------- | ------------ |
-| 2.1  | Crear estructura `/src/` con autoloader PSR-4       | ✅ Completado |
-| 2.2  | Migrar `app/Functions/likes.php` completo           | ✅ Completado |
-| 2.3  | Migrar `app/Functions/seguir.php` completo          | ✅ Completado |
-| 2.4  | Migrar `app/Chat/` completo                         | ✅ Completado |
-| 2.5  | Migrar `app/Content/` → `src/Services/` y `Models/` | ⏳ Pendiente  |
-| 2.6  | Migrar `app/Finanza/` → `src/Services/`             | ⏳ Pendiente  |
-| 2.7  | Migrar resto de `/app/` y eliminar deprecated       | ⏳ Pendiente  |
+| Paso | Descripción                                   | Estado        |
+| ---- | --------------------------------------------- | ------------- |
+| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado  |
+| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado  |
+| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado  |
+| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado  |
+| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado  |
+| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado  |
+| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado  |
+| 2.5d | Migrar `app/Content/Logic/` completo          | 🔄 En progreso |
+| 2.5e | Migrar resto de `app/Content/`                | ⏳ Pendiente   |
+| 2.6  | Migrar `app/Finanza/` → `src/Services/`       | ⏳ Pendiente   |
+| 2.7  | Migrar resto de `/app/` y eliminar deprecated | ⏳ Pendiente   |
 
 
 ### Fase 3: Limpiar `header.php`
@@ -272,6 +276,43 @@ $likeService = new LikeService();
   - Wrappers movidos a `app/deprecated/chat.php`
 - **[NAMESPACE]** Renombrado namespace global de `Theme\V4` a `Kamples`
 - **[FIX]** Estandarización de logs: Reemplazado `error_log` por `Logger::obtenerInstancia()` en todos los servicios y controladores nuevos.
+- **[2.5a]** Migración COMPLETA de Comentarios:
+  - `src/Services/ComentarioService.php` - Lógica de negocio (creación, validación, rate limiting, paginación, eliminación)
+  - `src/Controllers/ComentarioController.php` - Handlers AJAX (procesarComentario, renderComentarios, eliminarComentario)
+  - `src/Views/Components/ComentarioForm.php` - Formulario de comentarios
+  - **ELIMINADA** carpeta `app/Content/Comentarios/` completamente
+  - Wrappers movidos a `app/deprecated/comentarios.php`
+  - Mejoras: tipado estricto, escape de datos, Logger integrado
+- **[2.5b]** Migración COMPLETA de Colab (Colaboraciones):
+  - `src/Services/ColabService.php` - Lógica de negocio (crear colab, validaciones, variables, cambio de estado, resumen)
+  - `src/Controllers/ColabController.php` - Handler AJAX (empezarColab)
+  - `src/Views/Components/ColabComponents.php` - Vistas HTML (opciones, contenido, audio, título, participantes, chat, resumen)
+  - **ELIMINADA** carpeta `app/Content/Colab/` completamente
+  - Wrappers movidos a `app/deprecated/colab.php`
+  - Mejoras: tipado estricto, inyección de dependencias, Logger integrado, escape de datos
+- **[2.5c]** Migración COMPLETA de Colecciones:
+  - `src/Services/ColeccionService.php` - Lógica de negocio (CRUD colecciones, samples, colecciones especiales, cache)
+  - `src/Controllers/ColeccionController.php` - 7 handlers AJAX (crear, editar, borrar, guardarSample, eliminarSample, verificar, listar)
+  - `src/Views/Components/ColeccionComponents.php` - Vistas HTML (modales, posts, single, opciones)
+  - **ELIMINADA** carpeta `app/Content/Colecciones/` completamente
+  - Wrappers movidos a `app/deprecated/colecciones.php`
+  - Funciones helper mantenidas: `maybe_unserialize_dos`, `datosColeccion`, `imagenPost`
+  - Mejoras: tipado estricto, Logger integrado, separación de responsabilidades
+- **[2.5d]** Migración PARCIAL de Logic (app/Content/Logic/):
+  - `src/Services/CacheService.php` - Sistema de cache con compresión gzip, expiración y limpieza
+  - `src/Services/FeedService.php` - Feed personalizado, datos de cálculo, reinicio de feed
+  - `src/Services/FiltroService.php` - Filtros globales, por autor, condiciones meta query
+  - `src/Controllers/FiltroController.php` - 6 handlers AJAX (obtener, guardar, restablecer filtros)
+  - `src/Services/BusquedaService.php` - Búsqueda de posts, usuarios, balanceo de resultados
+  - `src/Controllers/BusquedaController.php` - Handler AJAX de búsqueda con cache
+  - `src/Views/Components/BusquedaComponents.php` - Componente de buscador local
+  - `src/Services/PostEstadoService.php` - Estados de posts, verificación, cambio de imagen
+  - `src/Controllers/PostEstadoController.php` - 8 handlers AJAX (verificar, cambiar estado, imagen)
+  - `src/Services/ContadorService.php` - Conteo de posts filtrados
+  - `src/Controllers/ContadorController.php` - Handler AJAX de conteo
+  - **ELIMINADOS** archivos: `cache.php`, `feed.php`, `reiniciarFeed.php`, `datosParaCalculo.php`, `filtroGlobal.php`, `filtroLogic.php`, `busqueda.php`, `estado.php`, `contador.php`, `manejarColeccion.php`, `localControl.php`
+  - Wrappers creados en `app/deprecated/`: `cache.php`, `feed.php`, `filtro.php`, `busqueda.php`, `estado.php`, `contador.php`
+  - **PENDIENTE**: `queryPost.php` (938 líneas) y `procesarIdeas.php` (221 líneas) - archivos complejos que requieren migración cuidadosa
 
 ---
 
