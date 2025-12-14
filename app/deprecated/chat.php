@@ -155,3 +155,17 @@ function renderListaChats($conversaciones, $usuarioId)
     // Ya no usamos el array de conversaciones directamente, delegamos al componente
     return \Kamples\Views\Components\ChatList::mostrar((int)$usuarioId);
 }
+
+/**
+ * Renderizar conversaciones de un usuario.
+ * 
+ * @param int $usuarioId ID del usuario.
+ * @return string HTML de las conversaciones.
+ * @deprecated Usar Kamples\Views\Components\ChatList::mostrar()
+ */
+if (!function_exists('conversacionesUsuario')) {
+    function conversacionesUsuario($usuarioId): string
+    {
+        return \Kamples\Views\Components\ChatList::mostrar((int)$usuarioId);
+    }
+}
