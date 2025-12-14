@@ -94,3 +94,28 @@ function chequearLike($postId, $userId, $likeType = 'like'): bool
     $servicio = new LikeService();
     return $servicio->usuarioTieneReaccion((int) $postId, (int) $userId, $likeType);
 }
+
+/**
+ * Renderizar botones de like en un post.
+ *
+ * @param int $postId ID del post.
+ * @return string HTML de los botones de like.
+ * @deprecated Usar LikeButtons::mostrar() directamente.
+ */
+function like($postId): string
+{
+    return \Kamples\Views\Components\LikeButtons::mostrar((int) $postId);
+}
+
+/**
+ * Obtener los IDs de posts que le gustan a un usuario.
+ *
+ * @param int $userId ID del usuario.
+ * @return array IDs de posts.
+ * @deprecated Usar LikeService::obtenerLikesDelUsuario() directamente.
+ */
+function obtenerLikesDelUsuario($userId): array
+{
+    $servicio = new LikeService();
+    return $servicio->obtenerLikesDelUsuario((int) $userId);
+}

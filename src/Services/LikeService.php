@@ -335,4 +335,22 @@ class LikeService
             'no_me_gusta' => $this->usuarioTieneReaccion($postId, $userId, 'no_me_gusta'),
         ];
     }
+
+    /**
+     * Obtener IDs de posts que tienen like de un usuario.
+     *
+     * @param int $userId ID del usuario.
+     * @param string $tipo Tipo de reacción (por defecto 'like').
+     * @return array IDs de posts.
+     */
+    public function obtenerLikesDelUsuario(int $userId, string $tipo = 'like'): array
+    {
+        $resultados = $this->db->get_col($this->db->prepare(
+            "SELECT post_id FROM {$this->nombreTabla} WHERE user_id = %d AND like_type = %s",
+            $userId,
+            $tipo
+        ));
+
+        return $resultados ? array_map('intval', $resultados) : [];
+    }
 }
