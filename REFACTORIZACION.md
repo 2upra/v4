@@ -190,7 +190,11 @@ $likeService = new LikeService();
 | 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado |
 | 2.5d | Migrar `app/Content/Logic/` completo          | ✅ Completado |
 | 2.5e | Migrar resto de `app/Content/`                | ✅ Completado |
-| 2.6  | Migrar resto de `/app/` y eliminar deprecated | ⏳ Pendiente  |
+| 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado |
+| 2.6b | Migrar `app/Authentication/`                  | ✅ Completado |
+| 2.6c | Migrar `app/AlgoritmoPost/`                   | ⏳ Pendiente  |
+| 2.6d | Migrar `app/Functions/`                       | ⏳ Pendiente  |
+| 2.6e | Migrar resto de `/app/`                       | ⏳ Pendiente  |
 | 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final   |
 
 > **Nota:** El módulo `app/Finanza/` (Stripe/pagos) se deja para el final ya que no es prioritario y requiere pruebas especiales con el sistema de pagos.
@@ -334,6 +338,27 @@ $likeService = new LikeService();
   - Wrappers creados en `app/deprecated/`: `posts.php`, `momentos.php`, `typesPosts.php`, `ajustes.php`
   - 30+ funciones migradas: htmlPost, variablesPosts, botonseguir, opcionesPost, opcionesRola, wave, audioPost, infoPost, fondoPost, imagenPostList, renderMusicContent, renderNonMusicContent, sampleListHtml, renderPostControls, nohayPost, etc.
   - Mejoras: arquitectura OOP, separación de responsabilidades (Service/Component), tipado estricto, Logger integrado
+- **[2.6a]** Migración COMPLETA de app/Logic/:
+  - `src/Services/IAService.php` - Servicio de IA con comunicación a API Gemini (descripción, subida de archivos)
+  - `src/Controllers/IAController.php` - Handler AJAX para peticiones de IA
+  - `src/Services/UtilService.php` - Utilidades generales (normalizar texto, tiempo relativo, zona horaria)
+  - `src/Controllers/UtilController.php` - Handler AJAX para ajuste de zona horaria
+  - `src/Services/VistaService.php` - Servicio de tracking de vistas (por usuario y post)
+  - `src/Controllers/VistaController.php` - Handler AJAX para guardar vistas
+  - `src/Services/WaveformService.php` - Gestión de imágenes de waveform de audio
+  - `src/Controllers/WaveformController.php` - Handler AJAX para guardar waveforms
+  - **ELIMINADA** carpeta `app/Logic/` completamente
+  - Wrappers creados en `app/deprecated/`: `ia.php`, `auxiliar.php`, `vistas.php`, `waveform.php`
+  - Funciones migradas: generarDescripcionIA, subirArchivo, normalizarTexto, TiempoRelativoNoti, guardarVista, save_waveform_image, etc.
+  - Mejoras: tipado estricto, Logger integrado, método CURL centralizado, validación de archivos
+- **[2.6b]** Migración COMPLETA de app/Authentication/:
+  - `src/Services/AuthService.php` - Servicio de autenticación (~280 líneas: login, registro, Google OAuth, tokens, Firebase)
+  - `src/Controllers/AuthController.php` - Controlador REST (endpoints de verificación, Firebase, user-agent)
+  - `src/Views/Components/AuthComponents.php` - Formularios de login y registro con Google OAuth
+  - **ELIMINADA** carpeta `app/Authentication/` completamente
+  - Wrappers creados en `app/deprecated/`: `auth.php`
+  - Funciones migradas: iniciar_sesion, registrar_usuario, handle_google_callback, generate_secure_token, verify_secure_token, save_firebase_token, is_electron_app
+  - Mejoras: tipado estricto, Logger integrado, separación Service/Controller/Component, detección de navegadores embebidos
 
 ---
 
@@ -421,4 +446,15 @@ Para modificar la configuración de un canal, editar `inc/Config/constants.php`:
 - Documentar cualquier comportamiento extraño encontrado
 - Si una función parece hacer demasiado, probablemente lo hace
 - **Usar `refactorLog()` para registrar cambios importantes durante la refactorización**
+
+# Errores de consola corregidos (2025-12-14)
+
+Los siguientes errores fueron identificados y corregidos:
+
+| Error                                                                | Archivo                               | Causa                                                                                  | Corrección                                                                       |
+| -------------------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `400 Bad Request` en AJAX (obtenerFiltrosTotal, obtenerFiltroActual) | `functions.php`, `src/Controllers/`   | Los controladores no se cargaban - el autoloader PSR-4 solo carga clases al invocarlas | Creado `src/Controllers/init.php` que carga todos los controladores              |
+| `userAgent is not defined`                                           | `app/Functions/modalapp.php` línea 54 | Variable usada sin definir                                                             | Cambiado `userAgent` por `navigator.userAgent`                                   |
+| `Cannot read properties of undefined (reading 'querySelector')`      | `js/wavejs.js` línea 264              | Función `handleWaveformClick` llamada sin parámetro `post`                             | Unificada función duplicada y añadida lógica para obtener `post` del `container` |
+| `No se encontró el elemento 'filtrosPost'`                           | `js/filtros.js` línea 229             | `console.error` innecesario en páginas sin filtros                                     | Cambiado a return silencioso                                                     |
 

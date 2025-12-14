@@ -153,73 +153,14 @@ function inicializarWaveforms() {
         }
     });
 
-    function handleWaveformClick(cont, post) {
-        const id = cont.getAttribute('postIDWave');
-        if (!id) {
-            return;
-        }
-
-        const wavesurfer = window.wavesurfers[id];
-
-        if (estadoAudio && audioActual !== wavesurfer) {
-            if (audioActual) {
-                audioActual.pause();
-            }
-            estadoAudio = false;
-            audioActual = null;
-        }
-
-        if (audioActual && audioActual !== wavesurfer) {
-            audioActual.pause();
-            const prevPost = audioActual.container.closest('.POST-sampleList');
-            if (prevPost) {
-                const prevPauseBtn = prevPost.querySelector('.pausaSL');
-                const prevRepBtn = prevPost.querySelector('.reproducirSL');
-                if (prevPauseBtn) {
-                    prevPauseBtn.style.display = 'none';
-                }
-                if (prevRepBtn) {
-                    prevRepBtn.style.display = 'none';
-                }
-            }
-        }
-
-        if (!cont.dataset.audioLoaded) {
-            const url = cont.getAttribute('data-audio-url');
-            loadAudio(id, url, cont, true);
-        } else {
-            if (wavesurfer) {
-                if (wavesurfer.isPlaying()) {
-                    wavesurfer.pause();
-                    estadoAudio = false;
-                    audioActual = null;
-                } else {
-                    wavesurfer.play();
-                    estadoAudio = true;
-                    audioActual = wavesurfer;
-                }
-            }
-        }
-
-        const repBtn = post.querySelector('.reproducirSL');
-        const pauseBtn = post.querySelector('.pausaSL');
-
-        if (wavesurfer && wavesurfer.isPlaying()) {
-            repBtn.style.display = 'none';
-            pauseBtn.style.display = 'flex';
-            estadoAudio = true;
-            audioActual = wavesurfer;
-        } else {
-            repBtn.style.display = 'none';
-            pauseBtn.style.display = 'none';
-            estadoAudio = false;
-            audioActual = null;
-        }
-    }
-
     function handleWaveformClick(container, post) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
+
+        /* Si no se pasa post, intentar obtenerlo del container */
+        if (!post) {
+            post = container.closest('.POST-sampleList');
+        }
 
         if (estadoAudio && audioActual !== window.wavesurfers[postId]) {
             if (audioActual) {
@@ -229,10 +170,10 @@ function inicializarWaveforms() {
             audioActual = null;
         }
 
-        // Pausar cualquier audio que se esté reproduciendo
+        /* Pausar cualquier audio que se esté reproduciendo */
         if (audioActual && audioActual !== window.wavesurfers[postId]) {
             audioActual.pause();
-            // Ocultar botones de pausa en el post anterior
+            /* Ocultar botones de pausa en el post anterior */
             const previousPost = audioActual.container.closest('.POST-sampleList');
             if (previousPost) {
                 const prevPausaBtn = previousPost.querySelector('.pausaSL');
@@ -260,20 +201,22 @@ function inicializarWaveforms() {
             }
         }
 
-        // Actualizar botones después de la acción
-        const reproducirBtn = post.querySelector('.reproducirSL');
-        const pausaBtn = post.querySelector('.pausaSL');
+        /* Actualizar botones después de la acción solo si existe post */
+        if (post) {
+            const reproducirBtn = post.querySelector('.reproducirSL');
+            const pausaBtn = post.querySelector('.pausaSL');
 
-        if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
-            reproducirBtn.style.display = 'none';
-            pausaBtn.style.display = 'flex';
-            estadoAudio = true;
-            audioActual = window.wavesurfers[postId];
-        } else {
-            reproducirBtn.style.display = 'none';
-            pausaBtn.style.display = 'none';
-            estadoAudio = false;
-            audioActual = null;
+            if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
+                if (reproducirBtn) reproducirBtn.style.display = 'none';
+                if (pausaBtn) pausaBtn.style.display = 'flex';
+                estadoAudio = true;
+                audioActual = window.wavesurfers[postId];
+            } else {
+                if (reproducirBtn) reproducirBtn.style.display = 'none';
+                if (pausaBtn) pausaBtn.style.display = 'none';
+                estadoAudio = false;
+                audioActual = null;
+            }
         }
     }
 

@@ -47,6 +47,8 @@ require_once get_template_directory() . '/src/autoload.php';
 // Controlador de posts (AJAX handlers)
 \Kamples\Controllers\PostController::inicializar();
 
+
+
 // =============================================================================
 // DEPENDENCIAS EXTERNAS
 // =============================================================================
@@ -265,9 +267,10 @@ function incluirArchivos($directorio)
     }
 }
 
-// Cargar todos los archivos de /app/ (código legacy pendiente de refactorizar)
+// Cargar archivos del tema
 $directorios = [
-    'app/',
+    'src/', 
+    'app/',              // Código legacy pendiente de refactorizar
 ];
 
 foreach ($directorios as $directorio) {

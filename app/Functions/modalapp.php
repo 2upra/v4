@@ -51,7 +51,7 @@ function modalApp()
             </div>
         </div>
         <script>
-            if (!userAgent.includes('AppAndroid')) {
+            if (!navigator.userAgent.includes('AppAndroid')) {
                 window.createAppmodalBackground = function() {
                     let darkBackground = document.getElementById('backgroundModalApp');
                     if (!darkBackground) {
