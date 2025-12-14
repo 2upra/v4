@@ -114,8 +114,10 @@ function like($postId): string
  * @return array IDs de posts.
  * @deprecated Usar LikeService::obtenerLikesDelUsuario() directamente.
  */
-function obtenerLikesDelUsuario($userId): array
-{
-    $servicio = new LikeService();
-    return $servicio->obtenerLikesDelUsuario((int) $userId);
+if (!function_exists('obtenerLikesDelUsuario')) {
+    function obtenerLikesDelUsuario($userId): array
+    {
+        $servicio = new LikeService();
+        return $servicio->obtenerLikesDelUsuario((int) $userId);
+    }
 }
