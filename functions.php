@@ -63,32 +63,69 @@ try {
 
 
 // DEBUG TEMPORAL: Verificación de usuario
-function debug_usuario_actual()
+// REPARACIÓN DE ROLES: Ejecutar con ?fix_roles=1
+function reparar_roles_admin()
 {
-    if (isset($_GET['debug_user'])) {
-        global $wpdb;
-        $user = wp_get_current_user();
+    if (isset($_GET['fix_roles'])) {
+        require_once(ABSPATH . 'wp-admin/includes/schema.php');
 
-        echo '<pre>';
-        echo "<h1>Debug de Usuario</h1>";
-        echo "<strong>ID Usuario:</strong> " . $user->ID . "\n";
-        echo "<strong>Login:</strong> " . $user->user_login . "\n";
-        echo "<strong>Roles:</strong> " . print_r($user->roles, true) . "\n";
-        echo "<strong>Caps:</strong> " . print_r($user->allcaps, true) . "\n";
-        echo "<strong>Prefix DB:</strong> " . $wpdb->prefix . "\n";
-        echo "<strong>Base Prefix DB:</strong> " . $wpdb->base_prefix . "\n";
-        echo "<strong>User Meta Prefix esperado:</strong> " . $wpdb->prefix . "capabilities\n";
+        // 1. Intentar restaurar roles por defecto si están muy dañados
+        if (!get_role('administrator')) {
+            populate_roles();
+            echo "Roles por defecto repoblados.<br>";
+        }
 
-        $meta_capabilities = get_user_meta($user->ID, $wpdb->prefix . 'capabilities', true);
-        echo "<strong>Raw Meta Capabilities:</strong> " . print_r($meta_capabilities, true) . "\n";
+        // 2. Asegurar capabilities críticas al rol 'administrator'
+        $role = get_role('administrator');
+        if ($role) {
+            $caps = array(
+                'manage_options',
+                'edit_dashboard',
+                'edit_theme_options',
+                'activate_plugins',
+                'install_plugins',
+                'update_plugins',
+                'delete_plugins',
+                'update_core',
+                'list_users',
+                'remove_users',
+                'add_users',
+                'promote_users',
+                'edit_users',
+                'create_users',
+                'delete_users',
+                'unfiltered_html'
+            );
 
-        echo "<strong>Can 'administrator':</strong> " . (current_user_can('administrator') ? 'SI' : 'NO') . "\n";
-        echo "<strong>Can 'manage_options':</strong> " . (current_user_can('manage_options') ? 'SI' : 'NO') . "\n";
-        echo '</pre>';
+            foreach ($caps as $cap) {
+                $role->add_cap($cap);
+            }
+            echo "Capacidades críticas añadidas al rol Administrator.<br>";
+        } else {
+            echo "Error crítico: No se encuentra el rol Administrator.<br>";
+        }
+
+        // 3. Forzar capabilities al usuario actual (o ID 1)
+        $user_id = get_current_user_id();
+        if (!$user_id) $user_id = 1; // Fallback si no hay sesión iniciada pero accedemos
+
+        $user = new WP_User($user_id);
+        $user->add_role('administrator');
+        $user->add_cap('administrator');
+        $user->add_cap('manage_options');
+
+        echo "<strong>Reparación finalizada para usuario ID $user_id.</strong><br>";
+        echo "Intenta acceder ahora al wp-admin.<br>";
+
+        // Verificar estado final
+        echo "<pre>";
+        print_r($user->allcaps);
+        echo "</pre>";
+
         die();
     }
 }
-add_action('init', 'debug_usuario_actual');
+add_action('init', 'reparar_roles_admin');
 
 
 function headGeneric()
