@@ -1,45 +1,54 @@
-<?
+<?php
+
+/**
+ * Funciones principales del tema.
+ * 
+ * Este archivo ha sido refactorizado para seguir principios SOLID.
+ * Las responsabilidades se han dividido en módulos dentro de /inc/.
+ *
+ * @package Theme_V4
+ * @since 1.0.0
+ * @see REFACTORIZACION.md para el historial de cambios
+ */
+
+// =============================================================================
+// CARGA DE MÓDULOS DEL TEMA
+// =============================================================================
+
+// Configuración y constantes (debe cargarse primero)
+require_once get_template_directory() . '/inc/Config/constants.php';
+
+// Sistema de logging
+require_once get_template_directory() . '/inc/Logging/Logger.php';
+
+// =============================================================================
+// DEPENDENCIAS EXTERNAS
+// =============================================================================
+
 require_once ABSPATH . 'wp-admin/includes/media.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/image.php';
 
-$stripe_init_path = ABSPATH . 'wp-content/stripe/init.php';
-
-if (file_exists($stripe_init_path)) {
-    require_once $stripe_init_path;
+// Stripe (opcional)
+$stripeInitPath = ABSPATH . 'wp-content/stripe/init.php';
+if (file_exists($stripeInitPath)) {
+    require_once $stripeInitPath;
 }
-/*
-composer install --ignore-platform-reqs
-*/
+
+// Composer autoload
 require_once __DIR__ . '/vendor/autoload.php';
 
+// Variables de entorno
 try {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv->load();
 } catch (Exception $e) {
-    //error_log('Error al cargar el archivo .env: ' . $e->getMessage());
+    // Valores por defecto si no existe .env
     if (!isset($_ENV['DATABASE_HOST'])) {
         $_ENV['DATABASE_HOST'] = 'localhost';
         $_ENV['AUDIOCLAVE'] = 'e1d78b9adf3466f98b7e53e1e7f21dfe723b1ccd0f93a09a2b9bdf3905a5fd07';
     }
 }
-
-define('STRIPE_ERROR_ENABLED', true);
-define('SEO_LOG_ENABLED', true);
-define('GUARDAR_LOG_ENABLED', true);
-
-//
-define('LOG_AUDIO_ENABLED', false);
-define('RENDIMIENTO_ENABLED', true);
-define('CHAT_LOG_ENABLED', false);
-define('AUT_LOG_ENABLED', true);
-define('LOG_ALGORITMO_ENABLED', false);
-define('AJAX_POST_LOG_ENABLED', false);
-define('IA_LOG_ENABLED', true);
-define('POST_LOG_ENABLED', false);
-define('STREAM_LOG_ENABLED', false);
-define('INTERES_TABLE', "{$wpdb->prefix}interes");
-define('POSTINLIMIT', 640);
 /*
 function debug_page_load_time() {
     $time = number_format((microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"]) * 1000, 2);
@@ -233,149 +242,17 @@ function encolar_sw_js()
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
 */
 
-//esto funciona cuando es local, tiene que sar el rror log de wp pro defecto spara todos los archivos 
-function escribirLog($mensaje, $archivo = '', $maxlineas = 10000)
-{
-
-    // Intentar usar el error_log de WordPress por defecto
-    if (is_object($mensaje) || is_array($mensaje)) {
-        error_log(print_r($mensaje, true));
-    } else {
-        error_log($mensaje);
-    }
-
-    // Si se especificó un archivo y no estamos en local, intentamos escribir en el
-    if (!empty($archivo) && (!defined('LOCAL') || !LOCAL)) {
-        try {
-            if (!is_writable(dirname($archivo))) {
-                error_log("escribirLog: No se puede escribir en el directorio: " . dirname($archivo));
-                return false;
-            }
-
-            if (is_object($mensaje) || is_array($mensaje)) {
-                $mensaje = print_r($mensaje, true);
-            }
-
-            $log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
-
-            $fp = fopen($archivo, 'a');
-            if ($fp) {
-                if (flock($fp, LOCK_EX)) {
-                    fwrite($fp, $log . PHP_EOL);
-
-                    // Limitar el tamaño del archivo, pero solo si se especificó un archivo
-                    if (rand(1, 10000) === 1) {
-                        $lineas = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                        if (count($lineas) > $maxlineas) {
-                            $lineas = array_slice($lineas, -$maxlineas);
-                            file_put_contents($archivo, implode(PHP_EOL, $lineas) . PHP_EOL);
-                        }
-                    }
-
-                    flock($fp, LOCK_UN);
-                } else {
-                    error_log("escribirLog: No se pudo obtener el bloqueo del archivo: $archivo");
-                }
-                fclose($fp);
-            } else {
-                error_log("escribirLog: No se pudo abrir el archivo: $archivo");
-            }
-        } catch (Exception $e) {
-            error_log("escribirLog: Excepción capturada: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    return true;
-}
-// sudo touch /var/www/wordpress/wp-content/themes/streamLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/rendimiento.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/rendimiento.log
-// tail -f /var/www/wordpress/wp-content/themes/rendimiento.log
-function streamLog($log)
-{
-    if (STREAM_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/streamLog.log');
-    }
-}
-
-
-function seoLog($log)
-{
-    if (SEO_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/seoLog.log');
-    }
-}
-
-
-function logAudio($log)
-{
-    if (LOG_AUDIO_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log');
-    }
-}
-
-function rendimientolog($log)
-{
-    if (RENDIMIENTO_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/rendimiento.log');
-    }
-}
-
-function chatLog($log)
-{
-    if (CHAT_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
-    }
-}
-
-function stripeError($log)
-{
-    if (STRIPE_ERROR_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
-    }
-}
-
-function autLog($log)
-{
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
-}
-
-function guardarLog($log)
-{
-    if (GUARDAR_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
-    }
-}
-
-function logAlgoritmo($log)
-{
-    if (LOG_ALGORITMO_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100);
-    }
-}
-
-function ajaxPostLog($log)
-{
-    if (AJAX_POST_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
-    }
-}
-
-function iaLog($log)
-{
-    if (IA_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
-    }
-}
-
-function postLog($log)
-{
-    if (POST_LOG_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
-    }
-}
-
+// =============================================================================
+// FUNCIONES DE LOGGING
+// =============================================================================
+// Las funciones de logging han sido movidas a: inc/Logging/Logger.php
+// Las funciones originales (escribirLog, streamLog, seoLog, etc.) siguen 
+// disponibles como wrappers para mantener compatibilidad con código existente.
+// Ver la clase Logger para la nueva implementación orientada a objetos.
+// =============================================================================
 
 //wave
+
 
 function scriptsOrdenados()
 {
