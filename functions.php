@@ -61,6 +61,36 @@ try {
 }
 
 
+
+// DEBUG TEMPORAL: Verificación de usuario
+function debug_usuario_actual()
+{
+    if (isset($_GET['debug_user'])) {
+        global $wpdb;
+        $user = wp_get_current_user();
+
+        echo '<pre>';
+        echo "<h1>Debug de Usuario</h1>";
+        echo "<strong>ID Usuario:</strong> " . $user->ID . "\n";
+        echo "<strong>Login:</strong> " . $user->user_login . "\n";
+        echo "<strong>Roles:</strong> " . print_r($user->roles, true) . "\n";
+        echo "<strong>Caps:</strong> " . print_r($user->allcaps, true) . "\n";
+        echo "<strong>Prefix DB:</strong> " . $wpdb->prefix . "\n";
+        echo "<strong>Base Prefix DB:</strong> " . $wpdb->base_prefix . "\n";
+        echo "<strong>User Meta Prefix esperado:</strong> " . $wpdb->prefix . "capabilities\n";
+
+        $meta_capabilities = get_user_meta($user->ID, $wpdb->prefix . 'capabilities', true);
+        echo "<strong>Raw Meta Capabilities:</strong> " . print_r($meta_capabilities, true) . "\n";
+
+        echo "<strong>Can 'administrator':</strong> " . (current_user_can('administrator') ? 'SI' : 'NO') . "\n";
+        echo "<strong>Can 'manage_options':</strong> " . (current_user_can('manage_options') ? 'SI' : 'NO') . "\n";
+        echo '</pre>';
+        die();
+    }
+}
+add_action('init', 'debug_usuario_actual');
+
+
 function headGeneric()
 {
     if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
