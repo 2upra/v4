@@ -184,25 +184,25 @@ src/
 | 9   | StreamService            | ~180   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 10  | ColeccionDescargaService | ~155   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 11  | ComentarioService        | ~135   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
-| 12  | ColabService             | ~410   | Colaboraciones           | 🟢 Baja    | ⏳ Pendiente  |
-| 13  | SyncService              | ~390   | Sincronización Electron  | 🟢 Baja    | ⏳ Pendiente  |
+| 12  | ColabService             | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 13  | SyncService              | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 14  | FiltroService            | ~110   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 15  | HashService              | ~120   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
-| 16  | ChatService              | ~330   | Sistema de chat          | 🟢 Baja    | ⏳ Pendiente  |
+| 16  | ChatService              | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 17  | AuthService              | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 18  | AudioProteccionService   | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 19  | PerfilService            | ~290   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
 | 20  | PostEdicionService       | ~285   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
 | 21  | InteresService           | ~295   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
 | 22  | NormalizacionService     | ~320   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
-| 23  | ModeracionService        | ~240   | Moderación/bloqueos      | 🟢 Baja    | ⏳ Pendiente  |
-| 24  | AutoContentService       | ~250   | Mejora con IA            | 🟢 Baja    | ⏳ Pendiente  |
-| 25  | DescargaService          | ~260   | Descargas de audio       | 🟢 Baja    | ⏳ Pendiente  |
-| 26  | LikeService              | ~290   | Sistema de likes         | 🟢 Baja    | ⏳ Pendiente  |
+| 23  | ModeracionService        | ~240   | Movido a Moderacion/     | ✅ Hecho   | ✅ Completado |
+| 24  | AutoContentService       | ~210   | Movido a Contenido/      | ✅ Hecho   | ✅ Completado |
+| 25  | DescargaService          | ~180   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 26  | LikeService              | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 27  | AlbumService             | ~250   | Procesamiento álbumes    | 🟢 Baja    | ⏳ Pendiente  |
 | 28  | BusquedaService          | ~230   | Búsqueda de contenido    | 🟢 Baja    | ⏳ Pendiente  |
 | 29  | PostRenderService        | ~240   | Renderizado de posts     | 🟢 Baja    | ⏳ Pendiente  |
-| 30  | PostCreacionService      | ~320   | Creación de posts        | 🟢 Baja    | ⏳ Pendiente  |
+| 30  | PostCreacionService      | ~160   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
 | 31  | IAService                | ~220   | Comunicación con IA      | 🟢 Baja    | ⏳ Pendiente  |
 | 32  | IdeaService              | ~240   | Procesamiento de ideas   | 🟢 Baja    | ⏳ Pendiente  |
 | 33  | ImagenService            | ~200   | Optimización imágenes    | 🟢 Baja    | ⏳ Pendiente  |
@@ -229,7 +229,7 @@ src/
 | #   | Controlador            | Tamaño | Estado      |
 | --- | ---------------------- | ------ | ----------- |
 | 1   | FinanzaController      | ~460   | ⏳ Pendiente |
-| 2   | ChatController         | ~320   | ⏳ Oitir     |
+| 2   | ChatController         | ~320   | ⏳ Pendiente |
 | 3   | ComentarioController   | ~270   | ⏳ Pendiente |
 | 4   | ColeccionController    | ~240   | ⏳ Pendiente |
 | 5   | ArchivoController      | ~200   | ⏳ Pendiente |
@@ -540,6 +540,69 @@ src/
 - **Evaluación SRP:** Cumple - Todo relacionado con normalización de datos de algoritmo
 - **Acción:** Movido a `src/Services/Contenido/NormalizacionService.php`
 - **Wrapper deprecated:** `src/Services/NormalizacionService.php` redirige al nuevo
+
+#### ColabService (2025-12-15) ✅
+- **Antes:** 415 líneas, violaba SRP (UI + validación + CRUD + conversaciones + consultas + estado)
+- **Después:** Dividido en 3 servicios en `src/Services/Social/`:
+  - `ColabService.php` (~100 líneas) - Fachada orquestadora
+  - `ColabCrudService.php` (~250 líneas) - Creación, validación, conversaciones, archivos, estado
+  - `ColabQueryService.php` (~150 líneas) - Botón, variables, resumen de colabs
+- **Wrapper deprecated:** `src/Services/ColabService.php` redirige al nuevo
+- **Reducción:** 415 → 100 líneas (~76% menos en archivo principal)
+
+#### ModeracionService (2025-12-15) ✅
+- **Estado:** ~254 líneas - Dentro del límite de 300 líneas
+- **Responsabilidades:** Bloqueo/restricción de usuarios, gestión de IPs, registro de intentos
+- **Evaluación SRP:** Cumple - Todo relacionado con moderación de usuarios
+- **Acción:** Movido a `src/Services/Moderacion/ModeracionService.php`
+- **Wrapper deprecated:** `src/Services/ModeracionService.php` redirige al nuevo
+
+#### LikeService (2025-12-15) ✅
+- **Antes:** 357 líneas, violaba SRP (acciones + procesamiento + notificaciones + consultas)
+- **Después:** Dividido en 3 servicios en `src/Services/Social/`:
+  - `LikeService.php` (~100 líneas) - Fachada orquestadora
+  - `LikeCrudService.php` (~200 líneas) - Agregar, eliminar, procesar reacciones, notificar
+  - `LikeQueryService.php` (~110 líneas) - Conteos, estados, obtener likes de usuario
+- **Wrapper deprecated:** `src/Services/LikeService.php` redirige al nuevo
+- **Reducción:** 357 → 100 líneas (~72% menos en archivo principal)
+
+#### SyncService (2025-12-15) ✅
+- **Antes:** 408 líneas, violaba SRP (verificación + audios + descarga + timestamps)
+- **Después:** Dividido en 4 servicios en `src/Services/Core/`:
+  - `SyncService.php` (~100 líneas) - Fachada orquestadora
+  - `SyncVerificacionService.php` (~110 líneas) - Verificación de cambios y timestamps
+  - `SyncAudioService.php` (~200 líneas) - Obtención y procesamiento de audios
+  - `SyncDescargaService.php` (~130 líneas) - Descarga y streaming de archivos
+- **Wrapper deprecated:** `src/Services/SyncService.php` redirige al nuevo
+- **Reducción:** 408 → 100 líneas (~75% menos en archivo principal)
+
+#### ChatService (2025-12-15) ✅
+- **Antes:** 385 líneas, violaba SRP (tokens + mensajes + conversaciones + utilidades)
+- **Después:** Dividido en 4 servicios en `src/Services/Social/`:
+  - `ChatService.php` (~100 líneas) - Fachada orquestadora
+  - `ChatTokenService.php` (~100 líneas) - Generación y verificación de tokens
+  - `ChatMensajeService.php` (~190 líneas) - CRUD de mensajes
+  - `ChatConversacionService.php` (~120 líneas) - Gestión de conversaciones
+- **Wrapper deprecated:** `src/Services/ChatService.php` redirige al nuevo
+- **Reducción:** 385 → 100 líneas (~74% menos en archivo principal)
+
+#### PostCreacionService (2025-12-15) ✅
+- **Antes:** 376 líneas, violaba SRP (crear posts + archivos + algoritmo + tags)
+- **Después:** Dividido en 3 servicios en `src/Services/Publicacion/`:
+  - `PostCreacionService.php` (~160 líneas) - Fachada orquestadora
+  - `PostArchivosService.php` (~210 líneas) - Procesamiento de archivos adjuntos
+  - `PostAlgoritmoDataService.php` (~75 líneas) - Datos del algoritmo y tags
+- **Wrapper deprecated:** `src/Services/PostCreacionService.php` redirige al nuevo
+- **Reducción:** 376 → 160 líneas (~57% menos en archivo principal)
+
+#### DescargaService (2025-12-15) ✅
+- **Antes:** 303 líneas, violaba SRP (procesamiento + tokens + streaming)
+- **Después:** Dividido en 3 servicios en `src/Services/Core/`:
+  - `DescargaService.php` (~180 líneas) - Fachada orquestadora
+  - `DescargaTokenService.php` (~105 líneas) - Generación y validación de tokens
+  - `DescargaEnvioService.php` (~125 líneas) - Streaming y envío de archivos
+- **Wrapper deprecated:** `src/Services/DescargaService.php` redirige al nuevo
+- **Reducción:** 303 → 180 líneas (~41% menos en archivo principal)
 
 ---
 
