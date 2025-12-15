@@ -178,17 +178,17 @@ src/
 | 3   | ColeccionService         | ~200   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
 | 4   | AudioProcessingService   | ~120   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
 | 5   | AutoPostService          | ~110   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 6   | NotificacionService      | ~470   | Notificaciones push     | 🟡 Media   | ⏳ Pendiente  |
-| 7   | FinanzaService           | ~450   | Sistema financiero      | 🟡 Media   | ⏳ Pendiente  |
-| 8   | FeedService              | ~460   | Feed personalizado      | 🟡 Media   | ⏳ Pendiente  |
-| 9   | StreamService            | ~420   | Streaming de audio      | 🟡 Media   | ⏳ Pendiente  |
-| 10  | ColeccionDescargaService | ~400   | Descarga ZIP            | 🟢 Baja    | ⏳ Pendiente  |
-| 11  | ComentarioService        | ~400   | Comentarios             | 🟢 Baja    | ⏳ Pendiente  |
-| 12  | ColabService             | ~410   | Colaboraciones          | 🟢 Baja    | ⏳ Pendiente  |
-| 13  | SyncService              | ~390   | Sincronización Electron | 🟢 Baja    | ⏳ Pendiente  |
+| 6   | NotificacionService      | ~100   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 7   | FinanzaService           | ~115   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 8   | FeedService              | ~230   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 9   | StreamService            | ~180   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 10  | ColeccionDescargaService | ~155   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 11  | ComentarioService        | ~135   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 12  | ColabService             | ~410   | Colaboraciones          | 🟢 Baja    | ⏳ Omitir     |
+| 13  | SyncService              | ~390   | Sincronización Electron | 🟢 Baja    | ⏳ Omitir     |
 | 14  | FiltroService            | ~360   | Filtros de posts        | 🟢 Baja    | ⏳ Pendiente  |
 | 15  | HashService              | ~400   | Hashing de audio        | 🟢 Baja    | ⏳ Pendiente  |
-| 16  | ChatService              | ~330   | Sistema de chat         | 🟢 Baja    | ⏳ Pendiente  |
+| 16  | ChatService              | ~330   | Sistema de chat         | 🟢 Baja    | ⏳ Omitir     |
 | 17  | AuthService              | ~300   | Autenticación           | 🟢 Baja    | ⏳ Pendiente  |
 | 18  | AudioProteccionService   | ~300   | Protección de audio     | 🟢 Baja    | ⏳ Pendiente  |
 | 19  | PerfilService            | ~280   | Perfiles de usuario     | 🟢 Baja    | ⏳ Pendiente  |
@@ -412,6 +412,67 @@ src/
   - `AutoPostMultipleService.php` (~160 líneas) - División de posts múltiples
 - **Wrapper deprecated:** `src/Services/AutoPostService.php` redirige al nuevo
 - **Reducción:** 608 → 110 líneas (~82% menos en archivo principal)
+
+#### NotificacionService (2025-12-15) ✅
+- **Antes:** 471 líneas, violaba SRP (Firebase + CRUD + consultas + cola/cron)
+- **Después:** Dividido en 5 servicios en `src/Services/Social/`:
+  - `NotificacionService.php` (~100 líneas) - Fachada orquestadora
+  - `NotificacionPushService.php` (~120 líneas) - Firebase: envío de notificaciones push
+  - `NotificacionCrudService.php` (~170 líneas) - Creación de notificaciones, envíos masivos/individuales
+  - `NotificacionQueryService.php` (~190 líneas) - Consultas, obtener, marcar como vista
+  - `NotificacionColaService.php` (~100 líneas) - Cola, cron, procesamiento asíncrono
+- **Wrapper deprecated:** `src/Services/NotificacionService.php` redirige al nuevo
+- **Reducción:** 471 → 100 líneas (~79% menos en archivo principal)
+
+#### FinanzaService (2025-12-15) ✅
+- **Antes:** 494 líneas, violaba SRP (cálculos + gestión acciones + historial)
+- **Después:** Dividido en 4 servicios en `src/Services/Finanza/`:
+  - `FinanzaService.php` (~115 líneas) - Fachada orquestadora
+  - `FinanzaCalculoService.php` (~210 líneas) - Cálculos de ingresos, valoración empresa/acciones
+  - `FinanzaAccionesService.php` (~190 líneas) - Gestión de acciones de usuarios
+  - `FinanzaHistorialService.php` (~145 líneas) - Consultas e historial financiero
+- **Wrapper deprecated:** `src/Services/FinanzaService.php` redirige al nuevo
+- **Reducción:** 494 → 115 líneas (~77% menos en archivo principal)
+
+#### FeedService (2025-12-15) ✅
+- **Antes:** 539 líneas, violaba SRP (obtención + cache + consultas datos)
+- **Después:** Dividido en 4 servicios en `src/Services/Feed/`:
+  - `FeedService.php` (~230 líneas) - Fachada orquestadora
+  - `FeedDatosService.php` (~240 líneas) - Consultas a base de datos
+  - `FeedRecopilacionService.php` (~125 líneas) - Recopilación de datos con cache
+  - `FeedCacheService.php` (~130 líneas) - Gestión de cache y reinicio
+- **Wrapper deprecated:** `src/Services/FeedService.php` redirige al nuevo
+- **Reducción:** 539 → 230 líneas (~57% menos en archivo principal)
+
+#### StreamService (2025-12-15) ✅
+- **Antes:** 517 líneas, violaba SRP (tokens + seguridad + streaming + cache)
+- **Después:** Dividido en 4 servicios en `src/Services/Audio/`:
+  - `StreamService.php` (~180 líneas) - Fachada orquestadora
+  - `StreamTokenService.php` (~220 líneas) - Generación/verificación de tokens
+  - `StreamSeguridadService.php` (~115 líneas) - Rate limiting y bloqueo de IPs
+  - `StreamEnvioService.php` (~195 líneas) - Streaming de archivos con range requests
+- **Wrapper deprecated:** `src/Services/StreamService.php` redirige al nuevo
+- **Reducción:** 517 → 180 líneas (~65% menos en archivo principal)
+
+#### ColeccionDescargaService (2025-12-15) ✅
+- **Antes:** 453 líneas, violaba SRP (ZIPs + tokens + streaming + estadísticas)
+- **Después:** Dividido en 4 servicios en `src/Services/Coleccion/`:
+  - `ColeccionDescargaService.php` (~155 líneas) - Fachada orquestadora
+  - `ColeccionDescargaZipService.php` (~180 líneas) - Creación y gestión de ZIPs
+  - `ColeccionDescargaTokenService.php` (~195 líneas) - Tokens y streaming
+  - `ColeccionDescargaEstadisticasService.php` (~170 líneas) - Pinkys y estadísticas
+- **Wrapper deprecated:** `src/Services/ColeccionDescargaService.php` redirige al nuevo
+- **Reducción:** 453 → 155 líneas (~66% menos en archivo principal)
+
+#### ComentarioService (2025-12-15) ✅
+- **Antes:** 459 líneas, violaba SRP (rate limiting + validación + CRUD + consultas + metadatos)
+- **Después:** Dividido en 4 servicios en `src/Services/Social/`:
+  - `ComentarioService.php` (~135 líneas) - Fachada orquestadora
+  - `ComentarioCrudService.php` (~180 líneas) - Crear y eliminar comentarios
+  - `ComentarioQueryService.php` (~130 líneas) - Consultas y formateo
+  - `ComentarioUtilService.php` (~220 líneas) - Rate limiting, validación, metadatos
+- **Wrapper deprecated:** `src/Services/ComentarioService.php` redirige al nuevo
+- **Reducción:** 459 → 135 líneas (~71% menos en archivo principal)
 
 ---
 
