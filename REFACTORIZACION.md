@@ -201,17 +201,17 @@ $likeService = new LikeService();
 > **Nota:** El módulo `app/Finanza/` (Stripe/pagos) se deja para el final ya que no es prioritario y requiere pruebas especiales con el sistema de pagos.
 
 #### Carpetas pendientes en `/app/` (2.6f)
-| Carpeta     | Archivos | Descripción           | Prioridad |
-| ----------- | -------- | --------------------- | --------- |
-| `Auto/`     | 7        | Posts automáticos, IA | Media     |
-| `Form/`     | 4        | Formularios de subida | Alta      |
-| `Misc/`     | 6        | Iconos, emergencias   | Baja      |
-| `Pages/`    | 15       | Tabs de páginas       | Media     |
-| `Perfiles/` | 4        | Perfiles de usuario   | Media     |
-| `Sync/`     | 1        | API de sincronización | Baja      |
-| `Test/`     | 3        | Archivos de prueba    | Baja      |
-| `Commands/` | 2        | Scripts shell         | Baja      |
-| `python/`   | 2        | Scripts Python        | Baja      |
+| Carpeta         | Archivos | Descripción           | Prioridad    |
+| --------------- | -------- | --------------------- | ------------ |
+| ~~`Auto/`~~     | 7        | Posts automáticos, IA | ✅ Completado |
+| `Form/`         | 4        | Formularios de subida | Alta         |
+| `Misc/`         | 6        | Iconos, emergencias   | Baja         |
+| `Pages/`        | 15       | Tabs de páginas       | Media        |
+| ~~`Perfiles/`~~ | 4        | Perfiles de usuario   | ✅ Completado |
+| `Sync/`         | 1        | API de sincronización | Baja         |
+| `Test/`         | 3        | Archivos de prueba    | Baja         |
+| `Commands/`     | 2        | Scripts shell         | Baja         |
+| `python/`       | 2        | Scripts Python        | Baja         |
 
 
 
@@ -421,6 +421,20 @@ $likeService = new LikeService();
   - **ELIMINADA** carpeta `app/Hook/` completamente
   - **ELIMINADA** carpeta `app/View/` completamente
   - Wrappers creados en `app/deprecated/`: `descargarColeccion.php`, `admin.php`, `hooks.php`, `onboarding.php`
+  - **[2.6f]** Migración de `app/Perfiles/`:
+    - `src/Services/PerfilService.php` - Actualizado con gestión de avatar, nombres y enlaces.
+    - `src/Controllers/PerfilController.php` - Unificación de handlers AJAX de perfil.
+    - `src/Views/Components/PerfilComponents.php` - Componentes de UI (banner, modales, shortcodes).
+    - `src/Core/ProfileRoutes.php` - Reglas de reescritura y redirecciones de usuarios.
+    - `app/deprecated/perfiles.php` - Wrapper de compatibilidad.
+    - **ELIMINADA** carpeta `app/Perfiles/` completamente.
+  - **[2.6g]** Migración de `app/Auto/`:
+    - `src/Services/AutoPostService.php` - Gestión de posts automáticos y escaneo.
+    - `src/Services/AutoContentService.php` - Mejora de contenido con IA y renombrado.
+    - `src/Services/PythonService.php` - Ejecución de scripts Python.
+    - `src/Services/HashService.php` - Actualizado con métodos de hashing de audio.
+    - `app/deprecated/auto.php` - Wrappers de compatibilidad.
+    - **ELIMINADA** carpeta `app/Auto/` completamente.
 
 ---
 

@@ -742,4 +742,95 @@ class AlgoritmoService
             $this->logger->$nivel('algoritmo', $mensaje);
         }
     }
+
+    /**
+     * Recalcula feed similar para posts en background (Cron job).
+     */
+    public function recalcularSimilarToFeed(): void
+    {
+        // Constantes internas
+        $LOCK_KEY = 'similar_to_process_lock';
+        $MAX_LOCK_TIME = 300;
+        $PROGRESS_OPTION = 'similar_to_progress';
+        $CACHED_COUNT_OPTION = 'similar_to_cached_count';
+        $STOP_UNTIL_OPTION = 'similar_to_stop_until';
+        $CONSECUTIVE_LIMIT = 100;
+        $STOP_DURATION = 6 * HOUR_IN_SECONDS;
+
+        // Verificar detención
+        $stopUntil = get_option($STOP_UNTIL_OPTION, 0);
+        if ($stopUntil && time() < $stopUntil) {
+            return;
+        } elseif ($stopUntil && time() >= $stopUntil) {
+            delete_option($STOP_UNTIL_OPTION);
+            update_option($CACHED_COUNT_OPTION, 0);
+        }
+
+        // Lock
+        $cacheService = \Kamples\Services\CacheService::obtenerInstancia(); // Asumiendo CacheService
+        // Ojo, en legacy usaba 'obtenerCache/guardarCache' wrappers.
+        // Si CacheService tiene metodos estaticos o instancia, usarlo.
+
+        // Simulado con methods temporales si no tengo acceso fácil a CacheService aquí o usar transients
+        $lockTime = get_transient($LOCK_KEY);
+        if ($lockTime && (time() - $lockTime < $MAX_LOCK_TIME)) {
+            return;
+        }
+        set_transient($LOCK_KEY, time(), $MAX_LOCK_TIME);
+
+        try {
+            $lastProcessedId = (int)get_option($PROGRESS_OPTION, 0);
+            global $wpdb;
+
+            while (true) {
+                // Obtener siguiente post
+                $query = $wpdb->prepare(
+                    "SELECT p.ID FROM {$wpdb->posts} p
+                    INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                    WHERE p.post_type = 'social_post'
+                    AND p.post_status = 'publish'
+                    AND p.ID > %d
+                    AND pm.meta_key = 'datosAlgoritmo'
+                    ORDER BY p.ID ASC LIMIT 1",
+                    $lastProcessedId
+                );
+
+                $postId = $wpdb->get_var($query);
+
+                if (!$postId) {
+                    update_option($PROGRESS_OPTION, 0);
+                    update_option($CACHED_COUNT_OPTION, 0);
+                    break;
+                }
+
+                $cacheKey = "similar_to_$postId";
+                // Verificar si existe cache
+                if (get_transient($cacheKey)) { // Uso transient como cache simple
+                    update_option($PROGRESS_OPTION, $postId);
+                    $cachedCount = (int)get_option($CACHED_COUNT_OPTION, 0) + 1;
+                    update_option($CACHED_COUNT_OPTION, $cachedCount);
+
+                    if ($cachedCount >= $CONSECUTIVE_LIMIT) {
+                        update_option($STOP_UNTIL_OPTION, time() + $STOP_DURATION);
+                        update_option($CACHED_COUNT_OPTION, 0);
+                        break;
+                    }
+                    $lastProcessedId = $postId;
+                } else {
+                    // Calcular 
+                    $postsSimilares = $this->calcularFeedPersonalizado(44, '', $postId); // 44 es usuario sistema/default? 
+                    if ($postsSimilares) {
+                        set_transient($cacheKey, $postsSimilares, 15 * DAY_IN_SECONDS);
+                    }
+                    update_option($PROGRESS_OPTION, $postId);
+                    update_option($CACHED_COUNT_OPTION, 0);
+                    break; // Solo uno por ejecución
+                }
+            }
+        } catch (\Exception $e) {
+            $this->log('error', "Error en recalcularSimilarToFeed: " . $e->getMessage());
+        } finally {
+            delete_transient($LOCK_KEY);
+        }
+    }
 }

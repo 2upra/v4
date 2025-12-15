@@ -359,6 +359,113 @@ class HashService
     /**
      * Ejecuta el script de permisos
      */
+    /**
+     * Obtiene un registro por hash
+     *
+     * @param string $fileHash Hash del archivo
+     * @return array|null Datos del registro o null
+     */
+    public function obtenerHash(string $fileHash): ?array
+    {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
+            $fileHash
+        ), ARRAY_A);
+    }
+
+    /**
+     * Obtiene hashes filtrados por extensión
+     * 
+     * @param array $extensiones Lista de extensiones permitidas
+     * @return array Lista de hashes
+     */
+    public function obtenerHashesFiltrados(array $extensiones): array
+    {
+        global $wpdb;
+        if (empty($extensiones)) {
+            return [];
+        }
+
+        $extensiones_regex = implode('|', array_map('preg_quote', $extensiones));
+        $query = $wpdb->prepare(
+            "SELECT file_hash FROM {$wpdb->prefix}file_hashes WHERE file_url REGEXP %s",
+            '\.(' . $extensiones_regex . ')$'
+        );
+
+        return $wpdb->get_results($query, ARRAY_A);
+    }
+
+    /**
+     * Verifica si una URL de archivo responde correctamente
+     *
+     * @param string $fileHash Hash del archivo
+     * @return bool True si el archivo responde 200-299
+     */
+    public function verificarCargaArchivoPorHash(string $fileHash): bool
+    {
+        $archivo = $this->obtenerHash($fileHash);
+        if (!$archivo) {
+            return false;
+        }
+
+        $fileUrl = $archivo['file_url'];
+
+        $ch = curl_init($fileUrl);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            return true;
+        } else {
+            $this->actualizarEstadoArchivo((int)$archivo['id'], 'loss');
+            return false;
+        }
+    }
+
+    /**
+     * Compara dos hashes usando distancia euclidiana (para algoritmos de audio/imagen)
+     *
+     * @param string $hash1 Primer hash
+     * @param string $hash2 Segundo hash
+     * @param float $umbral Umbral de similitud
+     * @return bool True si son similares
+     */
+    public function sonHashesSimilaresEuclidean(string $hash1, string $hash2, float $umbral = 0.85): bool
+    {
+        if (empty($hash1) || empty($hash2)) {
+            return false;
+        }
+
+        $valores1 = array_map('hexdec', str_split($hash1, 2));
+        $valores2 = array_map('hexdec', str_split($hash2, 2));
+
+        if (count($valores1) !== count($valores2)) {
+            return false;
+        }
+
+        $sumaDiferenciasCuadradas = 0;
+        $maxDiferencia = 255;
+
+        for ($i = 0; $i < count($valores1); $i++) {
+            $diferencia = abs($valores1[$i] - $valores2[$i]);
+            $sumaDiferenciasCuadradas += pow($diferencia, 2);
+        }
+
+        $distancia = sqrt($sumaDiferenciasCuadradas);
+        $similitud = 1 - ($distancia / (sqrt(count($valores1)) * $maxDiferencia));
+
+        return $similitud >= $umbral;
+    }
+
+    /**
+     * Ejecuta el script de permisos
+     */
     private function ejecutarScriptPermisos(): void
     {
         if (file_exists(self::PERMISOS_SCRIPT_PATH)) {
