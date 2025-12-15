@@ -391,7 +391,7 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <? echo config() ?>
-                <? echo formRs() ?>
+                <? echo \Kamples\Views\Components\PostFormComponents::renderFormRs() ?>
                 <? echo mostrarModalActualizacionApp() ?>
 
                 <!-- Enviar mensaje de error -->

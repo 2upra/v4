@@ -435,6 +435,10 @@ $likeService = new LikeService();
     - `src/Services/HashService.php` - Actualizado con métodos de hashing de audio.
     - `app/deprecated/auto.php` - Wrappers de compatibilidad.
     - **ELIMINADA** carpeta `app/Auto/` completamente.
+  - **[FIX]** Restaurado y refactorizado `formRs`:
+    - `src/Views/Components/PostFormComponents.php` - Creado componente para el formulario de publicación.
+    - `app/deprecated/form.php` - Añadido wrapper de compatibilidad para `formRs()`.
+    - `header.php` - Actualizado para usar `PostFormComponents::renderFormRs()`.
 
 ---
 

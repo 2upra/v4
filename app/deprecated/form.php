@@ -184,3 +184,13 @@ if (!function_exists('asignarTags')) {
         PostCreacionService::obtenerInstancia()->asignarTags((int)$postId);
     }
 }
+
+/**
+ * @deprecated Usar Kamples\Views\Components\PostFormComponents::renderFormRs()
+ */
+if (!function_exists('formRs')) {
+    function formRs()
+    {
+        return \Kamples\Views\Components\PostFormComponents::renderFormRs();
+    }
+}
