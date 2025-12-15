@@ -170,55 +170,55 @@ src/
 
 ## Inventario de Servicios (46 archivos)
 
-### Por revisar
-| #   | Servicio                 | Líneas | Responsabilidad         | Prioridad | Estado       |
-| --- | ------------------------ | ------ | ----------------------- | --------- | ------------ |
-| 1   | PublicacionService       | ~230   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 2   | AlgoritmoService         | ~330   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 3   | ColeccionService         | ~200   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 4   | AudioProcessingService   | ~120   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 5   | AutoPostService          | ~110   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 6   | NotificacionService      | ~100   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 7   | FinanzaService           | ~115   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 8   | FeedService              | ~230   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 9   | StreamService            | ~180   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 10  | ColeccionDescargaService | ~155   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 11  | ComentarioService        | ~135   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 12  | ColabService             | ~410   | Colaboraciones          | 🟢 Baja    | ⏳ Omitir     |
-| 13  | SyncService              | ~390   | Sincronización Electron | 🟢 Baja    | ⏳ Omitir     |
-| 14  | FiltroService            | ~360   | Filtros de posts        | 🟢 Baja    | ⏳ Pendiente  |
-| 15  | HashService              | ~400   | Hashing de audio        | 🟢 Baja    | ⏳ Pendiente  |
-| 16  | ChatService              | ~330   | Sistema de chat         | 🟢 Baja    | ⏳ Omitir     |
-| 17  | AuthService              | ~300   | Autenticación           | 🟢 Baja    | ⏳ Pendiente  |
-| 18  | AudioProteccionService   | ~300   | Protección de audio     | 🟢 Baja    | ⏳ Pendiente  |
-| 19  | PerfilService            | ~280   | Perfiles de usuario     | 🟢 Baja    | ⏳ Pendiente  |
-| 20  | PostEdicionService       | ~270   | Edición de posts        | 🟢 Baja    | ⏳ Pendiente  |
-| 21  | InteresService           | ~270   | Intereses del usuario   | 🟢 Baja    | ⏳ Pendiente  |
-| 22  | NormalizacionService     | ~260   | Normalización de tags   | 🟢 Baja    | ⏳ Pendiente  |
-| 23  | ModeracionService        | ~240   | Moderación/bloqueos     | 🟢 Baja    | ⏳ Pendiente  |
-| 24  | AutoContentService       | ~250   | Mejora con IA           | 🟢 Baja    | ⏳ Pendiente  |
-| 25  | DescargaService          | ~260   | Descargas de audio      | 🟢 Baja    | ⏳ Pendiente  |
-| 26  | LikeService              | ~290   | Sistema de likes        | 🟢 Baja    | ⏳ Pendiente  |
-| 27  | AlbumService             | ~250   | Procesamiento álbumes   | 🟢 Baja    | ⏳ Pendiente  |
-| 28  | BusquedaService          | ~230   | Búsqueda de contenido   | 🟢 Baja    | ⏳ Pendiente  |
-| 29  | PostRenderService        | ~240   | Renderizado de posts    | 🟢 Baja    | ⏳ Pendiente  |
-| 30  | PostCreacionService      | ~320   | Creación de posts       | 🟢 Baja    | ⏳ Pendiente  |
-| 31  | IAService                | ~220   | Comunicación con IA     | 🟢 Baja    | ⏳ Pendiente  |
-| 32  | IdeaService              | ~240   | Procesamiento de ideas  | 🟢 Baja    | ⏳ Pendiente  |
-| 33  | ImagenService            | ~200   | Optimización imágenes   | 🟢 Baja    | ⏳ Pendiente  |
-| 34  | UsuarioService           | ~290   | Gestión de usuarios     | 🟢 Baja    | ⏳ Pendiente  |
-| 35  | SeguirService            | ~190   | Sistema de seguimiento  | 🟢 Baja    | ⏳ Pendiente  |
-| 36  | CacheService             | ~220   | Sistema de cache        | 🟢 Baja    | ⏳ Pendiente  |
-| 37  | PostEstadoService        | ~170   | Estados de posts        | 🟢 Baja    | ⏳ Pendiente  |
-| 38  | WaveformService          | ~150   | Waveforms de audio      | 🟢 Baja    | ⏳ Pendiente  |
-| 39  | ReproductorService       | ~140   | Control reproductor     | 🟢 Baja    | ⏳ Pendiente  |
-| 40  | PostSlugService          | ~130   | Slugs de posts          | 🟢 Baja    | ⏳ Pendiente  |
-| 41  | ReporteService           | ~120   | Reportes de contenido   | 🟢 Baja    | ⏳ Pendiente  |
-| 42  | TagService               | ~110   | Tags frecuentes         | 🟢 Baja    | ⏳ Pendiente  |
-| 43  | UtilService              | ~110   | Utilidades generales    | 🟢 Baja    | ⏳ Pendiente  |
-| 44  | VistaService             | ~110   | Tracking de vistas      | 🟢 Baja    | ⏳ Pendiente  |
-| 45  | PythonService            | ~80    | Ejecución Python        | 🟢 Baja    | ⏳ Pendiente  |
-| 46  | ContadorService          | ~50    | Conteo de posts         | 🟢 Baja    | ⏳ Pendiente  |
+### Por revisar *Recuerda que tambien hay que organizarlos.
+| #   | Servicio                 | Líneas | Responsabilidad          | Prioridad | Estado       |
+| --- | ------------------------ | ------ | ------------------------ | --------- | ------------ |
+| 1   | PublicacionService       | ~230   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 2   | AlgoritmoService         | ~330   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 3   | ColeccionService         | ~200   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 4   | AudioProcessingService   | ~120   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 5   | AutoPostService          | ~110   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 6   | NotificacionService      | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 7   | FinanzaService           | ~115   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 8   | FeedService              | ~230   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 9   | StreamService            | ~180   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 10  | ColeccionDescargaService | ~155   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 11  | ComentarioService        | ~135   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 12  | ColabService             | ~410   | Colaboraciones           | 🟢 Baja    | ⏳ Pendiente  |
+| 13  | SyncService              | ~390   | Sincronización Electron  | 🟢 Baja    | ⏳ Pendiente  |
+| 14  | FiltroService            | ~110   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 15  | HashService              | ~120   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 16  | ChatService              | ~330   | Sistema de chat          | 🟢 Baja    | ⏳ Pendiente  |
+| 17  | AuthService              | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 18  | AudioProteccionService   | ~100   | Fachada (refactorizado)  | ✅ Hecho   | ✅ Completado |
+| 19  | PerfilService            | ~290   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
+| 20  | PostEdicionService       | ~285   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
+| 21  | InteresService           | ~295   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
+| 22  | NormalizacionService     | ~320   | Dentro límite (revisado) | ✅ Hecho   | ✅ Completado |
+| 23  | ModeracionService        | ~240   | Moderación/bloqueos      | 🟢 Baja    | ⏳ Pendiente  |
+| 24  | AutoContentService       | ~250   | Mejora con IA            | 🟢 Baja    | ⏳ Pendiente  |
+| 25  | DescargaService          | ~260   | Descargas de audio       | 🟢 Baja    | ⏳ Pendiente  |
+| 26  | LikeService              | ~290   | Sistema de likes         | 🟢 Baja    | ⏳ Pendiente  |
+| 27  | AlbumService             | ~250   | Procesamiento álbumes    | 🟢 Baja    | ⏳ Pendiente  |
+| 28  | BusquedaService          | ~230   | Búsqueda de contenido    | 🟢 Baja    | ⏳ Pendiente  |
+| 29  | PostRenderService        | ~240   | Renderizado de posts     | 🟢 Baja    | ⏳ Pendiente  |
+| 30  | PostCreacionService      | ~320   | Creación de posts        | 🟢 Baja    | ⏳ Pendiente  |
+| 31  | IAService                | ~220   | Comunicación con IA      | 🟢 Baja    | ⏳ Pendiente  |
+| 32  | IdeaService              | ~240   | Procesamiento de ideas   | 🟢 Baja    | ⏳ Pendiente  |
+| 33  | ImagenService            | ~200   | Optimización imágenes    | 🟢 Baja    | ⏳ Pendiente  |
+| 34  | UsuarioService           | ~290   | Gestión de usuarios      | 🟢 Baja    | ⏳ Pendiente  |
+| 35  | SeguirService            | ~190   | Sistema de seguimiento   | 🟢 Baja    | ⏳ Pendiente  |
+| 36  | CacheService             | ~220   | Sistema de cache         | 🟢 Baja    | ⏳ Pendiente  |
+| 37  | PostEstadoService        | ~170   | Estados de posts         | 🟢 Baja    | ⏳ Pendiente  |
+| 38  | WaveformService          | ~150   | Waveforms de audio       | 🟢 Baja    | ⏳ Pendiente  |
+| 39  | ReproductorService       | ~140   | Control reproductor      | 🟢 Baja    | ⏳ Pendiente  |
+| 40  | PostSlugService          | ~130   | Slugs de posts           | 🟢 Baja    | ⏳ Pendiente  |
+| 41  | ReporteService           | ~120   | Reportes de contenido    | 🟢 Baja    | ⏳ Pendiente  |
+| 42  | TagService               | ~110   | Tags frecuentes          | 🟢 Baja    | ⏳ Pendiente  |
+| 43  | UtilService              | ~110   | Utilidades generales     | 🟢 Baja    | ⏳ Pendiente  |
+| 44  | VistaService             | ~110   | Tracking de vistas       | 🟢 Baja    | ⏳ Pendiente  |
+| 45  | PythonService            | ~80    | Ejecución Python         | 🟢 Baja    | ⏳ Pendiente  |
+| 46  | ContadorService          | ~50    | Conteo de posts          | 🟢 Baja    | ⏳ Pendiente  |
 
 > **Nota:** Líneas aproximadas según tamaño de archivo. Prioridad alta = servicios grandes que probablemente violan SRP.
 
@@ -229,7 +229,7 @@ src/
 | #   | Controlador            | Tamaño | Estado      |
 | --- | ---------------------- | ------ | ----------- |
 | 1   | FinanzaController      | ~460   | ⏳ Pendiente |
-| 2   | ChatController         | ~320   | ⏳ Pendiente |
+| 2   | ChatController         | ~320   | ⏳ Oitir     |
 | 3   | ComentarioController   | ~270   | ⏳ Pendiente |
 | 4   | ColeccionController    | ~240   | ⏳ Pendiente |
 | 5   | ArchivoController      | ~200   | ⏳ Pendiente |
@@ -473,6 +473,73 @@ src/
   - `ComentarioUtilService.php` (~220 líneas) - Rate limiting, validación, metadatos
 - **Wrapper deprecated:** `src/Services/ComentarioService.php` redirige al nuevo
 - **Reducción:** 459 → 135 líneas (~71% menos en archivo principal)
+
+#### FiltroService (2025-12-15) ✅
+- **Antes:** 362 líneas, violaba SRP (aplicación de filtros + condiciones meta_query + preferencias usuario)
+- **Después:** Dividido en 4 servicios en `src/Services/Feed/`:
+  - `FiltroService.php` (~110 líneas) - Fachada orquestadora
+  - `FiltroAplicacionService.php` (~145 líneas) - Aplicación de filtros a queries
+  - `FiltroCondicionService.php` (~105 líneas) - Definiciones de condiciones meta_query
+  - `FiltroPreferenciaService.php` (~135 líneas) - Gestión de preferencias del usuario
+- **Wrapper deprecated:** `src/Services/FiltroService.php` redirige al nuevo
+- **Reducción:** 362 → 110 líneas (~70% menos en archivo principal)
+
+#### HashService (2025-12-15) ✅
+- **Antes:** 476 líneas, violaba SRP (cálculo hashes + CRUD BD + verificación + limpieza cron)
+- **Después:** Dividido en 4 servicios en `src/Services/Audio/`:
+  - `HashService.php` (~120 líneas) - Fachada orquestadora
+  - `HashCalculoService.php` (~170 líneas) - Cálculo y comparación de hashes
+  - `HashCrudService.php` (~170 líneas) - CRUD en tabla file_hashes
+  - `HashVerificacionService.php` (~155 líneas) - Consultas, verificación y limpieza
+- **Wrapper deprecated:** `src/Services/HashService.php` redirige al nuevo
+- **Reducción:** 476 → 120 líneas (~75% menos en archivo principal)
+
+#### AuthService (2025-12-15) ✅
+- **Antes:** 340 líneas, violaba SRP (login/registro + Google OAuth + tokens sesión + Firebase)
+- **Después:** Dividido en 4 servicios en `src/Services/Usuario/`:
+  - `AuthService.php` (~100 líneas) - Fachada orquestadora
+  - `AuthCredencialesService.php` (~90 líneas) - Login y registro local
+  - `AuthGoogleService.php` (~145 líneas) - Autenticación via Google OAuth
+  - `AuthTokenService.php` (~160 líneas) - Tokens de sesión y Firebase
+- **Wrapper deprecated:** `src/Services/AuthService.php` redirige al nuevo
+- **Reducción:** 340 → 100 líneas (~71% menos en archivo principal)
+
+#### AudioProteccionService (2025-12-15) ✅
+- **Antes:** 330 líneas, violaba SRP (hooks protección + cron + regeneración lite + optimización 64k)
+- **Después:** Dividido en 3 servicios en `src/Services/Audio/`:
+  - `AudioProteccionService.php` (~100 líneas) - Fachada orquestadora + hooks protección + cron
+  - `AudioRegeneracionService.php` (~120 líneas) - Regeneración de archivos MP3 lite
+  - `AudioOptimizacionService.php` (~150 líneas) - Optimización a 64kbps y gestión waveforms
+- **Wrapper deprecated:** `src/Services/AudioProteccionService.php` redirige al nuevo
+- **Reducción:** 330 → 100 líneas (~70% menos en archivo principal)
+
+#### PerfilService (2025-12-15) ✅
+- **Estado:** ~290 líneas - Dentro del límite de 300 líneas
+- **Responsabilidades:** Avatar, seguidores/siguiendo, descripción, presentación, imagen perfil, nombre, enlace
+- **Evaluación SRP:** Cumple - Todas las funciones están relacionadas con gestión del perfil de usuario
+- **Acción:** Movido a `src/Services/Usuario/PerfilService.php`
+- **Wrapper deprecated:** `src/Services/PerfilService.php` redirige al nuevo
+
+#### PostEdicionService (2025-12-15) ✅
+- **Estado:** ~285 líneas - Dentro del límite de 300 líneas
+- **Responsabilidades:** Cambio de título, cambio de descripción, corrección de tags, regeneración JSON con IA
+- **Evaluación SRP:** Cumple - Enfocado exclusivamente en edición de posts existentes
+- **Acción:** Movido a `src/Services/Publicacion/PostEdicionService.php`
+- **Wrapper deprecated:** `src/Services/PostEdicionService.php` redirige al nuevo
+
+#### InteresService (2025-12-15) ✅
+- **Estado:** ~295 líneas - Dentro del límite de 300 líneas
+- **Responsabilidades:** Generación de intereses desde likes, procesamiento de posts, actualización en BD
+- **Evaluación SRP:** Cumple - Enfocado en el dominio de intereses del usuario
+- **Acción:** Movido a `src/Services/Usuario/InteresService.php`
+- **Wrapper deprecated:** `src/Services/InteresService.php` redirige al nuevo
+
+#### NormalizacionService (2025-12-15) ✅
+- **Estado:** ~320 líneas - Ligeramente sobre el límite pero código altamente cohesivo
+- **Responsabilidades:** Normalización de tags, hooks WordPress, respaldos, restauración batch
+- **Evaluación SRP:** Cumple - Todo relacionado con normalización de datos de algoritmo
+- **Acción:** Movido a `src/Services/Contenido/NormalizacionService.php`
+- **Wrapper deprecated:** `src/Services/NormalizacionService.php` redirige al nuevo
 
 ---
 
