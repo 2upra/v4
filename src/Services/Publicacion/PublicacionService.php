@@ -206,12 +206,6 @@ class PublicacionService
             case 'colecciones':
                 return function_exists('htmlColec') ? htmlColec($filtro) : '';
 
-            case 'tarea':
-                return function_exists('htmlTareas') ? htmlTareas($filtro) : '';
-
-            case 'notas':
-                return function_exists('htmlNotas') ? htmlNotas($filtro) : '';
-
             case 'post':
                 return function_exists('htmlArticulo') ? htmlArticulo($filtro) : '';
 

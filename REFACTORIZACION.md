@@ -176,8 +176,8 @@ src/
 | 1   | PublicacionService       | ~230   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
 | 2   | AlgoritmoService         | ~330   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
 | 3   | ColeccionService         | ~200   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
-| 4   | AudioProcessingService   | ~620   | Procesamiento de audio  | 🟡 Media   | ⏳ Pendiente  |
-| 5   | AutoPostService          | ~650   | Posts automáticos       | 🟡 Media   | ⏳ Pendiente  |
+| 4   | AudioProcessingService   | ~120   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
+| 5   | AutoPostService          | ~110   | Fachada (refactorizado) | ✅ Hecho   | ✅ Completado |
 | 6   | NotificacionService      | ~470   | Notificaciones push     | 🟡 Media   | ⏳ Pendiente  |
 | 7   | FinanzaService           | ~450   | Sistema financiero      | 🟡 Media   | ⏳ Pendiente  |
 | 8   | FeedService              | ~460   | Feed personalizado      | 🟡 Media   | ⏳ Pendiente  |
@@ -391,6 +391,27 @@ src/
   - `ColeccionQueryService.php` (~160 líneas) - Consultas y renderizado
 - **Wrapper deprecated:** `src/Services/ColeccionService.php` redirige al nuevo
 - **Reducción:** 722 → 200 líneas (~72% menos en archivo principal)
+
+#### AudioProcessingService (2025-12-15) ✅
+- **Antes:** 510 líneas, violaba SRP (conversión FFmpeg + análisis Python + generación IA + algoritmo)
+- **Después:** Dividido en 4 servicios en `src/Services/Audio/`:
+  - `AudioProcessingService.php` (~120 líneas) - Fachada orquestadora
+  - `AudioConversionService.php` (~160 líneas) - FFmpeg: versiones ligeras, metadatos, duración
+  - `AudioAnalisisService.php` (~90 líneas) - Script Python para BPM, pitch, emotion, key, scale
+  - `AudioIAService.php` (~230 líneas) - Generación de descripciones con IA
+- **Wrapper deprecated:** `src/Services/AudioProcessingService.php` redirige al nuevo
+- **Reducción:** 510 → 120 líneas (~76% menos en archivo principal)
+
+#### AutoPostService (2025-12-15) ✅
+- **Antes:** 608 líneas, violaba SRP (archivos + creación + escaneo + múltiples)
+- **Después:** Dividido en 5 servicios en `src/Services/Contenido/`:
+  - `AutoPostService.php` (~110 líneas) - Fachada orquestadora
+  - `AutoPostArchivoService.php` (~170 líneas) - Validación y procesamiento de archivos
+  - `AutoPostCreacionService.php` (~230 líneas) - Creación de posts y adjuntos
+  - `AutoPostScanService.php` (~190 líneas) - Escaneo cron y búsqueda de audios
+  - `AutoPostMultipleService.php` (~160 líneas) - División de posts múltiples
+- **Wrapper deprecated:** `src/Services/AutoPostService.php` redirige al nuevo
+- **Reducción:** 608 → 110 líneas (~82% menos en archivo principal)
 
 ---
 
