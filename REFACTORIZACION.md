@@ -53,7 +53,7 @@ Tema de WordPress para aplicación social/musical. Requiere refactorización pro
 
 ### Estado Actual
 - **Servicios:** ✅ **46/46 completados** - Todos organizados en carpetas de dominio
-- **Controladores:** ⏳ 0/31 pendientes
+- **Controladores:** 🔄 **6/31 completados** - En progreso
 - **Componentes:** ⏳ 0/33 pendientes
 
 ### Objetivos
@@ -231,39 +231,41 @@ src/
 
 ## Inventario de Controladores (31 archivos)
 
-| #   | Controlador            | Tamaño | Estado      |
-| --- | ---------------------- | ------ | ----------- |
-| 1   | FinanzaController      | ~460   | ⏳ Pendiente |
-| 2   | ChatController         | ~320   | ⏳ Pendiente |
-| 3   | ComentarioController   | ~270   | ⏳ Pendiente |
-| 4   | ColeccionController    | ~240   | ⏳ Pendiente |
-| 5   | ArchivoController      | ~200   | ⏳ Pendiente |
-| 6   | PerfilController       | ~200   | ⏳ Pendiente |
-| 7   | SyncController         | ~150   | ⏳ Pendiente |
-| 8   | AuthController         | ~150   | ⏳ Pendiente |
-| 9   | FiltroController       | ~140   | ⏳ Pendiente |
-| 10  | UsuarioController      | ~130   | ⏳ Pendiente |
-| 11  | PostController         | ~130   | ⏳ Pendiente |
-| 12  | LikeController         | ~115   | ⏳ Pendiente |
-| 13  | PostEstadoController   | ~95    | ⏳ Pendiente |
-| 14  | NotificacionController | ~95    | ⏳ Pendiente |
-| 15  | SeguirController       | ~75    | ⏳ Pendiente |
-| 16  | StreamController       | ~80    | ⏳ Pendiente |
-| 17  | ColabController        | ~75    | ⏳ Pendiente |
-| 18  | ModeracionController   | ~70    | ⏳ Pendiente |
-| 19  | PublicacionController  | ~75    | ⏳ Pendiente |
-| 20  | ReproductorController  | ~60    | ⏳ Pendiente |
-| 21  | ReporteController      | ~55    | ⏳ Pendiente |
-| 22  | OnboardingController   | ~55    | ⏳ Pendiente |
-| 23  | PostEdicionController  | ~65    | ⏳ Pendiente |
-| 24  | FormularioController   | ~55    | ⏳ Pendiente |
-| 25  | IAController           | ~50    | ⏳ Pendiente |
-| 26  | DescargaController     | ~50    | ⏳ Pendiente |
-| 27  | ContadorController     | ~45    | ⏳ Pendiente |
-| 28  | WaveformController     | ~45    | ⏳ Pendiente |
-| 29  | BusquedaController     | ~40    | ⏳ Pendiente |
-| 30  | VistaController        | ~35    | ⏳ Pendiente |
-| 31  | UtilController         | ~35    | ⏳ Pendiente |
+| #   | Controlador            | Tamaño | Destino        | Estado       |
+| --- | ---------------------- | ------ | -------------- | ------------ |
+| 1   | FinanzaController      | ~460   | `Finanza/`     | ✅ Completado |
+| 2   | ChatController         | ~320   | `Social/`      | ✅ Completado |
+| 3   | ComentarioController   | ~270   | `Social/`      | ✅ Completado |
+| 4   | ColeccionController    | ~240   | `Coleccion/`   | ✅ Completado |
+| 5   | ArchivoController      | ~200   | `Audio/`       | ✅ Completado |
+| 6   | PerfilController       | ~200   | `Usuario/`     | ✅ Completado |
+| 7   | SyncController         | ~150   | `Core/`        | ⏳ Pendiente  |
+| 8   | AuthController         | ~150   | `Usuario/`     | ⏳ Pendiente  |
+| 9   | FiltroController       | ~140   | `Feed/`        | ⏳ Pendiente  |
+| 10  | UsuarioController      | ~130   | `Usuario/`     | ⏳ Pendiente  |
+| 11  | PostController         | ~130   | `Publicacion/` | ⏳ Pendiente  |
+| 12  | LikeController         | ~115   | `Social/`      | ⏳ Pendiente  |
+| 13  | PostEstadoController   | ~95    | `Publicacion/` | ⏳ Pendiente  |
+| 14  | NotificacionController | ~95    | `Social/`      | ⏳ Pendiente  |
+| 15  | SeguirController       | ~75    | `Social/`      | ⏳ Pendiente  |
+| 16  | StreamController       | ~80    | `Audio/`       | ⏳ Pendiente  |
+| 17  | ColabController        | ~75    | `Social/`      | ⏳ Pendiente  |
+| 18  | ModeracionController   | ~70    | `Moderacion/`  | ⏳ Pendiente  |
+| 19  | PublicacionController  | ~75    | `Publicacion/` | ⏳ Pendiente  |
+| 20  | ReproductorController  | ~60    | `Audio/`       | ⏳ Pendiente  |
+| 21  | ReporteController      | ~55    | `Moderacion/`  | ⏳ Pendiente  |
+| 22  | OnboardingController   | ~55    | `Usuario/`     | ⏳ Pendiente  |
+| 23  | PostEdicionController  | ~65    | `Publicacion/` | ⏳ Pendiente  |
+| 24  | FormularioController   | ~55    | `Core/`        | ⏳ Pendiente  |
+| 25  | IAController           | ~50    | `Contenido/`   | ⏳ Pendiente  |
+| 26  | DescargaController     | ~50    | `Core/`        | ⏳ Pendiente  |
+| 27  | ContadorController     | ~45    | `Core/`        | ⏳ Pendiente  |
+| 28  | WaveformController     | ~45    | `Audio/`       | ⏳ Pendiente  |
+| 29  | BusquedaController     | ~40    | `Core/`        | ⏳ Pendiente  |
+| 30  | VistaController        | ~35    | `Core/`        | ⏳ Pendiente  |
+| 31  | UtilController         | ~35    | `Core/`        | ⏳ Pendiente  |
+
+> **Nota:** Los controladores marcados como completados fueron divididos (si excedían límite) o movidos a su carpeta de dominio con wrapper deprecated.
 
 ---
 
@@ -365,384 +367,66 @@ src/
 
 ---
 
-### Revisiones Completadas
+### Revisiones Completadas (Resumen)
 
-#### PublicacionService (2025-12-15) ✅
-- **Antes:** 1160 líneas, violaba SRP (queries + ordenamiento + filtros + renderizado)
-- **Después:** Dividido en 4 servicios en `src/Services/Publicacion/`:
-  - `PublicacionService.php` (~230 líneas) - Fachada orquestadora
-  - `PublicacionQueryService.php` (~280 líneas) - Construcción de queries
-  - `PublicacionOrdenamientoService.php` (~350 líneas) - Ordenamientos y likes
-  - `PublicacionFiltroService.php` (~270 líneas) - Filtros de usuario y búsqueda
-- **Wrapper deprecated:** `src/Services/PublicacionService.php` redirige al nuevo
-- **Reducción:** 1160 → 230 líneas (~80% menos en archivo principal)
+> **46 servicios refactorizados el 2025-12-15**
 
-#### AlgoritmoService (2025-12-15) ✅
-- **Antes:** 837 líneas, violaba SRP (puntuación + similitud + cron)
-- **Después:** Dividido en 4 servicios en `src/Services/Feed/`:
-  - `AlgoritmoService.php` (~330 líneas) - Fachada orquestadora
-  - `AlgoritmoPuntuacionService.php` (~260 líneas) - Cálculo de puntos
-  - `AlgoritmoSimilitudService.php` (~130 líneas) - Cálculo de similitud
-  - `AlgoritmoCronService.php` (~150 líneas) - Trabajo de cron
-- **Wrapper deprecated:** `src/Services/AlgoritmoService.php` redirige al nuevo
-- **Reducción:** 837 → 330 líneas (~60% menos en archivo principal)
+#### Servicios Divididos (21 servicios - violaban SRP)
 
-#### ColeccionService (2025-12-15) ✅
-- **Antes:** 722 líneas, violaba SRP (CRUD + samples + consultas + renderizado)
-- **Después:** Dividido en 4 servicios en `src/Services/Coleccion/`:
-  - `ColeccionService.php` (~200 líneas) - Fachada orquestadora
-  - `ColeccionCrudService.php` (~230 líneas) - Crear, editar, eliminar colecciones
-  - `ColeccionSampleService.php` (~360 líneas) - Gestión de samples en colecciones
-  - `ColeccionQueryService.php` (~160 líneas) - Consultas y renderizado
-- **Wrapper deprecated:** `src/Services/ColeccionService.php` redirige al nuevo
-- **Reducción:** 722 → 200 líneas (~72% menos en archivo principal)
+| Servicio Original        | Líneas Antes | Líneas Después | Reducción | Servicios Resultantes         |
+| ------------------------ | ------------ | -------------- | --------- | ----------------------------- |
+| PublicacionService       | 1160         | 230            | 80%       | 4 servicios en `Publicacion/` |
+| AlgoritmoService         | 837          | 330            | 60%       | 4 servicios en `Feed/`        |
+| ColeccionService         | 722          | 200            | 72%       | 4 servicios en `Coleccion/`   |
+| AutoPostService          | 608          | 110            | 82%       | 5 servicios en `Contenido/`   |
+| FeedService              | 539          | 230            | 57%       | 4 servicios en `Feed/`        |
+| StreamService            | 517          | 180            | 65%       | 4 servicios en `Audio/`       |
+| AudioProcessingService   | 510          | 120            | 76%       | 4 servicios en `Audio/`       |
+| FinanzaService           | 494          | 115            | 77%       | 4 servicios en `Finanza/`     |
+| HashService              | 476          | 120            | 75%       | 4 servicios en `Audio/`       |
+| NotificacionService      | 471          | 100            | 79%       | 5 servicios en `Social/`      |
+| ComentarioService        | 459          | 135            | 71%       | 4 servicios en `Social/`      |
+| ColeccionDescargaService | 453          | 155            | 66%       | 4 servicios en `Coleccion/`   |
+| ColabService             | 415          | 100            | 76%       | 3 servicios en `Social/`      |
+| SyncService              | 408          | 100            | 75%       | 4 servicios en `Core/`        |
+| ChatService              | 385          | 100            | 74%       | 4 servicios en `Social/`      |
+| PostCreacionService      | 376          | 160            | 57%       | 3 servicios en `Publicacion/` |
+| UsuarioService           | 366          | 170            | 54%       | 3 servicios en `Usuario/`     |
+| FiltroService            | 362          | 110            | 70%       | 4 servicios en `Feed/`        |
+| LikeService              | 357          | 100            | 72%       | 3 servicios en `Social/`      |
+| AuthService              | 340          | 100            | 71%       | 4 servicios en `Usuario/`     |
+| AudioProteccionService   | 330          | 100            | 70%       | 3 servicios en `Audio/`       |
+| DescargaService          | 303          | 180            | 41%       | 3 servicios en `Core/`        |
 
-#### AudioProcessingService (2025-12-15) ✅
-- **Antes:** 510 líneas, violaba SRP (conversión FFmpeg + análisis Python + generación IA + algoritmo)
-- **Después:** Dividido en 4 servicios en `src/Services/Audio/`:
-  - `AudioProcessingService.php` (~120 líneas) - Fachada orquestadora
-  - `AudioConversionService.php` (~160 líneas) - FFmpeg: versiones ligeras, metadatos, duración
-  - `AudioAnalisisService.php` (~90 líneas) - Script Python para BPM, pitch, emotion, key, scale
-  - `AudioIAService.php` (~230 líneas) - Generación de descripciones con IA
-- **Wrapper deprecated:** `src/Services/AudioProcessingService.php` redirige al nuevo
-- **Reducción:** 510 → 120 líneas (~76% menos en archivo principal)
+#### Servicios Movidos sin Dividir (25 servicios - cumplían SRP)
 
-#### AutoPostService (2025-12-15) ✅
-- **Antes:** 608 líneas, violaba SRP (archivos + creación + escaneo + múltiples)
-- **Después:** Dividido en 5 servicios en `src/Services/Contenido/`:
-  - `AutoPostService.php` (~110 líneas) - Fachada orquestadora
-  - `AutoPostArchivoService.php` (~170 líneas) - Validación y procesamiento de archivos
-  - `AutoPostCreacionService.php` (~230 líneas) - Creación de posts y adjuntos
-  - `AutoPostScanService.php` (~190 líneas) - Escaneo cron y búsqueda de audios
-  - `AutoPostMultipleService.php` (~160 líneas) - División de posts múltiples
-- **Wrapper deprecated:** `src/Services/AutoPostService.php` redirige al nuevo
-- **Reducción:** 608 → 110 líneas (~82% menos en archivo principal)
+| Servicio             | Líneas | Destino        |
+| -------------------- | ------ | -------------- |
+| NormalizacionService | ~320   | `Contenido/`   |
+| AlbumService         | ~303   | `Coleccion/`   |
+| InteresService       | ~295   | `Usuario/`     |
+| CacheService         | ~290   | `Core/`        |
+| PerfilService        | ~290   | `Usuario/`     |
+| PostEdicionService   | ~285   | `Publicacion/` |
+| IdeaService          | ~281   | `Contenido/`   |
+| PostRenderService    | ~277   | `Publicacion/` |
+| BusquedaService      | ~271   | `Core/`        |
+| ModeracionService    | ~254   | `Moderacion/`  |
+| ImagenService        | ~237   | `Contenido/`   |
+| IAService            | ~224   | `Contenido/`   |
+| SeguirService        | ~220   | `Usuario/`     |
+| PostEstadoService    | ~197   | `Publicacion/` |
+| ReproductorService   | ~173   | `Audio/`       |
+| WaveformService      | ~170   | `Audio/`       |
+| PostSlugService      | ~155   | `Publicacion/` |
+| ReporteService       | ~151   | `Moderacion/`  |
+| TagService           | ~134   | `Core/`        |
+| VistaService         | ~134   | `Core/`        |
+| UtilService          | ~126   | `Core/`        |
+| PythonService        | ~83    | `Core/`        |
+| ContadorService      | ~70    | `Core/`        |
 
-#### NotificacionService (2025-12-15) ✅
-- **Antes:** 471 líneas, violaba SRP (Firebase + CRUD + consultas + cola/cron)
-- **Después:** Dividido en 5 servicios en `src/Services/Social/`:
-  - `NotificacionService.php` (~100 líneas) - Fachada orquestadora
-  - `NotificacionPushService.php` (~120 líneas) - Firebase: envío de notificaciones push
-  - `NotificacionCrudService.php` (~170 líneas) - Creación de notificaciones, envíos masivos/individuales
-  - `NotificacionQueryService.php` (~190 líneas) - Consultas, obtener, marcar como vista
-  - `NotificacionColaService.php` (~100 líneas) - Cola, cron, procesamiento asíncrono
-- **Wrapper deprecated:** `src/Services/NotificacionService.php` redirige al nuevo
-- **Reducción:** 471 → 100 líneas (~79% menos en archivo principal)
-
-#### FinanzaService (2025-12-15) ✅
-- **Antes:** 494 líneas, violaba SRP (cálculos + gestión acciones + historial)
-- **Después:** Dividido en 4 servicios en `src/Services/Finanza/`:
-  - `FinanzaService.php` (~115 líneas) - Fachada orquestadora
-  - `FinanzaCalculoService.php` (~210 líneas) - Cálculos de ingresos, valoración empresa/acciones
-  - `FinanzaAccionesService.php` (~190 líneas) - Gestión de acciones de usuarios
-  - `FinanzaHistorialService.php` (~145 líneas) - Consultas e historial financiero
-- **Wrapper deprecated:** `src/Services/FinanzaService.php` redirige al nuevo
-- **Reducción:** 494 → 115 líneas (~77% menos en archivo principal)
-
-#### FeedService (2025-12-15) ✅
-- **Antes:** 539 líneas, violaba SRP (obtención + cache + consultas datos)
-- **Después:** Dividido en 4 servicios en `src/Services/Feed/`:
-  - `FeedService.php` (~230 líneas) - Fachada orquestadora
-  - `FeedDatosService.php` (~240 líneas) - Consultas a base de datos
-  - `FeedRecopilacionService.php` (~125 líneas) - Recopilación de datos con cache
-  - `FeedCacheService.php` (~130 líneas) - Gestión de cache y reinicio
-- **Wrapper deprecated:** `src/Services/FeedService.php` redirige al nuevo
-- **Reducción:** 539 → 230 líneas (~57% menos en archivo principal)
-
-#### StreamService (2025-12-15) ✅
-- **Antes:** 517 líneas, violaba SRP (tokens + seguridad + streaming + cache)
-- **Después:** Dividido en 4 servicios en `src/Services/Audio/`:
-  - `StreamService.php` (~180 líneas) - Fachada orquestadora
-  - `StreamTokenService.php` (~220 líneas) - Generación/verificación de tokens
-  - `StreamSeguridadService.php` (~115 líneas) - Rate limiting y bloqueo de IPs
-  - `StreamEnvioService.php` (~195 líneas) - Streaming de archivos con range requests
-- **Wrapper deprecated:** `src/Services/StreamService.php` redirige al nuevo
-- **Reducción:** 517 → 180 líneas (~65% menos en archivo principal)
-
-#### ColeccionDescargaService (2025-12-15) ✅
-- **Antes:** 453 líneas, violaba SRP (ZIPs + tokens + streaming + estadísticas)
-- **Después:** Dividido en 4 servicios en `src/Services/Coleccion/`:
-  - `ColeccionDescargaService.php` (~155 líneas) - Fachada orquestadora
-  - `ColeccionDescargaZipService.php` (~180 líneas) - Creación y gestión de ZIPs
-  - `ColeccionDescargaTokenService.php` (~195 líneas) - Tokens y streaming
-  - `ColeccionDescargaEstadisticasService.php` (~170 líneas) - Pinkys y estadísticas
-- **Wrapper deprecated:** `src/Services/ColeccionDescargaService.php` redirige al nuevo
-- **Reducción:** 453 → 155 líneas (~66% menos en archivo principal)
-
-#### ComentarioService (2025-12-15) ✅
-- **Antes:** 459 líneas, violaba SRP (rate limiting + validación + CRUD + consultas + metadatos)
-- **Después:** Dividido en 4 servicios en `src/Services/Social/`:
-  - `ComentarioService.php` (~135 líneas) - Fachada orquestadora
-  - `ComentarioCrudService.php` (~180 líneas) - Crear y eliminar comentarios
-  - `ComentarioQueryService.php` (~130 líneas) - Consultas y formateo
-  - `ComentarioUtilService.php` (~220 líneas) - Rate limiting, validación, metadatos
-- **Wrapper deprecated:** `src/Services/ComentarioService.php` redirige al nuevo
-- **Reducción:** 459 → 135 líneas (~71% menos en archivo principal)
-
-#### FiltroService (2025-12-15) ✅
-- **Antes:** 362 líneas, violaba SRP (aplicación de filtros + condiciones meta_query + preferencias usuario)
-- **Después:** Dividido en 4 servicios en `src/Services/Feed/`:
-  - `FiltroService.php` (~110 líneas) - Fachada orquestadora
-  - `FiltroAplicacionService.php` (~145 líneas) - Aplicación de filtros a queries
-  - `FiltroCondicionService.php` (~105 líneas) - Definiciones de condiciones meta_query
-  - `FiltroPreferenciaService.php` (~135 líneas) - Gestión de preferencias del usuario
-- **Wrapper deprecated:** `src/Services/FiltroService.php` redirige al nuevo
-- **Reducción:** 362 → 110 líneas (~70% menos en archivo principal)
-
-#### HashService (2025-12-15) ✅
-- **Antes:** 476 líneas, violaba SRP (cálculo hashes + CRUD BD + verificación + limpieza cron)
-- **Después:** Dividido en 4 servicios en `src/Services/Audio/`:
-  - `HashService.php` (~120 líneas) - Fachada orquestadora
-  - `HashCalculoService.php` (~170 líneas) - Cálculo y comparación de hashes
-  - `HashCrudService.php` (~170 líneas) - CRUD en tabla file_hashes
-  - `HashVerificacionService.php` (~155 líneas) - Consultas, verificación y limpieza
-- **Wrapper deprecated:** `src/Services/HashService.php` redirige al nuevo
-- **Reducción:** 476 → 120 líneas (~75% menos en archivo principal)
-
-#### AuthService (2025-12-15) ✅
-- **Antes:** 340 líneas, violaba SRP (login/registro + Google OAuth + tokens sesión + Firebase)
-- **Después:** Dividido en 4 servicios en `src/Services/Usuario/`:
-  - `AuthService.php` (~100 líneas) - Fachada orquestadora
-  - `AuthCredencialesService.php` (~90 líneas) - Login y registro local
-  - `AuthGoogleService.php` (~145 líneas) - Autenticación via Google OAuth
-  - `AuthTokenService.php` (~160 líneas) - Tokens de sesión y Firebase
-- **Wrapper deprecated:** `src/Services/AuthService.php` redirige al nuevo
-- **Reducción:** 340 → 100 líneas (~71% menos en archivo principal)
-
-#### AudioProteccionService (2025-12-15) ✅
-- **Antes:** 330 líneas, violaba SRP (hooks protección + cron + regeneración lite + optimización 64k)
-- **Después:** Dividido en 3 servicios en `src/Services/Audio/`:
-  - `AudioProteccionService.php` (~100 líneas) - Fachada orquestadora + hooks protección + cron
-  - `AudioRegeneracionService.php` (~120 líneas) - Regeneración de archivos MP3 lite
-  - `AudioOptimizacionService.php` (~150 líneas) - Optimización a 64kbps y gestión waveforms
-- **Wrapper deprecated:** `src/Services/AudioProteccionService.php` redirige al nuevo
-- **Reducción:** 330 → 100 líneas (~70% menos en archivo principal)
-
-#### PerfilService (2025-12-15) ✅
-- **Estado:** ~290 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Avatar, seguidores/siguiendo, descripción, presentación, imagen perfil, nombre, enlace
-- **Evaluación SRP:** Cumple - Todas las funciones están relacionadas con gestión del perfil de usuario
-- **Acción:** Movido a `src/Services/Usuario/PerfilService.php`
-- **Wrapper deprecated:** `src/Services/PerfilService.php` redirige al nuevo
-
-#### PostEdicionService (2025-12-15) ✅
-- **Estado:** ~285 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Cambio de título, cambio de descripción, corrección de tags, regeneración JSON con IA
-- **Evaluación SRP:** Cumple - Enfocado exclusivamente en edición de posts existentes
-- **Acción:** Movido a `src/Services/Publicacion/PostEdicionService.php`
-- **Wrapper deprecated:** `src/Services/PostEdicionService.php` redirige al nuevo
-
-#### InteresService (2025-12-15) ✅
-- **Estado:** ~295 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Generación de intereses desde likes, procesamiento de posts, actualización en BD
-- **Evaluación SRP:** Cumple - Enfocado en el dominio de intereses del usuario
-- **Acción:** Movido a `src/Services/Usuario/InteresService.php`
-- **Wrapper deprecated:** `src/Services/InteresService.php` redirige al nuevo
-
-#### NormalizacionService (2025-12-15) ✅
-- **Estado:** ~320 líneas - Ligeramente sobre el límite pero código altamente cohesivo
-- **Responsabilidades:** Normalización de tags, hooks WordPress, respaldos, restauración batch
-- **Evaluación SRP:** Cumple - Todo relacionado con normalización de datos de algoritmo
-- **Acción:** Movido a `src/Services/Contenido/NormalizacionService.php`
-- **Wrapper deprecated:** `src/Services/NormalizacionService.php` redirige al nuevo
-
-#### ColabService (2025-12-15) ✅
-- **Antes:** 415 líneas, violaba SRP (UI + validación + CRUD + conversaciones + consultas + estado)
-- **Después:** Dividido en 3 servicios en `src/Services/Social/`:
-  - `ColabService.php` (~100 líneas) - Fachada orquestadora
-  - `ColabCrudService.php` (~250 líneas) - Creación, validación, conversaciones, archivos, estado
-  - `ColabQueryService.php` (~150 líneas) - Botón, variables, resumen de colabs
-- **Wrapper deprecated:** `src/Services/ColabService.php` redirige al nuevo
-- **Reducción:** 415 → 100 líneas (~76% menos en archivo principal)
-
-#### ModeracionService (2025-12-15) ✅
-- **Estado:** ~254 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Bloqueo/restricción de usuarios, gestión de IPs, registro de intentos
-- **Evaluación SRP:** Cumple - Todo relacionado con moderación de usuarios
-- **Acción:** Movido a `src/Services/Moderacion/ModeracionService.php`
-- **Wrapper deprecated:** `src/Services/ModeracionService.php` redirige al nuevo
-
-#### LikeService (2025-12-15) ✅
-- **Antes:** 357 líneas, violaba SRP (acciones + procesamiento + notificaciones + consultas)
-- **Después:** Dividido en 3 servicios en `src/Services/Social/`:
-  - `LikeService.php` (~100 líneas) - Fachada orquestadora
-  - `LikeCrudService.php` (~200 líneas) - Agregar, eliminar, procesar reacciones, notificar
-  - `LikeQueryService.php` (~110 líneas) - Conteos, estados, obtener likes de usuario
-- **Wrapper deprecated:** `src/Services/LikeService.php` redirige al nuevo
-- **Reducción:** 357 → 100 líneas (~72% menos en archivo principal)
-
-#### SyncService (2025-12-15) ✅
-- **Antes:** 408 líneas, violaba SRP (verificación + audios + descarga + timestamps)
-- **Después:** Dividido en 4 servicios en `src/Services/Core/`:
-  - `SyncService.php` (~100 líneas) - Fachada orquestadora
-  - `SyncVerificacionService.php` (~110 líneas) - Verificación de cambios y timestamps
-  - `SyncAudioService.php` (~200 líneas) - Obtención y procesamiento de audios
-  - `SyncDescargaService.php` (~130 líneas) - Descarga y streaming de archivos
-- **Wrapper deprecated:** `src/Services/SyncService.php` redirige al nuevo
-- **Reducción:** 408 → 100 líneas (~75% menos en archivo principal)
-
-#### ChatService (2025-12-15) ✅
-- **Antes:** 385 líneas, violaba SRP (tokens + mensajes + conversaciones + utilidades)
-- **Después:** Dividido en 4 servicios en `src/Services/Social/`:
-  - `ChatService.php` (~100 líneas) - Fachada orquestadora
-  - `ChatTokenService.php` (~100 líneas) - Generación y verificación de tokens
-  - `ChatMensajeService.php` (~190 líneas) - CRUD de mensajes
-  - `ChatConversacionService.php` (~120 líneas) - Gestión de conversaciones
-- **Wrapper deprecated:** `src/Services/ChatService.php` redirige al nuevo
-- **Reducción:** 385 → 100 líneas (~74% menos en archivo principal)
-
-#### PostCreacionService (2025-12-15) ✅
-- **Antes:** 376 líneas, violaba SRP (crear posts + archivos + algoritmo + tags)
-- **Después:** Dividido en 3 servicios en `src/Services/Publicacion/`:
-  - `PostCreacionService.php` (~160 líneas) - Fachada orquestadora
-  - `PostArchivosService.php` (~210 líneas) - Procesamiento de archivos adjuntos
-  - `PostAlgoritmoDataService.php` (~75 líneas) - Datos del algoritmo y tags
-- **Wrapper deprecated:** `src/Services/PostCreacionService.php` redirige al nuevo
-- **Reducción:** 376 → 160 líneas (~57% menos en archivo principal)
-
-#### DescargaService (2025-12-15) ✅
-- **Antes:** 303 líneas, violaba SRP (procesamiento + tokens + streaming)
-- **Después:** Dividido en 3 servicios en `src/Services/Core/`:
-  - `DescargaService.php` (~180 líneas) - Fachada orquestadora
-  - `DescargaTokenService.php` (~105 líneas) - Generación y validación de tokens
-  - `DescargaEnvioService.php` (~125 líneas) - Streaming y envío de archivos
-- **Wrapper deprecated:** `src/Services/DescargaService.php` redirige al nuevo
-- **Reducción:** 303 → 180 líneas (~41% menos en archivo principal)
-
-#### AlbumService (2025-12-15) ✅
-- **Estado:** ~303 líneas - En el límite de 300 líneas
-- **Responsabilidades:** Procesamiento de álbumes, creación de rolas, metadatos
-- **Evaluación SRP:** Cumple - Todo relacionado con gestión de álbumes
-- **Acción:** Movido a `src/Services/Coleccion/AlbumService.php`
-- **Wrapper deprecated:** `src/Services/AlbumService.php` redirige al nuevo
-
-#### BusquedaService (2025-12-15) ✅
-- **Estado:** ~271 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Búsqueda de posts, usuarios, colecciones, balanceo de resultados
-- **Evaluación SRP:** Cumple - Enfocado en funcionalidad de búsqueda
-- **Acción:** Movido a `src/Services/Core/BusquedaService.php`
-- **Wrapper deprecated:** `src/Services/BusquedaService.php` redirige al nuevo
-
-#### PostRenderService (2025-12-15) ✅
-- **Estado:** ~277 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Preparación de variables para renderizado de posts
-- **Evaluación SRP:** Cumple - Enfocado en renderizado
-- **Acción:** Movido a `src/Services/Publicacion/PostRenderService.php`
-- **Wrapper deprecated:** `src/Services/PostRenderService.php` redirige al nuevo
-
-#### IAService (2025-12-15) ✅
-- **Estado:** ~224 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Comunicación con API de Gemini para generar descripciones
-- **Evaluación SRP:** Cumple - Enfocado en comunicación con IA
-- **Acción:** Movido a `src/Services/Contenido/IAService.php`
-- **Wrapper deprecated:** `src/Services/IAService.php` redirige al nuevo
-
-#### IdeaService (2025-12-15) ✅
-- **Estado:** ~281 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Generación de ideas/recomendaciones basadas en colecciones
-- **Evaluación SRP:** Cumple - Enfocado en sistema de ideas
-- **Acción:** Movido a `src/Services/Contenido/IdeaService.php`
-- **Wrapper deprecated:** `src/Services/IdeaService.php` redirige al nuevo
-
-#### ImagenService (2025-12-15) ✅
-- **Estado:** ~237 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Optimización de imágenes, subida, adjuntos
-- **Evaluación SRP:** Cumple - Enfocado en gestión de imágenes
-- **Acción:** Movido a `src/Services/Contenido/ImagenService.php`
-- **Wrapper deprecated:** `src/Services/ImagenService.php` redirige al nuevo
-
-#### UsuarioService (2025-12-15) ✅
-- **Antes:** 366 líneas, violaba SRP (tipo usuario + bloqueos + pinkys + preferencias)
-- **Después:** Dividido en 3 servicios en `src/Services/Usuario/`:
-  - `UsuarioService.php` (~170 líneas) - Fachada orquestadora
-  - `UsuarioBloqueoService.php` (~145 líneas) - Gestión de bloqueos entre usuarios
-  - `UsuarioPinkyService.php` (~115 líneas) - Gestión de pinkys (moneda virtual)
-- **Wrapper deprecated:** `src/Services/UsuarioService.php` redirige al nuevo
-- **Reducción:** 366 → 170 líneas (~54% menos en archivo principal)
-
-#### SeguirService (2025-12-15) ✅
-- **Estado:** ~220 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Seguir/dejar de seguir usuarios, contadores
-- **Evaluación SRP:** Cumple - Enfocado en relaciones de seguimiento
-- **Acción:** Movido a `src/Services/Usuario/SeguirService.php`
-- **Wrapper deprecated:** `src/Services/SeguirService.php` redirige al nuevo
-
-#### CacheService (2025-12-15) ✅
-- **Estado:** ~290 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Gestión de cache basada en archivos con compresión
-- **Evaluación SRP:** Cumple - Enfocado en operaciones de cache
-- **Acción:** Movido a `src/Services/Core/CacheService.php`
-- **Wrapper deprecated:** `src/Services/CacheService.php` redirige al nuevo
-
-#### PostEstadoService (2025-12-15) ✅
-- **Estado:** ~197 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Cambios de estado, verificación y permisos de posts
-- **Evaluación SRP:** Cumple - Enfocado en gestión de estados de posts
-- **Acción:** Movido a `src/Services/Publicacion/PostEstadoService.php`
-- **Wrapper deprecated:** `src/Services/PostEstadoService.php` redirige al nuevo
-
-#### WaveformService (2025-12-15) ✅
-- **Estado:** ~170 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Subida y gestión de imágenes de waveform de audio
-- **Evaluación SRP:** Cumple - Enfocado en waveforms de audio
-- **Acción:** Movido a `src/Services/Audio/WaveformService.php`
-- **Wrapper deprecated:** `src/Services/WaveformService.php` redirige al nuevo
-
-#### ReproductorService (2025-12-15) ✅
-- **Estado:** ~173 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Reproducciones, oyentes y rate limiting
-- **Evaluación SRP:** Cumple - Enfocado en control de reproductor
-- **Acción:** Movido a `src/Services/Audio/ReproductorService.php`
-- **Wrapper deprecated:** `src/Services/ReproductorService.php` redirige al nuevo
-
-#### PostSlugService (2025-12-15) ✅
-- **Estado:** ~155 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Actualización automática de títulos y slugs de posts
-- **Evaluación SRP:** Cumple - Enfocado en gestión de slugs
-- **Acción:** Movido a `src/Services/Publicacion/PostSlugService.php`
-- **Wrapper deprecated:** `src/Services/PostSlugService.php` redirige al nuevo
-
-#### ReporteService (2025-12-15) ✅
-- **Estado:** ~151 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Creación y gestión de reportes de contenido
-- **Evaluación SRP:** Cumple - Enfocado en sistema de reportes
-- **Acción:** Movido a `src/Services/Moderacion/ReporteService.php`
-- **Wrapper deprecated:** `src/Services/ReporteService.php` redirige al nuevo
-
-#### TagService (2025-12-15) ✅
-- **Estado:** ~134 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Obtención y análisis de tags frecuentes
-- **Evaluación SRP:** Cumple - Enfocado en gestión de tags
-- **Acción:** Movido a `src/Services/Core/TagService.php`
-- **Wrapper deprecated:** `src/Services/TagService.php` redirige al nuevo
-
-#### UtilService (2025-12-15) ✅
-- **Estado:** ~126 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Normalización de texto, tiempo relativo, zona horaria
-- **Evaluación SRP:** Cumple - Utilidades generales del tema
-- **Acción:** Movido a `src/Services/Core/UtilService.php`
-- **Wrapper deprecated:** `src/Services/UtilService.php` redirige al nuevo
-
-#### VistaService (2025-12-15) ✅
-- **Estado:** ~134 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Tracking de vistas de posts por usuario
-- **Evaluación SRP:** Cumple - Enfocado en registro de vistas
-- **Acción:** Movido a `src/Services/Core/VistaService.php`
-- **Wrapper deprecated:** `src/Services/VistaService.php` redirige al nuevo
-
-#### PythonService (2025-12-15) ✅
-- **Estado:** ~83 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Ejecución de scripts Python para análisis de audio
-- **Evaluación SRP:** Cumple - Enfocado en integración con Python
-- **Acción:** Movido a `src/Services/Core/PythonService.php`
-- **Wrapper deprecated:** `src/Services/PythonService.php` redirige al nuevo
-
-#### ContadorService (2025-12-15) ✅
-- **Estado:** ~70 líneas - Dentro del límite de 300 líneas
-- **Responsabilidades:** Conteo de posts filtrados para usuarios
-- **Evaluación SRP:** Cumple - Enfocado en conteo de posts
-- **Acción:** Movido a `src/Services/Core/ContadorService.php`
-- **Wrapper deprecated:** `src/Services/ContadorService.php` redirige al nuevo
+> **Todos los servicios tienen wrappers deprecated en `src/Services/` que redirigen a las nuevas ubicaciones.**
 
 
 ---
