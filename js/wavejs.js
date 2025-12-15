@@ -1,5 +1,6 @@
 let audioActual = null;
 let estadoAudio = false;
+window.wavesurfers = window.wavesurfers || {};
 
 function inicializarWaveforms() {
     nextWave();

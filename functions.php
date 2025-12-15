@@ -44,8 +44,8 @@ require_once get_template_directory() . '/src/autoload.php';
 // Servicio de gestión de slugs
 \Kamples\Services\PostSlugService::inicializar();
 
-// Controlador de posts (AJAX handlers)
-\Kamples\Controllers\PostController::inicializar();
+// Inicializar Controladores (incluye PostController, StreamController, etc.)
+require_once get_template_directory() . '/src/Controllers/init.php';
 
 
 
@@ -269,7 +269,7 @@ function incluirArchivos($directorio)
 
 // Cargar archivos del tema
 $directorios = [
-    'src/', 
+    'src/',
     'app/',              // Código legacy pendiente de refactorizar
 ];
 
