@@ -343,52 +343,83 @@ function limpiarLogs()
         ABSPATH . 'wp-content/debug.log'
     ];
 
-    foreach ($logFiles as $file) {
-        if (!file_exists($file)) {
-            continue;
-        }
+    /* 
+     * Procesar solo UN archivo por ejecución para evitar timeout.
+     * El índice se guarda en transient y rota entre archivos.
+     */
+    $indice = (int) get_transient('limpiar_logs_indice');
+    $indice = $indice % count($logFiles);
+    set_transient('limpiar_logs_indice', $indice + 1, HOUR_IN_SECONDS);
 
-        $fileSizeMb = filesize($file) / (1024 * 1024);
+    $file = $logFiles[$indice];
 
-        if ($fileSizeMb <= 1) {
-            continue;
-        }
+    if (!file_exists($file)) {
+        return;
+    }
 
-        try {
-            $tempFile = $file . '.temp';
-            $fpOut = fopen($tempFile, 'w');
+    $fileSizeMb = filesize($file) / (1024 * 1024);
 
-            if ($fpOut === false) {
-                continue;
-            }
+    /* Solo limpiar si supera 1MB */
+    if ($fileSizeMb <= 1) {
+        return;
+    }
 
-            $fileObj = new SplFileObject($file, 'r');
-            $fileObj->seek(PHP_INT_MAX);
-            $totalLines = $fileObj->key();
-            $startLine = max(0, $totalLines - 2000);
-            $fileObj->rewind();
-
-            $currentLine = 0;
-            while (!$fileObj->eof()) {
-                if ($currentLine >= $startLine) {
-                    fwrite($fpOut, $fileObj->current());
+    try {
+        /* 
+         * Para archivos muy grandes (>5MB), simplemente truncar a las últimas líneas
+         * usando tail del sistema si está disponible, o truncar directamente.
+         */
+        if ($fileSizeMb > 5) {
+            /* Truncar agresivamente: mantener solo últimos 500KB */
+            $fp = fopen($file, 'r+');
+            if ($fp) {
+                $keepBytes = 500 * 1024;
+                $fileSize = filesize($file);
+                if ($fileSize > $keepBytes) {
+                    fseek($fp, -$keepBytes, SEEK_END);
+                    /* Avanzar hasta el próximo salto de línea para no cortar a mitad */
+                    fgets($fp);
+                    $content = fread($fp, $keepBytes);
+                    ftruncate($fp, 0);
+                    fseek($fp, 0);
+                    fwrite($fp, $content);
                 }
-                $fileObj->next();
-                $currentLine++;
+                fclose($fp);
             }
+            return;
+        }
 
-            fclose($fpOut);
+        /* Para archivos entre 1-5MB, usar el método original pero optimizado */
+        $tempFile = $file . '.temp';
+        $linesToKeep = 1000;
 
-            if (file_exists($tempFile)) {
-                unlink($file);
-                rename($tempFile, $file);
-            }
-        } catch (Exception $e) {
-            error_log("Error procesando archivo de log {$file}: " . $e->getMessage());
+        /* Leer solo las últimas N líneas usando file() con límite de memoria */
+        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return;
+        }
 
-            if (isset($tempFile) && file_exists($tempFile)) {
-                unlink($tempFile);
-            }
+        $totalLines = count($lines);
+        if ($totalLines <= $linesToKeep) {
+            return;
+        }
+
+        /* Tomar solo las últimas líneas */
+        $lastLines = array_slice($lines, -$linesToKeep);
+
+        /* Escribir al archivo temporal */
+        file_put_contents($tempFile, implode(PHP_EOL, $lastLines) . PHP_EOL);
+
+        /* Reemplazar el original */
+        if (file_exists($tempFile)) {
+            unlink($file);
+            rename($tempFile, $file);
+        }
+    } catch (Exception $e) {
+        error_log("Error limpiando log {$file}: " . $e->getMessage());
+
+        if (isset($tempFile) && file_exists($tempFile)) {
+            @unlink($tempFile);
         }
     }
 }
