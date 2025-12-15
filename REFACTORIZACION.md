@@ -1,7 +1,7 @@
 # Refactorización del Tema v4 (2upra/kamples)
 
-> **Última actualización:** 2025-12-14
-> **Estado:** En progreso - Fase 1
+> **Última actualización:** 2025-12-15
+> **Estado:** Fase 2 completada - Listo para Fase 3
 
 ---
 
@@ -179,44 +179,43 @@ $likeService = new LikeService();
    ```
 
 #### Pasos de la Fase 2
-| Paso | Descripción                                   | Estado        |
-| ---- | --------------------------------------------- | ------------- |
-| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado  |
-| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado  |
-| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado  |
-| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado  |
-| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado  |
-| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado  |
-| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado  |
-| 2.5d | Migrar `app/Content/Logic/` completo          | ✅ Completado  |
-| 2.5e | Migrar resto de `app/Content/`                | ✅ Completado  |
-| 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado  |
-| 2.6b | Migrar `app/Authentication/`                  | ✅ Completado  |
-| 2.6c | Migrar `app/AlgoritmoPost/`                   | ✅ Completado  |
-| 2.6d | Migrar `app/Functions/`                       | ✅ Completado  |
-| 2.6e | Migrar `app/Admin/`, `app/Hook/`, `app/View/` | ✅ Completado  |
-| 2.6f | Migrar resto de `/app/`                       | ⏳ En progreso |
-| 2.7  | Migrar `app/Finanza/` (baja prioridad)        | 🔜 Al final    |
+| Paso | Descripción                                   | Estado       |
+| ---- | --------------------------------------------- | ------------ |
+| 2.1  | Crear estructura `/src/` con autoloader PSR-4 | ✅ Completado |
+| 2.2  | Migrar `app/Functions/likes.php` completo     | ✅ Completado |
+| 2.3  | Migrar `app/Functions/seguir.php` completo    | ✅ Completado |
+| 2.4  | Migrar `app/Chat/` completo                   | ✅ Completado |
+| 2.5a | Migrar `app/Content/Comentarios/` completo    | ✅ Completado |
+| 2.5b | Migrar `app/Content/Colab/` completo          | ✅ Completado |
+| 2.5c | Migrar `app/Content/Colecciones/` completo    | ✅ Completado |
+| 2.5d | Migrar `app/Content/Logic/` completo          | ✅ Completado |
+| 2.5e | Migrar resto de `app/Content/`                | ✅ Completado |
+| 2.6a | Migrar `app/Logic/` (IA, vistas, waveform)    | ✅ Completado |
+| 2.6b | Migrar `app/Authentication/`                  | ✅ Completado |
+| 2.6c | Migrar `app/AlgoritmoPost/`                   | ✅ Completado |
+| 2.6d | Migrar `app/Functions/`                       | ✅ Completado |
+| 2.6e | Migrar `app/Admin/`, `app/Hook/`, `app/View/` | ✅ Completado |
+| 2.6f | Migrar resto de `/app/`                       | ✅ Completado |
+| 2.7  | Migrar `app/Finanza/` completo                | ✅ Completado |
 
-> **Nota:** El módulo `app/Finanza/` (Stripe/pagos) se deja para el final ya que no es prioritario y requiere pruebas especiales con el sistema de pagos.
+> **FASE 2 COMPLETADA** - Todo el código de `/app/` ha sido migrado a `/src/`. Los scripts de utilidad se movieron a `/scripts/`.
 
-#### Carpetas pendientes en `/app/` (2.6f)
-| Carpeta                       | Archivos | Descripción             | Prioridad    |
-| ----------------------------- | -------- | ----------------------- | ------------ |
-| ~~`Auto/`~~                   | 7        | Posts automáticos, IA   | ✅ Completado |
-| ~~`Form/`~~                   | 4        | Migrado a src/Services  | ✅ Completado |
-| `Misc/`                       | 6        | Iconos, emergencias     | ⏸️ Pospuesto  |
-| `Pages/`                      | 3        | Tabs legacy pendientes  | ⏸️ Parcial    |
-| ~~`Perfiles/`~~               | 4        | Perfiles de usuario     | ✅ Completado |
-| `Sync/`                       | 1        | API de sincronización   | Baja         |
-| `Test/`                       | 3        | Archivos de prueba      | Baja         |
-| `Commands/`                   | 2        | Scripts shell           | Baja         |
-| `python/`                     | 2        | Scripts Python          | Baja         |
-| `Pendiente por refactorizar/` | 2        | Notificaciones, álbumes | ✅ Completado |
+#### Carpetas migradas en `/app/` (2.6f)
+| Carpeta                           | Archivos | Descripción             | Estado       |
+| --------------------------------- | -------- | ----------------------- | ------------ |
+| ~~`Auto/`~~                       | 7        | Posts automáticos, IA   | ✅ Completado |
+| ~~`Form/`~~                       | 4        | Migrado a src/Services  | ✅ Completado |
+| ~~`Misc/`~~                       | 2        | Scripts utilitarios     | ✅ Completado |
+| ~~`Pages/`~~                      | 3        | Tabs legacy             | ✅ Completado |
+| ~~`Perfiles/`~~                   | 4        | Perfiles de usuario     | ✅ Completado |
+| ~~`Sync/`~~                       | 1        | API de sincronización   | ✅ Completado |
+| ~~`Test/`~~                       | 3        | Archivos de prueba      | ✅ Completado |
+| ~~`Commands/`~~                   | 2        | Scripts shell           | ✅ Completado |
+| ~~`python/`~~                     | 2        | Scripts Python          | ✅ Completado |
+| ~~`Pendiente por refactorizar/`~~ | 2        | Notificaciones, álbumes | ✅ Completado |
+| ~~`Finanza/`~~                    | 13       | Sistema Stripe/pagos    | ✅ Completado |
 
-> **Nota sobre `Misc/iconos.php`:** Este archivo contiene ~290 líneas de iconos SVG globales. Se pospone su refactorización ya que funciona correctamente y no aporta valor inmediato migrarlo a una clase.
-
-> **Nota sobre `Pages/`:** Quedan 3 archivos legacy (`Sello.php`, `asleyTabs.php`, `inversorSector.php`) que dependen de funciones no refactorizadas (`calc_ing()`, `botonSponsor()`, `graficoHistorialAcciones()`, etc.). Los otros 10 archivos fueron migrados a `src/Views/Components/Tabs/`.
+> **Nota sobre scripts:** Los archivos de Python, Shell y Tests fueron movidos a carpetas dedicadas (`/scripts/python/`, `/scripts/shell/`, `/Tests/`).
 
 
 ### Fase 3: Limpiar `header.php`
@@ -484,6 +483,71 @@ $likeService = new LikeService();
   - `ImagenService.php` - Actualizado para usar `AudioProcessingService` en lugar de función global
   - `app/deprecated/form.php` - Añadidos wrappers deprecados: `procesarAudioLigero()`, `analizarYGuardarMetasAudio()`
   - **RECUPERADAS** funciones perdidas durante refactorización anterior (de `manejar.php` original)
+- **[2.6k]** Migración COMPLETA de `app/Sync/`:
+  - `src/Services/SyncService.php` - Servicio de sincronización para Electron (~350 líneas):
+    - `verificarCambios()` - Detecta cambios en descargas/samples desde última sync
+    - `obtenerAudiosUsuario()` - Lista de audios con tokens de descarga seguros
+    - `descargarAudio()` - Descarga con verificación de token/nonce
+    - `enviarArchivo()` - Streaming de archivo con soporte de rangos HTTP
+    - `actualizarTimestampDescargas()`, `actualizarTimestampSamplesGuardados()`
+  - `src/Controllers/SyncController.php` - Endpoints REST para sincronización
+  - `app/deprecated/sync.php` - Wrappers de compatibilidad
+  - **ELIMINADA** carpeta `app/Sync/` completamente
+- **[2.6l]** Migración de funciones de moderación de `app/Misc/Emergencias.php`:
+  - `src/Services/ModeracionService.php` - Servicio de moderación (~260 líneas):
+    - `bloquearYEliminarUsuarios()` - Bloqueo completo con eliminación de contenido
+    - `restringirUsuarios()` - Restricción de rol (no elimina contenido)
+    - `banearAutorDePost()` - Baneo desde un post específico
+    - `bloquearIp()` - Bloqueo de IP en .htaccess
+    - `registrarIntentoFallido()` - Logging de intentos de acceso fallidos
+    - `crearRolRestringido()` - Creación del rol 'restringido'
+  - `src/Controllers/ModeracionController.php` - Handler AJAX para banear usuarios
+  - `app/deprecated/emergencias.php` - Wrappers de compatibilidad
+  - **ELIMINADO** archivo `app/Misc/Emergencias.php`
+- **[2.6m]** Migración COMPLETA de `app/Pages/` (3 archivos restantes):
+  - `src/Views/Components/Tabs/ProyectoTabs.php` - Componente de tabs especiales (~800 líneas):
+    - `renderPanel()` - Panel de rolas enviadas (versión simplificada)
+    - `renderAsleyTab()` - Tab del portafolio personal
+    - `renderPortafolio()` - Portafolio completo con bio, skills, experiencia, proyectos
+    - `renderBioSection()` - Sección de biografía y habilidades
+    - `renderProyectosSection()` - Sección de proyectos (2upra, Galle)
+    - `renderInversorSector()` - Página de inversores/patrocinadores (compatible con funciones legacy de Finanza)
+  - `app/deprecated/pages.php` - Actualizado con wrappers para `panel()`, `asleyTab()`, `portafolio()`, `inversorSector()`
+  - **ELIMINADA** carpeta `app/Pages/` completamente
+- **[2.7]** Migración COMPLETA de `app/Finanza/` (sistema financiero/Stripe):
+  - `src/Services/FinanzaService.php` - Servicio centralizado de finanzas (~450 líneas):
+    - `calcularIngresos()` - Algoritmo de valoración de acciones
+    - `agregarAccionesUnicaVez()` - Agregar acciones por transacción
+    - `sumarAccionesMensual()` - Suma mensual de acciones PRO
+    - `obtenerHistorialAccionesUsuario()` - Historial de acciones
+    - `calcularAccionPorUsuario()` - Cálculo de valor por usuario
+    - `obtenerTodasLasTransacciones()` - Listado de transacciones
+  - `src/Controllers/FinanzaController.php` - Endpoints REST de Stripe (~450 líneas):
+    - `/stripe/acciones/crear-sesion`, `/stripe/acciones/webhook` - Compra de acciones
+    - `/stripe/compra/crear-sesion`, `/stripe/compra/webhook` - Compra de beats/samples
+    - `/stripe/pro/crear-sesion`, `/stripe/pro/webhook` - Suscripciones PRO
+    - Cron jobs para acciones mensuales e historial
+    - Endpoints legacy compatibles: `avada/v1/`, `stripe/v1/`
+  - `src/Views/Components/FinanzaComponents.php` - Componentes UI (~500 líneas):
+    - `renderPanelInversor()` - Panel completo del inversor
+    - `renderValores()` - Valores de la empresa
+    - `renderBotonDonar()`, `renderBotonCompra()`, `renderBotonSponsor()` - Botones
+    - `renderModalComprarAcciones()`, `renderModalPro()` - Modales
+    - `renderGraficoHistorial()`, `renderGraficoCapital()`, `renderGraficoBolsa()` - Gráficos Chart.js
+    - `renderTablaAcciones()`, `renderTablaTransacciones()` - Tablas de datos
+  - `app/deprecated/finanza.php` - Wrappers de compatibilidad
+  - **ELIMINADA** carpeta `app/deprecated/finanza/` completamente (13 archivos)
+- **[2.7b]** Organización de scripts de utilidad:
+  - `scripts/python/` - Scripts Python movidos (audio.py, hashAudio.py)
+  - `scripts/shell/` - Scripts Shell movidos (permisos.sh, process_audio.sh)
+  - `Tests/` - Archivos de prueba movidos (BuscarDuplicados.php, audioTest.py)
+  - `app/deprecated/misc.php` - Wrapper con función saberSi()
+  - `src/Services/UsuarioService.php` - Añadido método saberSi()
+  - **ELIMINADAS** carpetas: `app/deprecated/finanza/`, `app/deprecated/misc/`, `app/deprecated/python/`, `app/deprecated/commands/`, `app/deprecated/test/`
+- **[FASE 2 COMPLETADA TOTALMENTE]** Toda la Fase 2 está completada:
+  - `/app/` solo contiene `/app/deprecated/` con wrappers de compatibilidad
+  - Todo el código de lógica de negocio está en `/src/`
+  - Scripts de utilidad organizados en `/scripts/` y `/Tests/`
 
 ---
 

@@ -299,8 +299,58 @@ class UsuarioService
         return (int)get_user_meta($userId, 'pinky', true);
     }
 
+    /* 
+     * PREFERENCIAS DE USUARIO
+     */
+
     /**
-     * Registra un mensaje en el log.
+     * Verifica si al usuario le gusta al menos una rola.
+     * Actualiza el meta 'leGustaAlMenosUnaRola' con el resultado.
+     *
+     * @param int $userId ID del usuario
+     * @return bool True si le gusta al menos una rola
+     */
+    public function saberSi(int $userId): bool
+    {
+        $lastRun = get_user_meta($userId, 'ultima_ejecucion_saber', true);
+        $currentTime = current_time('timestamp');
+
+        if ($lastRun && ($currentTime - $lastRun < 1)) {
+            return (bool) get_user_meta($userId, 'leGustaAlMenosUnaRola', true);
+        }
+
+        update_user_meta($userId, 'ultima_ejecucion_saber', $currentTime);
+
+        $tableName = $this->wpdb->prefix . 'post_likes';
+        $likedPosts = $this->wpdb->get_col($this->wpdb->prepare(
+            "SELECT post_id FROM $tableName WHERE user_id = %d",
+            $userId
+        ));
+
+        if (empty($likedPosts)) {
+            update_user_meta($userId, 'leGustaAlMenosUnaRola', false);
+            return false;
+        }
+
+        $rolaPosts = get_posts([
+            'post__in' => $likedPosts,
+            'meta_query' => [
+                [
+                    'key' => 'rola',
+                    'value' => 'true',
+                    'compare' => '='
+                ]
+            ],
+            'posts_per_page' => 1
+        ]);
+
+        $leGustaRola = !empty($rolaPosts);
+        update_user_meta($userId, 'leGustaAlMenosUnaRola', $leGustaRola);
+
+        return $leGustaRola;
+    }
+
+    /**
      *
      * @param string $nivel Nivel del log
      * @param string $mensaje Mensaje

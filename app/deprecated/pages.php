@@ -150,17 +150,44 @@ if (!function_exists('inversorTab')) {
     }
 }
 
-/* 
- * Las siguientes funciones aun no han sido completamente
- * migradas porque dependen de otras funciones legacy
- * (calc_ing, botonSponsor, graficoHistorialAcciones, etc.)
- * 
- * Se incluyen directamente desde sus archivos originales:
- * - inversorSector() -> app/Pages/inversorSector.php
- * - panel() -> app/Pages/Sello.php  
- * - asleyTab() -> app/Pages/asleyTabs.php
- * - portafolio() -> app/Pages/asleyTabs.php
- * 
- * Estos archivos se mantienen en app/Pages/ hasta que
- * todas sus dependencias sean refactorizadas.
+use Kamples\Views\Components\Tabs\ProyectoTabs;
+
+/**
+ * @deprecated Use ProyectoTabs::renderPanel()
  */
+if (!function_exists('panel')) {
+    function panel(): string
+    {
+        return ProyectoTabs::renderPanel();
+    }
+}
+
+/**
+ * @deprecated Use ProyectoTabs::renderAsleyTab()
+ */
+if (!function_exists('asleyTab')) {
+    function asleyTab(): string
+    {
+        return ProyectoTabs::renderAsleyTab();
+    }
+}
+
+/**
+ * @deprecated Use ProyectoTabs::renderPortafolio()
+ */
+if (!function_exists('portafolio')) {
+    function portafolio(): string
+    {
+        return ProyectoTabs::renderPortafolio();
+    }
+}
+
+/**
+ * @deprecated Use ProyectoTabs::renderInversorSector()
+ */
+if (!function_exists('inversorSector')) {
+    function inversorSector(): string
+    {
+        return ProyectoTabs::renderInversorSector();
+    }
+}
