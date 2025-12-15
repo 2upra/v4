@@ -474,7 +474,6 @@ if (!defined('ABSPATH')) {
 
             </div>
         <? else : ?>
-            <? echo modalCarta() ?>
             <div class="CGUNVP" id="modalregistro" data-nosnippet>
                 <? echo registrar_usuario() ?>
             </div>

@@ -181,7 +181,6 @@ const modalManager = new ModalManager();
 
 function smooth() {
     modalManager.añadirModal('opcionesFiltros', '#filtrosPost', ['.ORDENPOSTSL']);
-    modalManager.añadirModal('carta', '#modalCarta', ['.carta'], '.cerrarCarta');
     modalManager.añadirModal('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar');
     modalManager.añadirModal('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC');
     modalManager.añadirModal('proPro', '#propro', ['.prostatus0']);
@@ -191,4 +190,3 @@ function smooth() {
     modalManager.añadirModal('config', '#modalConfig', ['.botonConfig']);
     modalManager.añadirModal('RS', '#formRs', ['.subiricono']);
 }
-
