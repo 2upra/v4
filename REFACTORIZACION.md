@@ -201,18 +201,22 @@ $likeService = new LikeService();
 > **Nota:** El módulo `app/Finanza/` (Stripe/pagos) se deja para el final ya que no es prioritario y requiere pruebas especiales con el sistema de pagos.
 
 #### Carpetas pendientes en `/app/` (2.6f)
-| Carpeta         | Archivos | Descripción           | Prioridad    |
-| --------------- | -------- | --------------------- | ------------ |
-| ~~`Auto/`~~     | 7        | Posts automáticos, IA | ✅ Completado |
-| `Form/`         | 4        | Formularios de subida | Alta         |
-| `Misc/`         | 6        | Iconos, emergencias   | Baja         |
-| `Pages/`        | 15       | Tabs de páginas       | Media        |
-| ~~`Perfiles/`~~ | 4        | Perfiles de usuario   | ✅ Completado |
-| `Sync/`         | 1        | API de sincronización | Baja         |
-| `Test/`         | 3        | Archivos de prueba    | Baja         |
-| `Commands/`     | 2        | Scripts shell         | Baja         |
-| `python/`       | 2        | Scripts Python        | Baja         |
+| Carpeta                       | Archivos | Descripción             | Prioridad    |
+| ----------------------------- | -------- | ----------------------- | ------------ |
+| ~~`Auto/`~~                   | 7        | Posts automáticos, IA   | ✅ Completado |
+| ~~`Form/`~~                   | 4        | Migrado a src/Services  | ✅ Completado |
+| `Misc/`                       | 6        | Iconos, emergencias     | ⏸️ Pospuesto  |
+| `Pages/`                      | 3        | Tabs legacy pendientes  | ⏸️ Parcial    |
+| ~~`Perfiles/`~~               | 4        | Perfiles de usuario     | ✅ Completado |
+| `Sync/`                       | 1        | API de sincronización   | Baja         |
+| `Test/`                       | 3        | Archivos de prueba      | Baja         |
+| `Commands/`                   | 2        | Scripts shell           | Baja         |
+| `python/`                     | 2        | Scripts Python          | Baja         |
+| `Pendiente por refactorizar/` | 2        | Notificaciones, álbumes | ✅ Completado |
 
+> **Nota sobre `Misc/iconos.php`:** Este archivo contiene ~290 líneas de iconos SVG globales. Se pospone su refactorización ya que funciona correctamente y no aporta valor inmediato migrarlo a una clase.
+
+> **Nota sobre `Pages/`:** Quedan 3 archivos legacy (`Sello.php`, `asleyTabs.php`, `inversorSector.php`) que dependen de funciones no refactorizadas (`calc_ing()`, `botonSponsor()`, `graficoHistorialAcciones()`, etc.). Los otros 10 archivos fueron migrados a `src/Views/Components/Tabs/`.
 
 
 ### Fase 3: Limpiar `header.php`
@@ -440,7 +444,49 @@ $likeService = new LikeService();
     - `app/deprecated/form.php` - Añadido wrapper de compatibilidad para `formRs()`.
     - `header.php` - Actualizado para usar `PostFormComponents::renderFormRs()`.
 
+### 2025-12-15
+- **[2.6h]** Migración de `app/Pendiente por refactorizar/`:
+  - `src/Services/NotificacionService.php` - Servicio completo de notificaciones (~400 líneas):
+    - Creación de notificaciones internas (WordPress posts)
+    - Envío de notificaciones push via Firebase
+    - Cola de procesamiento asíncrono
+    - Gestión de estado de lectura (marcar como vista)
+    - Long polling para detección de nuevas notificaciones
+  - `src/Controllers/NotificacionController.php` - Handlers AJAX para notificaciones
+  - `src/Views/Components/NotificacionComponents.php` - Componentes UI (lista, items, icono)
+  - `src/Services/AlbumService.php` - Procesamiento de álbumes musicales (~280 líneas):
+    - Conversión de posts en álbumes con tracks individuales (rolas)
+    - Copia de metadatos y thumbnails
+    - Creación automática de posts por cada track
+  - `app/deprecated/notificaciones.php` - Wrappers de compatibilidad
+  - Archivos originales listos para eliminar de `Pendiente por refactorizar/`
+- **[2.6i]** Migración de `app/Pages/` a `src/Views/Components/Tabs/`:
+  - `src/Views/Components/Tabs/SocialTabs.php` - Tabs sociales (Artista/Fan, Feed/Samples)
+  - `src/Views/Components/Tabs/PerfilTabs.php` - Tabs de perfil de usuario
+  - `src/Views/Components/Tabs/BibliotecaTabs.php` - Tab de biblioteca
+  - `src/Views/Components/Tabs/BusquedaTabs.php` - Tab de búsqueda
+  - `src/Views/Components/Tabs/MusicTabs.php` - Tab de música (últimas rolas)
+  - `src/Views/Components/Tabs/ColabTabs.php` - Tab de colaboraciones
+  - `src/Views/Components/Tabs/ColeccionTabs.php` - Tab de colecciones
+  - `src/Views/Components/Tabs/TaskTabs.php` - Tab de tareas
+  - `src/Views/Components/Tabs/InicioTabs.php` - Página de inicio (registro/login)
+  - `src/Views/Components/Tabs/InversorTabs.php` - Tab de inversor/proyecto
+  - `app/deprecated/pages.php` - Wrappers de compatibilidad actualizados
+  - **ELIMINADOS** 10 archivos: `socialTabs.php`, `perfilTabs.php`, `bibliotecaTabs.php`, `busquedaTabs.php`, `musicTabs.php`, `colabTabss.php`, `colebTabs.php`, `taskTabs.php`, `InicioNormal.php`, `inversorTabs.php`
+  - **PENDIENTES** 3 archivos con dependencias legacy: `Sello.php` (`panel()`), `asleyTabs.php` (`asleyTab()`, `portafolio()`), `inversorSector.php` (`inversorSector()`)
+- **[NOTA]** `app/Misc/iconos.php` pospuesto - Funciona correctamente, no aporta valor inmediato refactorizar
+- **[2.6j]** Recuperación y migración de funciones de procesamiento de audio:
+  - `src/Services/AudioProcessingService.php` - Servicio completo de procesamiento de audio (~450 líneas):
+    - `procesarAudioLigero()` - Crea versiones 128k de audio, elimina metadatos, extrae duración
+    - `analizarYGuardarMetasAudio()` - Análisis con Python (BPM, pitch, emotion, key, scale) + descripción IA
+    - Métodos auxiliares: `eliminarMetadatos`, `crearVersionLigera`, `insertarEnMediaLibrary`, `guardarDuracion`, `construirPromptIA`
+  - `PostCreacionService.php` - Actualizado para usar `AudioProcessingService` en lugar de función global
+  - `ImagenService.php` - Actualizado para usar `AudioProcessingService` en lugar de función global
+  - `app/deprecated/form.php` - Añadidos wrappers deprecados: `procesarAudioLigero()`, `analizarYGuardarMetasAudio()`
+  - **RECUPERADAS** funciones perdidas durante refactorización anterior (de `manejar.php` original)
+
 ---
+
 
 
 ## Problemas de Seguridad Identificados

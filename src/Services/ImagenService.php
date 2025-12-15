@@ -195,11 +195,9 @@ class ImagenService
         $audioAdjIds[] = $attachmentId;
         update_post_meta($postId, 'audioAdjIds', array_unique($audioAdjIds));
 
-        /* Llamar a función de procesamiento de audio si existe */
-        if (function_exists('procesarAudioLigero')) {
-            $index = 1;
-            procesarAudioLigero($postId, $attachmentId, $index);
-        }
+        /* Procesar audio usando el servicio */
+        $audioProcessingService = AudioProcessingService::obtenerInstancia();
+        $audioProcessingService->procesarAudioLigero($postId, $attachmentId, 1);
     }
 
     /**

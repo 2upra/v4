@@ -355,10 +355,9 @@ class PostCreacionService
             update_attached_file($archivoId, $newFilePath);
             update_post_meta($postId, 'sample', true);
 
-            /* Procesar audio ligero si la función existe */
-            if (function_exists('procesarAudioLigero')) {
-                procesarAudioLigero($postId, $archivoId, $indice);
-            }
+            /* Procesar audio ligero usando el servicio */
+            $audioProcessingService = AudioProcessingService::obtenerInstancia();
+            $audioProcessingService->procesarAudioLigero($postId, $archivoId, $indice);
         }
     }
 

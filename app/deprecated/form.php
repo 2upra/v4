@@ -194,3 +194,38 @@ if (!function_exists('formRs')) {
         return \Kamples\Views\Components\PostFormComponents::renderFormRs();
     }
 }
+
+/**
+ * @deprecated Usar AudioProcessingService::procesarAudioLigero()
+ */
+if (!function_exists('procesarAudioLigero')) {
+    function procesarAudioLigero($postId, $audioId, $index)
+    {
+        return \Kamples\Services\AudioProcessingService::obtenerInstancia()
+            ->procesarAudioLigero((int)$postId, (int)$audioId, (int)$index);
+    }
+}
+
+/**
+ * @deprecated Usar AudioProcessingService::analizarYGuardarMetasAudio()
+ */
+if (!function_exists('analizarYGuardarMetasAudio')) {
+    function analizarYGuardarMetasAudio(
+        $postId,
+        $archivoPath,
+        $index,
+        $nombreArchivo = null,
+        $carpeta = null,
+        $carpetaAbuela = null
+    ) {
+        \Kamples\Services\AudioProcessingService::obtenerInstancia()
+            ->analizarYGuardarMetasAudio(
+                (int)$postId,
+                $archivoPath,
+                (int)$index,
+                $nombreArchivo,
+                $carpeta,
+                $carpetaAbuela
+            );
+    }
+}

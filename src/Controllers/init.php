@@ -36,6 +36,7 @@ $controllers = [
     UtilController::class,
     VistaController::class,
     WaveformController::class,
+    NotificacionController::class,
 ];
 
 foreach ($controllers as $controllerClass) {

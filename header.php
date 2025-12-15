@@ -184,15 +184,6 @@ if (!defined('ABSPATH')) {
                         <? endif; ?>
 
 
-                        <div class="menu-item iconoInver">
-                            <a href="<?php echo home_url('/inversion'); ?>">
-                                <?php echo $GLOBALS['iconoInver']; ?>
-                                <div class="textoAyuda">
-                                    2upra necesita tu ayuda
-                                </div>
-                            </a>
-                        </div>
-
                         <div class="menu-item iconoTareas">
                             <a href="<?php echo home_url('/tareas'); ?>">
                                 <? echo $GLOBALS['objetivo']; ?>
