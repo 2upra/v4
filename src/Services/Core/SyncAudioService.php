@@ -13,6 +13,7 @@
 namespace Kamples\Services\Core;
 
 use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Contenido\ImagenService;
 
 class SyncAudioService
 {
@@ -187,8 +188,8 @@ class SyncAudioService
         $portadaId = get_post_thumbnail_id($postId);
         if ($portadaId) {
             $portadaUrl = wp_get_attachment_url($portadaId);
-            if ($portadaUrl && function_exists('img')) {
-                return img($portadaUrl);
+            if ($portadaUrl) {
+                return ImagenService::obtenerInstancia()->optimizar($portadaUrl);
             }
             return $portadaUrl;
         }
@@ -197,8 +198,8 @@ class SyncAudioService
         $imagenTemporalId = get_post_meta($postId, 'imagenTemporal', true);
         if ($imagenTemporalId) {
             $imagenTemporalUrl = wp_get_attachment_url($imagenTemporalId);
-            if ($imagenTemporalUrl && function_exists('img')) {
-                return img($imagenTemporalUrl);
+            if ($imagenTemporalUrl) {
+                return ImagenService::obtenerInstancia()->optimizar($imagenTemporalUrl);
             }
             return $imagenTemporalUrl;
         }
@@ -215,7 +216,8 @@ class SyncAudioService
     public function obtenerInfoUsuario(int $receptorId): array
     {
         $imagenPerfil = PerfilService::obtenerInstancia()->obtenerImagenPerfil($receptorId);
-        $nombreUsuario = function_exists('obtenerNombreUsuario') ? obtenerNombreUsuario($receptorId) : 'Usuario';
+        $usuario = get_userdata($receptorId);
+        $nombreUsuario = $usuario ? ($usuario->display_name ?: $usuario->user_login) : 'Usuario';
 
         return [
             'imagenPerfil' => $imagenPerfil ?: 'ruta_por_defecto.jpg',

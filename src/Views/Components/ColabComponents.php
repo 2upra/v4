@@ -13,6 +13,8 @@
 namespace Kamples\Views\Components;
 
 use Kamples\Services\Social\ColabService;
+use Kamples\Services\Audio\StreamService;
+use Kamples\Services\Publicacion\PublicacionService;
 
 /* Evitar acceso directo */
 
@@ -110,13 +112,11 @@ class ColabComponents
             <div>
                 <div>Colab pendientes</div>
                 <?php
-                if (function_exists('publicaciones')) {
-                    echo publicaciones([
-                        'post_type' => 'colab',
-                        'filtro'    => 'colabPendiente',
-                        'posts'     => 20
-                    ]);
-                }
+                echo PublicacionService::obtenerInstancia()->obtener([
+                    'post_type' => 'colab',
+                    'filtro'    => 'colabPendiente',
+                    'posts'     => 20
+                ]);
                 ?>
             </div>
             <div></div>
@@ -242,7 +242,10 @@ class ColabComponents
     {
         $wave        = get_post_meta($postId, 'waveform_image_url', true);
         $waveCargada = get_post_meta($postId, 'waveCargada', true);
-        $urlAudioSegura = function_exists('audioUrlSegura') ? audioUrlSegura($audioIdLite) : '';
+        $urlAudioSegura = StreamService::obtenerInstancia()->generarUrlSegura($audioIdLite);
+        if (is_wp_error($urlAudioSegura)) {
+            $urlAudioSegura = '';
+        }
 
         ob_start();
     ?>

@@ -12,6 +12,7 @@
 namespace Kamples\Services\Social;
 
 use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Contenido\ImagenService;
 use Kamples\Services\Core\UtilService;
 
 if (!defined('ABSPATH')) {
@@ -104,7 +105,7 @@ class ComentarioQueryService
             'fechaRelativa' => UtilService::obtenerInstancia()->tiempoRelativo($comentario->post_date),
             'avatar' => PerfilService::obtenerInstancia()->obtenerImagenPerfil($autorId),
             'imagenPortada' => $imagenPortada
-                ? (function_exists('img') ? img($imagenPortada) : $imagenPortada)
+                ? ImagenService::obtenerInstancia()->optimizar($imagenPortada)
                 : '',
             'audio' => $audio,
             'audioUrl' => $audioUrl ?: '',

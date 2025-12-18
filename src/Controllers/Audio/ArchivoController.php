@@ -217,7 +217,7 @@ class ArchivoController
                 "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s",
                 $hash
             ),
-            ARRAY_A
+            'ARRAY_A'
         );
 
         return $result ?: null;

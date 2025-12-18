@@ -12,6 +12,9 @@
 namespace Kamples\Views\Components;
 
 use Kamples\Services\Publicacion\PostRenderService;
+use Kamples\Services\Contenido\ImagenService;
+use Kamples\Services\Social\ColabService;
+use Kamples\Services\Coleccion\ColeccionService;
 
 class PostComponents
 {
@@ -110,7 +113,7 @@ class PostComponents
         }
 
         $blurredClass = ($block && !$esSuscriptor) ? 'blurred' : '';
-        $optimizedUrl = function_exists('img') ? img($thumbnailUrl, 40, 'all') : $thumbnailUrl;
+        $optimizedUrl = ImagenService::obtenerInstancia()->optimizar($thumbnailUrl, 40, 'all');
 
         ob_start();
     ?>
@@ -148,7 +151,7 @@ class PostComponents
             $imageUrl = get_the_post_thumbnail_url($postId, $imageSize) ?: '';
         }
 
-        $processedUrl = function_exists('img') ? img($imageUrl, $quality, 'all') : $imageUrl;
+        $processedUrl = ImagenService::obtenerInstancia()->optimizar($imageUrl, $quality, 'all');
 
         ob_start();
     ?>
@@ -626,14 +629,14 @@ class PostComponents
     ?>
         <div class="QSORIW">
             <?php echo \Kamples\Views\Components\LikeButtons::mostrar($postId); ?>
-            <?php if ($mostrarBotonCompra && function_exists('botonCompra')): ?>
-                <?php echo botonCompra($postId); ?>
+            <?php if ($mostrarBotonCompra): ?>
+                <?php echo FinanzaComponents::renderBotonCompra($postId); ?>
             <?php endif; ?>
             <?php echo $this->renderBotonComentar($postId); ?>
             <?php if (!empty($audioIdLite)): ?>
                 <?php echo $this->renderizarBotonDescarga($postId, get_current_user_id(), get_post_meta($postId, 'paraDescarga', true)); ?>
-                <?php echo function_exists('botonColab') ? botonColab($postId, $colab) : ''; ?>
-                <?php echo function_exists('botonColeccion') ? botonColeccion($postId) : ''; ?>
+                <?php echo (new ColabService())->obtenerBotonColab($postId, (bool)$colab); ?>
+                <?php echo (new ColeccionService())->renderizarBotonColeccion($postId); ?>
             <?php endif; ?>
         </div>
     <?php

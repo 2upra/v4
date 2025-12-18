@@ -2,6 +2,10 @@
 
 namespace Kamples\Controllers\Finanza;
 
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use Stripe\Webhook;
+
 /**
  * Controlador de compra de beats/samples.
  * 
@@ -59,7 +63,7 @@ class CompraController
                 return $this->errorResponse('La clave de Stripe no está configurada', 500);
             }
 
-            \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
+            Stripe::setApiKey($_ENV['STRIPEKEY']);
             $data = $request->get_json_params();
 
             $userId = sanitize_text_field($data['userId'] ?? '');
@@ -70,22 +74,26 @@ class CompraController
                 return $this->errorResponse('Parámetros inválidos', 400);
             }
 
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => ['name' => 'Compra de beat&sample'],
-                        'unit_amount' => intval($precio * 100),
-                    ],
-                    'quantity' => 1,
-                ]],
-                'metadata' => [
-                    'transaction_type' => 'comprabeat',
-                    'user_id' => $userId,
-                    'post_id' => $postId,
-                    'monto' => $precio,
+            $lineItems = [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => ['name' => 'Compra de beat&sample'],
+                    'unit_amount' => intval($precio * 100),
                 ],
+                'quantity' => 1,
+            ]];
+
+            $metadata = [
+                'transaction_type' => 'comprabeat',
+                'user_id' => $userId,
+                'post_id' => $postId,
+                'monto' => $precio,
+            ];
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => $lineItems,
+                'metadata' => $metadata,
                 'mode' => 'payment',
                 'success_url' => home_url(''),
                 'cancel_url' => home_url(''),
@@ -112,7 +120,7 @@ class CompraController
             $payload = @file_get_contents('php://input');
             $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
-            $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $_ENV['HOOKCOMPRA']);
+            $event = Webhook::constructEvent($payload, $sigHeader, $_ENV['HOOKCOMPRA']);
 
             if ($event->type === 'checkout.session.completed') {
                 $session = $event->data->object;

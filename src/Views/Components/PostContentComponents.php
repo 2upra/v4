@@ -13,6 +13,7 @@
 namespace Kamples\Views\Components;
 
 use Kamples\Services\Publicacion\PostRenderService;
+use Kamples\Services\Contenido\ImagenService;
 use Kamples\Views\Components\LikeButtons;
 
 class PostContentComponents
@@ -48,7 +49,7 @@ class PostContentComponents
         string $audioUrl
     ): void {
         $thumbnailUrl = get_the_post_thumbnail_url($postId, 'full');
-        $optimizedThumbnailUrl = function_exists('img') ? img($thumbnailUrl, 40, 'all') : $thumbnailUrl;
+        $optimizedThumbnailUrl = ImagenService::obtenerInstancia()->optimizar($thumbnailUrl, 40, 'all');
         $momento = get_post_meta($postId, 'momento', true);
         $esColeccion = get_post_meta($postId, 'datosColeccion', true);
 
@@ -277,7 +278,7 @@ class PostContentComponents
                                 <div class="post-thumbnail">
                                     <?php
                                     $thumbnailUrl = get_the_post_thumbnail_url($postId, 'full');
-                                    $optimizedThumbnailUrl = function_exists('img') ? img($thumbnailUrl, 40, 'all') : $thumbnailUrl;
+                                    $optimizedThumbnailUrl = ImagenService::obtenerInstancia()->optimizar($thumbnailUrl, 40, 'all');
                                     ?>
                                     <img src="<?php echo esc_url($optimizedThumbnailUrl); ?>" alt="<?php echo esc_attr(get_the_title($postId)); ?>">
                                 </div>
@@ -285,7 +286,7 @@ class PostContentComponents
                                 <div class="temporal-thumbnail">
                                     <?php
                                     $temporalImageUrl = wp_get_attachment_url($imagenTemporalId);
-                                    $optimizedTemporalImageUrl = function_exists('img') ? img($temporalImageUrl, 40, 'all') : $temporalImageUrl;
+                                    $optimizedTemporalImageUrl = ImagenService::obtenerInstancia()->optimizar($temporalImageUrl, 40, 'all');
                                     ?>
                                     <img src="<?php echo esc_url($optimizedTemporalImageUrl); ?>" alt="Imagen temporal">
                                 </div>

@@ -11,6 +11,8 @@
 
 namespace Kamples\Services\Core;
 
+use Kamples\Services\Usuario\UsuarioService;
+
 class DescargaService
 {
     private static ?DescargaService $instancia = null;
@@ -158,12 +160,7 @@ class DescargaService
      */
     private function restarPinkys(int $userId, int $cantidad): void
     {
-        if (function_exists('restarPinkys')) {
-            restarPinkys($userId, $cantidad);
-        } else {
-            $pinky = (int) get_user_meta($userId, 'pinky', true);
-            update_user_meta($userId, 'pinky', max(0, $pinky - $cantidad));
-        }
+        UsuarioService::obtenerInstancia()->restarPinkys($userId, $cantidad);
     }
 
     /**

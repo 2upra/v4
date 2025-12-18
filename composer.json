@@ -20,7 +20,8 @@
         "guzzlehttp/guzzle": "^7.9",
         "nlp-tools/nlp-tools": "^0.1.3",
         "wamania/php-stemmer": "^3.0",
-        "kreait/firebase-php": "^7.16"
+        "kreait/firebase-php": "^7.16",
+        "stripe/stripe-php": "^19.1"
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
@@ -28,7 +29,8 @@
         "php-parallel-lint/php-parallel-lint": "^1.2.0",
         "wp-cli/i18n-command": "^2.2.5",
         "phpunit/phpunit": "^9.0",
-        "php-stubs/wordpress-stubs": "^6.9"
+        "php-stubs/wordpress-stubs": "^6.9",
+        "phpstan/phpstan": "^2.1"
     },
     "scripts": {
         "lint:wpcs": "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs",

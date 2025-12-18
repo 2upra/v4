@@ -13,6 +13,8 @@
 namespace Kamples\Services\Publicacion;
 
 use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Contenido\ImagenService;
+use Kamples\Services\Audio\StreamService;
 
 class PostRenderService
 {
@@ -116,11 +118,7 @@ class PostRenderService
             $imagenUrl = get_the_post_thumbnail_url($postId, $imagenSize) ?: '';
         }
 
-        if (function_exists('img')) {
-            $imagenProcesada = img($imagenUrl, $quality, 'all');
-        } else {
-            $imagenProcesada = $imagenUrl;
-        }
+        $imagenProcesada = ImagenService::obtenerInstancia()->optimizar($imagenUrl, $quality, 'all');
 
         return esc_url($imagenProcesada);
     }
@@ -207,15 +205,11 @@ class PostRenderService
      */
     public function obtenerUrlAudioSegura($audioId): string
     {
-        if (function_exists('audioUrlSegura')) {
-            $url = audioUrlSegura($audioId);
-            if (is_wp_error($url)) {
-                return '';
-            }
-            return $url;
+        $url = StreamService::obtenerInstancia()->generarUrlSegura($audioId);
+        if (is_wp_error($url)) {
+            return '';
         }
-
-        return wp_get_attachment_url($audioId) ?: '';
+        return $url;
     }
 
     /**

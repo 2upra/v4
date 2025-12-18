@@ -3,6 +3,9 @@
 namespace Kamples\Controllers\Finanza;
 
 use Kamples\Services\Finanza\FinanzaService;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use Stripe\Webhook;
 
 /**
  * Controlador de acciones/donaciones.
@@ -95,7 +98,7 @@ class AccionesController
                 return $this->errorResponse('La clave de Stripe no está configurada', 500);
             }
 
-            \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
+            Stripe::setApiKey($_ENV['STRIPEKEY']);
             $data = $request->get_json_params();
             $userId = sanitize_text_field($data['userId'] ?? '');
             $cantidadCompra = floatval($data['cantidadCompra'] ?? 0);
@@ -104,20 +107,24 @@ class AccionesController
                 return $this->errorResponse('Parámetros inválidos proporcionados', 400);
             }
 
-            $session = \Stripe\Checkout\Session::create([
-                'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => ['name' => 'Compra de Acciones'],
-                        'unit_amount' => intval($cantidadCompra * 100),
-                    ],
-                    'quantity' => 1,
-                ]],
-                'metadata' => [
-                    'transaction_type' => 'compra_acciones',
-                    'user_id' => $userId,
+            $lineItems = [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => ['name' => 'Compra de Acciones'],
+                    'unit_amount' => intval($cantidadCompra * 100),
                 ],
+                'quantity' => 1,
+            ]];
+
+            $metadata = [
+                'transaction_type' => 'compra_acciones',
+                'user_id' => $userId,
+            ];
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => $lineItems,
+                'metadata' => $metadata,
                 'mode' => 'payment',
                 'success_url' => home_url(''),
                 'cancel_url' => home_url(''),
@@ -144,7 +151,7 @@ class AccionesController
             $payload = @file_get_contents('php://input');
             $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
-            $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $_ENV['HOOKACCIONES']);
+            $event = Webhook::constructEvent($payload, $sigHeader, $_ENV['HOOKACCIONES']);
 
             if ($event->type === 'checkout.session.completed') {
                 $session = $event->data->object;

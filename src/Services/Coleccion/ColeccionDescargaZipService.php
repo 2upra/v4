@@ -11,6 +11,8 @@
 
 namespace Kamples\Services\Coleccion;
 
+use Kamples\Services\Usuario\UsuarioService;
+
 class ColeccionDescargaZipService
 {
     private static ?ColeccionDescargaZipService $instancia = null;
@@ -106,9 +108,7 @@ class ColeccionDescargaZipService
                         $numNoDescargados
                     ));
                 }
-                if (function_exists('restarPinkys')) {
-                    restarPinkys($userId, $numNoDescargados);
-                }
+                UsuarioService::obtenerInstancia()->restarPinkys($userId, $numNoDescargados);
             }
             return true;
         }

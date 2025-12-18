@@ -2,6 +2,11 @@
 
 namespace Kamples\Controllers\Finanza;
 
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use Stripe\Webhook;
+use Stripe\Subscription;
+
 /**
  * Controlador de suscripciones PRO.
  * 
@@ -61,7 +66,7 @@ class SuscripcionController
                 return $this->errorResponse('La clave de Stripe no está configurada', 500);
             }
 
-            \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
+            Stripe::setApiKey($_ENV['STRIPEKEY']);
             $body = $request->get_json_params();
             $userId = isset($body['user_id']) ? intval($body['user_id']) : 0;
 
@@ -69,12 +74,14 @@ class SuscripcionController
                 return $this->errorResponse('Usuario no autenticado o ID no proporcionado', 401);
             }
 
-            $session = \Stripe\Checkout\Session::create([
+            $lineItems = [[
+                'price' => self::PRICE_ID_PRO,
+                'quantity' => 1
+            ]];
+
+            $session = Session::create([
                 'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price' => self::PRICE_ID_PRO,
-                    'quantity' => 1
-                ]],
+                'line_items' => $lineItems,
                 'mode' => 'subscription',
                 'success_url' => home_url('/'),
                 'cancel_url' => home_url('/'),
@@ -98,13 +105,13 @@ class SuscripcionController
                 return $this->errorResponse('La clave de Stripe no está configurada', 500);
             }
 
-            \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
+            Stripe::setApiKey($_ENV['STRIPEKEY']);
 
             if (!isset($_ENV['HOOKPRO'])) {
                 return $this->errorResponse('La clave de webhook no está configurada', 500);
             }
 
-            $event = \Stripe\Webhook::constructEvent(
+            $event = Webhook::constructEvent(
                 $request->get_body(),
                 $request->get_header('stripe-signature'),
                 $_ENV['HOOKPRO']
@@ -132,7 +139,7 @@ class SuscripcionController
      */
     private function procesarSuscripcion(array $session): void
     {
-        $subscription = \Stripe\Subscription::retrieve($session['subscription']);
+        $subscription = Subscription::retrieve($session['subscription']);
 
         foreach ($subscription->items->data as $item) {
             if ($item->price->id === self::PRICE_ID_PRO) {

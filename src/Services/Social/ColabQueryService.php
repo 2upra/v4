@@ -13,6 +13,7 @@
 namespace Kamples\Services\Social;
 
 use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Contenido\ImagenService;
 
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
@@ -77,7 +78,7 @@ class ColabQueryService
         if (!$imagenPost) {
             $imagenPost = site_url('/wp-content/uploads/2024/09/1ndoryu_1725478496.webp');
         }
-        $imagenPostOp = function_exists('img') ? img($imagenPost, 40, 'all') : $imagenPost;
+        $imagenPostOp = ImagenService::obtenerInstancia()->optimizar($imagenPost, 40, 'all');
 
         $postTitulo = get_the_title($postId);
 

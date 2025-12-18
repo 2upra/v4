@@ -3,6 +3,7 @@
 namespace Kamples\Services\Core;
 
 use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Contenido\ImagenService;
 
 // CacheService is in the same namespace
 
@@ -190,13 +191,13 @@ class BusquedaService
     {
         if (has_post_thumbnail($postId)) {
             $url = get_the_post_thumbnail_url($postId, 'thumbnail');
-            return function_exists('img') ? img($url) : $url;
+            return ImagenService::obtenerInstancia()->optimizar($url);
         }
 
         $imagenTemporalId = get_post_meta($postId, 'imagenTemporal', true);
         if ($imagenTemporalId) {
             $url = wp_get_attachment_image_url($imagenTemporalId, 'thumbnail');
-            return function_exists('img') ? img($url) : $url;
+            return ImagenService::obtenerInstancia()->optimizar($url);
         }
 
         return false;

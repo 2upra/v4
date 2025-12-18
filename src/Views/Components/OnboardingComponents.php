@@ -9,6 +9,8 @@
 
 namespace Kamples\Views\Components;
 
+use Kamples\Services\Contenido\ImagenService;
+
 class OnboardingComponents
 {
     /**
@@ -25,12 +27,12 @@ class OnboardingComponents
             return '';
         }
 
-        $fanDiv = function_exists('img')
-            ? img(site_url('/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp'))
-            : site_url('/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp');
-        $artistaBg = function_exists('img')
-            ? img(site_url('/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp'))
-            : site_url('/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
+        $fanDiv = ImagenService::obtenerInstancia()->optimizar(
+            site_url('/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp')
+        );
+        $artistaBg = ImagenService::obtenerInstancia()->optimizar(
+            site_url('/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp')
+        );
 
         ob_start();
 ?>

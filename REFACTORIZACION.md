@@ -387,18 +387,40 @@ private function crearMiNuevaTabla(): void
 
 > Ubicados en `/app/deprecated/`. Se irán eliminando conforme se actualicen las referencias.
 
-| Archivo       | Usos restantes | Estado                                                                     |
-| ------------- | -------------- | -------------------------------------------------------------------------- |
-| algoritmo.php | 0              | ✅ Eliminado (2025-12-18)                                                   |
-| contador.php  | 0              | ✅ Eliminado (2025-12-18)                                                   |
-| likes.php     | 0              | ✅ Eliminado (2025-12-18)                                                   |
-| perfiles.php  | 0 en src/      | ✅ Limpiado (2025-12-18) - `imagenPerfil()` reemplazado por `PerfilService` |
-| auxiliar.php  | 0 en src/      | ✅ Limpiado (2025-12-18) - `tiempoRelativo()` reemplazado por `UtilService` |
-| chat.php      | 0 en src/      | ✅ Limpiado (2025-12-18) - `tiempoRelativo()` reemplazado por `UtilService` |
-| auth.php      | Por verificar  | ⏳ Pendiente                                                                |
-| ...           | ...            | ...                                                                        |
+| Archivo       | Usos restantes | Estado                                                                                                                            |
+| ------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| algoritmo.php | 0              | ✅ Eliminado (2025-12-18)                                                                                                          |
+| contador.php  | 0              | ✅ Eliminado (2025-12-18)                                                                                                          |
+| likes.php     | 0              | ✅ Eliminado (2025-12-18)                                                                                                          |
+| perfiles.php  | 0 en src/      | ✅ Limpiado (2025-12-18) - `imagenPerfil()` reemplazado por `PerfilService`                                                        |
+| auxiliar.php  | 0 en src/      | ✅ Limpiado (2025-12-18) - `tiempoRelativo()` reemplazado por `UtilService`                                                        |
+| chat.php      | 0 en src/      | ✅ Limpiado (2025-12-18) - `tiempoRelativo()` reemplazado por `UtilService`                                                        |
+| functions.php | 0 en src/      | ✅ Limpiado (2025-12-18) - `img()` reemplazado por `ImagenService::optimizar()`, `restarPinkys()` reemplazado por `UsuarioService` |
+| auth.php      | Por verificar  | ⏳ Pendiente                                                                                                                       |
+| ...           | ...            | ...                                                                                                                               |
 
-> **Nota:** Lista completa en `/app/deprecated/`. Cada revisión de servicio incluirá verificar si su wrapper puede eliminarse.
+### Limpieza de Deprecated en src/ (2025-12-18)
+
+**Funciones eliminadas y reemplazadas:**
+
+| Función Deprecated | Usos Eliminados | Servicio/Método Moderno                              |
+| ------------------ | --------------- | ---------------------------------------------------- |
+| `img()`            | 14              | `ImagenService::obtenerInstancia()->optimizar()`     |
+| `restarPinkys()`   | 3               | `UsuarioService::obtenerInstancia()->restarPinkys()` |
+
+**Archivos actualizados:**
+- `Views/Components/PostContentComponents.php` - 3 usos de `img()`
+- `Views/Components/PostComponents.php` - 2 usos de `img()`
+- `Views/Components/OnboardingComponents.php` - 2 usos de `img()`
+- `Views/Components/ColeccionComponents.php` - 1 uso de `img()`
+- `Services/Social/ComentarioQueryService.php` - 1 uso de `img()`
+- `Services/Social/ColabQueryService.php` - 1 uso de `img()`
+- `Services/Publicacion/PostRenderService.php` - 1 uso de `img()`
+- `Services/Core/SyncAudioService.php` - 2 usos de `img()`
+- `Services/Core/BusquedaService.php` - 2 usos de `img()`
+- `Services/Core/DescargaService.php` - 1 uso de `restarPinkys()`
+- `Services/Coleccion/ColeccionDescargaZipService.php` - 1 uso de `restarPinkys()`
+- `Services/Coleccion/ColeccionDescargaEstadisticasService.php` - 1 uso de `restarPinkys()`
 
 ---
 

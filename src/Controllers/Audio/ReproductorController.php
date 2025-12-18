@@ -51,8 +51,8 @@ class ReproductorController
      */
     public function manejarReproduccion(\WP_REST_Request $request)
     {
-        $postId = absint($request->get_param('post_id'));
-        $artistId = absint($request->get_param('artist'));
+        $postId = abs((int) $request->get_param('post_id'));
+        $artistId = abs((int) $request->get_param('artist'));
         $ipAddress = sanitize_text_field($_SERVER['REMOTE_ADDR'] ?? '');
 
         $resultado = $this->reproductorService->registrarReproduccion(

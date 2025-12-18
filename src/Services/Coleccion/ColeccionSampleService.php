@@ -12,6 +12,9 @@
 
 namespace Kamples\Services\Coleccion;
 
+use Kamples\Services\Contenido\ImagenService;
+use Kamples\Services\Core\CacheService;
+
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
@@ -173,6 +176,9 @@ class ColeccionSampleService
         ]);
 
         foreach ($colecciones as $coleccion) {
+            if (!$coleccion instanceof \WP_Post) {
+                continue;
+            }
             $samples = $this->obtenerSamplesDeColeccion($coleccion->ID);
             if (in_array($sampleId, $samples)) {
                 $coleccionesConSample[] = $coleccion->ID;
@@ -223,11 +229,9 @@ class ColeccionSampleService
             update_user_meta($userId, $tipo . '_coleccion_id', $colecEspId);
             update_post_meta($colecEspId, 'coleccion_especial', $titulo);
 
-            if (function_exists('subirImagenDesdeURL')) {
-                $imgId = subirImagenDesdeURL($imgUrl, $colecEspId);
-                if ($imgId) {
-                    set_post_thumbnail($colecEspId, $imgId);
-                }
+            $imgId = ImagenService::obtenerInstancia()->subirImagenDesdeUrl($imgUrl, $colecEspId);
+            if ($imgId) {
+                set_post_thumbnail($colecEspId, $imgId);
             }
 
             return $colecEspId;
@@ -342,9 +346,7 @@ class ColeccionSampleService
      */
     private function borrarCacheColeccion(int $coleccionId): void
     {
-        if (function_exists('borrarCacheColeccion')) {
-            borrarCacheColeccion($coleccionId);
-        }
+        CacheService::obtenerInstancia()->borrarCacheColeccion($coleccionId);
     }
 
     /**
