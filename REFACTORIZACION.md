@@ -1,6 +1,6 @@
 # Refactorización del Tema v4 (2upra/kamples)
 
-> **Última actualización:** 2025-12-17
+> **Última actualización:** 2025-12-18
 > **Estado:** Fase 3 - Revisión SOLID y limpieza de deprecated
 
 ---
@@ -8,6 +8,18 @@
 ## Contexto del Proyecto
 
 Tema de WordPress para aplicación social/musical. Requiere refactorización progresiva aplicando principios SOLID.
+
+---
+
+## Problemas Pendientes (Bugs)
+
+| #   | Problema                          | Descripción                                                                                                                                                             | Estado                                                                                        |
+| --- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 1   | **Google OAuth Error 400**        | Al iniciar sesión con Google: "Required parameter is missing: response_type". El parámetro está en el código pero no llega a Google. Posible problema de escape de URL. | Pendiente                                                                                     |
+| 2   | **Audios no cargan (404)**        | Los audios del feed devuelven 404: `/wp-json/1/v1/2?token=...`. El endpoint REST de streaming parece no estar registrado correctamente.                                 | ✅ Resuelto (2025-12-18) - StreamController agregado a init.php                                |
+| 3   | **Imágenes aleatorias no cargan** | Algunas imágenes del feed no cargan. Posible problema con URLs o permisos.                                                                                              | ✅ Resuelto (2025-12-18) - Función imagenPost migrada a PostRenderService::obtenerImagenPost() |
+
+> **Nota:** El problema de Google OAuth debe investigarse por separado.
 
 ---
 

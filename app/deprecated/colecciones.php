@@ -331,7 +331,9 @@ function datosColeccion($postId): void
 /**
  * Procesar imagen de post.
  * 
- * @deprecated Esta función se mantiene por compatibilidad (lógica de imágenes complicada).
+ * @deprecated 2.0.0 Usar PostRenderService::obtenerImagenPost() directamente
+ * @see \Kamples\Services\Publicacion\PostRenderService::obtenerImagenPost()
+ * 
  * @param int    $postId   ID del post.
  * @param string $size     Tamaño de imagen.
  * @param int    $quality  Calidad.
@@ -342,56 +344,20 @@ function datosColeccion($postId): void
  */
 function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $useTemp = false)
 {
-    $postThumbnailId = get_post_thumbnail_id($postId);
+    static $renderService = null;
 
-    if ($postThumbnailId) {
-        $url = wp_get_attachment_image_url($postThumbnailId, $size);
-    } elseif ($useTemp) {
-        $tempImageId = get_post_meta($postId, 'imagenTemporal', true);
-
-        if ($tempImageId && wp_attachment_is_image($tempImageId)) {
-            $url = wp_get_attachment_image_url($tempImageId, $size);
-        } else {
-            if (function_exists('obtenerImagenAleatoria')) {
-                $randomImagePath = obtenerImagenAleatoria('/home/asley01/MEGA/Waw/random');
-                if (!$randomImagePath) {
-                    if (function_exists('ejecutarScriptPermisos')) {
-                        ejecutarScriptPermisos();
-                    }
-                    return false;
-                }
-                if (function_exists('subirImagenALibreria')) {
-                    $tempImageId = subirImagenALibreria($randomImagePath, $postId);
-                    if (!$tempImageId) {
-                        if (function_exists('ejecutarScriptPermisos')) {
-                            ejecutarScriptPermisos();
-                        }
-                        return false;
-                    }
-                    update_post_meta($postId, 'imagenTemporal', $tempImageId);
-                    $url = wp_get_attachment_image_url($tempImageId, $size);
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-    } else {
-        return false;
+    if ($renderService === null) {
+        $renderService = new \Kamples\Services\Publicacion\PostRenderService();
     }
 
-    if (function_exists('jetpack_photon_url') && $url) {
-        $args = ['quality' => $quality, 'strip' => $strip];
-        if ($pixelated) {
-            $args['w']    = 50;
-            $args['h']    = 50;
-            $args['zoom'] = 2;
-        }
-        return jetpack_photon_url($url, $args);
-    }
-
-    return $url;
+    return $renderService->obtenerImagenPost(
+        (int) $postId,
+        $size,
+        $quality,
+        $strip,
+        $pixelated,
+        $useTemp
+    );
 }
 
 /**

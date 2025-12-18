@@ -203,10 +203,13 @@ class ColeccionComponents
      */
     public static function renderImagenColeccion(int $postId): string
     {
-        $imagenUrl = '';
-        if (function_exists('imagenPost')) {
-            $imagenUrl = imagenPost($postId, 'large', 60, 'all', false, true);
+        $renderService = new \Kamples\Services\Publicacion\PostRenderService();
+        $imagenUrl = $renderService->obtenerImagenPost($postId, 'large', 60, 'all', false, true);
+
+        if (!$imagenUrl) {
+            $imagenUrl = get_the_post_thumbnail_url($postId, 'large') ?: '';
         }
+
         if (function_exists('img') && $imagenUrl) {
             $imagenProcesada = img($imagenUrl, 60, 'all');
         } else {

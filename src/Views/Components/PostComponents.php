@@ -135,10 +135,17 @@ class PostComponents
         $imageSize = 'thumbnail';
         $quality = 20;
 
-        if (function_exists('imagenPost')) {
-            $imageUrl = imagenPost($postId, $imageSize, $quality, 'all', ($block && !$esSuscriptor), true);
-        } else {
-            $imageUrl = get_the_post_thumbnail_url($postId, $imageSize);
+        $imageUrl = $this->renderService->obtenerImagenPost(
+            $postId,
+            $imageSize,
+            $quality,
+            'all',
+            ($block && !$esSuscriptor),
+            true
+        );
+
+        if (!$imageUrl) {
+            $imageUrl = get_the_post_thumbnail_url($postId, $imageSize) ?: '';
         }
 
         $processedUrl = function_exists('img') ? img($imageUrl, $quality, 'all') : $imageUrl;

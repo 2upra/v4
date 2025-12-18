@@ -73,6 +73,7 @@ foreach ($controladoresEstaticos as $controllerClass) {
  */
 $controladoresSimples = [
     Audio\ReproductorController::class,
+    Audio\StreamController::class,
 ];
 
 foreach ($controladoresSimples as $controllerClass) {

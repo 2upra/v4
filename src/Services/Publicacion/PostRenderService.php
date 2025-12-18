@@ -108,10 +108,10 @@ class PostRenderService
         $imagenSize = 'large';
         $quality = 60;
 
-        if (function_exists('imagenPost')) {
-            $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-        } else {
-            $imagenUrl = get_the_post_thumbnail_url($postId, $imagenSize);
+        $imagenUrl = $this->obtenerImagenPost($postId, $imagenSize, $quality, 'all', false, true);
+
+        if (!$imagenUrl) {
+            $imagenUrl = get_the_post_thumbnail_url($postId, $imagenSize) ?: '';
         }
 
         if (function_exists('img')) {
@@ -121,6 +121,80 @@ class PostRenderService
         }
 
         return esc_url($imagenProcesada);
+    }
+
+    /**
+     * Obtiene la URL de la imagen del post con fallbacks
+     * 
+     * Busca la imagen en este orden:
+     * 1. Thumbnail del post
+     * 2. Imagen temporal guardada en meta
+     * 3. Imagen aleatoria del directorio de respaldo (si usarTemporal = true)
+     * 
+     * @param int $postId ID del post
+     * @param string $size Tamaño de la imagen (thumbnail, medium, large, full)
+     * @param int $quality Calidad para CDN (1-100)
+     * @param string $strip Metadatos a eliminar ('all', 'color', 'none')
+     * @param bool $pixelada Si debe ser pixelada (blur)
+     * @param bool $usarTemporal Si debe usar imagen temporal/aleatoria como fallback
+     * @return string|false URL de la imagen o false si no hay
+     */
+    public function obtenerImagenPost(
+        int $postId,
+        string $size = 'medium',
+        int $quality = 50,
+        string $strip = 'all',
+        bool $pixelada = false,
+        bool $usarTemporal = false
+    ) {
+        $thumbnailId = get_post_thumbnail_id($postId);
+        $url = null;
+
+        /* Caso 1: El post tiene thumbnail */
+        if ($thumbnailId) {
+            $url = wp_get_attachment_image_url($thumbnailId, $size);
+        }
+        /* Caso 2: Usar imagen temporal como fallback */ elseif ($usarTemporal) {
+            $tempImageId = get_post_meta($postId, 'imagenTemporal', true);
+
+            if ($tempImageId && wp_attachment_is_image($tempImageId)) {
+                $url = wp_get_attachment_image_url($tempImageId, $size);
+            } else {
+                /* Caso 3: Obtener imagen aleatoria y guardarla */
+                $directorioRandom = '/home/asley01/MEGA/Waw/random';
+                $imagenAleatoria = $this->obtenerImagenAleatoria($directorioRandom);
+
+                if ($imagenAleatoria) {
+                    $nuevoTempId = $this->subirImagenALibreria($imagenAleatoria, $postId);
+
+                    if ($nuevoTempId) {
+                        update_post_meta($postId, 'imagenTemporal', $nuevoTempId);
+                        $url = wp_get_attachment_image_url($nuevoTempId, $size);
+                    }
+                }
+
+                if (!$url) {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+
+        /* Aplicar optimización CDN si está disponible */
+        if ($url && function_exists('jetpack_photon_url')) {
+            $args = ['quality' => $quality, 'strip' => $strip];
+
+            if ($pixelada) {
+                $args['w'] = 50;
+                $args['h'] = 50;
+                $args['zoom'] = 2;
+            }
+
+            return jetpack_photon_url($url, $args);
+        }
+
+        return $url ?: false;
     }
 
     /**
