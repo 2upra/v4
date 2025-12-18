@@ -12,7 +12,8 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\PostRenderService;
+use Kamples\Services\Publicacion\PostRenderService;
+use Kamples\Views\Components\LikeButtons;
 
 class PostContentComponents
 {

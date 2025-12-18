@@ -3,8 +3,8 @@
 /**
  * Migraciones de base de datos para el tema.
  * 
- * Crea las tablas necesarias para el funcionamiento del tema.
- * Solo se ejecuta en entorno LOCAL y una sola vez.
+ * Crea las tablas personalizadas necesarias para el funcionamiento del tema.
+ * Verifica la existencia real de las tablas antes de crearlas.
  *
  * @package Kamples
  * @since 1.0.0
@@ -20,35 +20,111 @@ if (!defined('ABSPATH')) {
 class DatabaseMigrations
 {
     /**
-     * Ejecutar todas las migraciones.
+     * Instancia singleton.
+     * 
+     * @var DatabaseMigrations|null
      */
-    public static function ejecutar(): void
+    private static ?DatabaseMigrations $instancia = null;
+
+    /**
+     * Referencia global a wpdb.
+     * 
+     * @var \wpdb
+     */
+    private \wpdb $wpdb;
+
+    /**
+     * Charset y collate de la base de datos.
+     * 
+     * @var string
+     */
+    private string $charsetCollate;
+
+    /**
+     * Constructor privado para singleton.
+     */
+    private function __construct()
     {
-        self::tablasMensajes();
-        self::tablasPost();
-        self::tablaFileHashes();
+        global $wpdb;
+        $this->wpdb = $wpdb;
+        $this->charsetCollate = $wpdb->get_charset_collate();
     }
 
     /**
-     * Crear tablas de mensajes y conversaciones.
+     * Obtener instancia singleton.
+     * 
+     * @return DatabaseMigrations
      */
-    private static function tablasMensajes(): void
+    public static function obtenerInstancia(): DatabaseMigrations
     {
-        global $wpdb;
+        if (self::$instancia === null) {
+            self::$instancia = new self();
+        }
+        return self::$instancia;
+    }
 
-        if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
-            update_option('tablasIniciales', '1');
+    /**
+     * Verificar si una tabla existe en la base de datos.
+     * 
+     * @param string $nombreTabla Nombre de la tabla (sin prefijo).
+     * @return bool
+     */
+    public function tablaExiste(string $nombreTabla): bool
+    {
+        $tablaCompleta = $this->wpdb->prefix . $nombreTabla;
+        $resultado = $this->wpdb->get_var(
+            $this->wpdb->prepare("SHOW TABLES LIKE %s", $tablaCompleta)
+        );
+        return $resultado === $tablaCompleta;
+    }
+
+    /**
+     * Ejecutar todas las migraciones.
+     * Solo crea tablas que no existan.
+     */
+    public function ejecutar(): void
+    {
+        $this->crearTablaConversacion();
+        $this->crearTablaMensajes();
+        $this->crearTablaInteres();
+        $this->crearTablaPostLikes();
+        $this->crearTablaFileHashes();
+    }
+
+    /**
+     * Crear tabla de conversaciones.
+     */
+    private function crearTablaConversacion(): void
+    {
+        if ($this->tablaExiste('conversacion')) {
             return;
         }
 
-        if (get_option('tablasIniciales')) {
+        $tabla = $this->wpdb->prefix . 'conversacion';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $tabla (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            tipo TINYINT(1) NOT NULL,
+            participantes LONGTEXT NOT NULL,
+            fecha DATETIME NOT NULL,
+            PRIMARY KEY (id)
+        ) {$this->charsetCollate};";
+
+        $this->ejecutarSQL($sql);
+    }
+
+    /**
+     * Crear tabla de mensajes.
+     */
+    private function crearTablaMensajes(): void
+    {
+        if ($this->tablaExiste('mensajes')) {
             return;
         }
 
-        $tabla_mensajes = $wpdb->prefix . 'mensajes';
-        $charset_collate = $wpdb->get_charset_collate();
+        $tabla = $this->wpdb->prefix . 'mensajes';
 
-        $sql_mensajes = "CREATE TABLE IF NOT EXISTS $tabla_mensajes (
+        $sql = "CREATE TABLE IF NOT EXISTS $tabla (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             conversacion BIGINT(20) UNSIGNED NOT NULL,
             emisor BIGINT(20) UNSIGNED NOT NULL,
@@ -61,46 +137,23 @@ class DatabaseMigrations
             PRIMARY KEY (id),
             KEY conversacion (conversacion),
             KEY emisor (emisor)
-        ) $charset_collate;";
+        ) {$this->charsetCollate};";
 
-        $tabla_conversaciones = $wpdb->prefix . 'conversacion';
-
-        $sql_conversaciones = "CREATE TABLE IF NOT EXISTS $tabla_conversaciones (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            tipo TINYINT(1) NOT NULL,
-            participantes LONGTEXT NOT NULL,
-            fecha DATETIME NOT NULL,
-            PRIMARY KEY (id)
-        ) $charset_collate;";
-
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-
-        $wpdb->query($sql_mensajes);
-        $wpdb->query($sql_conversaciones);
-
-        update_option('tablasIniciales', true);
+        $this->ejecutarSQL($sql);
     }
 
     /**
-     * Crear tablas de posts (intereses, likes).
+     * Crear tabla de intereses de usuario.
      */
-    private static function tablasPost(): void
+    private function crearTablaInteres(): void
     {
-        global $wpdb;
-
-        if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
-            update_option('tablasPost', '1');
+        if ($this->tablaExiste('interes')) {
             return;
         }
 
-        if (get_option('tablasPost')) {
-            return;
-        }
+        $tabla = $this->wpdb->prefix . 'interes';
 
-        $tabla_interes = $wpdb->prefix . 'interes';
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql_interes = "CREATE TABLE IF NOT EXISTS $tabla_interes (
+        $sql = "CREATE TABLE IF NOT EXISTS $tabla (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             user_id BIGINT(20) UNSIGNED NOT NULL,
             interest VARCHAR(255) NOT NULL,
@@ -108,11 +161,23 @@ class DatabaseMigrations
             PRIMARY KEY (id),
             KEY user_id (user_id),
             KEY interest (interest)
-        ) $charset_collate;";
+        ) {$this->charsetCollate};";
 
-        $tabla_post_likes = $wpdb->prefix . 'post_likes';
+        $this->ejecutarSQL($sql);
+    }
 
-        $sql_post_likes = "CREATE TABLE IF NOT EXISTS $tabla_post_likes (
+    /**
+     * Crear tabla de likes de posts.
+     */
+    private function crearTablaPostLikes(): void
+    {
+        if ($this->tablaExiste('post_likes')) {
+            return;
+        }
+
+        $tabla = $this->wpdb->prefix . 'post_likes';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $tabla (
             like_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             user_id BIGINT(20) UNSIGNED NOT NULL,
             post_id BIGINT(20) UNSIGNED NOT NULL,
@@ -120,35 +185,23 @@ class DatabaseMigrations
             PRIMARY KEY (like_id),
             KEY post_id (post_id),
             KEY like_date (like_date)
-        ) $charset_collate;";
+        ) {$this->charsetCollate};";
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-
-        $wpdb->query($sql_interes);
-        $wpdb->query($sql_post_likes);
-
-        update_option('tablasPost', true);
+        $this->ejecutarSQL($sql);
     }
 
     /**
      * Crear tabla de hashes de archivos.
      */
-    private static function tablaFileHashes(): void
+    private function crearTablaFileHashes(): void
     {
-        global $wpdb;
-
-        if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
+        if ($this->tablaExiste('file_hashes')) {
             return;
         }
 
-        if (get_option('tablaFileHashesCreada')) {
-            return;
-        }
+        $tabla = $this->wpdb->prefix . 'file_hashes';
 
-        $tabla_file_hashes = $wpdb->prefix . 'file_hashes';
-        $charset_collate = $wpdb->get_charset_collate();
-
-        $sql_file_hashes = "CREATE TABLE IF NOT EXISTS $tabla_file_hashes (
+        $sql = "CREATE TABLE IF NOT EXISTS $tabla (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             file_hash VARCHAR(64) NOT NULL,
             file_url TEXT NOT NULL,
@@ -157,14 +210,35 @@ class DatabaseMigrations
             user_id BIGINT UNSIGNED NOT NULL,
             PRIMARY KEY (id),
             UNIQUE KEY file_hash (file_hash)
-        ) $charset_collate;";
+        ) {$this->charsetCollate};";
 
+        $this->ejecutarSQL($sql);
+    }
+
+    /**
+     * Ejecutar una consulta SQL de creación de tabla.
+     * 
+     * @param string $sql Consulta SQL.
+     */
+    private function ejecutarSQL(string $sql): void
+    {
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql_file_hashes);
+        dbDelta($sql);
+    }
 
-        update_option('tablaFileHashesCreada', true);
+    /**
+     * Método estático para ejecutar migraciones.
+     * Para usar con add_action.
+     */
+    public static function inicializar(): void
+    {
+        self::obtenerInstancia()->ejecutar();
     }
 }
 
-// Ejecutar migraciones al iniciar WordPress
-# add_action('init', [DatabaseMigrations::class, 'ejecutar']);
+/* 
+ * Ejecutar migraciones al iniciar WordPress.
+ * Se ejecuta en 'init' con prioridad baja para asegurar que 
+ * $wpdb esté disponible.
+ */
+add_action('init', [DatabaseMigrations::class, 'inicializar'], 1);

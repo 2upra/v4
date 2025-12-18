@@ -12,6 +12,7 @@
 namespace Kamples\Views\Components;
 
 use Kamples\Services\Social\ChatService;
+use Kamples\Services\Usuario\PerfilService;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {
@@ -34,7 +35,7 @@ class ChatList
      */
     public function __construct(?ChatService $chatService = null)
     {
-        $this->chatService = $chatService ?? new ChatService();
+        $this->chatService = $chatService ?? ChatService::obtenerInstancia();
     }
 
     /**
@@ -117,8 +118,9 @@ class ChatList
                         $participantes = json_decode($conversacion->participantes);
                         $otrosParticipantes = array_diff($participantes, [$userId]);
                         $receptor = reset($otrosParticipantes);
-                        $imagenPerfil = function_exists('imagenPerfil') ? imagenPerfil($receptor) : '';
-                        $nombreUsuario = function_exists('obtenerNombreUsuario') ? obtenerNombreUsuario($receptor) : 'Usuario';
+                        $imagenPerfil = PerfilService::obtenerInstancia()->obtenerImagenPerfil($receptor);
+                        $infoUsuario = ChatService::obtenerInstancia()->obtenerInfoUsuario((int)$receptor);
+                        $nombreUsuario = $infoUsuario ? ($infoUsuario['nombre'] ?? 'Usuario') : 'Usuario';
 
                         $mensajeMostrado = "Mensaje desconocido";
                         $fechaOriginal = "";

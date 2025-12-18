@@ -16,6 +16,23 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
+/*
+ * ENTORNO DE DESARROLLO
+ * 
+ * Definir LOCAL si no está definido previamente (ej. en wp-config.php).
+ * Se intenta detectar automáticamente basado en el dominio.
+ */
+if (!defined('LOCAL')) {
+    $is_local = false;
+    if (isset($_SERVER['HTTP_HOST'])) {
+        $host = $_SERVER['HTTP_HOST'];
+        if (strpos($host, '.local') !== false || strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
+            $is_local = true;
+        }
+    }
+    define('LOCAL', $is_local);
+}
+
 /* 
  * NIVELES DE LOG
  * 

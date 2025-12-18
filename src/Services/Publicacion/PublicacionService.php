@@ -2,6 +2,11 @@
 
 namespace Kamples\Services\Publicacion;
 
+use Kamples\Views\Components\PostComponents;
+use Kamples\Views\Components\ColeccionComponents;
+use Kamples\Views\Components\ColabComponents;
+use Kamples\Views\Components\PostContentComponents;
+
 /**
  * Servicio central de gestion de publicaciones (Fachada).
  * 
@@ -158,7 +163,7 @@ class PublicacionService
             }
         } else {
             if ($filtro !== 'notas') {
-                echo (new \Kamples\Views\Components\PostComponents())->nohayPost($filtro, $isAjax);
+                echo (new PostComponents())->nohayPost($filtro, $isAjax);
             }
         }
 
@@ -196,18 +201,18 @@ class PublicacionService
         switch ($tipoPost) {
             case 'social_post':
                 if ($filtro === 'rola' || $filtro === 'tiendaPerfil') {
-                    return \Kamples\Views\Components\ColeccionComponents::renderHtmlColec($filtro);
+                    return ColeccionComponents::renderHtmlColec($filtro);
                 }
-                return (new \Kamples\Views\Components\PostComponents())->htmlPost($filtro);
+                return (new PostComponents())->htmlPost($filtro);
 
             case 'colab':
-                return \Kamples\Views\Components\ColabComponents::renderHtmlColab($filtro);
+                return ColabComponents::renderHtmlColab($filtro);
 
             case 'colecciones':
-                return \Kamples\Views\Components\ColeccionComponents::renderHtmlColec($filtro);
+                return ColeccionComponents::renderHtmlColec($filtro);
 
             case 'post':
-                return (new \Kamples\Views\Components\PostContentComponents())->htmlArticulo($filtro);
+                return (new PostContentComponents())->htmlArticulo($filtro);
 
             default:
                 return '<p>Tipo de publicacion no reconocido.</p>';

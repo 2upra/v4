@@ -33,6 +33,7 @@ Tema de WordPress para aplicación social/musical. Requiere refactorización pro
 - Variables/funciones: `camelCase` | Clases: `PascalCase` | Constantes: `SCREAMING_SNAKE_CASE`
 - Namespace: `Kamples\{Services|Controllers|Views\Components}`
 - Logging: **Solo** usar `Logger::obtenerInstancia()->info('canal', 'mensaje')`
+- Importación: Evitar usar namespaces completos en el código (`\Mi\Clase::metodo()`). Usar `use Mi\Clase;` al inicio.
 
 ---
 
@@ -162,6 +163,56 @@ src/
 > - Namespace claro por dominio
 > - Cambios en un módulo no afectan otros
 > - Mejor escalabilidad
+
+### Sistema de Migraciones de Base de Datos
+
+El tema utiliza un sistema centralizado para gestionar tablas personalizadas ubicado en `src/Core/DatabaseMigrations.php`.
+
+**Características:**
+- Verifica la existencia **real** de las tablas en la base de datos
+- Solo crea tablas que no existen (idempotente)
+- Se ejecuta automáticamente al cargar el tema
+
+**Tablas gestionadas:**
+| Tabla          | Propósito                  |
+| -------------- | -------------------------- |
+| `conversacion` | Conversaciones de chat     |
+| `mensajes`     | Mensajes de chat           |
+| `interes`      | Intereses de usuarios      |
+| `post_likes`   | Likes de publicaciones     |
+| `file_hashes`  | Hashes de archivos subidos |
+
+**Cómo añadir una nueva tabla:**
+```php
+// En DatabaseMigrations.php
+
+// 1. Añadir llamada en ejecutar()
+public function ejecutar(): void
+{
+    // ... tablas existentes
+    $this->crearMiNuevaTabla();
+}
+
+// 2. Crear método privado
+private function crearMiNuevaTabla(): void
+{
+    if ($this->tablaExiste('mi_tabla')) {
+        return;
+    }
+
+    $tabla = $this->wpdb->prefix . 'mi_tabla';
+
+    $sql = "CREATE TABLE IF NOT EXISTS $tabla (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        -- campos...
+        PRIMARY KEY (id)
+    ) {$this->charsetCollate};";
+
+    $this->ejecutarSQL($sql);
+}
+```
+
+---
 
 ### Criterios de Revisión por Archivo
 - [ ] **SRP**: ¿Tiene una sola responsabilidad clara?

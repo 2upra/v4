@@ -48,7 +48,7 @@ function handle_google_callback()
  */
 function is_electron_app()
 {
-    $authService = new AuthService();
+    $authService = AuthService::obtenerInstancia();
     return $authService->esAppElectron();
 }
 
@@ -57,7 +57,7 @@ function is_electron_app()
  */
 function generate_secure_token($user_id)
 {
-    $authService = new AuthService();
+    $authService = AuthService::obtenerInstancia();
     return $authService->generarTokenSeguro($user_id);
 }
 
@@ -66,7 +66,7 @@ function generate_secure_token($user_id)
  */
 function verify_secure_token($token)
 {
-    $authService = new AuthService();
+    $authService = AuthService::obtenerInstancia();
     return $authService->verificarToken($token);
 }
 
@@ -102,7 +102,7 @@ function save_firebase_token($request)
  */
 function save_version_meta($user_id, $request)
 {
-    $authService = new AuthService();
+    $authService = AuthService::obtenerInstancia();
     $versionName = sanitize_text_field($request->get_param('appVersionName') ?? '');
     $versionCode = intval($request->get_param('appVersionCode') ?? 0);
     $authService->guardarVersionApp($user_id, $versionName, $versionCode);

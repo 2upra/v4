@@ -11,6 +11,8 @@
 
 namespace Kamples\Views\Components;
 
+use Kamples\Services\Usuario\PerfilService;
+
 /* Evitar acceso directo */
 
 if (!defined('ABSPATH')) {
@@ -32,9 +34,7 @@ class ComentarioForm
 
         $usuario = wp_get_current_user();
         $nombreUsuario = esc_html($usuario->display_name);
-        $urlImagenPerfil = function_exists('imagenPerfil')
-            ? imagenPerfil($usuario->ID)
-            : get_avatar_url($usuario->ID);
+        $urlImagenPerfil = PerfilService::obtenerInstancia()->obtenerImagenPerfil($usuario->ID);
 
         ob_start();
 ?>

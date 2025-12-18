@@ -9,6 +9,7 @@
 use Kamples\Services\Finanza\FinanzaService;
 use Kamples\Views\Components\FinanzaComponents;
 use Kamples\Controllers\Finanza\FinanzaController;
+use Kamples\Services\Usuario\PerfilService;
 
 /* 
  * Funciones de cálculo de acciones
@@ -70,7 +71,7 @@ function calcularAccionPorUsuario($mostrarTodos = true)
     $output = '<table><thead><tr><th>Perfil</th><th>Usuario</th><th>Valor Total</th></tr></thead><tbody>';
 
     foreach ($datos as $usuario) {
-        $imagen = function_exists('imagenPerfil') ? imagenPerfil($usuario['user_id']) : '';
+        $imagen = function_exists('imagenPerfil') ? imagenPerfil($usuario['user_id']) : PerfilService::obtenerInstancia()->obtenerImagenPerfil($usuario['user_id']);
         $output .= sprintf(
             '<tr><td><img src="%s" alt="%s" /></td><td>%s</td><td>$%s</td></tr>',
             esc_url($imagen),

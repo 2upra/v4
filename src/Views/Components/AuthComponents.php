@@ -17,7 +17,7 @@ class AuthComponents
 
     public function __construct()
     {
-        $this->authService = new AuthService();
+        $this->authService = AuthService::obtenerInstancia();
     }
 
     /**

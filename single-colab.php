@@ -1,5 +1,8 @@
 <?php get_header(); ?>
 <?php
+
+use Kamples\Views\Components\ColabComponents;
+
 // single-social_post.php
 
 $user_id = get_current_user_id();
@@ -14,7 +17,7 @@ if (have_posts()) :
         <div id="main">
             <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
                 <div class="single colabSingle">
-                    <?php echo \Kamples\Views\Components\ColabComponents::renderHtmlColab($filtro); ?>
+                    <?php echo ColabComponents::renderHtmlColab($filtro); ?>
                 </div>
             </div>
         </div>

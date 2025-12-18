@@ -59,7 +59,7 @@ function procesarMensaje($request)
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null, $conversacion_id = null)
 {
     try {
-        $service = new ChatService();
+        $service = ChatService::obtenerInstancia();
         return $service->guardarMensaje(
             (int) $emisor,
             (int) $receptor,
@@ -105,7 +105,7 @@ function generarToken()
  */
 function tiempoRelativo($fecha)
 {
-    $service = new ChatService();
+    $service = ChatService::obtenerInstancia();
     return $service->tiempoRelativo($fecha);
 }
 
@@ -116,7 +116,7 @@ function tiempoRelativo($fecha)
  */
 function obtenerNombreUsuario($usuarioId)
 {
-    $service = new ChatService();
+    $service = ChatService::obtenerInstancia();
     $info = $service->obtenerInfoUsuario((int)$usuarioId);
     return $info ? $info['nombre'] : 'Usuario desconocido';
 }

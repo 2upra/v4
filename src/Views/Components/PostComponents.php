@@ -11,7 +11,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\PostRenderService;
+use Kamples\Services\Publicacion\PostRenderService;
 
 class PostComponents
 {
@@ -618,16 +618,35 @@ class PostComponents
         ob_start();
     ?>
         <div class="QSORIW">
-            <?php echo function_exists('like') ? like($postId) : ''; ?>
+            <?php echo \Kamples\Views\Components\LikeButtons::mostrar($postId); ?>
             <?php if ($mostrarBotonCompra && function_exists('botonCompra')): ?>
                 <?php echo botonCompra($postId); ?>
             <?php endif; ?>
-            <?php echo function_exists('botonComentar') ? botonComentar($postId, $colab) : ''; ?>
+            <?php echo $this->renderBotonComentar($postId); ?>
             <?php if (!empty($audioIdLite)): ?>
-                <?php echo function_exists('botonDescarga') ? botonDescarga($postId) : ''; ?>
+                <?php echo $this->renderizarBotonDescarga($postId, get_current_user_id(), get_post_meta($postId, 'paraDescarga', true)); ?>
                 <?php echo function_exists('botonColab') ? botonColab($postId, $colab) : ''; ?>
                 <?php echo function_exists('botonColeccion') ? botonColeccion($postId) : ''; ?>
             <?php endif; ?>
+        </div>
+    <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Renderiza botón de comentar
+     * 
+     * @param int $postId ID del post
+     * @return string HTML
+     */
+    public function renderBotonComentar(int $postId): string
+    {
+        ob_start();
+    ?>
+        <div class="RTAWOD">
+            <button class="WNLOFT" data-post-id="<?php echo esc_attr($postId); ?>">
+                <?php echo $GLOBALS['iconocomentario'] ?? ''; ?>
+            </button>
         </div>
     <?php
         return ob_get_clean();

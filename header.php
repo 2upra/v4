@@ -1,10 +1,22 @@
-<?
+<?php
+use Kamples\Services\Usuario\PerfilService;
+use Kamples\Views\Components\NotificacionComponents;
+use Kamples\Views\Components\OnboardingComponents;
+use Kamples\Views\Components\AppModalComponents;
+use Kamples\Views\Components\ComentarioForm;
+use Kamples\Views\Components\ChatList;
+use Kamples\Views\Components\ChatBox;
+use Kamples\Views\Components\PerfilComponents;
+use Kamples\Views\Components\PostFormComponents;
+use Kamples\Views\Components\ColeccionComponents;
+use Kamples\Views\Components\AuthComponents;
+
 if (!is_user_logged_in()) {
 } else {
     $usuario = wp_get_current_user();
     $user_id = get_current_user_id();
     $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = imagenPerfil($usuario->ID);
+    $url_imagen_perfil = PerfilService::obtenerInstancia()->obtenerImagenPerfil($usuario->ID);
     $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
     if (function_exists('jetpack_photon_url')) {
         $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
@@ -218,7 +230,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item">
                             <a>
-                                <? echo iconoNotificaciones() ?>
+                                <? echo NotificacionComponents::iconoNotificaciones() ?>
                             </a>
                         </div>
 
@@ -279,7 +291,7 @@ if (!defined('ABSPATH')) {
 
                                 <div class="xaxa1 menu-item">
                                     <a>
-                                        <? echo iconoNotificaciones() ?>
+                                        <? echo NotificacionComponents::iconoNotificaciones() ?>
                                     </a>
                                 </div>
 
@@ -341,27 +353,27 @@ if (!defined('ABSPATH')) {
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
 
                 <div class="modalInicial">
-                    <? echo modalTipoUsuario() ?>
-                    <? echo modalGeneros() ?>
+                    <? echo OnboardingComponents::renderModalTipoUsuario() ?>
+                    <? echo OnboardingComponents::renderModalGeneros() ?>
                 </div>
 
-                <? echo modalApp() ?>
+                <? echo AppModalComponents::renderModalDescargaApp() ?>
 
                 <div class="comentariosPost modal no-refresh" style="display: none" id="comentariosPost">
                     <div class="listComentarios no-refresh" id="listComentarios" style="display: none;">
 
                     </div>
-                    <? echo comentariosForm() ?>
+                    <? echo ComentarioForm::render() ?>
                 </div>
 
                 <div class="bloquesChatTest">
                     <div class="bloqueChatReiniciar">
-                        <? echo conversacionesUsuario($user_id) ?>
+                        <? echo ChatList::mostrar($user_id) ?>
                     </div>
-                    <? echo renderChat() ?>
+                    <? echo ChatBox::mostrar() ?>
                 </div>
                 <div class="notificaciones-lista modal" id="notificacionesModal" style="display: none">
-                    <? echo listarNotificaciones() ?>
+                    <? echo NotificacionComponents::listarNotificaciones(get_current_user_id()) ?>
                 </div>
                 <!-- Modal para editar titulo coleccion -->
                 <div id="cambiarTitulo" class="cambiarTituloModal modal" style="display: none;">
@@ -381,9 +393,9 @@ if (!defined('ABSPATH')) {
                     <button id="enviarCorregir" class="borde">Corregir</button>
                 </div>
 
-                <? echo config() ?>
-                <? echo \Kamples\Views\Components\PostFormComponents::renderFormRs() ?>
-                <? echo mostrarModalActualizacionApp() ?>
+                <? echo PerfilComponents::renderConfigModal() ?>
+                <? echo PostFormComponents::renderFormRs() ?>
+                <? echo AppModalComponents::renderModalActualizacionApp() ?>
 
                 <!-- Enviar mensaje de error -->
                 <div id="formularioError" class="formularioError" style="display:none;">
@@ -435,8 +447,8 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <? echo modalColeccion() ?>
-                <? echo modalCreacionColeccion() ?>
+                <? echo ColeccionComponents::renderModalColeccion() ?>
+                <? echo ColeccionComponents::renderModalCreacionColeccion() ?>
 
                 <!-- colab modal -->
                 <div id="modalcolab" class="modal gap-4" style="display: none;">
@@ -475,10 +487,10 @@ if (!defined('ABSPATH')) {
             </div>
         <? else : ?>
             <div class="CGUNVP" id="modalregistro" data-nosnippet>
-                <? echo registrar_usuario() ?>
+                <? echo (new AuthComponents())->renderFormularioRegistro() ?>
             </div>
             <div class="EJRINA" id="modalsesion" data-nosnippet>
-                <? echo iniciar_sesion() ?>
+                <? echo (new AuthComponents())->renderFormularioLogin() ?>
             </div>
             <div id="fondonegro"></div data-nosnippet>
 

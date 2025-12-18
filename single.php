@@ -4,6 +4,9 @@ if (! defined('ABSPATH')) {
 }
 $postId = get_the_ID();
 //  <p class="post-authorSingle">By: <? the_author(); </p>
+
+use Kamples\Views\Components\LikeButtons;
+use Kamples\Views\Components\PostComponents;
 ?>
 
 <head>
@@ -27,9 +30,9 @@ $postId = get_the_ID();
                             <? the_content(); ?>
                         </div>
                         <div class="botonesPost">
-                            <? echo like($postId); ?>
+                            <? echo LikeButtons::mostrar($postId); ?>
                             <button class="btnSinglePost"><a href="<?php echo esc_url(home_url('/inversion/')); ?>">Apoyar el proyecto</a></button>
-                            <? echo botonComentar($postId, $colab); ?>
+                            <? echo (new PostComponents())->renderBotonComentar($postId); ?>
                         </div>
                     </article>
             <? endwhile;

@@ -40,6 +40,9 @@ require_once get_template_directory() . '/src/autoload.php';
 // Registrar Custom Post Types y estados
 \Kamples\Core\PostTypes::inicializar();
 
+// Migraciones de base de datos (crear tablas si no existen)
+\Kamples\Core\DatabaseMigrations::obtenerInstancia()->ejecutar();
+
 // Servicio de gestión de slugs
 \Kamples\Services\Publicacion\PostSlugService::inicializar();
 

@@ -2,7 +2,8 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\FinanzaService;
+use Kamples\Services\Finanza\FinanzaService;
+use Kamples\Services\Usuario\PerfilService;
 
 /**
  * Componentes de UI para el módulo financiero.
@@ -327,7 +328,7 @@ class FinanzaComponents
         $output = '<table><thead><tr><th>Perfil</th><th>Usuario</th><th>Valor Total</th></tr></thead><tbody>';
 
         foreach ($datos as $usuario) {
-            $imagen = function_exists('imagenPerfil') ? imagenPerfil($usuario['user_id']) : '';
+            $imagen = PerfilService::obtenerInstancia()->obtenerImagenPerfil($usuario['user_id']);
             $output .= sprintf(
                 '<tr><td><img src="%s" alt="%s" /></td><td>%s</td><td>$%s</td></tr>',
                 esc_url($imagen),
@@ -355,7 +356,7 @@ class FinanzaComponents
         foreach ($transacciones as $transaction) {
             $user = get_user_by('email', $transaction['user_email']);
             if ($user) {
-                $imagen = function_exists('imagenPerfil') ? imagenPerfil($user->ID) : '';
+                $imagen = PerfilService::obtenerInstancia()->obtenerImagenPerfil($user->ID);
                 $output .= sprintf(
                     '<tr class="XXDD"><td><img src="%s" alt="%s" /></td><td>%s</td><td>$%s</td><td>%s</td></tr>',
                     esc_url($imagen),
