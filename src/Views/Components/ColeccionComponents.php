@@ -13,6 +13,9 @@
 namespace Kamples\Views\Components;
 
 use Kamples\Services\Coleccion\ColeccionService;
+use Kamples\Services\Contenido\ImagenService;
+use Kamples\Services\Publicacion\PublicacionService;
+use Kamples\Views\Components\FinanzaComponents;
 
 /* Evitar acceso directo */
 
@@ -172,7 +175,7 @@ class ColeccionComponents
                 <div class="CPQBEN" style="display: none;">
                     <?php
                     if (function_exists('like')) echo like($postId);
-                    if (function_exists('botonCompra')) echo botonCompra($postId);
+                    echo FinanzaComponents::renderBotonCompra($postId);
                     ?>
                     <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $autorId); ?></div>
                     <div class="CPQBCO">
@@ -185,8 +188,8 @@ class ColeccionComponents
                 $coleccionesMeta = get_post_meta($postId, 'colecciones', true);
                 $rolaMeta        = get_post_meta($postId, 'rola', true);
 
-                if (!$coleccionesMeta && !$rolaMeta && function_exists('botonCompra')) {
-                    echo botonCompra($postId);
+                if (!$coleccionesMeta && !$rolaMeta) {
+                    echo FinanzaComponents::renderBotonCompra($postId);
                 }
                 ?>
             </div>
@@ -210,8 +213,8 @@ class ColeccionComponents
             $imagenUrl = get_the_post_thumbnail_url($postId, 'large') ?: '';
         }
 
-        if (function_exists('img') && $imagenUrl) {
-            $imagenProcesada = img($imagenUrl, 60, 'all');
+        if ($imagenUrl) {
+            $imagenProcesada = ImagenService::obtenerInstancia()->optimizar($imagenUrl, 60, 'all');
         } else {
             $imagenProcesada = $imagenUrl;
         }
@@ -273,9 +276,8 @@ class ColeccionComponents
 
                 <div class="INFEIS">
                     <?php
-                    if (function_exists('datosColeccion')) {
-                        echo datosColeccion($postId);
-                    }
+                    /* Calcular datos de colección si es necesario */
+                    self::getService()->getSampleService()->calcularDatosColeccion($postId);
                     ?>
                     <div class="tags-container-colec" id="tags-<?php echo get_the_ID(); ?>"></div>
 
@@ -292,14 +294,12 @@ class ColeccionComponents
 
         <div class="LISTCOLECSIN">
             <?php
-            if (function_exists('publicaciones')) {
-                echo publicaciones([
-                    'post_type' => 'social_post',
-                    'filtro'    => 'sampleList',
-                    'posts'     => 12,
-                    'colec'     => $postId
-                ]);
-            }
+            echo PublicacionService::obtenerInstancia()->obtener([
+                'post_type' => 'social_post',
+                'filtro'    => 'sampleList',
+                'posts'     => 12,
+                'colec'     => $postId
+            ]);
             ?>
         </div>
     <?php
@@ -361,15 +361,13 @@ class ColeccionComponents
     ?>
         <div class="LISTCOLECSIN">
             <?php
-            if (function_exists('publicaciones')) {
-                echo publicaciones([
-                    'post_type' => 'social_post',
-                    'filtro'    => 'sampleList',
-                    'posts'     => 12,
-                    'colec'     => $postId,
-                    'idea'      => true
-                ]);
-            }
+            echo PublicacionService::obtenerInstancia()->obtener([
+                'post_type' => 'social_post',
+                'filtro'    => 'sampleList',
+                'posts'     => 12,
+                'colec'     => $postId,
+                'idea'      => true
+            ]);
             ?>
         </div>
         <?php

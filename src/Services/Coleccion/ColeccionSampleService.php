@@ -356,4 +356,152 @@ class ColeccionSampleService
             actualizarTimestampSamplesGuardados($userId);
         }
     }
+
+    /**
+     * Calcular datos de colección desde sus samples.
+     * 
+     * @param int $postId ID de la colección.
+     */
+    public function calcularDatosColeccion(int $postId): void
+    {
+        $this->logger->debug('algoritmo', "Inicio calcularDatosColeccion para post ID: $postId");
+
+        try {
+            $samplesSerialized = get_post_meta($postId, 'samples', true);
+            if (empty($samplesSerialized)) {
+                $this->logger->warning('algoritmo', "Metadato 'samples' vacío para post ID: $postId");
+                return;
+            }
+
+            $samples = $this->deserializarDatos($samplesSerialized);
+
+            if (!is_array($samples)) {
+                preg_match_all('/i:\d+;i:(\d+);/', $samplesSerialized, $matches);
+                if (isset($matches[1])) {
+                    $samples = array_map('intval', $matches[1]);
+                } else {
+                    $this->logger->error('algoritmo', "No se pudo deserializar 'samples' para post ID: $postId");
+                    return;
+                }
+            }
+
+            $datosColeccion = [
+                'estado_animo'           => [],
+                'artista_posible'        => [],
+                'genero_posible'         => [],
+                'instrumentos_principal' => [],
+                'tags_posibles'          => [],
+            ];
+
+            $campos = array_keys($datosColeccion);
+
+            foreach ($samples as $sampleId) {
+                $datosAlgoritmo = get_post_meta($sampleId, 'datosAlgoritmo', true);
+                if (empty($datosAlgoritmo)) {
+                    $datosAlgoritmoRespaldo = get_post_meta($sampleId, 'datosAlgoritmo_respaldo', true);
+                    if (!empty($datosAlgoritmoRespaldo)) {
+                        if (is_array($datosAlgoritmoRespaldo) || is_object($datosAlgoritmoRespaldo)) {
+                            $datosAlgoritmo = json_encode($datosAlgoritmoRespaldo);
+                        } else {
+                            $datosAlgoritmo = $this->deserializarDatos($datosAlgoritmoRespaldo);
+                            if (is_object($datosAlgoritmo) || is_array($datosAlgoritmo)) {
+                                $datosAlgoritmo = json_encode($datosAlgoritmo);
+                            }
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+
+                if (is_array($datosAlgoritmo)) {
+                    $datosAlgoritmo = json_encode($datosAlgoritmo);
+                } elseif (!is_string($datosAlgoritmo)) {
+                    continue;
+                }
+
+                $datosAlgoritmoArray = json_decode($datosAlgoritmo, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $datosAlgoritmoArray = $this->deserializarDatos($datosAlgoritmo);
+                    if (!is_array($datosAlgoritmoArray)) {
+                        continue;
+                    }
+                }
+
+                foreach ($campos as $campo) {
+                    if (isset($datosAlgoritmoArray[$campo])) {
+                        if (isset($datosAlgoritmoArray[$campo]['en'])) {
+                            $valores = $datosAlgoritmoArray[$campo]['en'];
+                        } else {
+                            continue;
+                        }
+
+                        $valores = $this->aplanarArray($valores);
+
+                        if (!is_array($valores)) {
+                            $valores = [$valores];
+                        }
+
+                        foreach ($valores as $valor) {
+                            if (is_array($valor)) {
+                                $subvalores = $this->aplanarArray($valor);
+                                foreach ($subvalores as $subvalor) {
+                                    $subvalor = trim((string) $subvalor);
+                                    if ($subvalor === '') continue;
+                                    if (isset($datosColeccion[$campo][$subvalor])) {
+                                        $datosColeccion[$campo][$subvalor]++;
+                                    } else {
+                                        $datosColeccion[$campo][$subvalor] = 1;
+                                    }
+                                }
+                                continue;
+                            }
+
+                            $valor = trim((string) $valor);
+                            if ($valor === '') continue;
+                            if (isset($datosColeccion[$campo][$valor])) {
+                                $datosColeccion[$campo][$valor]++;
+                            } else {
+                                $datosColeccion[$campo][$valor] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach ($datosColeccion as &$campo) {
+                arsort($campo);
+            }
+            unset($campo);
+
+            $datosColeccionJson = json_encode($datosColeccion, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            update_post_meta($postId, 'datosColeccion', $datosColeccionJson);
+
+            $this->logger->info('algoritmo', "calcularDatosColeccion completado para post ID: $postId");
+        } catch (\Exception $e) {
+            $this->logger->error('algoritmo', "Error en calcularDatosColeccion para post ID: $postId", ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Función helper para aplanar arrays anidados.
+     * 
+     * @param mixed $input Array a aplanar.
+     * @return array Array aplanado.
+     */
+    private function aplanarArray($input): array
+    {
+        $result = [];
+        if (is_array($input)) {
+            foreach ($input as $element) {
+                if (is_array($element)) {
+                    $result = array_merge($result, $this->aplanarArray($element));
+                } else {
+                    $result[] = $element;
+                }
+            }
+        } else {
+            $result[] = $input;
+        }
+        return $result;
+    }
 }

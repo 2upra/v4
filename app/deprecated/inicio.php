@@ -1,8 +1,11 @@
-<?php 
+<?php
+
+use Kamples\Services\Publicacion\PublicacionService;
+use Kamples\Services\Contenido\ImagenService;
 
 /** 
-* @deprecated Esto se olvido de refactorizar o mover.
-*/
+ * @deprecated Esto se olvido de refactorizar o mover.
+ */
 function dev()
 {
 
@@ -34,7 +37,7 @@ function dev()
 
                     <div class="BPLBDE nologin">
                         <div class="FOFDV5 nologin">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Inicio', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
+                            <?php echo PublicacionService::obtenerInstancia()->obtener(['filtro' => 'sampleList', 'tab_id' => 'Inicio', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
                         </div>
                     </div>
 
@@ -306,7 +309,7 @@ function modalCarta()
 
                 </div>
                 <div class="WMPVLV">
-                    <img src="<? echo img(site_url('/wp-content/uploads/2024/10/afsafad.png')); ?>" alt="">
+                    <img src="<? echo ImagenService::obtenerInstancia()->optimizar(site_url('/wp-content/uploads/2024/10/afsafad.png')); ?>" alt="">
                     <p>Wandorius</p>
                 </div>
                 <button class="borde cerrarCarta">Volver</button>

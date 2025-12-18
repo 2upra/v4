@@ -15,6 +15,8 @@
 
 namespace Kamples\Services\Audio;
 
+use Kamples\Services\Contenido\IAService;
+
 class AudioIAService
 {
     private static ?AudioIAService $instancia = null;
@@ -56,12 +58,8 @@ class AudioIAService
 
         $prompt = $this->construirPrompt($postId, $postContent, $nombreArchivo, $carpeta, $carpetaAbuela);
 
-        if (!function_exists('generarDescripcionIA')) {
-            $this->logger->warning('audio', 'Función generarDescripcionIA no disponible');
-            return;
-        }
-
-        $descripcion = generarDescripcionIA($audioPath, $prompt);
+        $iaService = new IAService();
+        $descripcion = $iaService->generarDescripcion($audioPath, $prompt);
 
         if ($descripcion) {
             $this->procesarYGuardarDescripcion($postId, $descripcion, $index);

@@ -11,6 +11,7 @@
  */
 
 use Kamples\Services\Core\SyncService;
+use Kamples\Services\Contenido\ImagenService;
 
 /**
  * Verifica si la cabecera X-Electron-App está presente.
@@ -110,8 +111,8 @@ if (!function_exists('obtenerImagenOptimizada')) {
         $portadaId = get_post_thumbnail_id($postId);
         if ($portadaId) {
             $portadaUrl = wp_get_attachment_url($portadaId);
-            if ($portadaUrl && function_exists('img')) {
-                return img($portadaUrl);
+            if ($portadaUrl) {
+                return ImagenService::obtenerInstancia()->optimizar($portadaUrl);
             }
             return $portadaUrl;
         }
@@ -119,8 +120,8 @@ if (!function_exists('obtenerImagenOptimizada')) {
         $imagenTemporalId = get_post_meta($postId, 'imagenTemporal', true);
         if ($imagenTemporalId) {
             $imagenTemporalUrl = wp_get_attachment_url($imagenTemporalId);
-            if ($imagenTemporalUrl && function_exists('img')) {
-                return img($imagenTemporalUrl);
+            if ($imagenTemporalUrl) {
+                return ImagenService::obtenerInstancia()->optimizar($imagenTemporalUrl);
             }
             return $imagenTemporalUrl;
         }
