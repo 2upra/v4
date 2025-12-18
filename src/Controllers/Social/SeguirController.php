@@ -5,15 +5,14 @@
  * 
  * Maneja las solicitudes AJAX para seguir y dejar de seguir usuarios.
  *
- * @package Kamples
+ * @package Kamples\Controllers\Social
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Social;
 
-use Kamples\Services\SeguirService;
+use Kamples\Services\Usuario\SeguirService;
 
-// Evitar acceso directo
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }

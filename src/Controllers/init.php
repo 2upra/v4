@@ -1,59 +1,112 @@
 <?php
 
-namespace Kamples\Controllers;
-
 /**
  * Inicializador de controladores.
  * 
  * Se encarga de instanciar y registrar los controladores del tema.
+ * Los archivos se cargan automáticamente via Composer autoload.
+ * Organizados por dominio/módulo.
+ * 
+ * @package Kamples\Controllers
+ * @since 2.0.0
  */
 
-$controllers = [
-    ArchivoController::class,
-    AuthController::class,
-    BusquedaController::class,
-    ChatController::class,
-    ColabController::class,
-    ColeccionController::class,
-    ComentarioController::class,
-    ContadorController::class,
-    DescargaController::class,
-    FiltroController::class,
-    FormularioController::class,
-    IAController::class,
-    LikeController::class,
-    OnboardingController::class,
-    PerfilController::class,
-    PostController::class,
-    PostEdicionController::class,
-    PostEstadoController::class,
-    PublicacionController::class,
-    ReporteController::class,
-    ReproductorController::class,
-    SeguirController::class,
-    StreamController::class,
-    UsuarioController::class,
-    UtilController::class,
-    VistaController::class,
-    WaveformController::class,
-    NotificacionController::class,
-    SyncController::class,
-    ModeracionController::class,
-    FinanzaController::class,
+use Kamples\Controllers\Audio;
+use Kamples\Controllers\Social;
+use Kamples\Controllers\Core;
+use Kamples\Controllers\Publicacion;
+use Kamples\Controllers\Usuario;
+use Kamples\Controllers\Feed;
+use Kamples\Controllers\Finanza;
+use Kamples\Controllers\Coleccion;
+use Kamples\Controllers\Moderacion;
+use Kamples\Controllers\Contenido;
+
+/* 
+ * Controladores que se auto-inicializan en su constructor
+ * (ya crean instancia con new al final del archivo)
+ */
+
+$autoInicializados = [
+    /* Audio */
+    Audio\StreamController::class,
+    Audio\ReproductorController::class,
+
+    /* Social */
+    Social\ChatController::class,
+    Social\NotificacionController::class,
+    Social\ComentarioController::class,
+
+    /* Core */
+    Core\SyncController::class,
+    Core\FormularioController::class,
+    Core\ContadorController::class,
+    Core\BusquedaController::class,
+
+    /* Publicacion */
+    Publicacion\PostEstadoController::class,
+
+    /* Usuario */
+    Usuario\OnboardingController::class,
+
+    /* Feed */
+    Feed\FiltroController::class,
+
+    /* Finanza */
+    Finanza\FinanzaController::class,
+
+    /* Coleccion */
+    Coleccion\ColeccionController::class,
+
+    /* Moderacion */
+    Moderacion\ModeracionController::class,
+    Moderacion\ReporteController::class,
 ];
 
-foreach ($controllers as $controllerClass) {
+/* 
+ * Controladores que requieren llamar registrar() o registrarHooks()
+ */
+$controladoresConRegistrar = [
+    Audio\ArchivoController::class,
+    Audio\WaveformController::class,
+    Social\LikeController::class,
+    Social\SeguirController::class,
+    Social\ColabController::class,
+    Core\VistaController::class,
+    Core\UtilController::class,
+    Core\DescargaController::class,
+    Contenido\IAController::class,
+    Publicacion\PostEdicionController::class,
+];
+
+foreach ($controladoresConRegistrar as $controllerClass) {
     if (class_exists($controllerClass)) {
-        // Verificar si tiene método estático inicializar (como PostController)
+        $instance = new $controllerClass();
+        if (method_exists($instance, 'registrar')) {
+            $instance->registrar();
+        } elseif (method_exists($instance, 'registrarHooks')) {
+            $instance->registrarHooks();
+        }
+    }
+}
+
+/* 
+ * Controladores con método estático inicializar() o registrar()
+ */
+$controladoresEstaticos = [
+    Publicacion\PostController::class,
+    Publicacion\PublicacionController::class,
+    Usuario\AuthController::class,
+    Usuario\PerfilController::class,
+    Usuario\UsuarioController::class,
+];
+
+foreach ($controladoresEstaticos as $controllerClass) {
+    if (class_exists($controllerClass)) {
         if (method_exists($controllerClass, 'inicializar')) {
             $controllerClass::inicializar();
-        } else {
-            // Instanciar
-            $instance = new $controllerClass();
-            // Si tiene método registrar, llamarlo
-            if (method_exists($instance, 'registrar')) {
-                $instance->registrar();
-            }
+        } elseif (method_exists($controllerClass, 'registrar')) {
+            $controllerClass::registrar();
         }
     }
 }

@@ -3,18 +3,16 @@
 /**
  * Controlador AJAX para el sistema de colaboraciones.
  * 
- * Maneja las solicitudes AJAX relacionadas con la creación
- * y gestión de colaboraciones entre usuarios.
+ * Maneja las solicitudes AJAX relacionadas con la creacion
+ * y gestion de colaboraciones entre usuarios.
  *
- * @package Kamples
+ * @package Kamples\Controllers\Social
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Social;
 
-use Kamples\Services\ColabService;
-
-/* Evitar acceso directo */
+use Kamples\Services\Social\ColabService;
 
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
@@ -35,7 +33,7 @@ class ColabController
     /**
      * Constructor.
      * 
-     * @param ColabService|null $colabService Servicio (inyección de dependencias).
+     * @param ColabService|null $colabService Servicio (inyeccion de dependencias).
      */
     public function __construct(?ColabService $colabService = null)
     {
@@ -52,12 +50,12 @@ class ColabController
     }
 
     /**
-     * Iniciar una nueva colaboración.
+     * Iniciar una nueva colaboracion.
      * Solo usuarios logueados.
      */
     public function empezarColab(): void
     {
-        /* Verificar autenticación */
+        /* Verificar autenticacion */
         if (!is_user_logged_in()) {
             wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
             return;
@@ -68,12 +66,12 @@ class ColabController
 
         /* Validar post ID */
         if (empty($datos['postId'])) {
-            $this->logger->warning('colab', 'No se proporcionó ID de publicación');
-            wp_send_json_error(['message' => 'No se ha proporcionado el ID de la publicación']);
+            $this->logger->warning('colab', 'No se proporciono ID de publicacion');
+            wp_send_json_error(['message' => 'No se ha proporcionado el ID de la publicacion']);
             return;
         }
 
-        /* Crear colaboración */
+        /* Crear colaboracion */
         $resultado = $this->colabService->crearColaboracion($datos);
 
         if ($resultado['exito']) {
@@ -86,7 +84,7 @@ class ColabController
     }
 
     /**
-     * Obtener y sanitizar datos de creación de colaboración.
+     * Obtener y sanitizar datos de creacion de colaboracion.
      * 
      * @return array Datos sanitizados.
      */

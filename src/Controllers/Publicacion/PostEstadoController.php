@@ -1,15 +1,16 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Publicacion;
 
-use Kamples\Services\PostEstadoService;
+use Kamples\Services\Publicacion\PostEstadoService;
 
 /**
- * Controlador AJAX para gestión de estados de posts.
+ * Controlador AJAX para gestion de estados de posts.
  * 
  * Maneja todas las peticiones AJAX relacionadas con
- * cambios de estado, verificación e imágenes de posts.
+ * cambios de estado, verificacion e imagenes de posts.
  *
+ * @package Kamples\Controllers\Publicacion
  * @since 1.0.0
  */
 class PostEstadoController
@@ -17,7 +18,7 @@ class PostEstadoController
     private PostEstadoService $estadoService;
 
     /**
-     * Constructor e inicialización de hooks AJAX.
+     * Constructor e inicializacion de hooks AJAX.
      */
     public function __construct()
     {

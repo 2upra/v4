@@ -1,14 +1,15 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Publicacion;
 
-use Kamples\Services\PublicacionService;
+use Kamples\Services\Publicacion\PublicacionService;
 
 /**
  * Controlador de publicaciones.
  * 
  * Maneja las peticiones AJAX para cargar publicaciones.
  *
+ * @package Kamples\Controllers\Publicacion
  * @since 1.0.0
  */
 class PublicacionController
@@ -44,7 +45,7 @@ class PublicacionController
     }
 
     /**
-     * Maneja la petición AJAX para cargar más publicaciones.
+     * Maneja la peticion AJAX para cargar mas publicaciones.
      *
      * @return void
      */

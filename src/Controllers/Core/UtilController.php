@@ -1,12 +1,13 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\UtilService;
+use Kamples\Services\Core\UtilService;
 
 /**
  * Controlador para peticiones AJAX de utilidades.
  *
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 class UtilController
@@ -34,7 +35,7 @@ class UtilController
     {
         $zonaHoraria = sanitize_text_field($_POST['timezone'] ?? 'UTC');
 
-        /* Validar que sea una zona horaria válida */
+        /* Validar que sea una zona horaria valida */
         try {
             new \DateTimeZone($zonaHoraria);
         } catch (\Exception $e) {

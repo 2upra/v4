@@ -1,14 +1,15 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\BusquedaService;
+use Kamples\Services\Core\BusquedaService;
 
 /**
- * Controlador AJAX para búsquedas.
+ * Controlador AJAX para busquedas.
  * 
- * Maneja las peticiones AJAX de búsqueda de contenido.
+ * Maneja las peticiones AJAX de busqueda de contenido.
  *
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 class BusquedaController
@@ -16,7 +17,7 @@ class BusquedaController
     private BusquedaService $busquedaService;
 
     /**
-     * Constructor e inicialización de hooks AJAX.
+     * Constructor e inicializacion de hooks AJAX.
      */
     public function __construct()
     {
@@ -36,7 +37,7 @@ class BusquedaController
     }
 
     /**
-     * Handler AJAX para búsqueda de resultados.
+     * Handler AJAX para busqueda de resultados.
      *
      * @return void
      */

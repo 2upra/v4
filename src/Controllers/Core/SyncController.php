@@ -6,13 +6,13 @@
  * Registra los endpoints REST y maneja las peticiones de sincronización
  * de audios, verificación de cambios y descarga de archivos.
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\SyncService;
+use Kamples\Services\Core\SyncService;
 
 class SyncController
 {

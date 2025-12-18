@@ -1,14 +1,15 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Moderacion;
 
-use Kamples\Services\ReporteService;
+use Kamples\Services\Moderacion\ReporteService;
 
 /**
  * Controlador de reportes.
  * 
  * Maneja los endpoints AJAX para el sistema de reportes.
  *
+ * @package Kamples\Controllers\Moderacion
  * @since 1.0.0
  */
 class ReporteController
@@ -17,7 +18,7 @@ class ReporteController
     private ReporteService $servicio;
 
     /**
-     * Constructor e inicialización de hooks.
+     * Constructor e inicializacion de hooks.
      */
     public function __construct()
     {

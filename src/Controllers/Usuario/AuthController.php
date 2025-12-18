@@ -1,16 +1,18 @@
 <?php
 
-namespace Kamples\Controllers;
-
-use Kamples\Services\AuthService;
-
 /**
  * Controlador de Autenticación.
  * 
  * Maneja endpoints REST y hooks de autenticación.
  *
+ * @package Kamples\Controllers\Usuario
  * @since 1.0.0
  */
+
+namespace Kamples\Controllers\Usuario;
+
+use Kamples\Services\Usuario\AuthService;
+
 class AuthController
 {
     private AuthService $authService;

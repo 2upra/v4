@@ -5,13 +5,13 @@
  * 
  * Maneja endpoints AJAX y redirects para descargas de audio
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\DescargaService;
+use Kamples\Services\Core\DescargaService;
 
 class DescargaController
 {

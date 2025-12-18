@@ -1,12 +1,13 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Contenido;
 
-use Kamples\Services\IAService;
+use Kamples\Services\Contenido\IAService;
 
 /**
  * Controlador para peticiones AJAX de IA.
  *
+ * @package Kamples\Controllers\Contenido
  * @since 1.0.0
  */
 class IAController
@@ -30,12 +31,12 @@ class IAController
     }
 
     /**
-     * Maneja la petición AJAX de IA.
+     * Maneja la peticion AJAX de IA.
      */
     public function manejarPeticionIA(): void
     {
         if (!check_ajax_referer('ia_nonce', 'nonce', false)) {
-            wp_send_json_error(['mensaje' => 'Nonce inválido']);
+            wp_send_json_error(['mensaje' => 'Nonce invalido']);
             return;
         }
 

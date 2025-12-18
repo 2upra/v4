@@ -1,8 +1,8 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Usuario;
 
-use Kamples\Services\UsuarioService;
+use Kamples\Services\Usuario\UsuarioService;
 
 /**
  * Controlador de operaciones de usuario.
@@ -12,6 +12,7 @@ use Kamples\Services\UsuarioService;
  * - Bloqueo/desbloqueo de usuarios
  * - Procesamiento de descargas (pinkys)
  *
+ * @package Kamples\Controllers\Usuario
  * @since 1.0.0
  */
 class UsuarioController

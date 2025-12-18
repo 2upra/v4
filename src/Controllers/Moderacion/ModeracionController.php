@@ -1,18 +1,18 @@
 <?php
 
 /**
- * Controlador AJAX para moderación de usuarios.
+ * Controlador AJAX para moderacion de usuarios.
  * 
- * Maneja las peticiones AJAX relacionadas con el baneo y restricción
- * de usuarios desde el panel de administración.
+ * Maneja las peticiones AJAX relacionadas con el baneo y restriccion
+ * de usuarios desde el panel de administracion.
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Moderacion
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Moderacion;
 
-use Kamples\Services\ModeracionService;
+use Kamples\Services\Moderacion\ModeracionService;
 
 class ModeracionController
 {
@@ -41,19 +41,19 @@ class ModeracionController
     {
         /* Verificar permisos */
         if (!current_user_can('administrator')) {
-            wp_send_json_error('No tienes permisos para realizar esta acción.');
+            wp_send_json_error('No tienes permisos para realizar esta accion.');
             wp_die();
         }
 
         /* Verificar nonce */
         if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'restringir_autor_nonce')) {
-            wp_send_json_error('Nonce no válido.');
+            wp_send_json_error('Nonce no valido.');
             wp_die();
         }
 
         /* Validar post_id */
         if (!isset($_POST['post_id']) || empty($_POST['post_id'])) {
-            wp_send_json_error('No se proporcionó un post_id.');
+            wp_send_json_error('No se proporciono un post_id.');
             wp_die();
         }
 

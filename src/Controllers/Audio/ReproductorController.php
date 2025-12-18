@@ -5,13 +5,13 @@
  * 
  * Maneja endpoints REST para reproducciones y oyentes
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Audio
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Audio;
 
-use Kamples\Services\ReproductorService;
+use Kamples\Services\Audio\ReproductorService;
 
 class ReproductorController
 {
@@ -44,7 +44,7 @@ class ReproductorController
     }
 
     /**
-     * Maneja la solicitud de registro de reproducción
+     * Maneja la solicitud de registro de reproduccion
      *
      * @param \WP_REST_Request $request Solicitud REST
      * @return \WP_REST_Response|\WP_Error Respuesta

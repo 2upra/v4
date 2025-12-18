@@ -1,12 +1,13 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Audio;
 
-use Kamples\Services\WaveformService;
+use Kamples\Services\Audio\WaveformService;
 
 /**
  * Controlador para peticiones AJAX de waveforms.
  *
+ * @package Kamples\Controllers\Audio
  * @since 1.0.0
  */
 class WaveformController
@@ -42,7 +43,7 @@ class WaveformController
         $postId = intval($_POST['post_id']);
 
         if ($postId <= 0) {
-            wp_send_json_error('ID de post inválido');
+            wp_send_json_error('ID de post invalido');
             return;
         }
 

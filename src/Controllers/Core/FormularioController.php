@@ -3,15 +3,15 @@
 /**
  * Controlador del formulario de subida
  * 
- * Maneja la acción AJAX principal de subida de posts
+ * Maneja la accion AJAX principal de subida de posts
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\PostCreacionService;
+use Kamples\Services\Publicacion\PostCreacionService;
 
 class FormularioController
 {
@@ -60,7 +60,7 @@ class FormularioController
 
         wp_send_json_success(['message' => 'Post creado exitosamente']);
 
-        /* Manejar múltiples posts si aplica */
+        /* Manejar multiples posts si aplica */
         if (isset($_POST['multiple']) && $_POST['multiple'] == '1') {
             if (function_exists('multiplesPost')) {
                 multiplesPost($postId);

@@ -1,6 +1,6 @@
 # Refactorización del Tema v4 (2upra/kamples)
 
-> **Última actualización:** 2025-12-15
+> **Última actualización:** 2025-12-17
 > **Estado:** Fase 3 - Revisión SOLID y limpieza de deprecated
 
 ---
@@ -53,7 +53,7 @@ Tema de WordPress para aplicación social/musical. Requiere refactorización pro
 
 ### Estado Actual
 - **Servicios:** ✅ **46/46 completados** - Todos organizados en carpetas de dominio
-- **Controladores:** 🔄 **6/31 completados** - En progreso
+- **Controladores:** ✅ **31/31 completados** - Todos organizados en carpetas de dominio
 - **Componentes:** ⏳ 0/33 pendientes
 
 ### Objetivos
@@ -229,7 +229,7 @@ src/
 
 ---
 
-## Inventario de Controladores (31 archivos)
+## Inventario de Controladores (31 archivos) ✅ COMPLETADO
 
 | #   | Controlador            | Tamaño | Destino        | Estado       |
 | --- | ---------------------- | ------ | -------------- | ------------ |
@@ -239,33 +239,33 @@ src/
 | 4   | ColeccionController    | ~240   | `Coleccion/`   | ✅ Completado |
 | 5   | ArchivoController      | ~200   | `Audio/`       | ✅ Completado |
 | 6   | PerfilController       | ~200   | `Usuario/`     | ✅ Completado |
-| 7   | SyncController         | ~150   | `Core/`        | ⏳ Pendiente  |
-| 8   | AuthController         | ~150   | `Usuario/`     | ⏳ Pendiente  |
-| 9   | FiltroController       | ~140   | `Feed/`        | ⏳ Pendiente  |
-| 10  | UsuarioController      | ~130   | `Usuario/`     | ⏳ Pendiente  |
-| 11  | PostController         | ~130   | `Publicacion/` | ⏳ Pendiente  |
-| 12  | LikeController         | ~115   | `Social/`      | ⏳ Pendiente  |
-| 13  | PostEstadoController   | ~95    | `Publicacion/` | ⏳ Pendiente  |
-| 14  | NotificacionController | ~95    | `Social/`      | ⏳ Pendiente  |
-| 15  | SeguirController       | ~75    | `Social/`      | ⏳ Pendiente  |
-| 16  | StreamController       | ~80    | `Audio/`       | ⏳ Pendiente  |
-| 17  | ColabController        | ~75    | `Social/`      | ⏳ Pendiente  |
-| 18  | ModeracionController   | ~70    | `Moderacion/`  | ⏳ Pendiente  |
-| 19  | PublicacionController  | ~75    | `Publicacion/` | ⏳ Pendiente  |
-| 20  | ReproductorController  | ~60    | `Audio/`       | ⏳ Pendiente  |
-| 21  | ReporteController      | ~55    | `Moderacion/`  | ⏳ Pendiente  |
-| 22  | OnboardingController   | ~55    | `Usuario/`     | ⏳ Pendiente  |
-| 23  | PostEdicionController  | ~65    | `Publicacion/` | ⏳ Pendiente  |
-| 24  | FormularioController   | ~55    | `Core/`        | ⏳ Pendiente  |
-| 25  | IAController           | ~50    | `Contenido/`   | ⏳ Pendiente  |
-| 26  | DescargaController     | ~50    | `Core/`        | ⏳ Pendiente  |
-| 27  | ContadorController     | ~45    | `Core/`        | ⏳ Pendiente  |
-| 28  | WaveformController     | ~45    | `Audio/`       | ⏳ Pendiente  |
-| 29  | BusquedaController     | ~40    | `Core/`        | ⏳ Pendiente  |
-| 30  | VistaController        | ~35    | `Core/`        | ⏳ Pendiente  |
-| 31  | UtilController         | ~35    | `Core/`        | ⏳ Pendiente  |
+| 7   | SyncController         | ~150   | `Core/`        | ✅ Completado |
+| 8   | AuthController         | ~150   | `Usuario/`     | ✅ Completado |
+| 9   | FiltroController       | ~140   | `Feed/`        | ✅ Completado |
+| 10  | UsuarioController      | ~130   | `Usuario/`     | ✅ Completado |
+| 11  | PostController         | ~130   | `Publicacion/` | ✅ Completado |
+| 12  | LikeController         | ~115   | `Social/`      | ✅ Completado |
+| 13  | PostEstadoController   | ~95    | `Publicacion/` | ✅ Completado |
+| 14  | NotificacionController | ~95    | `Social/`      | ✅ Completado |
+| 15  | SeguirController       | ~75    | `Social/`      | ✅ Completado |
+| 16  | StreamController       | ~80    | `Audio/`       | ✅ Completado |
+| 17  | ColabController        | ~75    | `Social/`      | ✅ Completado |
+| 18  | ModeracionController   | ~70    | `Moderacion/`  | ✅ Completado |
+| 19  | PublicacionController  | ~75    | `Publicacion/` | ✅ Completado |
+| 20  | ReproductorController  | ~60    | `Audio/`       | ✅ Completado |
+| 21  | ReporteController      | ~55    | `Moderacion/`  | ✅ Completado |
+| 22  | OnboardingController   | ~55    | `Usuario/`     | ✅ Completado |
+| 23  | PostEdicionController  | ~65    | `Publicacion/` | ✅ Completado |
+| 24  | FormularioController   | ~55    | `Core/`        | ✅ Completado |
+| 25  | IAController           | ~50    | `Contenido/`   | ✅ Completado |
+| 26  | DescargaController     | ~50    | `Core/`        | ✅ Completado |
+| 27  | ContadorController     | ~45    | `Core/`        | ✅ Completado |
+| 28  | WaveformController     | ~45    | `Audio/`       | ✅ Completado |
+| 29  | BusquedaController     | ~40    | `Core/`        | ✅ Completado |
+| 30  | VistaController        | ~35    | `Core/`        | ✅ Completado |
+| 31  | UtilController         | ~35    | `Core/`        | ✅ Completado |
 
-> **Nota:** Los controladores marcados como completados fueron divididos (si excedían límite) o movidos a su carpeta de dominio con wrapper deprecated.
+> **Nota:** Todos los controladores fueron movidos a sus carpetas de dominio (2025-12-17). Los archivos originales en la raíz deben ser eliminados o convertidos en wrappers deprecated.
 
 ---
 

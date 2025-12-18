@@ -6,11 +6,11 @@
  * Maneja acciones AJAX relacionadas con posts como banear usuarios,
  * actualizar contenido, etc.
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Publicacion
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Publicacion;
 
 class PostController
 {

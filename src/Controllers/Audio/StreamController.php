@@ -5,13 +5,13 @@
  * 
  * Endpoints REST para streaming de archivos de audio
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Audio
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Audio;
 
-use Kamples\Services\StreamService;
+use Kamples\Services\Audio\StreamService;
 
 class StreamController
 {

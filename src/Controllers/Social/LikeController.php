@@ -6,15 +6,14 @@
  * Maneja las solicitudes AJAX relacionadas con likes,
  * favoritos y dislikes de posts.
  *
- * @package Kamples
+ * @package Kamples\Controllers\Social
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Social;
 
-use Kamples\Services\LikeService;
+use Kamples\Services\Social\LikeService;
 
-// Evitar acceso directo
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
@@ -38,7 +37,7 @@ class LikeController
     /**
      * Constructor.
      *
-     * @param LikeService|null $likeService Servicio de likes (inyección de dependencias).
+     * @param LikeService|null $likeService Servicio de likes (inyeccion de dependencias).
      */
     public function __construct(?LikeService $likeService = null)
     {
@@ -60,7 +59,7 @@ class LikeController
     /**
      * Manejar solicitud AJAX de like.
      * 
-     * Procesa la acción de like/unlike desde el frontend.
+     * Procesa la accion de like/unlike desde el frontend.
      */
     public function manejarLike(): void
     {
@@ -70,37 +69,30 @@ class LikeController
 
         $respuesta = ['success' => false];
 
-        // Validar usuario autenticado
         if (!is_user_logged_in()) {
             $this->enviarRespuesta($respuesta, 'not_logged_in');
             return;
         }
 
-        // Validar nonce de seguridad
         if (!check_ajax_referer('like_post_nonce', 'nonce', false)) {
             $this->enviarRespuesta($respuesta, 'invalid_nonce');
             return;
         }
 
-        // Obtener y sanitizar datos del request
         $datos = $this->obtenerDatosRequest();
 
-        // Validar tipo de like
         if (!$this->likeService->esTipoValido($datos['tipo'])) {
             $this->enviarRespuesta($respuesta, 'error_like_type');
             return;
         }
 
-        // Validar post ID
         if (empty($datos['postId'])) {
             $this->enviarRespuesta($respuesta, 'missing_post_id');
             return;
         }
 
-        // Determinar acción a ejecutar
         $accion = $datos['estado'] ? $datos['tipo'] : 'unlike';
 
-        // Ejecutar la acción
         $this->likeService->ejecutarAccion(
             $datos['postId'],
             $datos['userId'],
@@ -108,10 +100,8 @@ class LikeController
             $datos['tipo']
         );
 
-        // Obtener contadores actualizados
         $contadores = $this->likeService->obtenerContadores($datos['postId']);
 
-        // Preparar respuesta exitosa
         $respuesta['success'] = true;
         $respuesta['counts'] = $contadores;
 
@@ -142,10 +132,10 @@ class LikeController
     }
 
     /**
-     * Enviar respuesta JSON y terminar ejecución.
+     * Enviar respuesta JSON y terminar ejecucion.
      *
      * @param array       $respuesta Datos de respuesta.
-     * @param string|null $error     Código de error (opcional).
+     * @param string|null $error     Codigo de error (opcional).
      */
     private function enviarRespuesta(array $respuesta, ?string $error = null): void
     {

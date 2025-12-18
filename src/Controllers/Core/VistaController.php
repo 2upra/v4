@@ -1,12 +1,13 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\VistaService;
+use Kamples\Services\Core\VistaService;
 
 /**
  * Controlador para peticiones AJAX de vistas.
  *
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 class VistaController
@@ -37,7 +38,7 @@ class VistaController
         $postId = isset($_POST['id_post']) ? intval($_POST['id_post']) : 0;
 
         if ($postId <= 0) {
-            wp_send_json_error(['mensaje' => 'ID de post inválido']);
+            wp_send_json_error(['mensaje' => 'ID de post invalido']);
             return;
         }
 

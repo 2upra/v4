@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Controlador de edición de posts
+ * Controlador de edicion de posts
  * 
- * Maneja endpoints AJAX para edición de título, descripción y tags
+ * Maneja endpoints AJAX para edicion de titulo, descripcion y tags
  *
- * @package Kamples\Controllers
+ * @package Kamples\Controllers\Publicacion
  * @since 1.0.0
  */
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Publicacion;
 
-use Kamples\Services\PostEdicionService;
+use Kamples\Services\Publicacion\PostEdicionService;
 
 class PostEdicionController
 {
@@ -34,7 +34,7 @@ class PostEdicionController
     }
 
     /**
-     * Maneja la solicitud AJAX de cambio de descripción
+     * Maneja la solicitud AJAX de cambio de descripcion
      */
     public function manejarCambiarDescripcion(): void
     {
@@ -49,7 +49,7 @@ class PostEdicionController
     }
 
     /**
-     * Maneja la solicitud AJAX de cambio de título
+     * Maneja la solicitud AJAX de cambio de titulo
      */
     public function manejarCambiarTitulo(): void
     {
@@ -64,7 +64,7 @@ class PostEdicionController
     }
 
     /**
-     * Maneja la solicitud AJAX de corrección de tags
+     * Maneja la solicitud AJAX de correccion de tags
      */
     public function manejarCorregirTags(): void
     {

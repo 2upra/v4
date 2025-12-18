@@ -1,12 +1,13 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Core;
 
-use Kamples\Services\ContadorService;
+use Kamples\Services\Core\ContadorService;
 
 /**
  * Controlador AJAX para conteo de posts.
  *
+ * @package Kamples\Controllers\Core
  * @since 1.0.0
  */
 class ContadorController
@@ -14,7 +15,7 @@ class ContadorController
     private ContadorService $contadorService;
 
     /**
-     * Constructor e inicialización de hooks AJAX.
+     * Constructor e inicializacion de hooks AJAX.
      */
     public function __construct()
     {

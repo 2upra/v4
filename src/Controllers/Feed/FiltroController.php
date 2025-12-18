@@ -1,8 +1,8 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Feed;
 
-use Kamples\Services\FiltroService;
+use Kamples\Services\Feed\FiltroService;
 
 /**
  * Controlador AJAX para gestión de filtros.
@@ -10,6 +10,7 @@ use Kamples\Services\FiltroService;
  * Maneja todas las peticiones AJAX relacionadas con
  * filtros de posts y preferencias del usuario.
  *
+ * @package Kamples\Controllers\Feed
  * @since 1.0.0
  */
 class FiltroController

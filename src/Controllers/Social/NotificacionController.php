@@ -1,14 +1,15 @@
 <?php
 
-namespace Kamples\Controllers;
+namespace Kamples\Controllers\Social;
 
-use Kamples\Services\NotificacionService;
+use Kamples\Services\Social\NotificacionService;
 
 /**
  * Controlador de notificaciones.
  * 
  * Maneja las peticiones AJAX relacionadas con notificaciones.
  *
+ * @package Kamples\Controllers\Social
  * @since 2.0.0
  */
 class NotificacionController
@@ -36,7 +37,7 @@ class NotificacionController
     }
 
     /**
-     * Handler AJAX: Marcar notificación como vista.
+     * Handler AJAX: Marcar notificacion como vista.
      */
     public function marcarNotificacionVista(): void
     {
