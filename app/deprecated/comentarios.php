@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
-use Kamples\Services\ComentarioService;
+use Kamples\Services\Social\ComentarioService;
 use Kamples\Views\Components\ComentarioForm;
 
 /**
@@ -65,7 +65,7 @@ add_action('template_redirect', 'redirigir_comentarios');
  */
 function inicializarComentariosController(): void
 {
-    $controller = new \Kamples\Controllers\ComentarioController();
+    $controller = new \Kamples\Controllers\Social\ComentarioController();
     $controller->registrar();
 }
 

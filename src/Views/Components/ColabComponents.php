@@ -12,7 +12,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\ColabService;
+use Kamples\Services\Social\ColabService;
 
 /* Evitar acceso directo */
 

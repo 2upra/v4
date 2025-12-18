@@ -2,7 +2,8 @@
 
 namespace Kamples\Services\Publicacion;
 
-use Kamples\Services\IdeaService;
+use Kamples\Services\Contenido\IdeaService;
+use Kamples\Services\Coleccion\ColeccionQueryService;
 
 /**
  * Servicio de construccion de queries para publicaciones.
@@ -19,6 +20,7 @@ class PublicacionQueryService
     private IdeaService $ideaService;
     private PublicacionOrdenamientoService $ordenamientoService;
     private PublicacionFiltroService $filtroService;
+    private ColeccionQueryService $coleccionQueryService;
     private static ?PublicacionQueryService $instancia = null;
 
     public function __construct()
@@ -26,6 +28,7 @@ class PublicacionQueryService
         $this->ideaService = IdeaService::obtenerInstancia();
         $this->ordenamientoService = PublicacionOrdenamientoService::obtenerInstancia();
         $this->filtroService = PublicacionFiltroService::obtenerInstancia();
+        $this->coleccionQueryService = new ColeccionQueryService();
     }
 
     public static function obtenerInstancia(): self
@@ -68,10 +71,11 @@ class PublicacionQueryService
 
         /* Query para coleccion especifica */
         if (!empty($args['colec']) && is_numeric($args['colec'])) {
-            if (function_exists('manejarColeccion')) {
-                return manejarColeccion($args, $paged);
-            }
-            return false;
+            return $this->coleccionQueryService->manejarColeccionArgs(
+                (int)$args['colec'],
+                $paged,
+                $args['post_type']
+            );
         }
 
         /* Query estandar: aplicar configuracion y ordenamiento */

@@ -148,12 +148,12 @@ add_action('wp_head', function () use ($schema) {
                         </div>
                         <div class="single">
                             <div class="fullH">
-                                <?php echo htmlPost($filtro); ?>
+                                <?php echo (new \Kamples\Views\Components\PostComponents())->htmlPost($filtro); ?>
                             </div>
                             <div class="publicaciones-similares" nosnippet>
                                 <h3 style="display: none;">Publicaciones Similares</h3>
                                 <?php
-                                echo publicaciones([
+                                echo \Kamples\Services\Publicacion\PublicacionService::obtenerInstancia()->obtener([
                                     'filtro'     => 'nada',
                                     'posts'      => 10,
                                     'similar_to' => $current_post_id,

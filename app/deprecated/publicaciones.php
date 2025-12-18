@@ -10,8 +10,11 @@
  * @since 1.0.0
  */
 
-use Kamples\Services\PublicacionService;
-use Kamples\Controllers\PublicacionController;
+use Kamples\Services\Publicacion\PublicacionService;
+use Kamples\Services\Publicacion\PublicacionQueryService;
+use Kamples\Services\Publicacion\PublicacionOrdenamientoService;
+use Kamples\Services\Publicacion\PublicacionFiltroService;
+use Kamples\Controllers\Publicacion\PublicacionController;
 
 /* Registrar el controlador AJAX */
 
@@ -47,7 +50,7 @@ function publicacionAjax()
 /**
  * Configura los argumentos de la query estándar.
  *
- * @deprecated Usar PublicacionService::obtenerInstancia()->configuracionQueryArgs()
+ * @deprecated Usar PublicacionQueryService::obtenerInstancia()->configuracionQueryArgs()
  * @param array $args Argumentos
  * @param int $paged Página
  * @param mixed $userId ID usuario perfil
@@ -57,14 +60,14 @@ function publicacionAjax()
  */
 function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario)
 {
-    $publicacionService = PublicacionService::obtenerInstancia();
-    return $publicacionService->configuracionQueryArgs($args, (int)$paged, $userId, (int)$usuarioActual, $tipoUsuario);
+    $queryService = PublicacionQueryService::obtenerInstancia();
+    return $queryService->configuracionQueryArgs($args, (int)$paged, $userId, (int)$usuarioActual, $tipoUsuario);
 }
 
 /**
  * Aplica pre-ordenamiento según el tipo de post.
  *
- * @deprecated Usar PublicacionService::obtenerInstancia()->preOrdenamiento()
+ * @deprecated Usar PublicacionQueryService::obtenerInstancia()->preOrdenamiento()
  * @param array $args Argumentos
  * @param int $paged Página
  * @param int $usu Usuario actual
@@ -78,8 +81,8 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
  */
 function preOrdenamiento($args, $paged, $usu, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
 {
-    $publicacionService = PublicacionService::obtenerInstancia();
-    return $publicacionService->preOrdenamiento(
+    $queryService = PublicacionQueryService::obtenerInstancia();
+    return $queryService->preOrdenamiento(
         $args,
         (int)$paged,
         (int)$usu,
@@ -109,7 +112,7 @@ function obtenerColeccionesParaMomento($args, $usuarioActual)
 /**
  * Ordenamiento especial para colecciones.
  *
- * @deprecated Usar PublicacionService::obtenerInstancia()->ordenamientoColecciones()
+ * @deprecated Usar PublicacionOrdenamientoService::obtenerInstancia()->ordenamientoColecciones()
  * @param array $queryArgs Query args
  * @param int $filtroTiempo Filtro tiempo
  * @param int $usuarioActual Usuario actual
@@ -117,14 +120,14 @@ function obtenerColeccionesParaMomento($args, $usuarioActual)
  */
 function ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual)
 {
-    $publicacionService = PublicacionService::obtenerInstancia();
-    return $publicacionService->ordenamientoColecciones($queryArgs, (int)$filtroTiempo, (int)$usuarioActual);
+    $ordenamientoService = PublicacionOrdenamientoService::obtenerInstancia();
+    return $ordenamientoService->ordenamientoColecciones($queryArgs, (int)$filtroTiempo, (int)$usuarioActual);
 }
 
 /**
  * Aplica ordenamiento según filtro de tiempo.
  *
- * @deprecated Usar PublicacionService::obtenerInstancia()->ordenamiento()
+ * @deprecated Usar PublicacionOrdenamientoService::obtenerInstancia()->ordenamiento()
  * @param array $queryArgs Query args actuales
  * @param int $filtroTiempo Filtro de tiempo seleccionado
  * @param int $usuarioActual ID usuario actual
@@ -138,8 +141,8 @@ function ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual)
  */
 function ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
 {
-    $publicacionService = PublicacionService::obtenerInstancia();
-    return $publicacionService->ordenamiento(
+    $ordenamientoService = PublicacionOrdenamientoService::obtenerInstancia();
+    return $ordenamientoService->ordenamiento(
         $queryArgs,
         (int)$filtroTiempo,
         (int)$usuarioActual,
@@ -155,29 +158,29 @@ function ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $s
 /**
  * Aplica filtros de usuario a la query.
  *
- * @deprecated Usar PublicacionService::obtenerInstancia()->aplicarFiltrosUsuario()
+ * @deprecated Usar PublicacionFiltroService::obtenerInstancia()->aplicarFiltrosUsuario()
  * @param array $queryArgs Query args
  * @param int $usuarioActual Usuario actual
  * @return array Query args modificados
  */
 function aplicarFiltrosUsuario($queryArgs, $usuarioActual)
 {
-    $publicacionService = PublicacionService::obtenerInstancia();
-    return $publicacionService->aplicarFiltrosUsuario($queryArgs, (int)$usuarioActual);
+    $filtroService = PublicacionFiltroService::obtenerInstancia();
+    return $filtroService->aplicarFiltrosUsuario($queryArgs, (int)$usuarioActual);
 }
 
 /**
  * Pre-filtra por identifier (búsqueda).
  *
- * @deprecated Usar PublicacionService::obtenerInstancia()->prefiltrarIdentifier()
+ * @deprecated Usar PublicacionFiltroService::obtenerInstancia()->prefiltrarIdentifier()
  * @param string $identifier Término de búsqueda
  * @param array $queryArgs Query args
  * @return array Query args modificados
  */
 function prefiltrarIdentifier($identifier, $queryArgs)
 {
-    $publicacionService = PublicacionService::obtenerInstancia();
-    return $publicacionService->prefiltrarIdentifier($identifier, $queryArgs);
+    $filtroService = PublicacionFiltroService::obtenerInstancia();
+    return $filtroService->prefiltrarIdentifier($identifier, $queryArgs);
 }
 
 /**

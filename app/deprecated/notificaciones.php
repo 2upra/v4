@@ -9,7 +9,7 @@
  * @deprecated Use las clases en Kamples\Services y Kamples\Views\Components
  */
 
-use Kamples\Services\NotificacionService;
+use Kamples\Services\Social\NotificacionService;
 use Kamples\Views\Components\NotificacionComponents;
 
 /**

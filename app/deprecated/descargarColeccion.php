@@ -9,7 +9,7 @@
  * @package app\deprecated
  */
 
-use Kamples\Services\ColeccionDescargaService;
+use Kamples\Services\Coleccion\ColeccionDescargaService;
 use Kamples\Views\Components\ColeccionComponents;
 
 /**

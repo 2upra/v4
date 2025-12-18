@@ -2,7 +2,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\NotificacionService;
+use Kamples\Services\Social\NotificacionService;
 
 /**
  * Componentes de vista para notificaciones.

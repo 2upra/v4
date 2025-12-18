@@ -8,8 +8,8 @@
  * @package app\deprecated
  */
 
-use Kamples\Services\HashService;
-use Kamples\Services\PostCreacionService;
+use Kamples\Services\Audio\HashService;
+use Kamples\Services\Publicacion\PostCreacionService;
 
 /* Inicializar servicios */
 
@@ -201,7 +201,7 @@ if (!function_exists('formRs')) {
 if (!function_exists('procesarAudioLigero')) {
     function procesarAudioLigero($postId, $audioId, $index)
     {
-        return \Kamples\Services\AudioProcessingService::obtenerInstancia()
+        return \Kamples\Services\Audio\AudioProcessingService::obtenerInstancia()
             ->procesarAudioLigero((int)$postId, (int)$audioId, (int)$index);
     }
 }
@@ -218,7 +218,7 @@ if (!function_exists('analizarYGuardarMetasAudio')) {
         $carpeta = null,
         $carpetaAbuela = null
     ) {
-        \Kamples\Services\AudioProcessingService::obtenerInstancia()
+        \Kamples\Services\Audio\AudioProcessingService::obtenerInstancia()
             ->analizarYGuardarMetasAudio(
                 (int)$postId,
                 $archivoPath,

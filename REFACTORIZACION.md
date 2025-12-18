@@ -225,7 +225,14 @@ src/
 | 45  | PythonService            | ~80    | Movido a Core/           | ✅ Hecho   | ✅ Completado |
 | 46  | ContadorService          | ~50    | Movido a Core/           | ✅ Hecho   | ✅ Completado |
 
+
 > **Nota:** Líneas aproximadas según tamaño de archivo. Prioridad alta = servicios grandes que probablemente violan SRP.
+
+### Wrappers Deprecated en `src/Services/` (Limpieza)
+
+| Servicio Wrapper | Estado      | Acción                                                                                                                                   |
+| ---------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **TODOS**        | 🗑️ Eliminado | Todos los wrappers en `src/Services/*.php` han sido eliminados (2025-12-17). Todas las referencias actualizadas a los nuevos namespaces. |
 
 ---
 
@@ -318,12 +325,13 @@ src/
 
 > Ubicados en `/app/deprecated/`. Se irán eliminando conforme se actualicen las referencias.
 
-| Archivo       | Usos restantes | Estado      |
-| ------------- | -------------- | ----------- |
-| algoritmo.php | Por verificar  | ⏳ Pendiente |
-| auth.php      | Por verificar  | ⏳ Pendiente |
-| auto.php      | Por verificar  | ⏳ Pendiente |
-| ...           | ...            | ...         |
+| Archivo       | Usos restantes | Estado                   |
+| ------------- | -------------- | ------------------------ |
+| algoritmo.php | 0              | ✅ Eliminado (2025-12-18) |
+| contador.php  | 0              | ✅ Eliminado (2025-12-18) |
+| likes.php     | 0              | ✅ Eliminado (2025-12-18) |
+| auth.php      | Por verificar  | ⏳ Pendiente              |
+| ...           | ...            | ...                      |
 
 > **Nota:** Lista completa en `/app/deprecated/`. Cada revisión de servicio incluirá verificar si su wrapper puede eliminarse.
 

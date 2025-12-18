@@ -9,7 +9,7 @@
  * @see Kamples\Views\Components\PerfilComponents
  */
 
-use Kamples\Services\PerfilService;
+use Kamples\Services\Usuario\PerfilService;
 use Kamples\Views\Components\PerfilComponents;
 
 if (!function_exists('imagenPerfil')) {

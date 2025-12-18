@@ -7,8 +7,8 @@
  * @see \Kamples\Services\IAService
  */
 
-use Kamples\Services\IAService;
-use Kamples\Controllers\IAController;
+use Kamples\Services\Contenido\IAService;
+use Kamples\Controllers\Contenido\IAController;
 
 /* Registrar hooks del controlador */
 

@@ -12,7 +12,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\ColeccionService;
+use Kamples\Services\Coleccion\ColeccionService;
 
 /* Evitar acceso directo */
 

@@ -2,8 +2,8 @@
 
 namespace Kamples\Services\Publicacion;
 
-use Kamples\Services\LikeService;
-use Kamples\Services\FiltroService;
+use Kamples\Services\Social\LikeService;
+use Kamples\Services\Feed\FiltroService;
 
 /**
  * Servicio de filtrado de publicaciones.

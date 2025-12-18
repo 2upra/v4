@@ -7,8 +7,8 @@
  * @see \Kamples\Services\VistaService
  */
 
-use Kamples\Services\VistaService;
-use Kamples\Controllers\VistaController;
+use Kamples\Services\Core\VistaService;
+use Kamples\Controllers\Core\VistaController;
 
 /* Registrar hooks del controlador */
 

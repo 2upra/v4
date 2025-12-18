@@ -10,7 +10,7 @@
  * @package app\deprecated
  */
 
-use Kamples\Services\DescargaService;
+use Kamples\Services\Core\DescargaService;
 use Kamples\Views\Components\DescargaComponents;
 
 /**

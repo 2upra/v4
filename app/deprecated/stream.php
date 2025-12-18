@@ -9,7 +9,7 @@
  * @package app\deprecated
  */
 
-use Kamples\Services\StreamService;
+use Kamples\Services\Audio\StreamService;
 
 define('ENABLE_BROWSER_AUDIO_CACHE', true);
 

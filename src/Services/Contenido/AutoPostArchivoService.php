@@ -14,7 +14,7 @@
 
 namespace Kamples\Services\Contenido;
 
-use Kamples\Services\HashService;
+use Kamples\Services\Audio\HashService;
 
 class AutoPostArchivoService
 {

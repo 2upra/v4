@@ -20,8 +20,8 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
-use Kamples\Services\SeguirService;
-use Kamples\Controllers\SeguirController;
+use Kamples\Services\Usuario\SeguirService;
+use Kamples\Controllers\Social\SeguirController;
 
 /* 
  *

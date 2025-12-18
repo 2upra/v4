@@ -8,7 +8,7 @@
  * @package app\deprecated
  */
 
-use Kamples\Services\AudioProteccionService;
+use Kamples\Services\Audio\AudioProteccionService;
 
 /* Inicializar el servicio */
 

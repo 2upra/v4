@@ -2,7 +2,7 @@
 
 namespace Kamples\Services\Core;
 
-use Kamples\Services\CacheService;
+// CacheService is in the same namespace
 
 /**
  * Servicio de búsqueda de contenido.

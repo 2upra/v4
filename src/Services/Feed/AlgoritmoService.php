@@ -2,7 +2,7 @@
 
 namespace Kamples\Services\Feed;
 
-use Kamples\Services\FeedService;
+use Kamples\Services\Feed\FeedService;
 
 /**
  * Servicio del algoritmo de recomendacion de posts (Fachada).

@@ -2,7 +2,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\AuthService;
+use Kamples\Services\Usuario\AuthService;
 
 /**
  * Componentes de vistas de autenticación.

@@ -16,8 +16,8 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
-use Kamples\Services\ColeccionService;
-use Kamples\Controllers\ColeccionController;
+use Kamples\Services\Coleccion\ColeccionService;
+use Kamples\Controllers\Coleccion\ColeccionController;
 use Kamples\Views\Components\ColeccionComponents;
 
 /* 

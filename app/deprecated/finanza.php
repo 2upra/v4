@@ -6,8 +6,9 @@
  * @deprecated Usar Kamples\Services\FinanzaService y Kamples\Views\Components\FinanzaComponents
  */
 
-use Kamples\Services\FinanzaService;
+use Kamples\Services\Finanza\FinanzaService;
 use Kamples\Views\Components\FinanzaComponents;
+use Kamples\Controllers\Finanza\FinanzaController;
 
 /* 
  * Funciones de cálculo de acciones
@@ -199,57 +200,57 @@ function bolsavalores()
  */
 
 /**
- * @deprecated Los endpoints REST son manejados por FinanzaController
+ * @deprecated Los endpoints REST son manejados por AccionesController
  */
 function crear_sesion_acciones(\WP_REST_Request $request)
 {
-    $controller = new \Kamples\Controllers\FinanzaController();
-    return $controller->crearSesionAcciones($request);
+    $controller = new \Kamples\Controllers\Finanza\AccionesController();
+    return $controller->crearSesion($request);
 }
 
 /**
- * @deprecated Los endpoints REST son manejados por FinanzaController
+ * @deprecated Los endpoints REST son manejados por AccionesController
  */
 function manejador_webhook_acciones(\WP_REST_Request $request)
 {
-    $controller = new \Kamples\Controllers\FinanzaController();
-    return $controller->webhookAcciones($request);
+    $controller = new \Kamples\Controllers\Finanza\AccionesController();
+    return $controller->webhook($request);
 }
 
 /**
- * @deprecated Los endpoints REST son manejados por FinanzaController
+ * @deprecated Los endpoints REST son manejados por CompraController
  */
 function crear_sesion_compra(\WP_REST_Request $request)
 {
-    $controller = new \Kamples\Controllers\FinanzaController();
-    return $controller->crearSesionCompra($request);
+    $controller = new \Kamples\Controllers\Finanza\CompraController();
+    return $controller->crearSesion($request);
 }
 
 /**
- * @deprecated Los endpoints REST son manejados por FinanzaController
+ * @deprecated Los endpoints REST son manejados por CompraController
  */
 function manejador_webhook_compra(\WP_REST_Request $request)
 {
-    $controller = new \Kamples\Controllers\FinanzaController();
-    return $controller->webhookCompra($request);
+    $controller = new \Kamples\Controllers\Finanza\CompraController();
+    return $controller->webhook($request);
 }
 
 /**
- * @deprecated Los endpoints REST son manejados por FinanzaController
+ * @deprecated Los endpoints REST son manejados por SuscripcionController
  */
 function crear_sesion_pro(\WP_REST_Request $request)
 {
-    $controller = new \Kamples\Controllers\FinanzaController();
-    return $controller->crearSesionPro($request);
+    $controller = new \Kamples\Controllers\Finanza\SuscripcionController();
+    return $controller->crearSesion($request);
 }
 
 /**
- * @deprecated Los endpoints REST son manejados por FinanzaController
+ * @deprecated Los endpoints REST son manejados por SuscripcionController
  */
 function stripe_webhook_pro(\WP_REST_Request $request)
 {
-    $controller = new \Kamples\Controllers\FinanzaController();
-    return $controller->webhookPro($request);
+    $controller = new \Kamples\Controllers\Finanza\SuscripcionController();
+    return $controller->webhook($request);
 }
 
 /* 

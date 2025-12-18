@@ -157,8 +157,8 @@ class PublicacionService
                 echo $this->renderizarPost($tipoPost, $filtro);
             }
         } else {
-            if ($filtro !== 'notas' && function_exists('nohayPost')) {
-                echo nohayPost($filtro, $isAjax);
+            if ($filtro !== 'notas') {
+                echo (new \Kamples\Views\Components\PostComponents())->nohayPost($filtro, $isAjax);
             }
         }
 
@@ -196,18 +196,18 @@ class PublicacionService
         switch ($tipoPost) {
             case 'social_post':
                 if ($filtro === 'rola' || $filtro === 'tiendaPerfil') {
-                    return function_exists('htmlColec') ? htmlColec($filtro) : '';
+                    return \Kamples\Views\Components\ColeccionComponents::renderHtmlColec($filtro);
                 }
-                return function_exists('htmlPost') ? htmlPost($filtro) : '';
+                return (new \Kamples\Views\Components\PostComponents())->htmlPost($filtro);
 
             case 'colab':
-                return function_exists('htmlColab') ? htmlColab($filtro) : '';
+                return \Kamples\Views\Components\ColabComponents::renderHtmlColab($filtro);
 
             case 'colecciones':
-                return function_exists('htmlColec') ? htmlColec($filtro) : '';
+                return \Kamples\Views\Components\ColeccionComponents::renderHtmlColec($filtro);
 
             case 'post':
-                return function_exists('htmlArticulo') ? htmlArticulo($filtro) : '';
+                return (new \Kamples\Views\Components\PostContentComponents())->htmlArticulo($filtro);
 
             default:
                 return '<p>Tipo de publicacion no reconocido.</p>';

@@ -15,7 +15,7 @@
 
 namespace Kamples\Services\Audio;
 
-use Kamples\Services\HashService;
+use Kamples\Services\Audio\HashService;
 
 class AudioProcessingService
 {

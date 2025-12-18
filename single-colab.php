@@ -7,14 +7,14 @@ if (have_posts()) :
     while (have_posts()) : the_post();
         $filtro = 'colab';
         ob_start();
-        
+
         // Obtener el ID del post actual
         $current_post_id = get_the_ID();
 ?>
         <div id="main">
             <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
                 <div class="single colabSingle">
-                    <?php echo htmlColab($filtro); ?>
+                    <?php echo \Kamples\Views\Components\ColabComponents::renderHtmlColab($filtro); ?>
                 </div>
             </div>
         </div>

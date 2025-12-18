@@ -2,8 +2,8 @@
 
 namespace Kamples\Services\Publicacion;
 
-use Kamples\Services\FeedService;
-use Kamples\Services\CacheService;
+use Kamples\Services\Feed\FeedService;
+use Kamples\Services\Core\CacheService;
 
 /**
  * Servicio de ordenamiento de publicaciones.

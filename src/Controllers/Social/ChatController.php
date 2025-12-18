@@ -2,7 +2,7 @@
 
 namespace Kamples\Controllers\Social;
 
-use Kamples\Services\ChatService;
+use Kamples\Services\Social\ChatService;
 
 /**
  * Controlador principal del sistema de chat.
@@ -22,7 +22,7 @@ class ChatController
 
     public function __construct(?ChatService $chatService = null)
     {
-        $chatService = $chatService ?? new ChatService();
+        $chatService = $chatService ?? ChatService::obtenerInstancia();
 
         $this->apiController = new ChatApiController($chatService);
         $this->ajaxController = new ChatAjaxController($chatService);

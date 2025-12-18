@@ -1,8 +1,8 @@
 <?php
 
-use Kamples\Services\AutoPostService;
-use Kamples\Services\AutoContentService;
-use Kamples\Services\PythonService;
+use Kamples\Services\Contenido\AutoPostService;
+use Kamples\Services\Contenido\AutoContentService;
+use Kamples\Services\Core\PythonService;
 
 /**
  * Wrappers deprecados para funciones de automaización y IA.
@@ -81,5 +81,5 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 
 function recalcularSimilarToFeed()
 {
-    \Kamples\Services\AlgoritmoService::obtenerInstancia()->recalcularSimilarToFeed();
+    \Kamples\Services\Feed\AlgoritmoService::obtenerInstancia()->recalcularSimilarToFeed();
 }

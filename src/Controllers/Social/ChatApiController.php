@@ -2,7 +2,7 @@
 
 namespace Kamples\Controllers\Social;
 
-use Kamples\Services\ChatService;
+use Kamples\Services\Social\ChatService;
 use WP_REST_Request;
 use WP_REST_Response;
 

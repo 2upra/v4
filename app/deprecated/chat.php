@@ -20,8 +20,10 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
-use Kamples\Controllers\ChatController;
-use Kamples\Services\ChatService;
+use Kamples\Controllers\Social\ChatController;
+use Kamples\Controllers\Social\ChatApiController;
+use Kamples\Controllers\Social\ChatAjaxController;
+use Kamples\Services\Social\ChatService;
 
 /* 
  *
@@ -41,18 +43,18 @@ $chatController->registrar();
 /**
  * Wrapper de compatibilidad para procesarMensaje.
  *
- * @deprecated Usar Kamples\Controllers\ChatController::apiProcesarMensaje
+ * @deprecated Usar Kamples\Controllers\Social\ChatApiController::procesarMensaje
  */
 function procesarMensaje($request)
 {
-    $controller = new ChatController();
-    return $controller->apiProcesarMensaje($request);
+    $controller = new ChatApiController();
+    return $controller->procesarMensaje($request);
 }
 
 /**
  * Wrapper de compatibilidad para guardarMensaje.
  *
- * @deprecated Usar Kamples\Services\ChatService::guardarMensaje
+ * @deprecated Usar Kamples\Services\Social\ChatService::guardarMensaje
  */
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null, $conversacion_id = null)
 {
@@ -77,23 +79,23 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
  * 
  * @param WP_REST_Request $request
  * @return WP_REST_Response
- * @deprecated Usar ChatController::apiVerificarToken
+ * @deprecated Usar ChatApiController::verificarToken
  */
 function verificarToken($request)
 {
-    $controller = new ChatController();
-    return $controller->apiVerificarToken($request);
+    $controller = new ChatApiController();
+    return $controller->verificarToken($request);
 }
 
 /**
  * Generar token (Wrapper).
  * 
- * @deprecated Usar ChatController::ajaxGenerarToken
+ * @deprecated Usar ChatAjaxController::generarToken
  */
 function generarToken()
 {
-    $controller = new ChatController();
-    $controller->ajaxGenerarToken();
+    $controller = new ChatAjaxController();
+    $controller->generarToken();
 }
 
 /**
@@ -122,12 +124,12 @@ function obtenerNombreUsuario($usuarioId)
 /**
  * Handler AJAX: Info usuario (Legacy Wrapper).
  * 
- * @deprecated Usar ChatController::ajaxInfoUsuario
+ * @deprecated Usar ChatAjaxController::infoUsuario
  */
 function infoUsuario()
 {
-    $controller = new ChatController();
-    $controller->ajaxInfoUsuario();
+    $controller = new ChatAjaxController();
+    $controller->infoUsuario();
 }
 
 /**

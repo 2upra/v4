@@ -11,7 +11,7 @@
 
 namespace Kamples\Controllers\Audio;
 
-use Kamples\Services\HashService;
+use Kamples\Services\Audio\HashService;
 
 class ArchivoController
 {

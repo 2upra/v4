@@ -7,8 +7,8 @@
  * @see \Kamples\Services\WaveformService
  */
 
-use Kamples\Services\WaveformService;
-use Kamples\Controllers\WaveformController;
+use Kamples\Services\Audio\WaveformService;
+use Kamples\Controllers\Audio\WaveformController;
 
 /* Registrar hooks del controlador */
 

@@ -11,7 +11,7 @@
 
 namespace Kamples\Controllers\Usuario;
 
-use Kamples\Services\PerfilService;
+use Kamples\Services\Usuario\PerfilService;
 use Logger;
 
 class PerfilController

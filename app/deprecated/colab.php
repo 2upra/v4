@@ -16,8 +16,8 @@ if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
 
-use Kamples\Services\ColabService;
-use Kamples\Controllers\ColabController;
+use Kamples\Services\Social\ColabService;
+use Kamples\Controllers\Social\ColabController;
 use Kamples\Views\Components\ColabComponents;
 
 /* 

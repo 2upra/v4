@@ -8,7 +8,7 @@
  * @see \Kamples\Controllers\FiltroController
  */
 
-use Kamples\Services\FiltroService;
+use Kamples\Services\Feed\FiltroService;
 
 /**
  * Aplica filtro global a query args.

@@ -7,8 +7,8 @@
  * @see \Kamples\Services\UtilService
  */
 
-use Kamples\Services\UtilService;
-use Kamples\Controllers\UtilController;
+use Kamples\Services\Core\UtilService;
+use Kamples\Controllers\Core\UtilController;
 
 /* Registrar hooks del controlador */
 

@@ -12,7 +12,7 @@
 
 namespace Kamples\Controllers\Social;
 
-use Kamples\Services\ComentarioService;
+use Kamples\Services\Social\ComentarioService;
 
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
@@ -25,7 +25,7 @@ class ComentarioController
 
     public function __construct(?ComentarioService $comentarioService = null)
     {
-        $this->comentarioService = $comentarioService ?? new ComentarioService();
+        $this->comentarioService = $comentarioService ?? ComentarioService::obtenerInstancia();
 
         if (class_exists('\Logger')) {
             $this->logger = \Logger::obtenerInstancia();
@@ -189,9 +189,9 @@ class ComentarioController
                         <p><?php echo esc_html($datos['autorNombre']); ?></p>
                         <span class="fecha"><?php echo esc_html($datos['fechaRelativa']); ?></span>
                         <?php
-                        if (function_exists('opcionesComentarios')) {
-                            echo opcionesComentarios($datos['id'], $datos['autorId']);
-                        }
+
+                        echo opcionesComentarios($datos['id'], $datos['autorId']);
+
                         ?>
                     </div>
                     <div class="contenidoComentario">
@@ -207,18 +207,18 @@ class ComentarioController
                         <?php if (!empty($datos['audio'])): ?>
                             <div class="audioComentario">
                                 <?php
-                                if (function_exists('wave')) {
-                                    wave($datos['audioUrl'], $datos['audio'], $datos['id']);
-                                }
+
+                                wave($datos['audioUrl'], $datos['audio'], $datos['id']);
+
                                 ?>
                             </div>
                         <?php endif; ?>
 
                         <div class="controlComentario">
                             <?php
-                            if (function_exists('renderPostControls')) {
-                                echo renderPostControls($datos['id'], '', $datos['audio']);
-                            }
+
+                            echo renderPostControls($datos['id'], '', $datos['audio']);
+
                             ?>
                         </div>
                     </div>

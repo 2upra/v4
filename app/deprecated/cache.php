@@ -7,7 +7,7 @@
  * @see \Kamples\Services\CacheService
  */
 
-use Kamples\Services\CacheService;
+use Kamples\Services\Core\CacheService;
 
 /**
  * Guarda datos en cache.

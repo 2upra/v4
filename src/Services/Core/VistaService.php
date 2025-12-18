@@ -19,7 +19,7 @@ class VistaService
     public function __construct()
     {
         $this->logger = \Logger::obtenerInstancia();
-        $this->feedService = new FeedService();
+        $this->feedService = FeedService::obtenerInstancia();
     }
 
     /**

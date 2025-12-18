@@ -8,7 +8,7 @@
  * @package app\deprecated
  */
 
-use Kamples\Services\NormalizacionService;
+use Kamples\Services\Contenido\NormalizacionService;
 
 /* Inicializar el servicio */
 

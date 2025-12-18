@@ -2,7 +2,7 @@
 
 namespace Kamples\Controllers\Finanza;
 
-use Kamples\Services\FinanzaService;
+use Kamples\Services\Finanza\FinanzaService;
 
 /**
  * Controlador de acciones/donaciones.

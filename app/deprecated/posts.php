@@ -12,7 +12,7 @@
 
 use Kamples\Views\Components\PostComponents;
 use Kamples\Views\Components\PostContentComponents;
-use Kamples\Services\PostRenderService;
+use Kamples\Services\Publicacion\PostRenderService;
 
 /*
  * COMPONENTES DE POST

@@ -146,6 +146,48 @@ class ColeccionQueryService
     }
 
     /**
+     * Genera los argumentos de query para una colección (paginada).
+     *
+     * @param int $colecId ID de la colección
+     * @param int $paged Página actual
+     * @param string $postType Tipo de post
+     * @return array|false Argumentos de WP_Query ou false
+     */
+    public function manejarColeccionArgs(int $colecId, int $paged, string $postType)
+    {
+        $cache = \Kamples\Services\Core\CacheService::obtenerInstancia('feed');
+        $cacheKey = 'coleccion_' . $colecId . '_paged_' . $paged;
+
+        $cachedData = $cache->obtener($cacheKey);
+        if ($cachedData !== false) {
+            return $cachedData;
+        }
+
+        $samplesMeta = get_post_meta($colecId, 'samples', true);
+        $samplesMeta = $this->deserializarDatos($samplesMeta);
+
+        if (is_array($samplesMeta) && !empty($samplesMeta)) {
+            $queryArgs = [
+                'post_type' => $postType,
+                'post__in' => array_values($samplesMeta),
+                'orderby' => 'rand',
+                'posts_per_page' => 12,
+                'paged' => $paged,
+            ];
+
+            $cacheMasterKey = 'cache_colec_' . $colecId;
+            $cacheKeys = $cache->obtener($cacheMasterKey) ?: [];
+            $cacheKeys[] = $cacheKey;
+            $cache->guardar($cacheMasterKey, $cacheKeys, 86400);
+            $cache->guardar($cacheKey, $queryArgs, 86400);
+
+            return $queryArgs;
+        }
+
+        return false;
+    }
+
+    /**
      * Deserializar datos (JSON o serialize).
      */
     private function deserializarDatos($data)

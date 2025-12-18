@@ -2,8 +2,8 @@
 
 namespace Kamples\Services\Feed;
 
-use Kamples\Services\CacheService;
-use Kamples\Services\InteresService;
+use Kamples\Services\Core\CacheService;
+use Kamples\Services\Usuario\InteresService;
 
 /**
  * Servicio de recopilacion de datos para el feed.

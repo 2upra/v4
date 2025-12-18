@@ -10,7 +10,7 @@
  * @since 1.0.0
  */
 
-use Kamples\Services\IdeaService;
+use Kamples\Services\Contenido\IdeaService;
 
 /**
  * Maneja la obtención de ideas para una colección.

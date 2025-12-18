@@ -12,7 +12,7 @@
 
 namespace Kamples\Controllers\Coleccion;
 
-use Kamples\Services\ColeccionService;
+use Kamples\Services\Coleccion\ColeccionService;
 
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');

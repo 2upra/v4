@@ -2,7 +2,7 @@
 
 namespace Kamples\Controllers\Social;
 
-use Kamples\Services\ChatService;
+use Kamples\Services\Social\ChatService;
 
 /**
  * Controlador de handlers AJAX para el chat.

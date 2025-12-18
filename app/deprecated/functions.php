@@ -9,10 +9,10 @@
  * @see \Kamples\Services\UsuarioService
  */
 
-use Kamples\Services\UsuarioService;
-use Kamples\Services\ReporteService;
-use Kamples\Services\ImagenService;
-use Kamples\Services\TagService;
+use Kamples\Services\Usuario\UsuarioService;
+use Kamples\Services\Moderacion\ReporteService;
+use Kamples\Services\Contenido\ImagenService;
+use Kamples\Services\Core\TagService;
 
 /* 
 *  TIPO USUARIO

@@ -7,7 +7,7 @@
  * @see \Kamples\Services\FeedService
  */
 
-use Kamples\Services\FeedService;
+use Kamples\Services\Feed\FeedService;
 
 /**
  * Obtiene el feed personalizado de un usuario.

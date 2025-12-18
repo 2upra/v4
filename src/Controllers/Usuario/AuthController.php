@@ -20,7 +20,7 @@ class AuthController
 
     public function __construct()
     {
-        $this->authService = new AuthService();
+        $this->authService = AuthService::obtenerInstancia();
         $this->logger = \Logger::obtenerInstancia();
     }
 

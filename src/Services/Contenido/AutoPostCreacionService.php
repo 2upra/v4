@@ -15,7 +15,7 @@
 
 namespace Kamples\Services\Contenido;
 
-use Kamples\Services\HashService;
+use Kamples\Services\Audio\HashService;
 use Kamples\Services\PythonService;
 use Kamples\Services\IAService;
 use WP_Error;

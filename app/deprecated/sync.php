@@ -10,7 +10,7 @@
  * @package Kamples\Deprecated
  */
 
-use Kamples\Services\SyncService;
+use Kamples\Services\Core\SyncService;
 
 /**
  * Verifica si la cabecera X-Electron-App está presente.

@@ -11,7 +11,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\LikeService;
+use Kamples\Services\Social\LikeService;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {

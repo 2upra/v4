@@ -2,6 +2,8 @@
 
 namespace Kamples\Services\Feed;
 
+use Kamples\Services\Social\LikeService;
+
 /**
  * Servicio de definición de condiciones de filtro.
  * 
@@ -42,13 +44,12 @@ class FiltroCondicionService
                 $queryArgs['post_status'] = 'pending';
             },
             'likesRolas' => function (&$queryArgs) use ($usuarioActual) {
-                if (function_exists('obtenerLikesDelUsuario')) {
-                    $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
-                    if ($userLikedPostIds) {
-                        $queryArgs['post__in'] = $userLikedPostIds;
-                    } else {
-                        $queryArgs['posts_per_page'] = 0;
-                    }
+                $likeService = new LikeService();
+                $userLikedPostIds = $likeService->obtenerLikesDelUsuario($usuarioActual);
+                if ($userLikedPostIds) {
+                    $queryArgs['post__in'] = $userLikedPostIds;
+                } else {
+                    $queryArgs['posts_per_page'] = 0;
                 }
             },
             'nada' => function (&$queryArgs) {
@@ -75,18 +76,17 @@ class FiltroCondicionService
                 }
             },
             'rolaListLike' => function (&$queryArgs) use ($usuarioActual) {
-                if (function_exists('obtenerLikesDelUsuario')) {
-                    $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
-                    if (!empty($userLikedPostIds)) {
-                        $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
-                            'relation' => 'AND',
-                            ['key' => 'rola', 'value' => '1', 'compare' => '='],
-                            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
-                        ]);
-                        $queryArgs['post__in'] = $userLikedPostIds;
-                    } else {
-                        $queryArgs['posts_per_page'] = 0;
-                    }
+                $likeService = new LikeService();
+                $userLikedPostIds = $likeService->obtenerLikesDelUsuario($usuarioActual);
+                if (!empty($userLikedPostIds)) {
+                    $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
+                        'relation' => 'AND',
+                        ['key' => 'rola', 'value' => '1', 'compare' => '='],
+                        ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+                    ]);
+                    $queryArgs['post__in'] = $userLikedPostIds;
+                } else {
+                    $queryArgs['posts_per_page'] = 0;
                 }
             },
             'sampleList' => [

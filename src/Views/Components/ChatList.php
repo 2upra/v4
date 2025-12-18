@@ -11,7 +11,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\ChatService;
+use Kamples\Services\Social\ChatService;
 
 // Evitar acceso directo
 if (!defined('ABSPATH')) {

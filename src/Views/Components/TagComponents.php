@@ -2,7 +2,7 @@
 
 namespace Kamples\Views\Components;
 
-use Kamples\Services\TagService;
+use Kamples\Services\Core\TagService;
 
 /**
  * Componente de visualización de tags.

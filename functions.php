@@ -16,7 +16,6 @@
 // =============================================================================
 
 // Suprimir advertencias de deprecación (PHP 8.4 compatibility)
-error_reporting(E_ALL & ~E_DEPRECATED);
 
 // Configuración y constantes (debe cargarse primero)
 require_once get_template_directory() . '/inc/Config/constants.php';
@@ -42,10 +41,13 @@ require_once get_template_directory() . '/src/autoload.php';
 \Kamples\Core\PostTypes::inicializar();
 
 // Servicio de gestión de slugs
-\Kamples\Services\PostSlugService::inicializar();
+\Kamples\Services\Publicacion\PostSlugService::inicializar();
 
 // Inicializar Controladores (incluye PostController, StreamController, etc.)
 require_once get_template_directory() . '/src/Controllers/init.php';
+
+// Inicializar Componentes Globales
+\Kamples\Views\Components\ReproductorComponents::agregarAlFooter();
 
 
 

@@ -6,7 +6,7 @@
  * @deprecated Usar Kamples\Services\UsuarioService
  */
 
-use Kamples\Services\UsuarioService;
+use Kamples\Services\Usuario\UsuarioService;
 
 /**
  * Verifica si al usuario le gusta al menos una rola.

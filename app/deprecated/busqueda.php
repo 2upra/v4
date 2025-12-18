@@ -8,7 +8,7 @@
  * @see \Kamples\Controllers\BusquedaController
  */
 
-use Kamples\Services\BusquedaService;
+use Kamples\Services\Core\BusquedaService;
 use Kamples\Views\Components\BusquedaComponents;
 
 /**

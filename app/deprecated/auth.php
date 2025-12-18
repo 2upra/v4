@@ -9,8 +9,8 @@
  * @see \Kamples\Views\Components\AuthComponents
  */
 
-use Kamples\Services\AuthService;
-use Kamples\Controllers\AuthController;
+use Kamples\Services\Usuario\AuthService;
+use Kamples\Controllers\Usuario\AuthController;
 use Kamples\Views\Components\AuthComponents;
 
 /* Inicializar controlador de autenticación */
@@ -75,7 +75,7 @@ function verify_secure_token($token)
  */
 function log_user_agent_callback($request)
 {
-    $controller = new \Kamples\Controllers\AuthController();
+    $controller = new \Kamples\Controllers\Usuario\AuthController();
     return $controller->logUserAgent($request);
 }
 
@@ -84,7 +84,7 @@ function log_user_agent_callback($request)
  */
 function verify_token_endpoint($request)
 {
-    $controller = new \Kamples\Controllers\AuthController();
+    $controller = new \Kamples\Controllers\Usuario\AuthController();
     return $controller->verificarTokenEndpoint($request);
 }
 
@@ -93,7 +93,7 @@ function verify_token_endpoint($request)
  */
 function save_firebase_token($request)
 {
-    $controller = new \Kamples\Controllers\AuthController();
+    $controller = new \Kamples\Controllers\Usuario\AuthController();
     return $controller->guardarTokenFirebase($request);
 }
 
