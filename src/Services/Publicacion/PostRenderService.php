@@ -12,6 +12,8 @@
 
 namespace Kamples\Services\Publicacion;
 
+use Kamples\Services\Usuario\PerfilService;
+
 class PostRenderService
 {
     private \Logger $logger;
@@ -55,7 +57,7 @@ class PostRenderService
             'author_id' => $autorId,
             'es_suscriptor' => in_array($autorId, (array)$autoresSuscritos),
             'author_name' => get_the_author_meta('display_name', $autorId),
-            'author_avatar' => function_exists('imagenPerfil') ? imagenPerfil($autorId) : '',
+            'author_avatar' => PerfilService::obtenerInstancia()->obtenerImagenPerfil($autorId),
             'audio_id_lite' => get_post_meta($postId, 'post_audio_lite', true),
             'audio_id' => get_post_meta($postId, 'post_audio', true),
             'audio_url' => wp_get_attachment_url(get_post_meta($postId, 'post_audio', true)),

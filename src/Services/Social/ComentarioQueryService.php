@@ -11,6 +11,9 @@
 
 namespace Kamples\Services\Social;
 
+use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Core\UtilService;
+
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
@@ -98,12 +101,8 @@ class ComentarioQueryService
             'autorNombre' => $autor ? $autor->display_name : 'Usuario desconocido',
             'contenido' => $comentario->post_content,
             'fecha' => $comentario->post_date,
-            'fechaRelativa' => function_exists('tiempoRelativo')
-                ? tiempoRelativo($comentario->post_date)
-                : human_time_diff(strtotime($comentario->post_date), current_time('timestamp')),
-            'avatar' => function_exists('imagenPerfil')
-                ? imagenPerfil($autorId)
-                : get_avatar_url($autorId),
+            'fechaRelativa' => UtilService::obtenerInstancia()->tiempoRelativo($comentario->post_date),
+            'avatar' => PerfilService::obtenerInstancia()->obtenerImagenPerfil($autorId),
             'imagenPortada' => $imagenPortada
                 ? (function_exists('img') ? img($imagenPortada) : $imagenPortada)
                 : '',

@@ -12,6 +12,8 @@
 
 namespace Kamples\Services\Core;
 
+use Kamples\Services\Usuario\PerfilService;
+
 class SyncAudioService
 {
     private static ?SyncAudioService $instancia = null;
@@ -212,7 +214,7 @@ class SyncAudioService
      */
     public function obtenerInfoUsuario(int $receptorId): array
     {
-        $imagenPerfil = function_exists('imagenPerfil') ? imagenPerfil($receptorId) : '';
+        $imagenPerfil = PerfilService::obtenerInstancia()->obtenerImagenPerfil($receptorId);
         $nombreUsuario = function_exists('obtenerNombreUsuario') ? obtenerNombreUsuario($receptorId) : 'Usuario';
 
         return [

@@ -11,6 +11,8 @@
 
 namespace Kamples\Services\Social;
 
+use Kamples\Services\Usuario\PerfilService;
+
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
@@ -118,7 +120,7 @@ class ChatConversacionService
         }
 
         $nombre = !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
-        $imagen = function_exists('imagenPerfil') ? imagenPerfil($userId) : '';
+        $imagen = PerfilService::obtenerInstancia()->obtenerImagenPerfil($userId);
 
         return [
             'id' => $userId,

@@ -2,6 +2,8 @@
 
 namespace Kamples\Views\Components;
 
+use Kamples\Services\Usuario\PerfilService;
+
 /**
  * Componentes relacionados con el formulario de publicación.
  * 
@@ -25,8 +27,7 @@ class PostFormComponents
         $user = wp_get_current_user();
         $nombreUsuario = $user->display_name;
 
-        // Obtener imagen de perfil usando la función global existente o fallback
-        $urlImagenperfil = function_exists('imagenPerfil') ? imagenPerfil($user->ID) : get_avatar_url($user->ID);
+        $urlImagenperfil = PerfilService::obtenerInstancia()->obtenerImagenPerfil($user->ID);
 
 ?>
         <style>

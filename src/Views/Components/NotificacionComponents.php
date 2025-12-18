@@ -3,6 +3,8 @@
 namespace Kamples\Views\Components;
 
 use Kamples\Services\Social\NotificacionService;
+use Kamples\Services\Usuario\PerfilService;
+use Kamples\Services\Core\UtilService;
 
 /**
  * Componentes de vista para notificaciones.
@@ -67,16 +69,9 @@ class NotificacionComponents
         $postRelacionado = get_post_meta($postId, 'post_relacionado', true);
         $fechaPublicacion = get_the_date('Y-m-d H:i:s');
 
-        if (function_exists('tiempoRelativo')) {
-            $fechaRelativa = tiempoRelativo($fechaPublicacion);
-        } else {
-            $fechaRelativa = human_time_diff(strtotime($fechaPublicacion), current_time('timestamp')) . ' ago';
-        }
+        $fechaRelativa = UtilService::obtenerInstancia()->tiempoRelativo($fechaPublicacion);
 
-        $avatarOptimizado = '';
-        if ($emisor && function_exists('imagenPerfil')) {
-            $avatarOptimizado = imagenPerfil($emisor);
-        }
+        $avatarOptimizado = $emisor ? PerfilService::obtenerInstancia()->obtenerImagenPerfil($emisor) : '';
 
         ob_start();
 ?>

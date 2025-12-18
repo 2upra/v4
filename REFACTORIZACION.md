@@ -13,11 +13,10 @@ Tema de WordPress para aplicación social/musical. Requiere refactorización pro
 
 ## Problemas Pendientes (Bugs)
 
-| #   | Problema                          | Descripción                                                                                                                                                             | Estado                                                                                        |
-| --- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 1   | **Google OAuth Error 400**        | Al iniciar sesión con Google: "Required parameter is missing: response_type". El parámetro está en el código pero no llega a Google. Posible problema de escape de URL. | Pendiente                                                                                     |
-| 2   | **Audios no cargan (404)**        | Los audios del feed devuelven 404: `/wp-json/1/v1/2?token=...`. El endpoint REST de streaming parece no estar registrado correctamente.                                 | ✅ Resuelto (2025-12-18) - StreamController agregado a init.php                                |
-| 3   | **Imágenes aleatorias no cargan** | Algunas imágenes del feed no cargan. Posible problema con URLs o permisos.                                                                                              | ✅ Resuelto (2025-12-18) - Función imagenPost migrada a PostRenderService::obtenerImagenPost() |
+| #   | Problema                          | Descripción                                                                                                                             | Estado                                                                                        |
+| --- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2   | **Audios no cargan (404)**        | Los audios del feed devuelven 404: `/wp-json/1/v1/2?token=...`. El endpoint REST de streaming parece no estar registrado correctamente. | ✅ Resuelto (2025-12-18) - StreamController agregado a init.php                                |
+| 3   | **Imágenes aleatorias no cargan** | Algunas imágenes del feed no cargan. Posible problema con URLs o permisos.                                                              | ✅ Resuelto (2025-12-18) - Función imagenPost migrada a PostRenderService::obtenerImagenPost() |
 
 > **Nota:** El problema de Google OAuth debe investigarse por separado.
 
@@ -388,13 +387,16 @@ private function crearMiNuevaTabla(): void
 
 > Ubicados en `/app/deprecated/`. Se irán eliminando conforme se actualicen las referencias.
 
-| Archivo       | Usos restantes | Estado                   |
-| ------------- | -------------- | ------------------------ |
-| algoritmo.php | 0              | ✅ Eliminado (2025-12-18) |
-| contador.php  | 0              | ✅ Eliminado (2025-12-18) |
-| likes.php     | 0              | ✅ Eliminado (2025-12-18) |
-| auth.php      | Por verificar  | ⏳ Pendiente              |
-| ...           | ...            | ...                      |
+| Archivo       | Usos restantes | Estado                                                                     |
+| ------------- | -------------- | -------------------------------------------------------------------------- |
+| algoritmo.php | 0              | ✅ Eliminado (2025-12-18)                                                   |
+| contador.php  | 0              | ✅ Eliminado (2025-12-18)                                                   |
+| likes.php     | 0              | ✅ Eliminado (2025-12-18)                                                   |
+| perfiles.php  | 0 en src/      | ✅ Limpiado (2025-12-18) - `imagenPerfil()` reemplazado por `PerfilService` |
+| auxiliar.php  | 0 en src/      | ✅ Limpiado (2025-12-18) - `tiempoRelativo()` reemplazado por `UtilService` |
+| chat.php      | 0 en src/      | ✅ Limpiado (2025-12-18) - `tiempoRelativo()` reemplazado por `UtilService` |
+| auth.php      | Por verificar  | ⏳ Pendiente                                                                |
+| ...           | ...            | ...                                                                        |
 
 > **Nota:** Lista completa en `/app/deprecated/`. Cada revisión de servicio incluirá verificar si su wrapper puede eliminarse.
 

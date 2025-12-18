@@ -50,3 +50,4 @@ Cargo.lock
 *.rmeta
 *.o
 *.d
+.agent/rules/1.md

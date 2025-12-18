@@ -12,6 +12,8 @@
 
 namespace Kamples\Services\Social;
 
+use Kamples\Services\Usuario\PerfilService;
+
 if (!defined('ABSPATH')) {
     exit('Acceso directo no permitido.');
 }
@@ -92,8 +94,8 @@ class ColabQueryService
             'colabFileUrl'            => $colabFileUrl,
             'colabAutorName'          => get_the_author_meta('display_name', $colabAutor),
             'colabColaboradorName'    => get_the_author_meta('display_name', $colabColaborador),
-            'colabColaboradorAvatar'  => function_exists('imagenPerfil') ? imagenPerfil($colabColaborador) : '',
-            'colabAutorAvatar'        => function_exists('imagenPerfil') ? imagenPerfil($colabAutor) : '',
+            'colabColaboradorAvatar'  => PerfilService::obtenerInstancia()->obtenerImagenPerfil($colabColaborador),
+            'colabAutorAvatar'        => PerfilService::obtenerInstancia()->obtenerImagenPerfil($colabAutor),
             'colabFecha'              => get_the_date('', $postId),
             'colab_status'            => get_post_status($postId),
             'imagenPostOp'            => $imagenPostOp,

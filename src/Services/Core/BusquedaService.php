@@ -2,6 +2,8 @@
 
 namespace Kamples\Services\Core;
 
+use Kamples\Services\Usuario\PerfilService;
+
 // CacheService is in the same namespace
 
 /**
@@ -116,7 +118,7 @@ class BusquedaService
                     'titulo' => $user->display_name,
                     'url' => get_author_posts_url($user->ID),
                     'tipo' => 'Perfil',
-                    'imagen' => function_exists('imagenPerfil') ? imagenPerfil($user->ID) : '',
+                    'imagen' => PerfilService::obtenerInstancia()->obtenerImagenPerfil($user->ID),
                 ];
             }
         }
