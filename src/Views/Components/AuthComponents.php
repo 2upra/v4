@@ -67,7 +67,7 @@ class AuthComponents
 
                         <script>
                             document.getElementById('google-login-btn').addEventListener('click', function() {
-                                const googleOAuthURL = '<?php echo esc_js($googleOAuthUrl); ?>';
+                                const googleOAuthURL = '<?php echo esc_url($googleOAuthUrl); ?>';
 
                                 const isEmbeddedBrowser = () => {
                                     const ua = navigator.userAgent || navigator.vendor || window.opera;
